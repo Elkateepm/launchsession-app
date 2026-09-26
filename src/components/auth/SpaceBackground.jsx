@@ -105,7 +105,7 @@ export default function SpaceBackground({ height = 620 }) {
       {stars.map(s => (
         <div key={s.id} style={{
           position: 'absolute', top: `${s.top}%`, left: `${s.left}%`,
-          width: s.size, height: s.size, borderRadius: '50%', background: '#fff',
+          width: s.size, height: s.size, borderRadius: '50%', background: 'var(--surface)',
           opacity: s.opacity,
           animation: s.twinkle ? `ls-twinkle ${3 + s.delay}s ease-in-out infinite` : 'none',
         }} />

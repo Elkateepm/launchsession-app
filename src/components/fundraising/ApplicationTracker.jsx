@@ -6,7 +6,7 @@ import FundraisingEmptyState from './hub/FundraisingEmptyState'
 import Icon from '../../lib/icons'
 
 const STAGES = [
-  { key: 'researching', label: 'Researching', color: '#6B7280', bg: '#F3F2F7' },
+  { key: 'researching', label: 'Researching', color: 'var(--text3)', bg: '#F3F2F7' },
   { key: 'drafting', label: 'Drafting', color: LS.purpleDark, bg: LS.lavender },
   { key: 'submitted', label: 'Submitted', color: '#92640C', bg: '#FDF6E8' },
   { key: 'awarded', label: 'Awarded', color: '#16803C', bg: '#E7F6EC' },
@@ -99,7 +99,7 @@ export default function ApplicationTracker({ org, refreshKey }) {
                 <span style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: stage.color }}>{stage.label}</span>
                 <span style={{ fontSize: 11, fontWeight: 700, color: LS.muted, background: stage.bg, borderRadius: 20, padding: '1px 8px' }}>{byStage[stage.key].length}</span>
               </div>
-              <div style={{ background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 16, padding: '4px 18px' }}>
+              <div style={{ background: 'var(--surface)', border: `1px solid ${LS.border}`, borderRadius: 16, padding: '4px 18px' }}>
                 {byStage[stage.key].map((a, i) => (
                   <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 0', borderBottom: i === byStage[stage.key].length - 1 ? 'none' : `1px solid ${LS.border}` }}>
                     <div style={{ width: 34, height: 34, borderRadius: 10, background: stage.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

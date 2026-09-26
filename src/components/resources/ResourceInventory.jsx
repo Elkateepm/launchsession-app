@@ -43,11 +43,11 @@ export default function ResourceInventory({ resources, bookings, venues, onBook,
   }
 
   return (
-    <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 18, padding: 20 }}>
-      <div style={{ fontSize: 15, fontWeight: 800, color: '#111827', marginBottom: 14 }}>Resource Inventory</div>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: 20 }}>
+      <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 14 }}>Resource Inventory</div>
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search resources..." style={{ flex: '1 1 180px', padding: '9px 12px', borderRadius: 9, border: '1.5px solid #E5E7EB', fontSize: 13 }} />
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search resources..." style={{ flex: '1 1 180px', padding: '9px 12px', borderRadius: 9, border: '1.5px solid var(--border)', fontSize: 13 }} />
         <select value={category} onChange={e => setCategory(e.target.value)} style={selStyle}>
           <option value="all">All categories</option>
           {CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.icon} {c.label}</option>)}
@@ -77,7 +77,7 @@ export default function ResourceInventory({ resources, bookings, venues, onBook,
           <option value="category">Sort: Category</option>
           <option value="status">Sort: Status</option>
         </select>
-        <div style={{ display: 'flex', border: '1.5px solid #E5E7EB', borderRadius: 9, overflow: 'hidden' }}>
+        <div style={{ display: 'flex', border: '1.5px solid var(--border)', borderRadius: 9, overflow: 'hidden' }}>
           <button onClick={() => setView('grid')} style={{ padding: '8px 12px', border: 'none', background: view === 'grid' ? '#7C3AED' : '#fff', color: view === 'grid' ? '#fff' : '#6B7280', cursor: 'pointer' }}>▦</button>
           <button onClick={() => setView('list')} style={{ padding: '8px 12px', border: 'none', background: view === 'list' ? '#7C3AED' : '#fff', color: view === 'list' ? '#fff' : '#6B7280', cursor: 'pointer' }}><Icon name="☰" /></button>
         </div>
@@ -95,10 +95,10 @@ export default function ResourceInventory({ resources, bookings, venues, onBook,
           {filtered.map(r => (
             <ResourceCard key={r.id} resource={r} nextBooking={nextBookingFor(r.id)} onBook={onBook} onOpen={onOpen} onQuickAction={onQuickAction} view="grid" />
           ))}
-          <button onClick={onAddResource} style={{ border: '2px dashed #E5E7EB', borderRadius: 16, background: '#F8FAFC', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 180, cursor: 'pointer' }}>
+          <button onClick={onAddResource} style={{ border: '2px dashed var(--border)', borderRadius: 16, background: 'var(--surface2)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 180, cursor: 'pointer' }}>
             <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: '#7C3AED' }}>+</div>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#7C3AED' }}>Add New Resource</div>
-            <div style={{ fontSize: 11, color: '#9CA3AF', textAlign: 'center', padding: '0 20px' }}>Add rooms, vehicles or equipment to your inventory</div>
+            <div style={{ fontSize: 11, color: 'var(--text-faint)', textAlign: 'center', padding: '0 20px' }}>Add rooms, vehicles or equipment to your inventory</div>
           </button>
         </div>
       ) : (
@@ -112,4 +112,4 @@ export default function ResourceInventory({ resources, bookings, venues, onBook,
   )
 }
 
-const selStyle = { padding: '9px 10px', borderRadius: 9, border: '1.5px solid #E5E7EB', fontSize: 12.5, background: '#fff', color: '#374151' }
+const selStyle = { padding: '9px 10px', borderRadius: 9, border: '1.5px solid var(--border)', fontSize: 12.5, background: 'var(--surface)', color: 'var(--text2)' }

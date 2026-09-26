@@ -25,7 +25,7 @@ export const OUTCOME_AREAS = [
 export const HEALTH_AREAS = ['confidence', 'attendance', 'wellbeing', 'education', 'resilience', 'employability', 'social', 'aspiration']
   .map(k => OUTCOME_AREAS.find(a => a.key === k) || { key: 'aspiration', label: 'Aspiration', icon: '🚀', color: '#6366F1' })
 
-export const areaByKey = (key) => OUTCOME_AREAS.find(a => a.key === key) || { key, label: key, icon: '📊', color: '#9CA3AF' }
+export const areaByKey = (key) => OUTCOME_AREAS.find(a => a.key === key) || { key, label: key, icon: '📊', color: 'var(--text-faint)' }
 
 export const SCORE_LABELS = { 1: 'Needs a lot of support', 3: 'Some challenges', 5: 'Getting there', 7: 'Doing well', 9: 'Almost thriving', 10: 'Thriving! 🌟' }
 export const scoreLabel = (n) => SCORE_LABELS[n] || Object.entries(SCORE_LABELS).reduce((best, [k, v]) => Math.abs(Number(k) - n) < Math.abs(Number(best[0]) - n) ? [k, v] : best, Object.entries(SCORE_LABELS)[0])[1]
@@ -89,7 +89,7 @@ export function Sparkline({ data, color = '#1B9AAA', width = 72, height = 26 }) 
 // TrendArrow — small up/down/flat indicator with % change
 // ---------------------------------------------------------------------------
 export function TrendArrow({ delta, suffix = '%' }) {
-  if (delta === null || delta === undefined || Number.isNaN(delta)) return <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 700 }}>—</span>
+  if (delta === null || delta === undefined || Number.isNaN(delta)) return <span style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 700 }}>—</span>
   const up = delta > 0, flat = Math.abs(delta) < 0.5
   const color = flat ? '#9CA3AF' : up ? '#16A34A' : '#DC2626'
   const arrow = flat ? '→' : up ? '↑' : '↓'
@@ -120,9 +120,9 @@ export function CircularGauge({ value, size = 168, stroke = 14, color = '#1B9AAA
         />
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ fontSize: size * 0.22, fontWeight: 900, color: '#111827', lineHeight: 1 }}><AnimatedNumber value={value} /></div>
-        {label && <div style={{ fontSize: 11, color: '#6B7280', fontWeight: 700, marginTop: 4 }}>{label}</div>}
-        {sublabel && <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 1 }}>{sublabel}</div>}
+        <div style={{ fontSize: size * 0.22, fontWeight: 900, color: 'var(--text)', lineHeight: 1 }}><AnimatedNumber value={value} /></div>
+        {label && <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 700, marginTop: 4 }}>{label}</div>}
+        {sublabel && <div style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 1 }}>{sublabel}</div>}
       </div>
     </div>
   )
@@ -146,7 +146,7 @@ export function ProgressRing({ value, max = 10, size = 56, stroke = 6, color = '
           strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round"
           style={{ transition: 'stroke-dashoffset 0.9s cubic-bezier(.16,1,.3,1)' }} />
       </svg>
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.24, fontWeight: 900, color: '#111827' }}>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.24, fontWeight: 900, color: 'var(--text)' }}>
         {value ? Number(value).toFixed(1) : '—'}
       </div>
     </div>
@@ -158,7 +158,7 @@ export function ProgressRing({ value, max = 10, size = 56, stroke = 6, color = '
 // ---------------------------------------------------------------------------
 export function ScoreBar({ value, max = 10, color }) {
   return (
-    <div style={{ height: 8, background: '#F3F4F6', borderRadius: 99, overflow: 'hidden' }}>
+    <div style={{ height: 8, background: 'var(--surface3)', borderRadius: 99, overflow: 'hidden' }}>
       <motion.div
         initial={{ width: 0 }}
         animate={{ width: `${Math.max(0, Math.min(100, (value / max) * 100))}%` }}
@@ -174,10 +174,10 @@ export function ScoreBar({ value, max = 10, color }) {
 // ---------------------------------------------------------------------------
 export function EmptyState({ icon = '🚀', title, subtitle, primaryLabel, onPrimary, secondaryLabel, onSecondary, primary }) {
   return (
-    <div style={{ textAlign: 'center', padding: '48px 24px', background: 'linear-gradient(135deg,#F9FAFB,#F3F4F6)', borderRadius: 20, border: '1px dashed #E5E7EB' }}>
+    <div style={{ textAlign: 'center', padding: '48px 24px', background: 'linear-gradient(135deg,#F9FAFB,#F3F4F6)', borderRadius: 20, border: '1px dashed var(--border)' }}>
       <div style={{ fontSize: 44, marginBottom: 14 }}>{icon}</div>
-      <div style={{ fontWeight: 900, fontSize: 16, color: '#111827' }}>{title}</div>
-      {subtitle && <div style={{ fontSize: 13, color: '#6B7280', marginTop: 6, maxWidth: 360, marginLeft: 'auto', marginRight: 'auto' }}>{subtitle}</div>}
+      <div style={{ fontWeight: 900, fontSize: 16, color: 'var(--text)' }}>{title}</div>
+      {subtitle && <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 6, maxWidth: 360, marginLeft: 'auto', marginRight: 'auto' }}>{subtitle}</div>}
       <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 20, flexWrap: 'wrap' }}>
         {primaryLabel && (
           <button onClick={onPrimary} style={{ padding: '10px 20px', borderRadius: 12, border: 'none', background: primary || '#1B9AAA', color: '#fff', fontWeight: 800, cursor: 'pointer', fontSize: 13 }}>
@@ -185,7 +185,7 @@ export function EmptyState({ icon = '🚀', title, subtitle, primaryLabel, onPri
           </button>
         )}
         {secondaryLabel && (
-          <button onClick={onSecondary} style={{ padding: '10px 20px', borderRadius: 12, border: '1.5px solid #E5E7EB', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>
+          <button onClick={onSecondary} style={{ padding: '10px 20px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>
             {secondaryLabel}
           </button>
         )}
@@ -238,11 +238,11 @@ export function KpiCard({ icon, label, value, decimals = 0, suffix = '', color =
       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05, duration: 0.4 }}
       onClick={onClick}
       whileHover={onClick ? { y: -2, boxShadow: '0 8px 24px rgba(0,0,0,0.08)' } : {}}
-      style={{ background: '#fff', borderRadius: 18, padding: '16px 18px', border: '1px solid #EEF0F2', cursor: onClick ? 'pointer' : 'default' }}
+      style={{ background: 'var(--surface)', borderRadius: 18, padding: '16px 18px', border: '1px solid #EEF0F2', cursor: onClick ? 'pointer' : 'default' }}
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>{icon} {label}</div>
+          <div style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>{icon} {label}</div>
           <div style={{ fontSize: 26, fontWeight: 900, color, marginTop: 6 }}>
             <AnimatedNumber value={value} decimals={decimals} suffix={suffix} />
           </div>

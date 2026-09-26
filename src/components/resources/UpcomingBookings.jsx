@@ -35,17 +35,17 @@ export default function UpcomingBookings({ bookings, resources, sessions, staff,
 
   if (upcoming.length === 0) {
     return (
-      <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 18, padding: 20 }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: 20 }}>
         <ResourceEmptyState icon="📅" title="No upcoming bookings" description="Book a resource above and it'll show up here." />
       </div>
     )
   }
 
   return (
-    <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 18, padding: 20 }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#111827' }}>Upcoming Bookings <span style={{ fontWeight: 500, color: '#9CA3AF', fontSize: 12 }}>(This Week)</span></div>
-        <button onClick={onViewCalendar} style={{ background: 'none', border: '1px solid #E5E7EB', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer' }}><Icon name="📅" /> View calendar</button>
+        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>Upcoming Bookings <span style={{ fontWeight: 500, color: 'var(--text-faint)', fontSize: 12 }}>(This Week)</span></div>
+        <button onClick={onViewCalendar} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}><Icon name="📅" /> View calendar</button>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -55,21 +55,21 @@ export default function UpcomingBookings({ bookings, resources, sessions, staff,
           const assigned = staff.find(s => s.id === b.assigned_to)
           const bs = BOOKING_STATUS_CONFIG[b.status] || BOOKING_STATUS_CONFIG.confirmed
           return (
-            <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, background: '#F8FAFC', flexWrap: 'wrap' }}>
+            <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, background: 'var(--surface2)', flexWrap: 'wrap' }}>
               <div style={{ width: 64, flexShrink: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 800, color: '#111827' }}>{fmtDate(b.start_time).split(' ')[0]}</div>
-                <div style={{ fontSize: 10.5, color: '#6B7280' }}>{fmtDate(b.start_time).split(' ').slice(1).join(' ')}</div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)' }}>{fmtDate(b.start_time).split(' ')[0]}</div>
+                <div style={{ fontSize: 10.5, color: 'var(--text3)' }}>{fmtDate(b.start_time).split(' ').slice(1).join(' ')}</div>
               </div>
               <div style={{ flex: 1, minWidth: 140 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>{resource?.name || 'Unknown resource'}</div>
-                <div style={{ fontSize: 11, color: '#6B7280' }}>{session?.title || b.purpose || '—'}{assigned ? ` · ${assigned.full_name}` : ''}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{resource?.name || 'Unknown resource'}</div>
+                <div style={{ fontSize: 11, color: 'var(--text3)' }}>{session?.title || b.purpose || '—'}{assigned ? ` · ${assigned.full_name}` : ''}</div>
               </div>
-              <div style={{ fontSize: 12, color: '#374151', fontWeight: 600, flexShrink: 0 }}>{fmtTime(b.start_time)}–{fmtTime(b.end_time)}</div>
+              <div style={{ fontSize: 12, color: 'var(--text2)', fontWeight: 600, flexShrink: 0 }}>{fmtTime(b.start_time)}–{fmtTime(b.end_time)}</div>
               <span style={{ fontSize: 10.5, fontWeight: 800, color: bs.color, background: bs.bg, borderRadius: 99, padding: '3px 9px', flexShrink: 0 }}>{bs.label}</span>
               <div style={{ position: 'relative', flexShrink: 0 }}>
-                <button onClick={() => setMenuOpenId(menuOpenId === b.id ? null : b.id)} style={{ background: 'none', border: 'none', fontSize: 16, color: '#9CA3AF', cursor: 'pointer' }}>⋯</button>
+                <button onClick={() => setMenuOpenId(menuOpenId === b.id ? null : b.id)} style={{ background: 'none', border: 'none', fontSize: 16, color: 'var(--text-faint)', cursor: 'pointer' }}>⋯</button>
                 {menuOpenId === b.id && (
-                  <div style={{ position: 'absolute', top: '110%', right: 0, background: '#fff', border: '1px solid #E5E7EB', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 20, minWidth: 150 }}>
+                  <div style={{ position: 'absolute', top: '110%', right: 0, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 20, minWidth: 150 }}>
                     {['Edit', 'Duplicate', 'Check Out', 'Mark Returned', 'Cancel'].map(a => (
                       <button key={a} onClick={() => handleAction(a, b)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 14px', border: 'none', background: 'none', fontSize: 12.5, fontWeight: 600, color: a === 'Cancel' ? '#DC2626' : '#374151', cursor: 'pointer' }}>{a}</button>
                     ))}

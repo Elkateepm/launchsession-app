@@ -80,7 +80,7 @@ export default function PaymentsPanel({ org, isAdmin, campaigns = [] }) {
       {/* provider */}
       {isAdmin && (
         <div style={{
-          background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 16,
+          background: 'var(--surface)', border: `1px solid ${LS.border}`, borderRadius: 16,
           padding: 18, marginBottom: 16,
         }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 13 }}>
@@ -147,7 +147,7 @@ export default function PaymentsPanel({ org, isAdmin, campaigns = [] }) {
 
       {!loading && links.length === 0 && (
         <div style={{
-          padding: '30px 22px', textAlign: 'center', background: '#fff',
+          padding: '30px 22px', textAlign: 'center', background: 'var(--surface)',
           border: `1px solid ${LS.border}`, borderRadius: 16, marginBottom: 14,
         }}>
           <div style={{ fontSize: 14.5, fontWeight: 700, color: LS.text, marginBottom: 5 }}>
@@ -166,7 +166,7 @@ export default function PaymentsPanel({ org, isAdmin, campaigns = [] }) {
           const disabled = link.status === 'disabled'
           return (
             <div key={link.id} style={{
-              background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 14,
+              background: 'var(--surface)', border: `1px solid ${LS.border}`, borderRadius: 14,
               padding: '14px 15px', opacity: disabled ? 0.6 : 1,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 7 }}>
@@ -208,7 +208,7 @@ export default function PaymentsPanel({ org, isAdmin, campaigns = [] }) {
 
       {isAdmin && availableCampaigns.length > 0 && (
         <div style={{
-          background: '#fff', border: `1px dashed ${LS.lavenderBorder}`,
+          background: 'var(--surface)', border: `1px dashed ${LS.lavenderBorder}`,
           borderRadius: 14, padding: '15px 16px',
         }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: LS.muted, marginBottom: 10 }}>
@@ -239,7 +239,7 @@ function SmallBtn({ onClick, children }) {
   return (
     <button onClick={onClick} style={{
       padding: '7px 13px', borderRadius: 9, fontSize: 12.5, fontWeight: 700,
-      border: `1px solid ${LS.border}`, background: '#fff', color: LS.text,
+      border: `1px solid ${LS.border}`, background: 'var(--surface)', color: LS.text,
       cursor: 'pointer', fontFamily: 'inherit',
     }}>{children}</button>
   )

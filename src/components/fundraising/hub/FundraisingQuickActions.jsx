@@ -26,7 +26,7 @@ export default function FundraisingQuickActions({ onNewCampaign, onFindFunding, 
           flex: isMobile ? undefined : '1 1 0',
           minWidth: isMobile ? undefined : 150,
           display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8,
-          padding: '14px 14px', borderRadius: 16, border: `1px solid ${LS.border}`, background: '#fff',
+          padding: '14px 14px', borderRadius: 16, border: `1px solid ${LS.border}`, background: 'var(--surface)',
           cursor: 'pointer', textAlign: 'left', transition: 'transform 0.15s ease, box-shadow 0.15s ease',
         }}
           onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 10px 24px rgba(76,50,200,0.12)' }}

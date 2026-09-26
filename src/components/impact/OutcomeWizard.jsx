@@ -52,7 +52,7 @@ export default function OutcomeWizard({ org, children, presetChild, onClose, onS
   }
 
   const areaObj = OUTCOME_AREAS.find(a => a.key === form.area)
-  const inp = { width: '100%', boxSizing: 'border-box', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, fontFamily: 'inherit', outline: 'none' }
+  const inp = { width: '100%', boxSizing: 'border-box', padding: '10px 14px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'inherit', outline: 'none' }
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,39,0.45)', backdropFilter: 'blur(2px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
@@ -60,20 +60,20 @@ export default function OutcomeWizard({ org, children, presetChild, onClose, onS
         initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
         onClick={e => e.stopPropagation()}
-        style={{ background: '#fff', borderRadius: 24, width: 520, maxWidth: '100%', maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 30px 80px rgba(0,0,0,0.25)' }}
+        style={{ background: 'var(--surface)', borderRadius: 24, width: 520, maxWidth: '100%', maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 30px 80px rgba(0,0,0,0.25)' }}
       >
         {/* Header + progress */}
-        <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid #F3F4F6' }}>
+        <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border-soft)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ fontSize: 16, fontWeight: 900 }}><Icon name="📊" /> Record Outcome</div>
-            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#9CA3AF' }}><Icon name="✕" /></button>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: 'var(--text-faint)' }}><Icon name="✕" /></button>
           </div>
           <div style={{ display: 'flex', gap: 4, marginTop: 14 }}>
             {STEPS.map((s, i) => (
               <div key={s} style={{ flex: 1, height: 4, borderRadius: 99, background: i <= step ? primary : '#F3F4F6', transition: 'background 0.3s' }} />
             ))}
           </div>
-          <div style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 700, marginTop: 6 }}>STEP {step + 1} OF {STEPS.length} · {STEPS[step].toUpperCase()}</div>
+          <div style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 700, marginTop: 6 }}>STEP {step + 1} OF {STEPS.length} · {STEPS[step].toUpperCase()}</div>
         </div>
 
         {/* Body */}
@@ -97,7 +97,7 @@ export default function OutcomeWizard({ org, children, presetChild, onClose, onS
                         {form.child?.id === c.id && <div style={{ marginLeft: 'auto', color: primary, fontWeight: 900 }}><Icon name="✓" /></div>}
                       </div>
                     ))}
-                    {filteredChildren.length === 0 && <div style={{ textAlign: 'center', padding: 20, color: '#9CA3AF', fontSize: 13 }}>No young people found</div>}
+                    {filteredChildren.length === 0 && <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-faint)', fontSize: 13 }}>No young people found</div>}
                   </div>
                 </div>
               )}
@@ -126,7 +126,7 @@ export default function OutcomeWizard({ org, children, presetChild, onClose, onS
 
               {step === 3 && (
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 6 }}>NOTES (optional)</label>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 6 }}>NOTES (optional)</label>
                   <textarea autoFocus value={form.notes} onChange={e => set({ notes: e.target.value })} placeholder="What's contributed to this score? Any specific observations..." rows={5} style={{ ...inp, resize: 'none' }} />
                 </div>
               )}
@@ -141,18 +141,18 @@ export default function OutcomeWizard({ org, children, presetChild, onClose, onS
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                       <input value={form.goalTitle} onChange={e => set({ goalTitle: e.target.value })} placeholder="e.g. Improve confidence in group settings" style={inp} />
                       <div>
-                        <label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>TARGET DATE (optional)</label>
+                        <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>TARGET DATE (optional)</label>
                         <input type="date" value={form.goalTarget} onChange={e => set({ goalTarget: e.target.value })} style={inp} />
                       </div>
                     </div>
                   )}
-                  {!form.addGoal && <div style={{ fontSize: 12.5, color: '#9CA3AF', textAlign: 'center', padding: '20px 0' }}>You can skip this and add a goal later from their profile</div>}
+                  {!form.addGoal && <div style={{ fontSize: 12.5, color: 'var(--text-faint)', textAlign: 'center', padding: '20px 0' }}>You can skip this and add a goal later from their profile</div>}
                 </div>
               )}
 
               {step === 5 && (
                 <div>
-                  <div style={{ background: '#F9FAFB', borderRadius: 16, padding: 18, border: '1px solid #F3F4F6' }}>
+                  <div style={{ background: 'var(--surface2)', borderRadius: 16, padding: 18, border: '1px solid var(--border-soft)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
                       <div style={{ width: 40, height: 40, borderRadius: 10, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: primary }}>
                         {form.child?.first_name?.[0]}{form.child?.last_name?.[0]}
@@ -160,10 +160,10 @@ export default function OutcomeWizard({ org, children, presetChild, onClose, onS
                       <div style={{ fontWeight: 800, fontSize: 14 }}>{form.child?.first_name} {form.child?.last_name}</div>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8 }}>
-                      <span style={{ color: '#6B7280' }}>{areaObj?.icon} {areaObj?.label}</span>
+                      <span style={{ color: 'var(--text3)' }}>{areaObj?.icon} {areaObj?.label}</span>
                       <span style={{ fontWeight: 900, color: scoreColor(form.score) }}>{form.score}/10</span>
                     </div>
-                    {form.notes && <div style={{ fontSize: 12.5, color: '#6B7280', marginTop: 8, lineHeight: 1.5, borderTop: '1px solid #E5E7EB', paddingTop: 8 }}>{form.notes}</div>}
+                    {form.notes && <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 8, lineHeight: 1.5, borderTop: '1px solid var(--border)', paddingTop: 8 }}>{form.notes}</div>}
                     {form.addGoal && form.goalTitle && <div style={{ fontSize: 12.5, color: primary, marginTop: 8, fontWeight: 700 }}><Icon name="🎯" /> Goal: {form.goalTitle}</div>}
                   </div>
                 </div>
@@ -174,9 +174,9 @@ export default function OutcomeWizard({ org, children, presetChild, onClose, onS
         </div>
 
         {/* Footer nav */}
-        <div style={{ padding: '16px 24px', borderTop: '1px solid #F3F4F6', display: 'flex', gap: 10 }}>
+        <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-soft)', display: 'flex', gap: 10 }}>
           {step > 0 && (
-            <button onClick={() => setStep(s => s - 1)} style={{ padding: '10px 18px', borderRadius: 12, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}><Icon name="←" /> Back</button>
+            <button onClick={() => setStep(s => s - 1)} style={{ padding: '10px 18px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}><Icon name="←" /> Back</button>
           )}
           <div style={{ flex: 1 }} />
           {step < STEPS.length - 1 ? (

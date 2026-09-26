@@ -59,7 +59,7 @@ export default function OnboardingLayout({ children, wide = true, panelStyle, on
 
       {/* Extremely subtle star particles -- desktop/tablet only */}
       {!isMobile && !reducedMotion && STARS.map((s, i) => (
-        <div key={i} className="ls-star" style={{ position: 'absolute', top: s.top, left: s.left, width: s.size, height: s.size, borderRadius: '50%', background: '#fff', animationDelay: `${s.delay}s`, pointerEvents: 'none' }} />
+        <div key={i} className="ls-star" style={{ position: 'absolute', top: s.top, left: s.left, width: s.size, height: s.size, borderRadius: '50%', background: 'var(--surface)', animationDelay: `${s.delay}s`, pointerEvents: 'none' }} />
       ))}
 
       <div style={{ width: '100%', maxWidth: wide ? 1120 : 520, position: 'relative', zIndex: 2, margin: '0 auto' }}>

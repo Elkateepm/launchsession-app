@@ -299,10 +299,10 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
   // ---------------------------------------------------------------- chrome
   const SaveBadge = () => {
     const map = {
-      saving: { text: 'Saving…', color: '#94A3B8' },
+      saving: { text: 'Saving…', color: 'var(--text-faint)' },
       saved: { text: 'Saved ✓', color: '#12B76A' },
       error: { text: "Couldn't save", color: '#DC2626' },
-      idle: { text: '', color: '#94A3B8' },
+      idle: { text: '', color: 'var(--text-faint)' },
     }
     const s = map[saveState]
     if (!s.text) return null
@@ -325,12 +325,12 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
   ]
 
   return (
-    <div style={{ background: '#F8FAFC', minHeight: '100%', padding: isMobile ? 14 : 22 }}>
+    <div style={{ background: 'var(--surface2)', minHeight: '100%', padding: isMobile ? 14 : 22 }}>
       {/* header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
         <button onClick={leave} style={{
-          padding: '7px 13px', borderRadius: 9, border: '1px solid #E2E8F0',
-          background: '#fff', color: '#64748B', fontSize: 12.5, fontWeight: 700,
+          padding: '7px 13px', borderRadius: 9, border: '1px solid var(--border)',
+          background: 'var(--surface)', color: 'var(--text3)', fontSize: 12.5, fontWeight: 700,
           cursor: 'pointer', fontFamily: 'inherit',
         }}><Icon name="←" /> Forms</button>
         <div style={{ flex: 1 }} />
@@ -436,7 +436,7 @@ function Canvas({
 
   return (
     <div style={{
-      background: '#fff', border: '1px solid #ECE9F5', borderRadius: 18,
+      background: 'var(--surface)', border: '1px solid #ECE9F5', borderRadius: 18,
       padding: isMobile ? 18 : 28,
     }}>
       {/* Title and description are edited in place: they are content, not
@@ -449,7 +449,7 @@ function Canvas({
         aria-label="Form name"
         style={{
           width: '100%', border: 'none', outline: 'none', background: 'transparent',
-          fontSize: isMobile ? 21 : 25, fontWeight: 900, color: '#0F172A',
+          fontSize: isMobile ? 21 : 25, fontWeight: 900, color: 'var(--text)',
           letterSpacing: -0.4, marginBottom: 6, fontFamily: 'inherit',
         }}
       />
@@ -460,16 +460,16 @@ function Canvas({
         aria-label="Form description"
         style={{
           width: '100%', border: 'none', outline: 'none', background: 'transparent',
-          fontSize: 14.5, color: '#64748B', marginBottom: 22, fontFamily: 'inherit',
+          fontSize: 14.5, color: 'var(--text3)', marginBottom: 22, fontFamily: 'inherit',
         }}
       />
 
       {form.fields.length === 0 && (
         <div style={{
-          padding: '38px 22px', textAlign: 'center', border: '1.5px dashed #E2E8F0',
+          padding: '38px 22px', textAlign: 'center', border: '1.5px dashed var(--border)',
           borderRadius: 14, marginBottom: 14,
         }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', marginBottom: 5 }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)', marginBottom: 5 }}>
             Your form is ready to build
           </div>
           <div style={{ fontSize: 13.5, color: '#8B87A3', marginBottom: 16 }}>
@@ -572,7 +572,7 @@ function AddQuestionButton({ open, onOpen, onPick, primary, subtle, smartOptions
             transition={{ duration: 0.15 }}
             style={{
               position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 6, zIndex: 40,
-              background: '#fff', border: '1px solid #ECE9F5', borderRadius: 14,
+              background: 'var(--surface)', border: '1px solid #ECE9F5', borderRadius: 14,
               padding: 8, boxShadow: '0 18px 44px -18px rgba(15,23,42,0.4)',
               maxHeight: 380, overflowY: 'auto',
             }}
@@ -609,7 +609,7 @@ function AddQuestionButton({ open, onOpen, onPick, primary, subtle, smartOptions
 
 const MenuHeading = ({ children }) => (
   <div style={{
-    fontSize: 10.5, fontWeight: 800, color: '#94A3B8', letterSpacing: 0.6,
+    fontSize: 10.5, fontWeight: 800, color: 'var(--text-faint)', letterSpacing: 0.6,
     textTransform: 'uppercase', padding: '8px 10px 5px',
   }}>{children}</div>
 )
@@ -629,8 +629,8 @@ function MenuItem({ label, hint, onClick, disabled }) {
         opacity: disabled ? 0.45 : 1,
       }}
     >
-      <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A' }}>{label}</div>
-      {hint && <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 1 }}>{hint}</div>}
+      <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>{label}</div>
+      {hint && <div style={{ fontSize: 11.5, color: 'var(--text-faint)', marginTop: 1 }}>{hint}</div>}
     </button>
   )
 }
@@ -677,7 +677,7 @@ function QuestionCard({
             aria-haspopup="menu"
             aria-expanded={menuOpen}
             style={{
-              border: 'none', background: 'transparent', color: '#94A3B8',
+              border: 'none', background: 'transparent', color: 'var(--text-faint)',
               fontSize: 17, cursor: 'pointer', padding: '2px 6px', lineHeight: 1,
               fontWeight: 800,
             }}
@@ -686,7 +686,7 @@ function QuestionCard({
           {menuOpen && (
             <div style={{
               position: 'absolute', top: '100%', right: 0, marginTop: 4, zIndex: 40,
-              background: '#fff', border: '1px solid #ECE9F5', borderRadius: 12,
+              background: 'var(--surface)', border: '1px solid #ECE9F5', borderRadius: 12,
               padding: 6, minWidth: 190, boxShadow: '0 18px 44px -18px rgba(15,23,42,0.4)',
             }}>
               <MenuItem label="Edit" onClick={e => { onSelect(); onMenu() }} />
@@ -697,7 +697,7 @@ function QuestionCard({
               />
               <MenuItem label="Move up" disabled={index === 0} onClick={() => onMove(-1)} />
               <MenuItem label="Move down" disabled={index === total - 1} onClick={() => onMove(1)} />
-              <div style={{ height: 1, background: '#F1F5F9', margin: '5px 8px' }} />
+              <div style={{ height: 1, background: 'var(--surface-hover)', margin: '5px 8px' }} />
               <MenuItem label="Delete" onClick={onDelete} />
             </div>
           )}
@@ -713,10 +713,10 @@ function EditorBody({ field, primary, onChange, onDuplicate, onDelete, hasRespon
   const [showMore, setShowMore] = useState(!!field.description)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  const label = { display: 'block', fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 6 }
+  const label = { display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text3)', marginBottom: 6 }
   const input = {
     width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10,
-    border: '1.5px solid #E2E8F0', fontSize: 14, fontFamily: 'inherit', outline: 'none',
+    border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'inherit', outline: 'none',
   }
 
   const setOption = (i, v) =>
@@ -753,7 +753,7 @@ function EditorBody({ field, primary, onChange, onDuplicate, onDelete, hasRespon
           {QUESTION_TYPES.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
         </select>
         {field.smartSource && (
-          <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 6, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 6, lineHeight: 1.45 }}>
             Options come from your organisation's {field.smartSource}. Editing them here
             only changes this form.
           </div>
@@ -772,7 +772,7 @@ function EditorBody({ field, primary, onChange, onDuplicate, onDelete, hasRespon
                     onClick={() => onChange({ options: field.options.filter((_, idx) => idx !== i) })}
                     aria-label={`Remove option ${o}`}
                     style={{
-                      border: '1px solid #E2E8F0', background: '#fff', color: '#94A3B8',
+                      border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-faint)',
                       borderRadius: 9, cursor: 'pointer', padding: '0 11px', fontSize: 15,
                     }}
                   >×</button>
@@ -783,8 +783,8 @@ function EditorBody({ field, primary, onChange, onDuplicate, onDelete, hasRespon
           <button
             onClick={() => onChange({ options: [...(field.options || []), `Option ${(field.options?.length || 0) + 1}`] })}
             style={{
-              marginTop: 7, padding: '8px 13px', borderRadius: 9, border: '1px dashed #E2E8F0',
-              background: '#fff', color: primary, fontSize: 12.5, fontWeight: 700,
+              marginTop: 7, padding: '8px 13px', borderRadius: 9, border: '1px dashed var(--border)',
+              background: 'var(--surface)', color: primary, fontSize: 12.5, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
             }}
           >+ Add option</button>
@@ -818,7 +818,7 @@ function EditorBody({ field, primary, onChange, onDuplicate, onDelete, hasRespon
               </optgroup>
             ))}
           </select>
-          <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 6, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 6, lineHeight: 1.45 }}>
             The answer maintains this field on the child's record. Leave it unset for
             questions that are only ever read on the response itself.
           </div>
@@ -840,13 +840,13 @@ function EditorBody({ field, primary, onChange, onDuplicate, onDelete, hasRespon
           border: `1.5px solid ${field.required ? primary : '#CBD5E1'}`,
           background: field.required ? primary : '#fff',
         }}>{field.required ? '✓' : ''}</span>
-        <span style={{ fontSize: 14, fontWeight: 600, color: '#0F172A' }}>Required</span>
+        <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>Required</span>
       </button>
 
       <button
         onClick={() => setShowMore(v => !v)}
         style={{
-          border: 'none', background: 'transparent', color: '#64748B',
+          border: 'none', background: 'transparent', color: 'var(--text3)',
           fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
           textAlign: 'left', padding: 0,
         }}
@@ -865,10 +865,10 @@ function EditorBody({ field, primary, onChange, onDuplicate, onDelete, hasRespon
         </div>
       )}
 
-      <div style={{ height: 1, background: '#F1F5F9' }} />
+      <div style={{ height: 1, background: 'var(--surface-hover)' }} />
 
       <button onClick={onDuplicate} style={{
-        border: 'none', background: 'transparent', color: '#334155',
+        border: 'none', background: 'transparent', color: 'var(--text2)',
         fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
         textAlign: 'left', padding: 0,
       }}>Duplicate question</button>
@@ -897,7 +897,7 @@ function EditorBody({ field, primary, onChange, onDuplicate, onDelete, hasRespon
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => setConfirmDelete(false)} style={{
               padding: '8px 13px', borderRadius: 9, border: '1px solid #FECACA',
-              background: '#fff', color: '#7A271A', fontSize: 12.5, fontWeight: 700,
+              background: 'var(--surface)', color: '#7A271A', fontSize: 12.5, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
             }}>Cancel</button>
             <button onClick={onDelete} style={{
@@ -915,14 +915,14 @@ function EditorBody({ field, primary, onChange, onDuplicate, onDelete, hasRespon
 function QuestionEditor(props) {
   return (
     <div style={{
-      width: 320, flexShrink: 0, background: '#fff',
+      width: 320, flexShrink: 0, background: 'var(--surface)',
       border: '1px solid #ECE9F5', borderRadius: 18, padding: 20,
       position: 'sticky', top: 16,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
-        <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', flex: 1 }}>Edit question</div>
+        <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', flex: 1 }}>Edit question</div>
         <button onClick={props.onClose} aria-label="Close editor" style={{
-          border: 'none', background: 'transparent', fontSize: 19, color: '#94A3B8',
+          border: 'none', background: 'transparent', fontSize: 19, color: 'var(--text-faint)',
           cursor: 'pointer', lineHeight: 1, padding: 2,
         }}>×</button>
       </div>
@@ -934,7 +934,7 @@ function QuestionEditor(props) {
 function MobileEditorSheet(props) {
   return (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 1300, background: '#fff',
+      position: 'fixed', inset: 0, zIndex: 1300, background: 'var(--surface)',
       display: 'flex', flexDirection: 'column',
     }}>
       <div style={{
@@ -942,7 +942,7 @@ function MobileEditorSheet(props) {
         display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0,
       }}>
         <button onClick={props.onClose} style={{
-          border: 'none', background: 'transparent', color: '#64748B',
+          border: 'none', background: 'transparent', color: 'var(--text3)',
           fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', padding: 0,
         }}><Icon name="←" /> Question</button>
         <div style={{ flex: 1 }} />
@@ -962,16 +962,16 @@ function MobileEditorSheet(props) {
 // --------------------------------------------------------------- settings
 
 function SettingsPanel({ form, setForm, primary }) {
-  const label = { display: 'block', fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 6 }
+  const label = { display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text3)', marginBottom: 6 }
   const input = {
     width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
-    border: '1.5px solid #E2E8F0', fontSize: 14, fontFamily: 'inherit', outline: 'none',
+    border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'inherit', outline: 'none',
   }
   const set = changes => setForm(f => ({ ...f, ...changes }))
 
   return (
     <div style={{
-      background: '#fff', border: '1px solid #ECE9F5', borderRadius: 18,
+      background: 'var(--surface)', border: '1px solid #ECE9F5', borderRadius: 18,
       padding: 24, maxWidth: 620, display: 'grid', gap: 18,
     }}>
       <div>
@@ -989,7 +989,7 @@ function SettingsPanel({ form, setForm, primary }) {
           <option value="private">Staff only</option>
         </select>
         {form.visibility === 'public' && (
-          <div style={{ fontSize: 12, color: '#64748B', marginTop: 6 }}>
+          <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 6 }}>
             Anyone with the link can respond. No sign-in required.
           </div>
         )}
@@ -1022,10 +1022,10 @@ function SettingsPanel({ form, setForm, primary }) {
             background: form.updates_child ? primary : '#fff',
           }}>{form.updates_child ? '✓' : ''}</span>
           <span>
-            <span style={{ display: 'block', fontSize: 14, fontWeight: 700, color: '#0F172A' }}>
+            <span style={{ display: 'block', fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>
               Answers update the child's record
             </span>
-            <span style={{ display: 'block', fontSize: 12, color: '#64748B', marginTop: 2 }}>
+            <span style={{ display: 'block', fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>
               Map individual questions to record fields under Saves to, on each question.
             </span>
           </span>
@@ -1052,13 +1052,13 @@ function SettingsPanel({ form, setForm, primary }) {
                   <span style={{
                     width: 17, height: 17, borderRadius: '50%', flexShrink: 0, marginTop: 1,
                     display: 'grid', placeItems: 'center',
-                    border: `1.5px solid ${on ? primary : '#CBD5E1'}`, background: '#fff',
+                    border: `1.5px solid ${on ? primary : '#CBD5E1'}`, background: 'var(--surface)',
                   }}>
                     <span style={{ width: 9, height: 9, borderRadius: '50%', background: on ? primary : 'transparent' }} />
                   </span>
                   <span>
-                    <span style={{ display: 'block', fontSize: 13.5, fontWeight: 700, color: '#0F172A' }}>{title}</span>
-                    <span style={{ display: 'block', fontSize: 12, color: '#64748B', marginTop: 2, lineHeight: 1.45 }}>{hint}</span>
+                    <span style={{ display: 'block', fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>{title}</span>
+                    <span style={{ display: 'block', fontSize: 12, color: 'var(--text3)', marginTop: 2, lineHeight: 1.45 }}>{hint}</span>
                   </span>
                 </button>
               )
@@ -1070,7 +1070,7 @@ function SettingsPanel({ form, setForm, primary }) {
       <div>
         <label style={label}>CLOSING DATE</label>
         <input type="date" value={form.closing_date || ''} onChange={e => set({ closing_date: e.target.value || null })} style={input} />
-        <div style={{ fontSize: 12, color: '#64748B', marginTop: 6 }}>
+        <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 6 }}>
           After this date the form stops accepting responses and says so.
         </div>
       </div>
@@ -1091,10 +1091,10 @@ function SettingsPanel({ form, setForm, primary }) {
           background: form.multi_step ? primary : '#fff',
         }}>{form.multi_step ? '✓' : ''}</span>
         <span>
-          <span style={{ display: 'block', fontSize: 14, fontWeight: 700, color: '#0F172A' }}>
+          <span style={{ display: 'block', fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>
             Split long forms into steps
           </span>
-          <span style={{ display: 'block', fontSize: 12, color: '#64748B', marginTop: 2 }}>
+          <span style={{ display: 'block', fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>
             Only applies once there are more than eight questions.
           </span>
         </span>
@@ -1138,19 +1138,19 @@ function PreviewPanel({ form, primary, value, onChange, isMobile }) {
 
       <div style={{
         maxWidth: width, margin: device === 'mobile' && !isMobile ? '0 auto' : 0,
-        background: '#fff', border: '1px solid #ECE9F5', borderRadius: 18, padding: 24,
+        background: 'var(--surface)', border: '1px solid #ECE9F5', borderRadius: 18, padding: 24,
       }}>
-        <div style={{ fontSize: 22, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>
+        <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)', marginBottom: 6 }}>
           {form.name || 'Untitled form'}
         </div>
         {form.description && (
-          <div style={{ fontSize: 14.5, color: '#64748B', marginBottom: 20, lineHeight: 1.55 }}>
+          <div style={{ fontSize: 14.5, color: 'var(--text3)', marginBottom: 20, lineHeight: 1.55 }}>
             {form.description}
           </div>
         )}
 
         {form.fields.length === 0 && (
-          <div style={{ fontSize: 13.5, color: '#94A3B8', padding: '20px 0' }}>
+          <div style={{ fontSize: 13.5, color: 'var(--text-faint)', padding: '20px 0' }}>
             No questions yet.
           </div>
         )}
@@ -1177,7 +1177,7 @@ function PreviewPanel({ form, primary, value, onChange, isMobile }) {
         )}
       </div>
 
-      <div style={{ fontSize: 12, color: '#94A3B8', textAlign: 'center', marginTop: 12 }}>
+      <div style={{ fontSize: 12, color: 'var(--text-faint)', textAlign: 'center', marginTop: 12 }}>
         This is a preview. Nothing here is submitted.
       </div>
     </div>
@@ -1241,15 +1241,15 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
     load()
   }
 
-  const card = { background: '#fff', border: '1px solid #ECE9F5', borderRadius: 18, padding: 22 }
+  const card = { background: 'var(--surface)', border: '1px solid #ECE9F5', borderRadius: 18, padding: 22 }
 
   if (!formId) {
     return (
       <div style={{ ...card, maxWidth: 620 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>
           Give the form a name first
         </div>
-        <div style={{ fontSize: 13.5, color: '#64748B', lineHeight: 1.55 }}>
+        <div style={{ fontSize: 13.5, color: 'var(--text3)', lineHeight: 1.55 }}>
           Recipients attach to a saved form. Add a name on the Build tab and this
           will be ready.
         </div>
@@ -1260,10 +1260,10 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
   return (
     <div style={{ maxWidth: 720, display: 'grid', gap: 14 }}>
       <div style={card}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>
           Who is this for?
         </div>
-        <div style={{ fontSize: 13.5, color: '#64748B', lineHeight: 1.55, marginBottom: 16 }}>
+        <div style={{ fontSize: 13.5, color: 'var(--text3)', lineHeight: 1.55, marginBottom: 16 }}>
           {form.visibility === 'public'
             ? 'Anyone with the link can respond. Adding recipients also lets you see who has and hasn\u2019t.'
             : 'Only staff can respond to this form.'}
@@ -1272,12 +1272,12 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
         {recipients.length > 0 && (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 7 }}>
-              <span style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>
+              <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>
                 {completed.length} of {recipients.length} completed
               </span>
               <span style={{ fontSize: 13, fontWeight: 700, color: primary }}>{pct}%</span>
             </div>
-            <div style={{ height: 8, background: '#F1F5F9', borderRadius: 8, overflow: 'hidden', marginBottom: 16 }}>
+            <div style={{ height: 8, background: 'var(--surface-hover)', borderRadius: 8, overflow: 'hidden', marginBottom: 16 }}>
               <div style={{ width: `${pct}%`, height: '100%', background: primary, borderRadius: 8 }} />
             </div>
           </>
@@ -1334,16 +1334,16 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
                     background: sel ? primary : '#fff',
                   }}>{sel ? '\u2713' : ''}</span>
                   <span style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ display: 'block', fontSize: 13.5, fontWeight: 700, color: '#0F172A' }}>
+                    <span style={{ display: 'block', fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>
                       {c.first_name} {c.last_name}
                     </span>
-                    <span style={{ display: 'block', fontSize: 11.5, color: '#94A3B8' }}>
+                    <span style={{ display: 'block', fontSize: 11.5, color: 'var(--text-faint)' }}>
                       {/* No parent email means the form can be shared but this
                           person can never be ticked off automatically. */}
                       {c.parent_email || 'No parent email on record'}
                     </span>
                   </span>
-                  {added && <span style={{ fontSize: 11.5, color: '#94A3B8' }}>Added</span>}
+                  {added && <span style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>Added</span>}
                 </button>
               )
             })}
@@ -1362,15 +1362,15 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
         </div>
       )}
 
-      {loading && <div style={{ ...card, color: '#94A3B8', fontSize: 13.5 }}>Loading\u2026</div>}
+      {loading && <div style={{ ...card, color: 'var(--text-faint)', fontSize: 13.5 }}>Loading\u2026</div>}
 
       {!loading && outstanding.length > 0 && (
         <div style={card}>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>
             Haven't replied ({outstanding.length})
           </div>
           {outstanding.some(r => !r.recipient_email) && (
-            <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 10, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 12, color: 'var(--text-faint)', marginBottom: 10, lineHeight: 1.5 }}>
               Anyone without an email can still be sent the link, but their response
               can't be matched back automatically.
             </div>
@@ -1382,11 +1382,11 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
                   width: 7, height: 7, borderRadius: 7, flexShrink: 0,
                   background: r.recipient_email ? '#F79009' : '#CBD5E1',
                 }} />
-                <span style={{ color: '#0F172A', flex: 1 }}>{r.recipient_name || 'Unnamed'}</span>
+                <span style={{ color: 'var(--text)', flex: 1 }}>{r.recipient_name || 'Unnamed'}</span>
                 {r.recipient_email ? (
-                  <span style={{ color: '#94A3B8', fontSize: 12 }}>{r.recipient_email}</span>
+                  <span style={{ color: 'var(--text-faint)', fontSize: 12 }}>{r.recipient_email}</span>
                 ) : (
-                  <span style={{ color: '#94A3B8', fontSize: 11.5, fontStyle: 'italic' }}>
+                  <span style={{ color: 'var(--text-faint)', fontSize: 11.5, fontStyle: 'italic' }}>
                     no email — tick off by hand
                   </span>
                 )}
@@ -1398,14 +1398,14 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
 
       {!loading && completed.length > 0 && (
         <div style={card}>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>
             Completed ({completed.length})
           </div>
           <div style={{ display: 'grid', gap: 5 }}>
             {completed.map(r => (
               <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13.5 }}>
                 <span style={{ color: '#12B76A', flexShrink: 0 }}>{'\u2713'}</span>
-                <span style={{ color: '#0F172A', flex: 1 }}>{r.recipient_name || 'Unnamed'}</span>
+                <span style={{ color: 'var(--text)', flex: 1 }}>{r.recipient_name || 'Unnamed'}</span>
               </div>
             ))}
           </div>
@@ -1414,10 +1414,10 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
 
       {!loading && recipients.length === 0 && !picking && (
         <div style={{ ...card, textAlign: 'center' }}>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 5 }}>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 5 }}>
             No recipients yet
           </div>
-          <div style={{ fontSize: 13.5, color: '#64748B', lineHeight: 1.55 }}>
+          <div style={{ fontSize: 13.5, color: 'var(--text3)', lineHeight: 1.55 }}>
             Add people and LaunchSession will track who has replied. The public link
             keeps working either way.
           </div>

@@ -62,7 +62,7 @@ export function FormsOverview({ forms = [], submissions = [], primary, onOpenFor
   const fresh = submissions.filter(s => s.review_status === 'new').length
   const flagged = submissions.filter(s => s.review_status === 'needs_review').length
   const visible = forms.filter(f => (status === 'all' || statusOf(f) === status) && `${f.name} ${f.description || ''} ${f.tag || ''}`.toLowerCase().includes(query.trim().toLowerCase()))
-  const button = { minHeight: 44, padding: '10px 14px', borderRadius: 10, border: '1px solid #E2E8F0', background: 'var(--surface, #fff)', color: 'var(--text2, #334155)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }
+  const button = { minHeight: 44, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface, #fff)', color: 'var(--text2, #334155)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }
   const heading = { margin: 0, fontSize: 17, fontWeight: 800, color: 'var(--text, #172033)' }
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' })
   const closing = forms.filter(f => {

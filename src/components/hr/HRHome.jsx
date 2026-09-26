@@ -103,14 +103,14 @@ function Outcomes({ org, sensitiveView }) {
 
   if (!sensitiveView) {
     return (
-      <div style={{ ...card, textAlign: 'center', padding: 24, color: '#64748B', fontSize: 13.5, lineHeight: 1.55 }}>
+      <div style={{ ...card, textAlign: 'center', padding: 24, color: 'var(--text3)', fontSize: 13.5, lineHeight: 1.55 }}>
         Outcomes and warnings need disciplinary access, which an administrator grants
         separately from ordinary HR access.
       </div>
     )
   }
 
-  if (warnings === null) return <div style={{ ...card, color: '#64748B', fontSize: 14 }}>Loading outcomes…</div>
+  if (warnings === null) return <div style={{ ...card, color: 'var(--text3)', fontSize: 14 }}>Loading outcomes…</div>
 
   const shown = warnings.filter(w =>
     view === 'active' ? w.effective_status === 'active' : w.effective_status !== 'active')
@@ -130,17 +130,17 @@ function Outcomes({ org, sensitiveView }) {
       </div>
 
       {shown.length === 0 && (
-        <div style={{ ...card, textAlign: 'center', padding: 24, color: '#64748B', fontSize: 13.5 }}>
+        <div style={{ ...card, textAlign: 'center', padding: 24, color: 'var(--text3)', fontSize: 13.5 }}>
           {view === 'active' ? 'No active warnings.' : 'Nothing in the history yet.'}
         </div>
       )}
 
       {shown.map(w => (
         <div key={w.id} style={card}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', textTransform: 'uppercase' }}>
             {String(w.warning_type).replace('_', ' ')} warning
           </div>
-          <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 4 }}>
+          <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 4 }}>
             Issued {ukDate(w.issued_date)}
             {w.expiry_date ? ` · expires ${ukDate(w.expiry_date)}` : ' · no expiry'}
             {w.decision_maker_name ? ` · ${w.decision_maker_name}` : ''}
@@ -169,29 +169,29 @@ function AuditLog({ org }) {
     return () => { cancelled = true }
   }, [org?.id])
 
-  if (rows === null) return <div style={{ ...card, color: '#64748B', fontSize: 14 }}>Loading audit trail…</div>
+  if (rows === null) return <div style={{ ...card, color: 'var(--text3)', fontSize: 14 }}>Loading audit trail…</div>
   if (rows.length === 0) {
-    return <div style={{ ...card, textAlign: 'center', padding: 24, color: '#64748B', fontSize: 13.5 }}>
+    return <div style={{ ...card, textAlign: 'center', padding: 24, color: 'var(--text3)', fontSize: 13.5 }}>
       Nothing recorded yet.
     </div>
   }
 
   return (
     <div style={card}>
-      <div style={{ fontSize: 12.5, color: '#94A3B8', marginBottom: 10, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 12.5, color: 'var(--text-faint)', marginBottom: 10, lineHeight: 1.5 }}>
         Who changed what, and when. Summaries deliberately carry no case detail — an
         allegation or a medical note has no business in a log this many people can read.
       </div>
       {rows.map(r => (
-        <div key={r.id} style={{ display: 'flex', gap: 12, padding: '9px 0', borderTop: '1px solid #F1F5F9' }}>
-          <div style={{ width: 96, flexShrink: 0, fontSize: 12, color: '#94A3B8', fontWeight: 700 }}>
+        <div key={r.id} style={{ display: 'flex', gap: 12, padding: '9px 0', borderTop: '1px solid var(--border-soft)' }}>
+          <div style={{ width: 96, flexShrink: 0, fontSize: 12, color: 'var(--text-faint)', fontWeight: 700 }}>
             {new Date(r.created_at).toLocaleString('en-GB', {
               timeZone: 'Europe/London', dateStyle: 'short', timeStyle: 'short',
             })}
           </div>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontSize: 13.5, color: '#0F172A' }}>{r.summary || r.action}</div>
-            <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 1 }}>
+            <div style={{ fontSize: 13.5, color: 'var(--text)' }}>{r.summary || r.action}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 1 }}>
               {r.entity_type} · {String(r.action).replace(/_/g, ' ')}
             </div>
           </div>
@@ -225,7 +225,7 @@ function OrgCompliance({ org, primary, isAdmin, onOpen }) {
   }, [org?.id])
   useEffect(() => { load() }, [load])
 
-  if (rows === null) return <div style={{ ...card, color: '#64748B', fontSize: 14 }}>Loading compliance…</div>
+  if (rows === null) return <div style={{ ...card, color: 'var(--text3)', fontSize: 14 }}>Loading compliance…</div>
 
   const outstanding = rows.filter(r => ['overdue', 'missing', 'due_soon'].includes(r.status))
   const byStaff = outstanding.reduce((a, r) => {
@@ -253,7 +253,7 @@ function OrgCompliance({ org, primary, isAdmin, onOpen }) {
       )}
 
       {!error && view === 'outstanding' && Object.values(byStaff).length === 0 && (
-        <div style={{ ...card, textAlign: 'center', padding: 24, color: '#64748B', fontSize: 13.5 }}>
+        <div style={{ ...card, textAlign: 'center', padding: 24, color: 'var(--text3)', fontSize: 13.5 }}>
           Everyone is currently compliant.
         </div>
       )}
@@ -262,13 +262,13 @@ function OrgCompliance({ org, primary, isAdmin, onOpen }) {
         <button key={g.staff_id}
           onClick={() => onOpen({ id: null, hr_staff_id: g.staff_id, full_name: g.name })}
           style={{ ...card, width: '100%', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', display: 'block' }}>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>{g.name}</div>
-          <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 2 }}>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>{g.name}</div>
+          <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>
             {g.items.filter(i => i.status === 'overdue').length} overdue ·{' '}
             {g.items.filter(i => i.status === 'missing').length} missing ·{' '}
             {g.items.filter(i => i.status === 'due_soon').length} due soon
           </div>
-          <div style={{ fontSize: 12.5, color: '#94A3B8', marginTop: 6 }}>
+          <div style={{ fontSize: 12.5, color: 'var(--text-faint)', marginTop: 6 }}>
             {g.items.slice(0, 4).map(i => i.label).join(' · ')}
             {g.items.length > 4 ? ` +${g.items.length - 4}` : ''}
           </div>
@@ -297,8 +297,8 @@ function OrgCompliance({ org, primary, isAdmin, onOpen }) {
                 <>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>{r.label}</div>
-                      <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 2 }}>
+                      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>{r.label}</div>
+                      <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>
                         Applies to {r.applies_to === 'all' ? 'everyone' : r.applies_to}
                         {r.applies_value ? ` (${r.applies_value})` : ''}
                         {r.renewal_months ? ` · renews every ${r.renewal_months} months` : ' · no renewal'}
@@ -330,10 +330,10 @@ function RequirementForm({ org, primary, existing, onCancel, onSaved }) {
   const set = (k, v) => setF(s => ({ ...s, [k]: v }))
   const fld = {
     width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
-    border: '1px solid #E2E8F0', fontSize: 15, fontFamily: 'inherit', outline: 'none',
-    background: '#fff', marginBottom: 10,
+    border: '1px solid var(--border)', fontSize: 15, fontFamily: 'inherit', outline: 'none',
+    background: 'var(--surface)', marginBottom: 10,
   }
-  const lb = { display: 'block', fontSize: 11.5, fontWeight: 800, color: '#64748B', marginBottom: 6, letterSpacing: 0.4, textTransform: 'uppercase' }
+  const lb = { display: 'block', fontSize: 11.5, fontWeight: 800, color: 'var(--text3)', marginBottom: 6, letterSpacing: 0.4, textTransform: 'uppercase' }
 
   const save = async () => {
     setBusy(true); setErr('')
@@ -359,7 +359,7 @@ function RequirementForm({ org, primary, existing, onCancel, onSaved }) {
 
   return (
     <div style={existing ? {} : card}>
-      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>
+      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>
         {existing ? 'Edit requirement' : 'New requirement'}
       </div>
       <label style={lb}>Name</label>
@@ -386,7 +386,7 @@ function RequirementForm({ org, primary, existing, onCancel, onSaved }) {
       <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, cursor: 'pointer', minHeight: 44 }}>
         <input type="checkbox" checked={!!f.active} onChange={e => set('active', e.target.checked)}
           style={{ width: 18, height: 18, accentColor: primary, flexShrink: 0 }} />
-        <span style={{ fontSize: 14, color: '#0F172A' }}>In use</span>
+        <span style={{ fontSize: 14, color: 'var(--text)' }}>In use</span>
       </label>
       {err && (
         <div style={{ padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
@@ -513,7 +513,7 @@ function Approvals({ org, primary, canDecide, onOpen, onChanged }) {
     onOpen({ id: person.id, hr_staff_id: staffId, full_name: person.full_name }, 'onboarding')
   }
 
-  if (rows === null) return <div style={{ ...card, color: '#64748B', fontSize: 14 }}>Loading approvals…</div>
+  if (rows === null) return <div style={{ ...card, color: 'var(--text3)', fontSize: 14 }}>Loading approvals…</div>
 
   return (
     <>
@@ -541,7 +541,7 @@ function Approvals({ org, primary, canDecide, onOpen, onChanged }) {
       )}
 
       {!error && rows.length === 0 && (
-        <div style={{ ...card, textAlign: 'center', padding: 24, color: '#64748B', fontSize: 13.5, lineHeight: 1.55 }}>
+        <div style={{ ...card, textAlign: 'center', padding: 24, color: 'var(--text3)', fontSize: 13.5, lineHeight: 1.55 }}>
           Nobody is waiting. New accounts appear here the moment someone finishes setting up
           from an invite.
         </div>
@@ -556,14 +556,14 @@ function Approvals({ org, primary, canDecide, onOpen, onChanged }) {
               fontWeight: 800, fontSize: 15,
             }}>{(p.full_name || p.email || '?').slice(0, 1).toUpperCase()}</div>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>{p.full_name || p.email}</div>
-              <div style={{ fontSize: 12.5, color: '#64748B', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.email}</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>{p.full_name || p.email}</div>
+              <div style={{ fontSize: 12.5, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.email}</div>
             </div>
             <span style={{ padding: '3px 10px', borderRadius: 99, background: '#FEF6E7', color: '#93500A', fontSize: 11.5, fontWeight: 800, whiteSpace: 'nowrap' }}>
               Awaiting approval
             </span>
           </div>
-          <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 10 }}>
+          <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 10 }}>
             Invited as {p.role}{p.created_at ? ` · signed up ${ukDate(p.created_at)}` : ''}
           </div>
           {canDecide ? (
@@ -572,8 +572,8 @@ function Approvals({ org, primary, canDecide, onOpen, onChanged }) {
                 placeholder="Optional note (kept on their record)"
                 style={{
                   width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
-                  border: '1px solid #E2E8F0', fontSize: 15, fontFamily: 'inherit', outline: 'none',
-                  background: '#fff', marginBottom: 10,
+                  border: '1px solid var(--border)', fontSize: 15, fontFamily: 'inherit', outline: 'none',
+                  background: 'var(--surface)', marginBottom: 10,
                 }} />
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={() => decide(p, 'approved')} disabled={busy === p.id} style={{
@@ -582,13 +582,13 @@ function Approvals({ org, primary, canDecide, onOpen, onChanged }) {
                 }}>Approve</button>
                 <button onClick={() => decide(p, 'declined')} disabled={busy === p.id} style={{
                   flex: 1, minHeight: 44, borderRadius: 11, border: '1px solid #FECACA',
-                  background: '#fff', color: '#B42318', fontSize: 14, fontWeight: 800,
+                  background: 'var(--surface)', color: '#B42318', fontSize: 14, fontWeight: 800,
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}>Decline</button>
               </div>
             </>
           ) : (
-            <div style={{ fontSize: 13, color: '#64748B' }}>
+            <div style={{ fontSize: 13, color: 'var(--text3)' }}>
               Only an admin or manager can approve this account.
             </div>
           )}

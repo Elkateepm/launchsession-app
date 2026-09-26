@@ -53,14 +53,14 @@ export default function ResourceCheckout({ org, resources, checkouts, sessions, 
         <StatChip label="Recently returned" value={recentReturns.length} color="#16A34A" />
       </div>
 
-      <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 18, padding: 20 }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: 20 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: '#111827' }}>Check-in / Check-out</div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>Check-in / Check-out</div>
           <button onClick={() => setShowNewCheckout(x => !x)} style={{ padding: '8px 14px', borderRadius: 9, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>+ New Check-out</button>
         </div>
 
         {showNewCheckout && (
-          <div style={{ background: '#F8FAFC', borderRadius: 12, padding: 16, marginBottom: 16 }}>
+          <div style={{ background: 'var(--surface2)', borderRadius: 12, padding: 16, marginBottom: 16 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
               <select style={sel} value={form.resource_id} onChange={e => setForm({ ...form, resource_id: e.target.value })}>
                 <option value="">Search resource / asset code...</option>
@@ -80,7 +80,7 @@ export default function ResourceCheckout({ org, resources, checkouts, sessions, 
               <input type="datetime-local" style={sel} value={form.expected_return_at} onChange={e => setForm({ ...form, expected_return_at: e.target.value })} />
             </div>
             <textarea style={{ ...sel, minHeight: 44, resize: 'vertical', width: '100%', marginBottom: 10 }} placeholder="Notes (condition, etc.)" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
-            <div style={{ fontSize: 11, color: '#9CA3AF', marginBottom: 10 }}>Signature capture isn't available in this version — use notes to record who signed for it if needed.</div>
+            <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 10 }}>Signature capture isn't available in this version — use notes to record who signed for it if needed.</div>
             <button onClick={handleCheckOut} disabled={!form.resource_id || !form.checked_out_to} style={{ padding: '10px 18px', borderRadius: 9, border: 'none', background: (!form.resource_id || !form.checked_out_to) ? '#D1D5DB' : '#7C3AED', color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: (!form.resource_id || !form.checked_out_to) ? 'not-allowed' : 'pointer' }}>Confirm Check-out</button>
           </div>
         )}
@@ -97,24 +97,24 @@ export default function ResourceCheckout({ org, resources, checkouts, sessions, 
                 <div key={c.id} style={{ border: `1px solid ${isOverdue ? '#FECACA' : '#E5E7EB'}`, background: isOverdue ? '#FEF2F2' : '#fff', borderRadius: 10, padding: 12 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>{resource?.name} <span style={{ fontWeight: 500, color: '#6B7280' }}>× {c.quantity}</span></div>
-                      <div style={{ fontSize: 11.5, color: '#6B7280' }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{resource?.name} <span style={{ fontWeight: 500, color: 'var(--text3)' }}>× {c.quantity}</span></div>
+                      <div style={{ fontSize: 11.5, color: 'var(--text3)' }}>
                         To {borrower?.full_name || 'Unknown'} · out since {fmtDate(c.checked_out_at)}
                         {c.expected_return_at && ` · due ${fmtDate(c.expected_return_at)} ${fmtTime(c.expected_return_at)}`}
                         {isOverdue && <span style={{ color: '#DC2626', fontWeight: 700 }}> · OVERDUE</span>}
                       </div>
                     </div>
-                    <button onClick={() => setReturning(returning === c.id ? null : c.id)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Return</button>
+                    <button onClick={() => setReturning(returning === c.id ? null : c.id)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Return</button>
                   </div>
                   {returning === c.id && (
-                    <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #F1F5F9' }}>
+                    <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border-soft)' }}>
                       <select style={{ ...sel, marginBottom: 8 }} value={returnCondition} onChange={e => setReturnCondition(e.target.value)}>
                         <option value="good">Good condition</option>
                         <option value="minor_wear">Minor wear</option>
                         <option value="damaged">Damaged</option>
                       </select>
                       <textarea style={{ ...sel, minHeight: 40, resize: 'vertical', width: '100%', marginBottom: 8 }} placeholder="Return notes..." value={returnNotes} onChange={e => setReturnNotes(e.target.value)} />
-                      <div style={{ fontSize: 10.5, color: '#9CA3AF', marginBottom: 8 }}>Photo evidence upload isn't available in this version — use notes to describe any damage.</div>
+                      <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginBottom: 8 }}>Photo evidence upload isn't available in this version — use notes to describe any damage.</div>
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button onClick={() => handleReturn(c, false, false)} style={{ padding: '7px 12px', borderRadius: 8, border: 'none', background: '#16A34A', color: '#fff', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Mark Returned</button>
                         <button onClick={() => handleReturn(c, true, false)} style={{ padding: '7px 12px', borderRadius: 8, border: '1px solid #FDE68A', background: '#FFFBEB', color: '#92400E', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Mark Damaged</button>
@@ -134,11 +134,11 @@ export default function ResourceCheckout({ org, resources, checkouts, sessions, 
 
 function StatChip({ label, value, color }) {
   return (
-    <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, padding: '12px 14px' }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 14px' }}>
       <div style={{ fontSize: 22, fontWeight: 900, color }}>{value}</div>
-      <div style={{ fontSize: 11, color: '#6B7280', fontWeight: 600 }}>{label}</div>
+      <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600 }}>{label}</div>
     </div>
   )
 }
 
-const sel = { padding: '9px 10px', borderRadius: 8, border: '1.5px solid #E5E7EB', fontSize: 12.5, background: '#fff' }
+const sel = { padding: '9px 10px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 12.5, background: 'var(--surface)' }

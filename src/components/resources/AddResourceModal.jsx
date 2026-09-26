@@ -2,17 +2,17 @@ import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { CATEGORIES } from '../../lib/resourceHelpers'
 
-const inp = { width: '100%', padding: '10px 12px', borderRadius: 9, border: '1.5px solid #E5E7EB', fontSize: 13.5, fontFamily: 'inherit' }
-const label = { fontSize: 12, fontWeight: 700, color: '#374151', display: 'block', marginBottom: 6 }
+const inp = { width: '100%', padding: '10px 12px', borderRadius: 9, border: '1.5px solid var(--border)', fontSize: 13.5, fontFamily: 'inherit' }
+const label = { fontSize: 12, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 6 }
 const field = { marginBottom: 14 }
 
 function Toggle({ checked, onChange, label: text }) {
   return (
     <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: 12 }}>
       <div onClick={() => onChange(!checked)} style={{ width: 38, height: 22, borderRadius: 99, background: checked ? '#7C3AED' : '#E5E7EB', position: 'relative', transition: 'background 0.15s', flexShrink: 0 }}>
-        <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#fff', position: 'absolute', top: 3, left: checked ? 19 : 3, transition: 'left 0.15s' }} />
+        <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'var(--surface)', position: 'absolute', top: 3, left: checked ? 19 : 3, transition: 'left 0.15s' }} />
       </div>
-      <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>{text}</span>
+      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text2)' }}>{text}</span>
     </label>
   )
 }
@@ -62,10 +62,10 @@ export default function AddResourceModal({ org, staff, venues, existingResource,
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', justifyContent: 'flex-end' }} onClick={onClose}>
-      <div style={{ width: 460, maxWidth: '100%', height: '100%', background: '#fff', overflowY: 'auto', padding: 24 }} onClick={e => e.stopPropagation()}>
+      <div style={{ width: 460, maxWidth: '100%', height: '100%', background: 'var(--surface)', overflowY: 'auto', padding: 24 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-          <div style={{ fontSize: 18, fontWeight: 800, color: '#111827' }}>{r ? 'Edit Resource' : 'Add Resource'}</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#6B7280' }}>×</button>
+          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)' }}>{r ? 'Edit Resource' : 'Add Resource'}</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--text3)' }}>×</button>
         </div>
 
         {error && <div style={{ background: '#FEF2F2', color: '#B91C1C', border: '1px solid #FECACA', borderRadius: 8, padding: '10px 12px', fontSize: 12.5, marginBottom: 14, fontWeight: 600 }}>{error}</div>}
@@ -135,15 +135,15 @@ export default function AddResourceModal({ org, staff, venues, existingResource,
 
         {/* Category-specific fields, stored in metadata */}
         {form.category === 'vehicle' && (
-          <div style={{ background: '#F8FAFC', borderRadius: 10, padding: 14, marginBottom: 14 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Vehicle details</div>
+          <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: 14, marginBottom: 14 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Vehicle details</div>
             <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
               <input style={inp} placeholder="Registration" value={form.metadata.registration || ''} onChange={e => setMeta('registration', e.target.value)} />
               <input style={inp} placeholder="Seats" type="number" value={form.metadata.seats || ''} onChange={e => setMeta('seats', e.target.value)} />
             </div>
             <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
-              <div style={{ flex: 1 }}><div style={{ fontSize: 10.5, color: '#6B7280', marginBottom: 4 }}>MOT date</div><input type="date" style={inp} value={form.metadata.mot_date || ''} onChange={e => setMeta('mot_date', e.target.value)} /></div>
-              <div style={{ flex: 1 }}><div style={{ fontSize: 10.5, color: '#6B7280', marginBottom: 4 }}>Insurance expiry</div><input type="date" style={inp} value={form.metadata.insurance_expiry || ''} onChange={e => setMeta('insurance_expiry', e.target.value)} /></div>
+              <div style={{ flex: 1 }}><div style={{ fontSize: 10.5, color: 'var(--text3)', marginBottom: 4 }}>MOT date</div><input type="date" style={inp} value={form.metadata.mot_date || ''} onChange={e => setMeta('mot_date', e.target.value)} /></div>
+              <div style={{ flex: 1 }}><div style={{ fontSize: 10.5, color: 'var(--text3)', marginBottom: 4 }}>Insurance expiry</div><input type="date" style={inp} value={form.metadata.insurance_expiry || ''} onChange={e => setMeta('insurance_expiry', e.target.value)} /></div>
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
               <input style={inp} placeholder="Mileage" type="number" value={form.metadata.mileage || ''} onChange={e => setMeta('mileage', e.target.value)} />
@@ -153,8 +153,8 @@ export default function AddResourceModal({ org, staff, venues, existingResource,
         )}
 
         {form.category === 'room' && (
-          <div style={{ background: '#F8FAFC', borderRadius: 10, padding: 14, marginBottom: 14 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Room details</div>
+          <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: 14, marginBottom: 14 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Room details</div>
             <input style={{ ...inp, marginBottom: 10 }} placeholder="Accessibility notes" value={form.metadata.accessibility || ''} onChange={e => setMeta('accessibility', e.target.value)} />
             <input style={{ ...inp, marginBottom: 10 }} placeholder="Facilities (e.g. projector, kitchen)" value={form.metadata.facilities || ''} onChange={e => setMeta('facilities', e.target.value)} />
             <input style={inp} placeholder="Opening times" value={form.metadata.opening_times || ''} onChange={e => setMeta('opening_times', e.target.value)} />
@@ -162,8 +162,8 @@ export default function AddResourceModal({ org, staff, venues, existingResource,
         )}
 
         {(form.category === 'equipment' || form.category === 'sports_equipment' || form.category === 'technology') && (
-          <div style={{ background: '#F8FAFC', borderRadius: 10, padding: 14, marginBottom: 14 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Equipment details</div>
+          <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: 14, marginBottom: 14 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Equipment details</div>
             <select style={{ ...inp, marginBottom: 10 }} value={form.metadata.booking_mode || 'bulk'} onChange={e => setMeta('booking_mode', e.target.value)}>
               <option value="bulk">Bulk booking (by quantity)</option>
               <option value="individual">Individual item booking</option>

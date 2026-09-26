@@ -115,7 +115,7 @@ export default function PastSessionRegister({
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, background: '#F8FAFC', zIndex: 10200,
+      position: 'fixed', inset: 0, background: 'var(--surface2)', zIndex: 10200,
       display: 'flex', flexDirection: 'column',
       // Same notch problem as LiveRegister: inset 0 puts the back button under
       // the status bar once the app is on a home screen.
@@ -125,8 +125,8 @@ export default function PastSessionRegister({
       <style>{`@media print { .no-print { display: none !important; } }`}</style>
 
       {/* HEADER */}
-      <div className="no-print" style={{ background: '#fff', borderBottom: '1px solid #E5E7EB', padding: isMobile ? '10px 14px 12px' : '14px 18px' }}>
-        <button onClick={onClose} style={{ minHeight: 44, background: 'none', border: 'none', fontSize: 13, fontWeight: 700, color: '#6B7280', cursor: 'pointer', marginBottom: 10 }}><Icon name="←" /> {backLabel}</button>
+      <div className="no-print" style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: isMobile ? '10px 14px 12px' : '14px 18px' }}>
+        <button onClick={onClose} style={{ minHeight: 44, background: 'none', border: 'none', fontSize: 13, fontWeight: 700, color: 'var(--text3)', cursor: 'pointer', marginBottom: 10 }}><Icon name="←" /> {backLabel}</button>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {/* The org logo is dropped on a phone. It is the one thing on this
@@ -135,12 +135,12 @@ export default function PastSessionRegister({
                 because a printed register should identify the organisation. */}
             {!isMobile && (
               <div style={{ width: 44, height: 44, borderRadius: 12, background: `linear-gradient(135deg, ${primary}, ${secondary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
-                {org?.logo_url ? <img src={org.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#fff', padding: 4, boxSizing: 'border-box' }} /> : <span style={{ color: '#fff', fontWeight: 900, fontSize: 18 }}>{(org?.name || 'L')[0]}</span>}
+                {org?.logo_url ? <img src={org.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', background: 'var(--surface)', padding: 4, boxSizing: 'border-box' }} /> : <span style={{ color: '#fff', fontWeight: 900, fontSize: 18 }}>{(org?.name || 'L')[0]}</span>}
               </div>
             )}
             <div>
-              <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 900, color: '#111827' }}>{session.title}</div>
-              <div style={{ fontSize: isMobile ? 11.5 : 12.5, color: '#6B7280' }}>
+              <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 900, color: 'var(--text)' }}>{session.title}</div>
+              <div style={{ fontSize: isMobile ? 11.5 : 12.5, color: 'var(--text3)' }}>
                 {new Date(session.session_date).toLocaleDateString('en-GB', isMobile
                   ? { day: 'numeric', month: 'short' }
                   : { weekday: 'long', day: 'numeric', month: 'long' })} · {session.start_time}–{session.end_time}
@@ -149,12 +149,12 @@ export default function PastSessionRegister({
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: '#6B7280', background: '#F3F4F6', borderRadius: 99, padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="🔒" /> Attendance closed</span>
+            <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', background: 'var(--surface3)', borderRadius: 99, padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="🔒" /> Attendance closed</span>
             {session.closed_at && (
-              <div style={{ textAlign: 'right', background: '#F8FAFC', border: '1px solid #E5E7EB', borderRadius: 10, padding: '8px 12px' }}>
-                <div style={{ fontSize: 10.5, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase' }}>Final outcome</div>
-                <div style={{ fontSize: 12, color: '#374151' }}>Closed {fmtDateTime(session.closed_at)}</div>
-                <div style={{ fontSize: 11.5, color: '#6B7280' }}>by {closedByName}</div>
+              <div style={{ textAlign: 'right', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, padding: '8px 12px' }}>
+                <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase' }}>Final outcome</div>
+                <div style={{ fontSize: 12, color: 'var(--text2)' }}>Closed {fmtDateTime(session.closed_at)}</div>
+                <div style={{ fontSize: 11.5, color: 'var(--text3)' }}>by {closedByName}</div>
               </div>
             )}
           </div>
@@ -162,7 +162,7 @@ export default function PastSessionRegister({
         {/* Says the same thing as the "Attendance closed" pill two lines up.
             Worth the words on a desktop; not worth a row of the viewport on a
             phone. */}
-        {!isMobile && <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 8 }}>This session has ended and the final attendance record is locked.</div>}
+        {!isMobile && <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 8 }}>This session has ended and the final attendance record is locked.</div>}
 
         {session.reopened_at && !session.closed_at && (
           <div style={{ marginTop: 10, background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 10, padding: '8px 12px', fontSize: 12, color: '#92400E', fontWeight: 700 }}>
@@ -179,11 +179,11 @@ export default function PastSessionRegister({
           <button onClick={() => setSummaryOpen(v => !v)} style={{
             marginTop: 10, width: '100%', minHeight: 40, display: 'flex', alignItems: 'center',
             justifyContent: 'space-between', padding: '0 12px', borderRadius: 10,
-            border: '1px solid #E5E7EB', background: '#F8FAFC', cursor: 'pointer',
-            fontSize: 12.5, fontWeight: 800, color: '#374151', fontFamily: 'inherit',
+            border: '1px solid var(--border)', background: 'var(--surface2)', cursor: 'pointer',
+            fontSize: 12.5, fontWeight: 800, color: 'var(--text2)', fontFamily: 'inherit',
           }}>
             <span>{attendedTotal} of {totalExpected} attended · {attendanceRate}%</span>
-            <span style={{ color: '#9CA3AF' }}>{summaryOpen ? 'Hide' : 'Details'}</span>
+            <span style={{ color: 'var(--text-faint)' }}>{summaryOpen ? 'Hide' : 'Details'}</span>
           </button>
         )}
         {(!isMobile || summaryOpen) && (
@@ -202,8 +202,8 @@ export default function PastSessionRegister({
 
         {/* REGISTER COMPLETION */}
         {(!isMobile || summaryOpen) && (
-        <div style={{ marginTop: 12, background: '#F8FAFC', border: '1px solid #E5E7EB', borderRadius: 12, padding: 12 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 6 }}>
+        <div style={{ marginTop: 12, background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 12, padding: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700, color: 'var(--text2)', marginBottom: 6 }}>
             <span>Final register — {processedCount} of {totalExpected} processed</span>
             <span>{completionPct}% complete</span>
           </div>
@@ -218,7 +218,7 @@ export default function PastSessionRegister({
       </div>
 
       {/* TABS */}
-      <div className="no-print" style={{ display: 'flex', background: '#fff', borderBottom: '1px solid #E5E7EB', overflowX: 'auto' }}>
+      <div className="no-print" style={{ display: 'flex', background: 'var(--surface)', borderBottom: '1px solid var(--border)', overflowX: 'auto' }}>
         {TABS.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{ flex: '1 0 auto', padding: '11px 14px', border: 'none', borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent', background: 'none', color: tab === t.key ? primary : '#6B7280', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
             {t.label} {t.count}
@@ -227,10 +227,10 @@ export default function PastSessionRegister({
       </div>
 
       {/* SEARCH */}
-      <div className="no-print" style={{ padding: '10px 14px', background: '#fff', borderBottom: '1px solid #F1F5F9', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div className="no-print" style={{ padding: '10px 14px', background: 'var(--surface)', borderBottom: '1px solid var(--border-soft)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {/* flex-basis 160px meant the search box and both buttons fought for
             one row and wrapped mid-word at phone width. Search takes the row. */}
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search young people..." style={{ flex: isMobile ? '1 1 100%' : '1 1 160px', padding: isMobile ? '11px 12px' : '9px 12px', minHeight: isMobile ? 44 : undefined, borderRadius: 9, border: '1.5px solid #E5E7EB', fontSize: 13, boxSizing: 'border-box' }} />
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search young people..." style={{ flex: isMobile ? '1 1 100%' : '1 1 160px', padding: isMobile ? '11px 12px' : '9px 12px', minHeight: isMobile ? 44 : undefined, borderRadius: 9, border: '1.5px solid var(--border)', fontSize: 13, boxSizing: 'border-box' }} />
         <button onClick={onOpenNotes} style={ghostBtn}><Icon name="📝" /> Notes ({notes.length})</button>
         {canCorrect && <button onClick={() => setShowCorrection(true)} style={ghostBtn}>Correct attendance</button>}
       </div>
@@ -238,7 +238,7 @@ export default function PastSessionRegister({
       {/* LIST */}
       <div className="ls-scroll" style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 12 : 14 }}>
         {filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, color: '#9CA3AF', fontSize: 13 }}>Nobody in this list{search ? ' matching your search' : ''}.</div>
+          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-faint)', fontSize: 13 }}>Nobody in this list{search ? ' matching your search' : ''}.</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {filtered.map(({ child, att }) => (
@@ -253,17 +253,17 @@ export default function PastSessionRegister({
       </div>
 
       {/* STICKY FOOTER */}
-      <div className="no-print" style={{ background: '#fff', borderTop: '1px solid #E5E7EB', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
+      <div className="no-print" style={{ background: 'var(--surface)', borderTop: '1px solid var(--border)', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#374151' }}>Attendance closed</div>
-          <div style={{ fontSize: 11.5, color: '#9CA3AF' }}>Final attendance recorded: {attendedTotal} attended · {grouped.absent.length} absent · {grouped.signed_out.length} signed out</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2)' }}>Attendance closed</div>
+          <div style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>Final attendance recorded: {attendedTotal} attended · {grouped.absent.length} absent · {grouped.signed_out.length} signed out</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => setShowSummary(true)} style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>View summary</button>
           <button onClick={() => setShowMore(v => !v)} style={{ ...ghostBtn, padding: '10px 12px' }}>⋯</button>
         </div>
         {showMore && (
-          <div style={{ position: 'absolute', bottom: 56, right: 16, background: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, boxShadow: '0 12px 32px rgba(0,0,0,0.12)', overflow: 'hidden', minWidth: 200 }}>
+          <div style={{ position: 'absolute', bottom: 56, right: 16, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 12px 32px rgba(0,0,0,0.12)', overflow: 'hidden', minWidth: 200 }}>
             {canExport && <MenuItem onClick={() => { handleExportCsv(); setShowMore(false) }}>Export register (CSV)</MenuItem>}
             {canExport && <MenuItem onClick={() => { handleExportEmergency(); setShowMore(false) }}>Download emergency record</MenuItem>}
             {canExport && <MenuItem onClick={() => { window.print(); setShowMore(false) }}>Print / export PDF</MenuItem>}
@@ -298,7 +298,7 @@ function Stat({ label, value, color }) {
   return (
     <div style={{ background: color + '12', borderRadius: 10, padding: '8px 10px', textAlign: 'center' }}>
       <div style={{ fontSize: 17, fontWeight: 900, color }}>{value}</div>
-      <div style={{ fontSize: 10.5, color: '#6B7280', fontWeight: 700 }}>{label}</div>
+      <div style={{ fontSize: 10.5, color: 'var(--text3)', fontWeight: 700 }}>{label}</div>
     </div>
   )
 }
@@ -313,27 +313,27 @@ const STATUS_PILL = {
 function HistoricalRow({ child, att, groupLabel, peopleProfiles, isCorrected, onOpen, onViewAudit }) {
   const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
   const status = att?.status
-  const pill = STATUS_PILL[status] || { label: 'Unmarked', color: '#6B7280', bg: '#F3F4F6' }
+  const pill = STATUS_PILL[status] || { label: 'Unmarked', color: 'var(--text3)', bg: '#F3F4F6' }
   const recordedBy = peopleProfiles[att?.signed_out_by || att?.signed_in_by] || null
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#fff', border: '1px solid #E5E7EB', borderRadius: 14, padding: 12 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 12 }}>
       <div onClick={onOpen} style={{ width: 46, height: 46, borderRadius: 14, background: '#7C3AED', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 15, flexShrink: 0, cursor: 'pointer', overflow: 'hidden' }}>
         {child.photo_url ? <SignedImg bucket="gallery" src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
       </div>
       <div onClick={onOpen} style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: '#111827' }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>
           {child.first_name} {child.last_name}
           {child.is_walk_in && <span style={{ marginLeft: 6, fontSize: 9.5, fontWeight: 800, color: '#7C3AED', background: '#EDE9FE', borderRadius: 6, padding: '1px 6px' }}>WALK-IN</span>}
         </div>
-        <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 2 }}>{groupLabel(child.group_name)}</div>
-        <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 2 }}>
+        <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2 }}>{groupLabel(child.group_name)}</div>
+        <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2 }}>
           {status === 'signed_in' && `Attended · Signed in at ${fmtTime(att.signed_in_at)}`}
           {status === 'signed_out' && `Attended · Signed in at ${fmtTime(att.signed_in_at)} · Signed out at ${fmtTime(att.signed_out_at)}${att.collected_by_name ? ` · Collected by ${att.collected_by_name}` : ''}`}
           {status === 'absent' && `Absent · Reason: ${att.absence_reason || 'Not specified'}`}
           {!status && 'No attendance recorded'}
         </div>
-        {recordedBy && <div style={{ fontSize: 10.5, color: '#9CA3AF', marginTop: 2 }}>Recorded by {recordedBy}</div>}
+        {recordedBy && <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginTop: 2 }}>Recorded by {recordedBy}</div>}
         <div style={{ display: 'flex', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
           {(child.has_epipen || child.has_asthma || child.has_diabetes || child.takes_medication || child.medical_notes) && <span style={alertPill('#DC2626', '#FEE2E2')}>⚕ Medical</span>}
           {child.allergies && <span style={alertPill('#D97706', '#FEF3C7')}><Icon name="⚠" /> Allergy</span>}
@@ -350,11 +350,11 @@ function HistoricalRow({ child, att, groupLabel, peopleProfiles, isCorrected, on
 }
 
 function alertPill(color, bg) { return { fontSize: 9.5, fontWeight: 800, color, background: bg, borderRadius: 6, padding: '1px 6px' } }
-const ghostBtn = { padding: '8px 12px', borderRadius: 9, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer' }
+const ghostBtn = { padding: '8px 12px', borderRadius: 9, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }
 
 function MenuItem({ children, onClick, danger }) {
   return (
-    <button onClick={onClick} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '11px 16px', border: 'none', borderBottom: '1px solid #F1F5F9', background: '#fff', fontSize: 13, fontWeight: 600, color: danger ? '#DC2626' : '#374151', cursor: 'pointer' }}>
+    <button onClick={onClick} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '11px 16px', border: 'none', borderBottom: '1px solid var(--border-soft)', background: 'var(--surface)', fontSize: 13, fontWeight: 600, color: danger ? '#DC2626' : '#374151', cursor: 'pointer' }}>
       {children}
     </button>
   )
@@ -362,17 +362,17 @@ function MenuItem({ children, onClick, danger }) {
 
 function SessionTeamCard({ staffRows, peopleProfiles, canEdit, onSignIn, onSignOut }) {
   return (
-    <div style={{ marginTop: 20, background: '#fff', border: '1px solid #E5E7EB', borderRadius: 14, padding: 16 }}>
-      <div style={{ fontSize: 13, fontWeight: 800, color: '#111827', marginBottom: 10 }}>Session team</div>
+    <div style={{ marginTop: 20, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 16 }}>
+      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Session team</div>
       {staffRows.length === 0 ? (
-        <div style={{ fontSize: 12, color: '#9CA3AF' }}>No staff assigned to this session.</div>
+        <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>No staff assigned to this session.</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {staffRows.map(s => (
             <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
               <div style={{ minWidth: 0, fontSize: 12.5 }}>
-                <div style={{ fontWeight: 700, color: '#374151' }}>{peopleProfiles[s.user_id || s.volunteer_id] || (s.volunteer_id ? 'Volunteer' : 'Team member')} <span style={{ color: '#9CA3AF', fontWeight: 500 }}>· {s.role}</span></div>
-                <div style={{ color: '#9CA3AF', fontSize: 11 }}>
+                <div style={{ fontWeight: 700, color: 'var(--text2)' }}>{peopleProfiles[s.user_id || s.volunteer_id] || (s.volunteer_id ? 'Volunteer' : 'Team member')} <span style={{ color: 'var(--text-faint)', fontWeight: 500 }}>· {s.role}</span></div>
+                <div style={{ color: 'var(--text-faint)', fontSize: 11 }}>
                   {s.signed_in_at ? `Signed in ${fmtTime(s.signed_in_at)}` : 'Did not sign in'}
                   {s.signed_out_at ? ` · Signed out ${fmtTime(s.signed_out_at)}` : ''}
                 </div>
@@ -417,14 +417,14 @@ function ReopenRegisterModal({ session, authUserId, onClose, onDone }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 22, width: 400, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: 'var(--surface)', borderRadius: 16, padding: 22, width: 400, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 10 }}>Reopen register</div>
         <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: 12, marginBottom: 14, fontSize: 12.5, color: '#B91C1C', fontWeight: 600 }}>
           Reopening this register will allow attendance records to be changed. All changes will be audited.
         </div>
         <textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Reason for reopening (required)" style={{ ...sel, minHeight: 70, marginBottom: 14 }} />
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: 12, borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+          <button onClick={onClose} style={{ flex: 1, padding: 12, borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           <button onClick={handleReopen} disabled={!reason.trim() || saving} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: !reason.trim() ? '#D1D5DB' : '#DC2626', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             {saving ? 'Reopening...' : 'Confirm reopen'}
           </button>
@@ -458,7 +458,7 @@ function SessionSummaryDrawer({ session, org, grouped, rows, staffRows, peoplePr
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', justifyContent: 'flex-end' }} onClick={onClose}>
-      <div style={{ width: 420, maxWidth: '100%', height: '100%', background: '#fff', overflowY: 'auto', padding: 20 }} onClick={e => e.stopPropagation()}>
+      <div style={{ width: 420, maxWidth: '100%', height: '100%', background: 'var(--surface)', overflowY: 'auto', padding: 20 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
           <div style={{ fontSize: 16, fontWeight: 800 }}>Session summary</div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer' }}>×</button>
@@ -481,7 +481,7 @@ function SessionSummaryDrawer({ session, org, grouped, rows, staffRows, peoplePr
 
         {groupBreakdown.length > 0 && (
           <>
-            <div style={{ fontSize: 11.5, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', margin: '16px 0 8px' }}>Group breakdown</div>
+            <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', margin: '16px 0 8px' }}>Group breakdown</div>
             {groupBreakdown.map(([g, count]) => <SummaryRow key={g} label={g} value={count} />)}
           </>
         )}
@@ -492,9 +492,9 @@ function SessionSummaryDrawer({ session, org, grouped, rows, staffRows, peoplePr
 
 function SummaryRow({ label, value }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #F1F5F9' }}>
-      <span style={{ fontSize: 12.5, color: '#6B7280' }}>{label}</span>
-      <span style={{ fontSize: 12.5, fontWeight: 700, color: '#111827' }}>{value}</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid var(--border-soft)' }}>
+      <span style={{ fontSize: 12.5, color: 'var(--text3)' }}>{label}</span>
+      <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)' }}>{value}</span>
     </div>
   )
 }
@@ -505,26 +505,26 @@ function RegisterAuditHistory({ childId, auditLog, peopleProfiles, rows, onClose
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 420, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '80dvh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: 'var(--surface)', borderRadius: 16, padding: 20, width: 420, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '80dvh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Audit history</div>
-        <div style={{ fontSize: 12.5, color: '#6B7280', marginBottom: 14 }}>{child ? `${child.first_name} ${child.last_name}` : ''}</div>
+        <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 14 }}>{child ? `${child.first_name} ${child.last_name}` : ''}</div>
         {entries.length === 0 ? (
-          <div style={{ fontSize: 12.5, color: '#9CA3AF' }}>No corrections recorded.</div>
+          <div style={{ fontSize: 12.5, color: 'var(--text-faint)' }}>No corrections recorded.</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {entries.map(e => (
-              <div key={e.id} style={{ background: '#F8FAFC', borderRadius: 10, padding: 12, fontSize: 12.5 }}>
-                <div style={{ fontWeight: 700, color: '#111827', marginBottom: 4 }}>{e.previous_status || 'unmarked'} → {e.new_status || 'unmarked'}</div>
-                <div style={{ color: '#374151', marginBottom: 4 }}>{e.correction_reason}</div>
-                <div style={{ color: '#9CA3AF', fontSize: 11 }}>{peopleProfiles[e.changed_by] || 'A team member'} · {fmtDateTime(e.changed_at)}</div>
+              <div key={e.id} style={{ background: 'var(--surface2)', borderRadius: 10, padding: 12, fontSize: 12.5 }}>
+                <div style={{ fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{e.previous_status || 'unmarked'} → {e.new_status || 'unmarked'}</div>
+                <div style={{ color: 'var(--text2)', marginBottom: 4 }}>{e.correction_reason}</div>
+                <div style={{ color: 'var(--text-faint)', fontSize: 11 }}>{peopleProfiles[e.changed_by] || 'A team member'} · {fmtDateTime(e.changed_at)}</div>
               </div>
             ))}
           </div>
         )}
-        <button onClick={onClose} style={{ width: '100%', marginTop: 16, padding: 10, borderRadius: 9, border: '1px solid #E5E7EB', background: '#fff', fontWeight: 700, cursor: 'pointer' }}>Close</button>
+        <button onClick={onClose} style={{ width: '100%', marginTop: 16, padding: 10, borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', fontWeight: 700, cursor: 'pointer' }}>Close</button>
       </div>
     </div>
   )
 }
 
-const sel = { width: '100%', padding: '10px 12px', borderRadius: 9, border: '1.5px solid #E5E7EB', fontSize: 13, boxSizing: 'border-box' }
+const sel = { width: '100%', padding: '10px 12px', borderRadius: 9, border: '1.5px solid var(--border)', fontSize: 13, boxSizing: 'border-box' }

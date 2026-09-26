@@ -42,23 +42,23 @@ export default function RALinkedSessions({ assessment, org, session: authSession
 
   const filtered = allSessions.filter(s => !linkedIds.has(s.id) && (!search.trim() || s.title?.toLowerCase().includes(search.toLowerCase())))
 
-  if (loading) return <div style={{ padding: 16, color: '#94A3B8', fontSize: 13 }}>Loading linked sessions…</div>
+  if (loading) return <div style={{ padding: 16, color: 'var(--text-faint)', fontSize: 13 }}>Loading linked sessions…</div>
 
   return (
     <div>
       {linked.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '24px 10px', color: '#94A3B8', fontSize: 13 }}>Not attached to any sessions yet.</div>
+        <div style={{ textAlign: 'center', padding: '24px 10px', color: 'var(--text-faint)', fontSize: 13 }}>Not attached to any sessions yet.</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
           {linked.map(link => {
             const s = link.sessions
             if (!s) return null
             return (
-              <div key={link.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderRadius: 12, border: '1.5px solid rgba(15,23,42,0.08)', background: '#fff' }}>
+              <div key={link.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderRadius: 12, border: '1.5px solid rgba(15,23,42,0.08)', background: 'var(--surface)' }}>
                 <div style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--org-a10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}><Icon name="📅" /></div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{s.title}</div>
-                  <div style={{ fontSize: 11.5, color: '#94A3B8' }}>{s.session_date ? new Date(s.session_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : ''}{s.start_time ? ` · ${s.start_time}` : ''}{s.location ? ` · ${s.location}` : ''}</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>{s.title}</div>
+                  <div style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>{s.session_date ? new Date(s.session_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : ''}{s.start_time ? ` · ${s.start_time}` : ''}{s.location ? ` · ${s.location}` : ''}</div>
                 </div>
                 <button onClick={() => detach(link)} style={{ background: 'none', border: 'none', color: '#CBD5E1', cursor: 'pointer', fontSize: 15 }}><Icon name="✕" /></button>
               </div>
@@ -68,17 +68,17 @@ export default function RALinkedSessions({ assessment, org, session: authSession
       )}
 
       {picker ? (
-        <div style={{ border: '1.5px solid rgba(15,23,42,0.08)', borderRadius: 12, padding: 12, background: '#F8FAFC' }}>
+        <div style={{ border: '1.5px solid rgba(15,23,42,0.08)', borderRadius: 12, padding: 12, background: 'var(--surface2)' }}>
           <input autoFocus value={search} onChange={e => setSearch(e.target.value)} placeholder="Search upcoming sessions…" style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 9, border: '1.5px solid rgba(15,23,42,0.1)', fontSize: 13, outline: 'none', marginBottom: 8 }} />
           <div style={{ maxHeight: 240, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
             {filtered.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 14, color: '#94A3B8', fontSize: 12.5 }}>No matching upcoming sessions.</div>
+              <div style={{ textAlign: 'center', padding: 14, color: 'var(--text-faint)', fontSize: 12.5 }}>No matching upcoming sessions.</div>
             ) : filtered.map(s => (
-              <button key={s.id} onClick={() => attach(s)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 9, border: '1px solid rgba(15,23,42,0.06)', background: '#fff', cursor: 'pointer', textAlign: 'left' }}>
+              <button key={s.id} onClick={() => attach(s)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 9, border: '1px solid rgba(15,23,42,0.06)', background: 'var(--surface)', cursor: 'pointer', textAlign: 'left' }}>
                 <span style={{ fontSize: 15 }}><Icon name="📅" /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 700 }}>{s.title}</div>
-                  <div style={{ fontSize: 11, color: '#94A3B8' }}>{s.session_date ? new Date(s.session_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''}{s.location ? ` · ${s.location}` : ''}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{s.session_date ? new Date(s.session_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''}{s.location ? ` · ${s.location}` : ''}</div>
                 </div>
                 <span style={{ color: primary, fontWeight: 800, fontSize: 12 }}>+ Attach</span>
               </button>

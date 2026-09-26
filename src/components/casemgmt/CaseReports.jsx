@@ -93,19 +93,19 @@ export default function CaseReportModal({ cas, org, staff = [], onClose }) {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}
       style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.6)', backdropFilter: 'blur(4px)', zIndex: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <motion.div initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} onClick={e => e.stopPropagation()}
-        style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 640, maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.35)' }}>
+        style={{ background: 'var(--surface)', borderRadius: 20, width: '100%', maxWidth: 640, maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.35)' }}>
         <div style={{ padding: '18px 22px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}><Icon name="📄" /> Case Report — {cas.child_name}</div>
-            <div style={{ fontSize: 12, color: '#94A3B8' }}>Chronology &amp; summary, ready to print or export</div>
+            <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text)' }}><Icon name="📄" /> Case Report — {cas.child_name}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>Chronology &amp; summary, ready to print or export</div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text-faint)', cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
-        <div style={{ padding: 22, overflowY: 'auto', flex: 1, background: '#F8FAFC' }}>
+        <div style={{ padding: 22, overflowY: 'auto', flex: 1, background: 'var(--surface2)' }}>
           {loading ? (
-            <div style={{ color: '#94A3B8', fontSize: 13 }}>Building report…</div>
+            <div style={{ color: 'var(--text-faint)', fontSize: 13 }}>Building report…</div>
           ) : (
-            <pre style={{ fontFamily: 'inherit', fontSize: 12.5, whiteSpace: 'pre-wrap', color: '#334155', lineHeight: 1.6, background: '#fff', border: '1px solid rgba(15,23,42,0.06)', borderRadius: 12, padding: 18, margin: 0 }}>{buildText()}</pre>
+            <pre style={{ fontFamily: 'inherit', fontSize: 12.5, whiteSpace: 'pre-wrap', color: 'var(--text2)', lineHeight: 1.6, background: 'var(--surface)', border: '1px solid rgba(15,23,42,0.06)', borderRadius: 12, padding: 18, margin: 0 }}>{buildText()}</pre>
           )}
         </div>
         <div style={{ padding: '14px 22px', borderTop: '1px solid rgba(15,23,42,0.06)', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>

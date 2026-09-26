@@ -20,7 +20,7 @@ const OUTCOME_BY_KEY = Object.fromEntries(OUTCOMES.map(o => [o.key, o]))
 
 const field = {
   width: '100%', padding: '12px 13px', borderRadius: 11, fontSize: 15,
-  border: '1px solid #ECE9F5', background: '#fff', color: '#1C1B2E',
+  border: '1px solid #ECE9F5', background: 'var(--surface)', color: 'var(--text)',
   outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
 }
 
@@ -79,14 +79,14 @@ export function DynamicUpdateDrawer({ open, onClose, assessment, org, authSessio
             exit={isMobile ? { y: '100%' } : { scale: 0.97, opacity: 0 }}
             transition={{ type: 'spring', damping: 32, stiffness: 320 }}
             style={{
-              background: '#fff', width: isMobile ? '100%' : 460, maxWidth: '100%',
+              background: 'var(--surface)', width: isMobile ? '100%' : 460, maxWidth: '100%',
               borderRadius: isMobile ? '20px 20px 0 0' : 18,
               maxHeight: '92vh', display: 'flex', flexDirection: 'column',
             }}
           >
             <div style={{ padding: '16px 20px 14px', borderBottom: '1px solid #ECE9F5', flexShrink: 0 }}>
               {isMobile && <div style={{ width: 38, height: 4, borderRadius: 4, background: '#E4DFF5', margin: '0 auto 12px' }} />}
-              <div style={{ fontSize: 16.5, fontWeight: 800, color: '#1C1B2E' }}>Dynamic risk update</div>
+              <div style={{ fontSize: 16.5, fontWeight: 800, color: 'var(--text)' }}>Dynamic risk update</div>
               <div style={{ fontSize: 12.5, color: '#8B87A3', marginTop: 3 }}>
                 Record a change in conditions and what you did about it.
               </div>
@@ -159,7 +159,7 @@ export function DynamicUpdateDrawer({ open, onClose, assessment, org, authSessio
             }}>
               <button onClick={onClose} style={{
                 padding: '13px 18px', borderRadius: 12, border: '1px solid #ECE9F5',
-                background: '#fff', color: '#8B87A3', fontSize: 15, fontWeight: 700,
+                background: 'var(--surface)', color: '#8B87A3', fontSize: 15, fontWeight: 700,
                 cursor: 'pointer', fontFamily: 'inherit',
               }}>Cancel</button>
               <button
@@ -205,7 +205,7 @@ export function DynamicUpdateList({ assessment, org, staff = [], refreshKey }) {
     return (
       <div style={{
         padding: '22px 18px', borderRadius: 14, border: '1px solid #ECE9F5',
-        background: '#fff', textAlign: 'center',
+        background: 'var(--surface)', textAlign: 'center',
       }}>
         <div style={{ fontSize: 13.5, color: '#8B87A3', lineHeight: 1.5 }}>
           No dynamic updates recorded. These are added during a session when conditions change.
@@ -220,7 +220,7 @@ export function DynamicUpdateList({ assessment, org, staff = [], refreshKey }) {
         const o = OUTCOME_BY_KEY[u.outcome] || OUTCOMES[0]
         return (
           <div key={u.id} style={{
-            border: '1px solid #ECE9F5', borderRadius: 14, padding: 14, background: '#fff',
+            border: '1px solid #ECE9F5', borderRadius: 14, padding: 14, background: 'var(--surface)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 7 }}>
               <span style={{
@@ -235,7 +235,7 @@ export function DynamicUpdateList({ assessment, org, staff = [], refreshKey }) {
                 {fmtDate(u.created_at)} · {fmtTime(u.created_at)}
               </span>
             </div>
-            <div style={{ fontSize: 14, color: '#1C1B2E', lineHeight: 1.5 }}>{u.description}</div>
+            <div style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.5 }}>{u.description}</div>
             {u.action_taken && (
               <div style={{
                 marginTop: 8, paddingLeft: 11, borderLeft: '2px solid #E4DFF5',
@@ -278,7 +278,7 @@ export function EmergencyView({ open, onClose, assessment, org, venue }) {
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 1400, background: '#fff',
+      position: 'fixed', inset: 0, zIndex: 1400, background: 'var(--surface)',
       overflowY: 'auto', WebkitOverflowScrolling: 'touch',
     }}>
       <div style={{
@@ -322,7 +322,7 @@ export function EmergencyView({ open, onClose, assessment, org, venue }) {
                     border: '1px solid #ECE9F5', borderRadius: 12, padding: '13px 14px',
                     display: 'flex', alignItems: 'center', gap: 10,
                   }}>
-                    <span style={{ fontSize: 14.5, color: '#1C1B2E', flex: 1, minWidth: 0 }}>{line}</span>
+                    <span style={{ fontSize: 14.5, color: 'var(--text)', flex: 1, minWidth: 0 }}>{line}</span>
                     {phone && (
                       <a href={`tel:${phone.replace(/\s/g, '')}`} style={{
                         padding: '8px 14px', borderRadius: 9, background: '#12B76A',
@@ -355,7 +355,7 @@ export function EmergencyView({ open, onClose, assessment, org, venue }) {
               <div style={{ fontSize: 11.5, fontWeight: 700, color: '#8B87A3', letterSpacing: 0.3, marginBottom: 5 }}>
                 {label.toUpperCase()}
               </div>
-              <div style={{ fontSize: 14.5, color: '#1C1B2E', lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>
+              <div style={{ fontSize: 14.5, color: 'var(--text)', lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>
                 {value}
               </div>
             </div>

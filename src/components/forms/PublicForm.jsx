@@ -52,8 +52,8 @@ function FieldInput({ field, value, onChange, invalid, accent, id }) {
     width: '100%', boxSizing: 'border-box', padding: '14px 15px', borderRadius: 12,
     border: `1.5px solid ${invalid ? '#DC2626' : '#E2E8F0'}`,
     // 16px keeps iOS Safari from zooming the viewport on focus.
-    fontSize: 16, fontFamily: 'inherit', outline: 'none', background: '#fff',
-    color: '#0F172A', transition: 'border-color 150ms ease, box-shadow 150ms ease',
+    fontSize: 16, fontFamily: 'inherit', outline: 'none', background: 'var(--surface)',
+    color: 'var(--text)', transition: 'border-color 150ms ease, box-shadow 150ms ease',
   }
   const onFocus = e => { e.target.style.borderColor = accent; e.target.style.boxShadow = `0 0 0 3px ${accent}22` }
   const onBlur = e => { e.target.style.borderColor = invalid ? '#DC2626' : '#E2E8F0'; e.target.style.boxShadow = 'none' }
@@ -74,7 +74,7 @@ function FieldInput({ field, value, onChange, invalid, accent, id }) {
         }}>
           <input {...common} type="checkbox" checked={!!value} onChange={e => onChange(e.target.checked)}
             style={{ marginTop: 2, width: 20, height: 20, flexShrink: 0, accentColor: accent }} />
-          <span style={{ fontSize: 15, color: '#0F172A', lineHeight: 1.45 }}>
+          <span style={{ fontSize: 15, color: 'var(--text)', lineHeight: 1.45 }}>
             {/* Must match the builder preview, or staff approve wording that
                 respondents never see. */}
             {field.checkboxText || field.label}
@@ -98,7 +98,7 @@ function FieldInput({ field, value, onChange, invalid, accent, id }) {
                     textAlign: 'left', padding: '14px 15px', borderRadius: 12, cursor: 'pointer',
                     border: `1.5px solid ${active ? accent : invalid ? '#DC2626' : '#E2E8F0'}`,
                     background: active ? `${accent}0F` : '#fff',
-                    color: '#0F172A', fontSize: 15.5, fontWeight: active ? 700 : 500,
+                    color: 'var(--text)', fontSize: 15.5, fontWeight: active ? 700 : 500,
                     fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 11,
                     transition: 'background 150ms ease, border-color 150ms ease',
                   }}>
@@ -139,7 +139,7 @@ function Shell({ org, primary, secondary, children }) {
       }}>
         <div style={{ maxWidth: 620, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 14 }}>
           <div style={{
-            width: 54, height: 54, borderRadius: 15, background: '#fff', flexShrink: 0,
+            width: 54, height: 54, borderRadius: 15, background: 'var(--surface)', flexShrink: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 6px 18px rgba(0,0,0,0.16)', overflow: 'hidden',
           }}>
@@ -158,7 +158,7 @@ function Shell({ org, primary, secondary, children }) {
 
       <div style={{ maxWidth: 620, margin: '-18px auto 0', padding: '0 16px' }}>{children}</div>
 
-      <div style={{ textAlign: 'center', marginTop: 22, fontSize: 11.5, color: '#94A3B8' }}>
+      <div style={{ textAlign: 'center', marginTop: 22, fontSize: 11.5, color: 'var(--text-faint)' }}>
         Powered by LaunchSession
       </div>
     </div>
@@ -168,7 +168,7 @@ function Shell({ org, primary, secondary, children }) {
 function Card({ children, pad = 24 }) {
   return (
     <div style={{
-      background: '#fff', borderRadius: 20, padding: pad,
+      background: 'var(--surface)', borderRadius: 20, padding: pad,
       border: '1px solid #ECE9F5', boxShadow: '0 12px 32px -20px rgba(15,23,42,0.35)',
     }}>{children}</div>
   )
@@ -294,7 +294,7 @@ export default function PublicForm() {
   if (status === 'loading') {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', background: '#F7F8FC' }}>
-        <div style={{ width: 40, height: 40, border: '3px solid #E2E8F0', borderTop: '3px solid #7C5CFC', borderRadius: '50%', animation: 'ls-spin 0.8s linear infinite' }} />
+        <div style={{ width: 40, height: 40, border: '3px solid var(--border)', borderTop: '3px solid #7C5CFC', borderRadius: '50%', animation: 'ls-spin 0.8s linear infinite' }} />
         <style>{'@keyframes ls-spin { to { transform: rotate(360deg); } }'}</style>
       </div>
     )
@@ -307,8 +307,8 @@ export default function PublicForm() {
         background: '#F7F8FC', flexDirection: 'column', gap: 10, padding: 24, textAlign: 'center',
       }}>
         <div style={{ fontSize: 34 }}><Icon name="🔍" /></div>
-        <div style={{ fontSize: 19, fontWeight: 800, color: '#0F172A' }}>This form isn't available</div>
-        <div style={{ fontSize: 14.5, color: '#64748B', maxWidth: 340, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 19, fontWeight: 800, color: 'var(--text)' }}>This form isn't available</div>
+        <div style={{ fontSize: 14.5, color: 'var(--text3)', maxWidth: 340, lineHeight: 1.6 }}>
           It may have closed, or the link may be out of date. If someone sent it to you,
           ask them for the current link.
         </div>
@@ -326,15 +326,15 @@ export default function PublicForm() {
               background: '#E7F8ED', color: '#04713C',
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30,
             }}><Icon name="✓" /></div>
-            <div style={{ fontSize: 22, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>Thank you</div>
-            <div style={{ fontSize: 15, color: '#64748B', lineHeight: 1.6, marginBottom: 18 }}>
+            <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>Thank you</div>
+            <div style={{ fontSize: 15, color: 'var(--text3)', lineHeight: 1.6, marginBottom: 18 }}>
               {form.confirmation_message || `Your response has been sent to ${org?.name}.`}
             </div>
             <div style={{
               display: 'inline-block', padding: '10px 16px', borderRadius: 12,
               background: '#F7F8FC', fontSize: 13.5, color: '#475569', fontWeight: 600,
             }}>{form.name}</div>
-            <div style={{ fontSize: 13, color: '#94A3B8', marginTop: 18 }}>You can close this page.</div>
+            <div style={{ fontSize: 13, color: 'var(--text-faint)', marginTop: 18 }}>You can close this page.</div>
           </div>
         </Card>
       </Shell>
@@ -346,11 +346,11 @@ export default function PublicForm() {
     return (
       <Shell org={org} primary={primary} secondary={secondary}>
         <Card pad={28}>
-          <h1 style={{ fontSize: 25, fontWeight: 900, color: '#0F172A', margin: '0 0 10px', lineHeight: 1.25 }}>
+          <h1 style={{ fontSize: 25, fontWeight: 900, color: 'var(--text)', margin: '0 0 10px', lineHeight: 1.25 }}>
             {form.name}
           </h1>
           {(form.intro_text || form.description) && (
-            <p style={{ fontSize: 15.5, color: '#64748B', lineHeight: 1.65, margin: '0 0 18px' }}>
+            <p style={{ fontSize: 15.5, color: 'var(--text3)', lineHeight: 1.65, margin: '0 0 18px' }}>
               {form.intro_text || form.description}
             </p>
           )}
@@ -358,7 +358,7 @@ export default function PublicForm() {
             <span style={{ padding: '6px 12px', borderRadius: 99, background: 'var(--org-a05)', color: primary, fontSize: 12.5, fontWeight: 700 }}>
               {fields.length} question{fields.length === 1 ? '' : 's'}
             </span>
-            <span style={{ padding: '6px 12px', borderRadius: 99, background: '#F1F5F9', color: '#475569', fontSize: 12.5, fontWeight: 700 }}>
+            <span style={{ padding: '6px 12px', borderRadius: 99, background: 'var(--surface-hover)', color: '#475569', fontSize: 12.5, fontWeight: 700 }}>
               About {mins} minute{mins === 1 ? '' : 's'}
             </span>
           </div>
@@ -382,12 +382,12 @@ export default function PublicForm() {
         {pct !== null && (
           <div style={{ marginBottom: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 7 }}>
-              <span style={{ fontSize: 12.5, fontWeight: 700, color: '#64748B' }}>
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text3)' }}>
                 Step {step + 1} of {sections.length}
               </span>
               <span style={{ fontSize: 12.5, fontWeight: 700, color: primary }}>{Math.round(pct)}%</span>
             </div>
-            <div style={{ height: 7, background: '#F1F5F9', borderRadius: 7, overflow: 'hidden' }}>
+            <div style={{ height: 7, background: 'var(--surface-hover)', borderRadius: 7, overflow: 'hidden' }}>
               <div style={{
                 width: `${pct}%`, height: '100%', borderRadius: 7,
                 background: `linear-gradient(90deg, ${primary}, ${secondary})`,
@@ -398,7 +398,7 @@ export default function PublicForm() {
         )}
 
         {pct === null && (
-          <h1 style={{ fontSize: 21, fontWeight: 900, color: '#0F172A', margin: '0 0 18px' }}>{form.name}</h1>
+          <h1 style={{ fontSize: 21, fontWeight: 900, color: 'var(--text)', margin: '0 0 18px' }}>{form.name}</h1>
         )}
 
         <div style={{ display: 'grid', gap: 20 }}>
@@ -410,7 +410,7 @@ export default function PublicForm() {
               <div key={id}>
                 {field.type !== 'checkbox' && (
                   <label htmlFor={id} id={`${id}-label`} style={{
-                    display: 'block', fontSize: 15, fontWeight: 700, color: '#0F172A',
+                    display: 'block', fontSize: 15, fontWeight: 700, color: 'var(--text)',
                     marginBottom: 8, lineHeight: 1.45,
                   }}>
                     {field.label}
@@ -446,8 +446,8 @@ export default function PublicForm() {
         <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
           {step > 0 && (
             <button onClick={back} style={{
-              padding: '15px 20px', borderRadius: 14, border: '1.5px solid #E2E8F0',
-              background: '#fff', color: '#475569', fontSize: 15.5, fontWeight: 700,
+              padding: '15px 20px', borderRadius: 14, border: '1.5px solid var(--border)',
+              background: 'var(--surface)', color: '#475569', fontSize: 15.5, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
             }}>Back</button>
           )}

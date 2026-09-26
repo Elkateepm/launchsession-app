@@ -5,7 +5,7 @@ import Icon from '../../lib/icons'
 const PURPLE = '#6D5DF6'
 
 const card = (extra = {}) => ({
-  background: 'var(--surface,#fff)', border: '1px solid var(--border,#E5E7EB)', borderRadius: 16,
+  background: 'var(--surface,#fff)', border: '1px solid var(--border,var(--border))', borderRadius: 16,
   boxShadow: '0 1px 0 rgba(255,255,255,0.6) inset, 0 4px 16px -12px rgba(15,23,42,0.18)',
   ...extra,
 })
@@ -159,7 +159,7 @@ export default function ProjectsReportTab({ org }) {
     <div>
       <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 16, flexWrap: 'wrap' }}>
         <select value={selectedId} onChange={e => setSelectedId(e.target.value)}
-          style={{ padding: '9px 12px', borderRadius: 10, border: '1.5px solid var(--border,#E2E8F0)', fontSize: 13, fontWeight: 600, background: 'var(--surface,#fff)', color: 'var(--text)', minWidth: 220 }}>
+          style={{ padding: '9px 12px', borderRadius: 10, border: '1.5px solid var(--border,var(--border))', fontSize: 13, fontWeight: 600, background: 'var(--surface,#fff)', color: 'var(--text)', minWidth: 220 }}>
           {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
         <div style={{ flex: 1 }} />
@@ -210,7 +210,7 @@ export default function ProjectsReportTab({ org }) {
               <SectionLabel>Trips</SectionLabel>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {report.trips.map(t => (
-                  <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: 'var(--text2,#334155)', padding: '6px 0', borderBottom: '1px solid var(--border,#F1F5F9)' }}>
+                  <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: 'var(--text2,#334155)', padding: '6px 0', borderBottom: '1px solid var(--border,var(--border-soft))' }}>
                     <span style={{ fontWeight: 700 }}>{t.title}</span>
                     <span style={{ color: 'var(--text3)' }}>{new Date(`${t.session_date}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}{t.location ? ` · ${t.location}` : ''}</span>
                   </div>

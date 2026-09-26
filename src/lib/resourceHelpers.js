@@ -21,7 +21,7 @@ export const STATUS_CONFIG = {
   checked_out: { label: 'Checked Out', color: '#7C3AED', bg: '#F5F3FF', icon: '↗' },
   low_stock: { label: 'Low Stock', color: '#D97706', bg: '#FFFBEB', icon: '⚠' },
   maintenance: { label: 'Maintenance', color: '#DC2626', bg: '#FEF2F2', icon: '🔧' },
-  unavailable: { label: 'Unavailable', color: '#6B7280', bg: '#F9FAFB', icon: '✕' },
+  unavailable: { label: 'Unavailable', color: 'var(--text3)', bg: '#F9FAFB', icon: '✕' },
   overdue: { label: 'Overdue', color: '#DC2626', bg: '#FEF2F2', icon: '⏰' },
 }
 
@@ -34,7 +34,7 @@ export const BOOKING_STATUS_CONFIG = {
   confirmed: { label: 'Confirmed', color: '#16A34A', bg: '#F0FDF4' },
   declined: { label: 'Declined', color: '#DC2626', bg: '#FEF2F2' },
   changes_requested: { label: 'Changes Requested', color: '#D97706', bg: '#FFFBEB' },
-  cancelled: { label: 'Cancelled', color: '#6B7280', bg: '#F9FAFB' },
+  cancelled: { label: 'Cancelled', color: 'var(--text3)', bg: '#F9FAFB' },
   completed: { label: 'Completed', color: '#2563EB', bg: '#EFF6FF' },
 }
 

@@ -47,7 +47,7 @@ function computeReadiness(s, staffCount, volSlots, attendanceCount) {
 }
 
 // ─── SHARED STYLES ──────────────────────────────────────────────
-const cardStyle = { background: '#fff', border: '1px solid #F1F5F9', borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }
+const cardStyle = { background: 'var(--surface)', border: '1px solid var(--border-soft)', borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }
 
 function StatusChip({ status }) {
   const m = STATUS_META[status] || STATUS_META.planning
@@ -76,10 +76,10 @@ function KpiCard({ label, value, sub, icon, colorKey, active, onClick, delay }) 
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
         <div style={{ width: 40, height: 40, borderRadius: 12, background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>{icon}</div>
-        <div style={{ fontSize: 26, fontWeight: 900, color: '#0F172A', lineHeight: 1 }}>{value}</div>
+        <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--text)', lineHeight: 1 }}>{value}</div>
       </div>
-      <div style={{ fontSize: 13.5, fontWeight: 700, color: '#334155' }}>{label}</div>
-      <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 2 }}>{sub}</div>
+      <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text2)' }}>{label}</div>
+      <div style={{ fontSize: 11.5, color: 'var(--text-faint)', marginTop: 2 }}>{sub}</div>
     </motion.button>
   )
 }
@@ -191,33 +191,33 @@ function EventDrawer({ event, org, session, onClose, onNavigate, onChanged }) {
       <motion.div onClick={onClose} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.4)', zIndex: 199, backdropFilter: 'blur(2px)' }} />
       <motion.div
         initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 32, stiffness: 300 }}
-        style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: 'min(520px, 96vw)', background: '#fff', zIndex: 200, boxShadow: '-20px 0 60px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column' }}
+        style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: 'min(520px, 96vw)', background: 'var(--surface)', zIndex: 200, boxShadow: '-20px 0 60px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column' }}
       >
-        <div style={{ padding: '22px 24px 16px', borderBottom: '1px solid #F1F5F9' }}>
+        <div style={{ padding: '22px 24px 16px', borderBottom: '1px solid var(--border-soft)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               <div style={{ width: 44, height: 44, borderRadius: 13, background: '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}><Icon name={typeMeta.icon} /></div>
               <div>
-                <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>{event.title}</div>
-                <div style={{ fontSize: 12, color: '#94A3B8', fontWeight: 600 }}>{typeMeta.label}</div>
+                <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)' }}>{event.title}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 600 }}>{typeMeta.label}</div>
               </div>
             </div>
-            <button onClick={onClose} style={{ border: 'none', background: '#F1F5F9', borderRadius: 10, width: 32, height: 32, cursor: 'pointer', fontSize: 15, color: '#64748B' }}><Icon name="✕" /></button>
+            <button onClick={onClose} style={{ border: 'none', background: 'var(--surface-hover)', borderRadius: 10, width: 32, height: 32, cursor: 'pointer', fontSize: 15, color: 'var(--text3)' }}><Icon name="✕" /></button>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button onClick={() => onNavigate && onNavigate('registers')} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Open Register</button>
-            <button onClick={messageTeam} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Message Team</button>
+            <button onClick={messageTeam} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Message Team</button>
             {event.risk_assessment_required && (
-              <button onClick={() => onNavigate && onNavigate('risk_assessments')} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Risk Assessment</button>
+              <button onClick={() => onNavigate && onNavigate('risk_assessments')} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Risk Assessment</button>
             )}
-            <button onClick={duplicateEvent} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Duplicate</button>
+            <button onClick={duplicateEvent} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Duplicate</button>
             {event.status !== 'cancelled' && (
               <button onClick={cancelEvent} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Cancel Event</button>
             )}
           </div>
         </div>
 
-        <div style={{ display: 'flex', borderBottom: '1px solid #F1F5F9', padding: '0 24px' }}>
+        <div style={{ display: 'flex', borderBottom: '1px solid var(--border-soft)', padding: '0 24px' }}>
           {TABS.map(t => (
             <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '12px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: tab === t.key ? primary : '#94A3B8', borderBottom: tab === t.key ? `2px solid ${primary}` : '2px solid transparent' }}>
               {t.icon} {t.label}
@@ -244,12 +244,12 @@ function EventDrawer({ event, org, session, onClose, onNavigate, onChanged }) {
             </div>
           )}
           {tab === 'people' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13.5, color: '#334155' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13.5, color: 'var(--text2)' }}>
               <InfoRow label="Lead staff" value={event._leadName || (event.lead_staff_id ? 'Assigned' : 'Not assigned')} />
               <InfoRow label="Staff assigned" value={`${event._staffCount || 0}${event.min_staff ? ` / ${event.min_staff} required` : ''}`} />
               <InfoRow label="Participants expected" value={`${event._attendanceCount || 0}${event.max_capacity ? ` / ${event.max_capacity} capacity` : ''}`} />
               <InfoRow label="Volunteers" value={event._volSummary || 'No volunteer roles set'} />
-              <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 8 }}>Manage staff, volunteers and participants from Sessions, Volunteers and Registers.</div>
+              <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 8 }}>Manage staff, volunteers and participants from Sessions, Volunteers and Registers.</div>
             </div>
           )}
           {tab === 'safety' && (
@@ -264,7 +264,7 @@ function EventDrawer({ event, org, session, onClose, onNavigate, onChanged }) {
                 ['transport_required', 'Transport required'],
                 ['emergency_contact_sheet_required', 'Emergency contact sheet required'],
               ].filter(([k]) => event[k]).map(([k, label]) => (
-                <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: '1px solid #F8FAFC', fontSize: 13.5, color: '#334155' }}>
+                <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: '1px solid #F8FAFC', fontSize: 13.5, color: 'var(--text2)' }}>
                   <span style={{ color: '#22C55E' }}><Icon name="✓" /></span> {label}
                 </div>
               ))}
@@ -281,9 +281,9 @@ function EventDrawer({ event, org, session, onClose, onNavigate, onChanged }) {
   )
 }
 
-const inpStyle = { width: '100%', padding: '10px 12px', borderRadius: 9, border: '1.5px solid #E2E8F0', fontSize: 13.5, boxSizing: 'border-box', outline: 'none' }
-function Field({ label, children }) { return <div><div style={{ fontSize: 11.5, fontWeight: 700, color: '#64748B', marginBottom: 5, textTransform: 'uppercase', letterSpacing: 0.3 }}>{label}</div>{children}</div> }
-function InfoRow({ label, value }) { return <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid #F8FAFC' }}><span style={{ color: '#94A3B8' }}>{label}</span><span style={{ fontWeight: 700 }}>{value}</span></div> }
+const inpStyle = { width: '100%', padding: '10px 12px', borderRadius: 9, border: '1.5px solid var(--border)', fontSize: 13.5, boxSizing: 'border-box', outline: 'none' }
+function Field({ label, children }) { return <div><div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text3)', marginBottom: 5, textTransform: 'uppercase', letterSpacing: 0.3 }}>{label}</div>{children}</div> }
+function InfoRow({ label, value }) { return <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid #F8FAFC' }}><span style={{ color: 'var(--text-faint)' }}>{label}</span><span style={{ fontWeight: 700 }}>{value}</span></div> }
 
 // ─── MAIN PAGE ──────────────────────────────────────────────────
 export default function EventsTrips({ org, session, onNavigate }) {
@@ -404,13 +404,13 @@ export default function EventsTrips({ org, session, onNavigate }) {
         style={{ ...cardStyle, background: 'linear-gradient(135deg,#FAF5FF,#EFF6FF)', padding: isMobile ? 20 : '28px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20, marginBottom: 20 }}>
         <div style={{ maxWidth: 380 }}>
           <div style={{ fontSize: isMobile ? 22 : 27, fontWeight: 900, color: '#1E1B4B', marginBottom: 6 }}>Plan amazing adventures! <Icon name="🚀" /></div>
-          <div style={{ fontSize: 13.5, color: '#64748B', marginBottom: 18, lineHeight: 1.5 }}>Create events and trips that inspire, engage and make a difference.</div>
+          <div style={{ fontSize: 13.5, color: 'var(--text3)', marginBottom: 18, lineHeight: 1.5 }}>Create events and trips that inspire, engage and make a difference.</div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => setShowWizard(true)}
               style={{ padding: '12px 20px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#8B5CF6,#7C3AED)', color: '#fff', fontWeight: 800, fontSize: 13.5, cursor: 'pointer', boxShadow: '0 8px 20px -6px rgba(124,58,237,0.5)' }}>
               + New Event / Trip 🎉
             </motion.button>
-            <button onClick={() => alert('Calendar import is coming soon!')} style={{ padding: '12px 18px', borderRadius: 12, border: 'none', background: '#fff', color: '#334155', fontWeight: 700, fontSize: 13.5, cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+            <button onClick={() => alert('Calendar import is coming soon!')} style={{ padding: '12px 18px', borderRadius: 12, border: 'none', background: 'var(--surface)', color: 'var(--text2)', fontWeight: 700, fontSize: 13.5, cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               📅 Import from Calendar
             </button>
           </div>
@@ -440,7 +440,7 @@ export default function EventsTrips({ org, session, onNavigate }) {
               </button>
             ))}
             <div style={{ flex: 1, minWidth: 160, display: 'flex', gap: 8, marginLeft: 'auto' }}>
-              <input value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} placeholder="🔍 Search events..." style={{ flex: 1, padding: '9px 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 12.5, outline: 'none' }} />
+              <input value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} placeholder="🔍 Search events..." style={{ flex: 1, padding: '9px 14px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 12.5, outline: 'none' }} />
             </div>
           </div>
 
@@ -451,9 +451,9 @@ export default function EventsTrips({ org, session, onNavigate }) {
               <style>{`@keyframes lsShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }`}</style>
             </div>
           ) : pageItems.length === 0 ? (
-            <div style={{ ...cardStyle, padding: 40, textAlign: 'center', color: '#94A3B8' }}>
+            <div style={{ ...cardStyle, padding: 40, textAlign: 'center', color: 'var(--text-faint)' }}>
               <div style={{ fontSize: 32, marginBottom: 10 }}>🎈</div>
-              <div style={{ fontWeight: 700, marginBottom: 4, color: '#334155' }}>No events found</div>
+              <div style={{ fontWeight: 700, marginBottom: 4, color: 'var(--text2)' }}>No events found</div>
               <div style={{ fontSize: 13 }}>Try adjusting your filters, or create your first event.</div>
             </div>
           ) : (
@@ -469,37 +469,37 @@ export default function EventsTrips({ org, session, onNavigate }) {
                     onClick={() => setDrawerEvent(e)}
                   >
                     <div style={{ textAlign: 'center', width: 46, flexShrink: 0 }}>
-                      <div style={{ fontSize: 10.5, fontWeight: 800, color: '#94A3B8' }}>{dateObj ? dateObj.toLocaleDateString('en-GB', { month: 'short' }).toUpperCase() : monthName}</div>
-                      <div style={{ fontSize: 19, fontWeight: 900, color: '#0F172A' }}>{dateObj ? dateObj.getDate() : '–'}</div>
+                      <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--text-faint)' }}>{dateObj ? dateObj.toLocaleDateString('en-GB', { month: 'short' }).toUpperCase() : monthName}</div>
+                      <div style={{ fontSize: 19, fontWeight: 900, color: 'var(--text)' }}>{dateObj ? dateObj.getDate() : '–'}</div>
                     </div>
-                    <div style={{ width: 40, height: 40, borderRadius: 12, background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}><Icon name={typeMeta.icon} /></div>
+                    <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--surface2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}><Icon name={typeMeta.icon} /></div>
                     <div style={{ minWidth: 160, flex: '1 1 200px' }}>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', marginBottom: 2 }}>{e.title}</div>
-                      <div style={{ fontSize: 12, color: '#94A3B8' }}>{dateObj?.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} • {e.start_time?.slice(0, 5)}–{e.end_time?.slice(0, 5)}</div>
-                      <div style={{ fontSize: 11.5, color: '#94A3B8' }}>📍 {e.location || 'No location set'}</div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', marginBottom: 2 }}>{e.title}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>{dateObj?.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} • {e.start_time?.slice(0, 5)}–{e.end_time?.slice(0, 5)}</div>
+                      <div style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>📍 {e.location || 'No location set'}</div>
                     </div>
                     <div onClick={ev => ev.stopPropagation()}><StatusChip status={e._status} /></div>
                     <div style={{ fontSize: 12, color: '#475569', textAlign: 'center', minWidth: 70 }}>
                       <div>👤 {e._attendanceCount}{e.max_capacity ? ` / ${e.max_capacity}` : ''}</div>
-                      <div style={{ fontSize: 10.5, color: '#94A3B8' }}>Participants</div>
+                      <div style={{ fontSize: 10.5, color: 'var(--text-faint)' }}>Participants</div>
                     </div>
                     <div style={{ fontSize: 12, color: '#475569', textAlign: 'center', minWidth: 60 }}>
                       <div>🧑‍🏫 {e._staffCount}{e.min_staff ? ` / ${e.min_staff}` : ''}</div>
-                      <div style={{ fontSize: 10.5, color: '#94A3B8' }}>Staff</div>
+                      <div style={{ fontSize: 10.5, color: 'var(--text-faint)' }}>Staff</div>
                     </div>
                     <div style={{ fontSize: 12, color: '#475569', textAlign: 'center', minWidth: 70 }}>
                       <div>🙋 {e._volFilled} / {e._volRequired}</div>
-                      <div style={{ fontSize: 10.5, color: '#94A3B8' }}>Volunteers</div>
+                      <div style={{ fontSize: 10.5, color: 'var(--text-faint)' }}>Volunteers</div>
                     </div>
                     {!isMobile && (
                       <div style={{ width: 90 }}>
-                        <div style={{ height: 6, borderRadius: 99, background: '#F1F5F9', overflow: 'hidden' }}>
+                        <div style={{ height: 6, borderRadius: 99, background: 'var(--surface-hover)', overflow: 'hidden' }}>
                           <div style={{ height: '100%', width: `${e._readiness}%`, background: e._readiness === 100 ? '#22C55E' : e._readiness >= 50 ? primary : '#F59E0B', borderRadius: 99 }} />
                         </div>
                       </div>
                     )}
-                    <button onClick={ev => { ev.stopPropagation(); act.action() }} style={{ padding: '9px 16px', borderRadius: 10, border: `1.5px solid ${primary}`, background: '#fff', color: primary, fontWeight: 800, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>{act.label}</button>
-                    <button onClick={ev => { ev.stopPropagation(); setDrawerEvent(e) }} style={{ border: 'none', background: '#F8FAFC', borderRadius: 8, width: 30, height: 30, cursor: 'pointer', fontSize: 14, color: '#94A3B8' }}>⋯</button>
+                    <button onClick={ev => { ev.stopPropagation(); act.action() }} style={{ padding: '9px 16px', borderRadius: 10, border: `1.5px solid ${primary}`, background: 'var(--surface)', color: primary, fontWeight: 800, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>{act.label}</button>
+                    <button onClick={ev => { ev.stopPropagation(); setDrawerEvent(e) }} style={{ border: 'none', background: 'var(--surface2)', borderRadius: 8, width: 30, height: 30, cursor: 'pointer', fontSize: 14, color: 'var(--text-faint)' }}>⋯</button>
                   </motion.div>
                 )
               })}
@@ -508,10 +508,10 @@ export default function EventsTrips({ org, session, onNavigate }) {
 
           {totalPages > 1 && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 16 }}>
-              <span style={{ fontSize: 12, color: '#94A3B8' }}>Showing {(page - 1) * PER_PAGE + 1} to {Math.min(page * PER_PAGE, filtered.length)} of {filtered.length} events</span>
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ width: 30, height: 30, borderRadius: 8, border: '1.5px solid #E2E8F0', background: '#fff', cursor: page === 1 ? 'default' : 'pointer', opacity: page === 1 ? 0.4 : 1 }}><Icon name="←" /></button>
+              <span style={{ fontSize: 12, color: 'var(--text-faint)' }}>Showing {(page - 1) * PER_PAGE + 1} to {Math.min(page * PER_PAGE, filtered.length)} of {filtered.length} events</span>
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ width: 30, height: 30, borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', cursor: page === 1 ? 'default' : 'pointer', opacity: page === 1 ? 0.4 : 1 }}><Icon name="←" /></button>
               <span style={{ width: 30, height: 30, borderRadius: 8, background: primary, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12.5, fontWeight: 700 }}>{page}</span>
-              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ width: 30, height: 30, borderRadius: 8, border: '1.5px solid #E2E8F0', background: '#fff', cursor: page === totalPages ? 'default' : 'pointer', opacity: page === totalPages ? 0.4 : 1 }}><Icon name="→" /></button>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ width: 30, height: 30, borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', cursor: page === totalPages ? 'default' : 'pointer', opacity: page === totalPages ? 0.4 : 1 }}><Icon name="→" /></button>
             </div>
           )}
 
@@ -526,8 +526,8 @@ export default function EventsTrips({ org, session, onNavigate }) {
               <div key={i} style={{ ...cardStyle, padding: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                 <div style={{ fontSize: 20 }}>{icon}</div>
                 <div>
-                  <div style={{ fontSize: 12.5, fontWeight: 800, color: '#0F172A', marginBottom: 2 }}>{title}</div>
-                  <div style={{ fontSize: 11, color: '#94A3B8', lineHeight: 1.4 }}>{sub}</div>
+                  <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--text)', marginBottom: 2 }}>{title}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-faint)', lineHeight: 1.4 }}>{sub}</div>
                 </div>
               </div>
             ))}
@@ -538,7 +538,7 @@ export default function EventsTrips({ org, session, onNavigate }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ ...cardStyle, padding: 18 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}><Icon name="🧭" /> Today at a glance</div>
+              <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}><Icon name="🧭" /> Today at a glance</div>
               <button onClick={() => onNavigate && onNavigate('calendar')} style={{ border: 'none', background: 'none', color: primary, fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>View Calendar</button>
             </div>
             {[
@@ -549,15 +549,15 @@ export default function EventsTrips({ org, session, onNavigate }) {
               <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '9px 0', borderBottom: i < 2 ? '1px solid #F8FAFC' : 'none' }}>
                 <div style={{ width: 30, height: 30, borderRadius: 9, background: row.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}><Icon name={row.icon} /></div>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0F172A' }}>{row.title}</div>
-                  <div style={{ fontSize: 11, color: '#94A3B8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.sub}</div>
+                  <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)' }}>{row.title}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.sub}</div>
                 </div>
               </div>
             ))}
           </div>
 
           <div style={{ ...cardStyle, padding: 18 }}>
-            <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}><Icon name="⚡" /> Quick Actions</div>
+            <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)', marginBottom: 14 }}><Icon name="⚡" /> Quick Actions</div>
             {[
               { icon: '🚀', bg: '#F5F3FF', title: 'Create New Event / Trip', sub: 'Start planning something amazing', onClick: () => setShowWizard(true) },
               { icon: '📄', bg: '#EFF6FF', title: 'Copy from Template', sub: 'Coming soon', onClick: () => alert('Templates are coming soon!') },
@@ -566,7 +566,7 @@ export default function EventsTrips({ org, session, onNavigate }) {
             ].map((row, i) => (
               <button key={i} onClick={row.onClick} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '9px 0', width: '100%', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer' }}>
                 <div style={{ width: 30, height: 30, borderRadius: 9, background: row.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}><Icon name={row.icon} /></div>
-                <div><div style={{ fontSize: 12.5, fontWeight: 700, color: '#0F172A' }}>{row.title}</div><div style={{ fontSize: 11, color: '#94A3B8' }}>{row.sub}</div></div>
+                <div><div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)' }}>{row.title}</div><div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{row.sub}</div></div>
               </button>
             ))}
           </div>

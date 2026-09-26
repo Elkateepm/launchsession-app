@@ -9,9 +9,9 @@ export default function FundingMixChart({ campaigns }) {
 
   if (withRaised.length < 2 || total === 0) {
     return (
-      <div style={{ border: '1px dashed #E5E3DC', borderRadius: 16, padding: '18px 20px', marginBottom: 20, background: '#fff' }}>
+      <div style={{ border: '1px dashed #E5E3DC', borderRadius: 16, padding: '18px 20px', marginBottom: 20, background: 'var(--surface)' }}>
         <div style={{ fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#9B9890', marginBottom: 2 }}>Funding mix</div>
-        <div style={{ fontSize: 12.5, color: '#9CA3AF', lineHeight: 1.5 }}>
+        <div style={{ fontSize: 12.5, color: 'var(--text-faint)', lineHeight: 1.5 }}>
           {total === 0 ? 'Record a donation on a couple of campaigns to see where your funding is coming from.' : 'Add a second campaign with donations to see the mix between them.'}
         </div>
       </div>
@@ -28,9 +28,9 @@ export default function FundingMixChart({ campaigns }) {
   })
 
   return (
-    <div style={{ border: '1px solid #E5E3DC', borderRadius: 16, padding: '18px 20px', marginBottom: 20, background: '#fff' }}>
+    <div style={{ border: '1px solid #E5E3DC', borderRadius: 16, padding: '18px 20px', marginBottom: 20, background: 'var(--surface)' }}>
       <div style={{ fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#9B9890', marginBottom: 2 }}>Funding mix</div>
-      <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 16 }}>Where your £{total.toLocaleString()} raised has come from</div>
+      <div style={{ fontSize: 12, color: 'var(--text-faint)', marginBottom: 16 }}>Where your £{total.toLocaleString()} raised has come from</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap' }}>
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0, transform: 'rotate(-90deg)' }}>
           <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#F1EFE9" strokeWidth={stroke} />
@@ -47,7 +47,7 @@ export default function FundingMixChart({ campaigns }) {
             <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ width: 8, height: 8, borderRadius: 999, background: s.color, flexShrink: 0 }} />
               <span style={{ fontSize: 12.5, color: '#1C2333', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</span>
-              <span style={{ fontSize: 12, color: '#9CA3AF', flexShrink: 0 }}>{Math.round(s.pct * 100)}%</span>
+              <span style={{ fontSize: 12, color: 'var(--text-faint)', flexShrink: 0 }}>{Math.round(s.pct * 100)}%</span>
             </div>
           ))}
         </div>

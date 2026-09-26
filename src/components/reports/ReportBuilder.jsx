@@ -34,9 +34,9 @@ const SECTION_LABELS = {
 
 const fi = {
   width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10,
-  border: '1px solid #E2E8F0', fontSize: 13, outline: 'none', background: '#fff', color: '#0F172A',
+  border: '1px solid var(--border)', fontSize: 13, outline: 'none', background: 'var(--surface)', color: 'var(--text)',
 }
-const lbl = { fontSize: 11, fontWeight: 800, color: '#64748B', display: 'block', marginBottom: 6 }
+const lbl = { fontSize: 11, fontWeight: 800, color: 'var(--text3)', display: 'block', marginBottom: 6 }
 
 export default function ReportBuilder({ org, session, role, initialType, defaultRange, onClose, onSaved }) {
   const isMobile = useIsMobile()
@@ -100,17 +100,17 @@ export default function ReportBuilder({ org, session, role, initialType, default
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 10400 }} />
       <div onClick={e => e.stopPropagation()} style={{
-        position: 'fixed', zIndex: 10401, background: '#fff', display: 'flex', flexDirection: 'column',
+        position: 'fixed', zIndex: 10401, background: 'var(--surface)', display: 'flex', flexDirection: 'column',
         ...(isMobile ? { inset: 0 } : {
           top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
           width: 'min(780px, 94vw)', maxHeight: '90vh', borderRadius: 18,
           boxShadow: '0 32px 80px rgba(0,0,0,0.3)',
         }),
       }}>
-        <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', flexShrink: 0 }}>
+        <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--border-soft)', flexShrink: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>Create report</div>
-            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
+            <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)' }}>Create report</div>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text-faint)', cursor: 'pointer' }}><Icon name="✕" /></button>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
             {STEPS.map((s, i) => (
@@ -125,7 +125,7 @@ export default function ReportBuilder({ org, session, role, initialType, default
         <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
           {step === 0 && (
             <>
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>What do you want to report on?</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>What do you want to report on?</div>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit,minmax(210px,1fr))', gap: 10 }}>
                 {available.map(r => (
                   <button key={r.key} onClick={() => setType(r.key)} style={{
@@ -134,8 +134,8 @@ export default function ReportBuilder({ org, session, role, initialType, default
                     background: type === r.key ? '#EEF2FF' : '#fff',
                   }}>
                     <div style={{ fontSize: 16, marginBottom: 6 }}><Icon name={r.icon} /></div>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{r.name}</div>
-                    <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 3, lineHeight: 1.45 }}>{r.desc}</div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{r.name}</div>
+                    <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 3, lineHeight: 1.45 }}>{r.desc}</div>
                   </button>
                 ))}
               </div>
@@ -144,7 +144,7 @@ export default function ReportBuilder({ org, session, role, initialType, default
 
           {step === 1 && (
             <>
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>Choose scope</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>Choose scope</div>
               <div style={{ marginBottom: 14 }}>
                 <label style={lbl}>Report name</label>
                 <input value={name} onChange={e => setName(e.target.value)} style={fi} />
@@ -159,7 +159,7 @@ export default function ReportBuilder({ org, session, role, initialType, default
                   <input type="date" value={to} onChange={e => setTo(e.target.value)} style={fi} />
                 </div>
               </div>
-              <div style={{ marginTop: 14, fontSize: 12, color: '#64748B', background: '#F8FAFC', borderRadius: 10, padding: '10px 12px', lineHeight: 1.5 }}>
+              <div style={{ marginTop: 14, fontSize: 12, color: 'var(--text3)', background: 'var(--surface2)', borderRadius: 10, padding: '10px 12px', lineHeight: 1.5 }}>
                 Programme and location filters aren't wired into the aggregate query yet — the report currently covers all
                 delivery in the selected period. That's a documented gap rather than a silent one.
               </div>
@@ -168,13 +168,13 @@ export default function ReportBuilder({ org, session, role, initialType, default
 
           {step === 2 && (
             <>
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>Choose report content</div>
-              <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 14 }}>Only sections your data can fill are listed.</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>Choose report content</div>
+              <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 14 }}>Only sections your data can fill are listed.</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {(SECTIONS_BY_TYPE[type] || []).map(s => (
                   <label key={s} style={{
                     display: 'flex', alignItems: 'center', gap: 10, padding: '11px 13px', borderRadius: 10,
-                    border: '1px solid #E2E8F0', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#334155',
+                    border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--text2)',
                   }}>
                     <input type="checkbox" checked={sections.includes(s)}
                       onChange={e => setSections(prev => e.target.checked ? [...prev, s] : prev.filter(x => x !== s))} />
@@ -188,17 +188,17 @@ export default function ReportBuilder({ org, session, role, initialType, default
           {step === 3 && (
             <>
               {loadingPreview ? (
-                <div style={{ padding: 40, textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>Building preview…</div>
+                <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-faint)', fontSize: 13 }}>Building preview…</div>
               ) : !preview ? (
                 <div style={{ padding: 30, textAlign: 'center' }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>Preview unavailable</div>
-                  <div style={{ fontSize: 12.5, color: '#64748B' }}>{error || 'Try a different date range.'}</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>Preview unavailable</div>
+                  <div style={{ fontSize: 12.5, color: 'var(--text3)' }}>{error || 'Try a different date range.'}</div>
                 </div>
               ) : (
-                <div id="ls-report-preview" style={{ border: '1px solid #E2E8F0', borderRadius: 12, padding: isMobile ? 18 : 26, background: '#fff' }}>
-                  <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 1, color: '#64748B', textTransform: 'uppercase' }}>{org?.name}</div>
-                  <div style={{ fontSize: isMobile ? 19 : 23, fontWeight: 900, color: '#0F172A', marginTop: 6, letterSpacing: -0.5 }}>{name}</div>
-                  <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 4 }}>
+                <div id="ls-report-preview" style={{ border: '1px solid var(--border)', borderRadius: 12, padding: isMobile ? 18 : 26, background: 'var(--surface)' }}>
+                  <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 1, color: 'var(--text3)', textTransform: 'uppercase' }}>{org?.name}</div>
+                  <div style={{ fontSize: isMobile ? 19 : 23, fontWeight: 900, color: 'var(--text)', marginTop: 6, letterSpacing: -0.5 }}>{name}</div>
+                  <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 4 }}>
                     {new Date(`${from}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                     {' – '}
                     {new Date(`${to}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -264,7 +264,7 @@ export default function ReportBuilder({ org, session, role, initialType, default
                   {sections.includes('concerns') && (
                     <PreviewBlock title="Safeguarding">
                       <Line k="Open concerns" v={preview.open_concerns} />
-                      <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 6 }}>
+                      <div style={{ fontSize: 11.5, color: 'var(--text-faint)', marginTop: 6 }}>
                         Aggregate only — no identifiable detail is included.
                       </div>
                     </PreviewBlock>
@@ -277,7 +277,7 @@ export default function ReportBuilder({ org, session, role, initialType, default
           )}
         </div>
 
-        <div style={{ padding: 16, borderTop: '1px solid #F1F5F9', display: 'flex', gap: 8, flexWrap: 'wrap', flexShrink: 0 }}>
+        <div style={{ padding: 16, borderTop: '1px solid var(--border-soft)', display: 'flex', gap: 8, flexWrap: 'wrap', flexShrink: 0 }}>
           {step > 0 && (
             <button onClick={() => setStep(s => s - 1)} style={btnGhost}>Back</button>
           )}
@@ -311,16 +311,16 @@ function PreviewBlock({ title, children }) {
 function Fig({ n, l }) {
   return (
     <div>
-      <div style={{ fontSize: 22, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5 }}>{n}</div>
-      <div style={{ fontSize: 11, color: '#64748B', fontWeight: 600, marginTop: 2 }}>{l}</div>
+      <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.5 }}>{n}</div>
+      <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginTop: 2 }}>{l}</div>
     </div>
   )
 }
 function Line({ k, v }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #F1F5F9', fontSize: 12.5 }}>
-      <span style={{ color: '#64748B' }}>{k}</span>
-      <span style={{ fontWeight: 800, color: '#0F172A' }}>{v}</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border-soft)', fontSize: 12.5 }}>
+      <span style={{ color: 'var(--text3)' }}>{k}</span>
+      <span style={{ fontWeight: 800, color: 'var(--text)' }}>{v}</span>
     </div>
   )
 }
@@ -330,6 +330,6 @@ const btnPrimary = {
   background: 'linear-gradient(135deg,#4F46E5,#3B82F6)', cursor: 'pointer',
 }
 const btnGhost = {
-  padding: '11px 18px', borderRadius: 11, border: '1px solid #E2E8F0', background: '#fff',
-  color: '#334155', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+  padding: '11px 18px', borderRadius: 11, border: '1px solid var(--border)', background: 'var(--surface)',
+  color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer',
 }

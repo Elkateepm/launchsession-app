@@ -112,23 +112,23 @@ export default function VolunteerAcceptInvite() {
 
   if (error) return (
     <div style={{ minHeight: '100dvh', background: '#0D1B2A', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 440, padding: '36px 28px', textAlign: 'center', boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }}>
+      <div style={{ background: 'var(--surface)', borderRadius: 24, width: '100%', maxWidth: 440, padding: '36px 28px', textAlign: 'center', boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}><Icon name="⚠️" /></div>
-        <div style={{ fontSize: 18, fontWeight: 900, color: '#111827', marginBottom: 8 }}>Invite link problem</div>
-        <div style={{ fontSize: 14, color: '#6B7280', lineHeight: 1.6 }}>{error}</div>
+        <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>Invite link problem</div>
+        <div style={{ fontSize: 14, color: 'var(--text3)', lineHeight: 1.6 }}>{error}</div>
       </div>
     </div>
   )
 
   return (
     <div style={{ minHeight: '100dvh', background: 'linear-gradient(135deg,#0D1B2A 0%,#1B2A3B 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, fontFamily: 'Inter,sans-serif' }}>
-      <div style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 480, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }}>
+      <div style={{ background: 'var(--surface)', borderRadius: 24, width: '100%', maxWidth: 480, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }}>
 
         {done ? (
           <div style={{ padding: '48px 28px', textAlign: 'center' }}>
             <div style={{ fontSize: 56, marginBottom: 12 }}><Icon name="🎉" /></div>
-            <div style={{ fontSize: 22, fontWeight: 900, color: '#111827', marginBottom: 6 }}>You're all set!</div>
-            <div style={{ fontSize: 14, color: '#6B7280' }}>Taking you to {org?.name}'s volunteer portal...</div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)', marginBottom: 6 }}>You're all set!</div>
+            <div style={{ fontSize: 14, color: 'var(--text3)' }}>Taking you to {org?.name}'s volunteer portal...</div>
           </div>
         ) : (
           <>
@@ -161,15 +161,15 @@ export default function VolunteerAcceptInvite() {
                 </div>
               )}
 
-              <label style={{ fontSize: 12, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.6, display: 'block', marginBottom: 6 }}>Your email</label>
+              <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, display: 'block', marginBottom: 6 }}>Your email</label>
               <input
                 type="email"
                 value={user?.email || ''}
                 disabled
-                style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #E5E7EB', fontSize: 15, boxSizing: 'border-box', marginBottom: 14, background: '#F9FAFB', color: '#6B7280', fontFamily: 'Inter,sans-serif' }}
+                style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid var(--border)', fontSize: 15, boxSizing: 'border-box', marginBottom: 14, background: 'var(--surface2)', color: 'var(--text3)', fontFamily: 'Inter,sans-serif' }}
               />
 
-              <label style={{ fontSize: 12, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.6, display: 'block', marginBottom: 6 }}>Choose a password</label>
+              <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, display: 'block', marginBottom: 6 }}>Choose a password</label>
               <div style={{ position: 'relative', marginBottom: 4 }}>
                 <input
                   type={showPw ? 'text' : 'password'}
@@ -178,9 +178,9 @@ export default function VolunteerAcceptInvite() {
                   required
                   autoFocus
                   placeholder="Min. 8 characters"
-                  style={{ width: '100%', boxSizing: 'border-box', padding: '12px 44px 12px 14px', borderRadius: 12, border: '1.5px solid #E5E7EB', fontSize: 15, outline: 'none', fontFamily: 'Inter,sans-serif' }}
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '12px 44px 12px 14px', borderRadius: 12, border: '1.5px solid var(--border)', fontSize: 15, outline: 'none', fontFamily: 'Inter,sans-serif' }}
                 />
-                <button type="button" onClick={() => setShowPw(s => !s)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', fontSize: 16 }}>
+                <button type="button" onClick={() => setShowPw(s => !s)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-faint)', fontSize: 16 }}>
                   {showPw ? '🙈' : '👁️'}
                 </button>
               </div>
@@ -195,7 +195,7 @@ export default function VolunteerAcceptInvite() {
                 </div>
               )}
 
-              <label style={{ fontSize: 12, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.6, display: 'block', marginBottom: 6 }}>Confirm password</label>
+              <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, display: 'block', marginBottom: 6 }}>Confirm password</label>
               <input
                 type="password"
                 value={confirm}

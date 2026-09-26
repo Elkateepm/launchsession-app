@@ -23,17 +23,17 @@ const ROLE_LABELS = {
 const ASSIGNABLE_ROLES = ['admin', 'manager', 'staff', 'volunteer']
 
 const card = {
-  background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14,
+  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14,
   padding: 16, marginBottom: 10,
 }
 
 const input = {
   width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
-  border: '1px solid #E2E8F0', fontSize: 15, fontFamily: 'inherit', outline: 'none',
+  border: '1px solid var(--border)', fontSize: 15, fontFamily: 'inherit', outline: 'none',
 }
 
 const labelStyle = {
-  display: 'block', fontSize: 12, fontWeight: 700, color: '#64748B',
+  display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text3)',
   marginBottom: 6, letterSpacing: 0.3,
 }
 
@@ -149,10 +149,10 @@ export default function TeamCentre({ org, session, userProfile, onNavigate }) {
   ]
 
   return (
-    <div style={{ background: '#F8FAFC', minHeight: '100%', padding: isMobile ? 16 : 24 }}>
+    <div style={{ background: 'var(--surface2)', minHeight: '100%', padding: isMobile ? 16 : 24 }}>
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: isMobile ? 22 : 26, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5 }}>Team</div>
-        <div style={{ fontSize: 13.5, color: '#64748B', marginTop: 3 }}>
+        <div style={{ fontSize: isMobile ? 22 : 26, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.5 }}>Team</div>
+        <div style={{ fontSize: 13.5, color: 'var(--text3)', marginTop: 3 }}>
           Approve new accounts, set what each person can reach, and message the team.
         </div>
       </div>
@@ -194,17 +194,17 @@ export default function TeamCentre({ org, session, userProfile, onNavigate }) {
         }}>{toast}</div>
       )}
 
-      {loading && <div style={{ ...card, color: '#64748B', fontSize: 14 }}>Loading the team…</div>}
+      {loading && <div style={{ ...card, color: 'var(--text3)', fontSize: 14 }}>Loading the team…</div>}
 
       {!loading && tab === 'people' && (
         <>
           <input
             value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search by name, email or job title"
-            style={{ ...input, marginBottom: 12, background: '#fff' }}
+            style={{ ...input, marginBottom: 12, background: 'var(--surface)' }}
           />
           {filtered.length === 0 && (
-            <div style={{ ...card, color: '#64748B', fontSize: 14 }}>
+            <div style={{ ...card, color: 'var(--text3)', fontSize: 14 }}>
               {search ? 'Nobody matches that search.' : 'No one here yet. Invite staff from HR.'}
             </div>
           )}
@@ -216,10 +216,10 @@ export default function TeamCentre({ org, session, userProfile, onNavigate }) {
             }}>
               <Avatar person={p} primary={primary} />
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {p.full_name || p.email}
                 </div>
-                <div style={{ fontSize: 12.5, color: '#64748B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 12.5, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {p.job_title || ROLE_LABELS[p.role] || 'Staff'}
                 </div>
               </div>
@@ -230,12 +230,12 @@ export default function TeamCentre({ org, session, userProfile, onNavigate }) {
             </button>
           ))}
           {invites.length > 0 && (
-            <div style={{ ...card, background: '#F8FAFC' }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}>
+            <div style={{ ...card, background: 'var(--surface2)' }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 8 }}>
                 {invites.length} pending invite{invites.length === 1 ? '' : 's'}
               </div>
               {invites.map(i => (
-                <div key={i.id} style={{ fontSize: 13, color: '#64748B', padding: '4px 0' }}>
+                <div key={i.id} style={{ fontSize: 13, color: 'var(--text3)', padding: '4px 0' }}>
                   {i.full_name || i.email} · {ROLE_LABELS[i.role] || i.role} · not yet set up
                 </div>
               ))}
@@ -337,18 +337,18 @@ function PersonDrawer({ person, org, primary, isMobile, isAdmin, canDecide, myRo
       padding: isMobile ? 0 : 16,
     }}>
       <div onClick={e => e.stopPropagation()} style={{
-        background: '#fff', width: isMobile ? '100%' : 520, maxWidth: '100%',
+        background: 'var(--surface)', width: isMobile ? '100%' : 520, maxWidth: '100%',
         maxHeight: isMobile ? '92vh' : '88vh', overflowY: 'auto',
         borderRadius: isMobile ? '20px 20px 0 0' : 18, padding: 20,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
           <Avatar person={person} size={52} primary={primary} />
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>{person.full_name || person.email}</div>
-            <div style={{ fontSize: 13, color: '#64748B', overflow: 'hidden', textOverflow: 'ellipsis' }}>{person.email}</div>
+            <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)' }}>{person.full_name || person.email}</div>
+            <div style={{ fontSize: 13, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{person.email}</div>
           </div>
           <button onClick={onClose} style={{
-            background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8',
+            background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-faint)',
             fontSize: 15, minHeight: 44, minWidth: 44, fontFamily: 'inherit',
           }}><Icon name="✕" /></button>
         </div>
@@ -375,7 +375,7 @@ function PersonDrawer({ person, org, primary, isMobile, isAdmin, canDecide, myRo
               }}>Approve</button>
               <button onClick={() => onDecide(person, 'declined')} style={{
                 flex: 1, minHeight: 44, borderRadius: 11, border: '1px solid #FECACA',
-                background: '#fff', color: '#B42318', fontSize: 14, fontWeight: 800,
+                background: 'var(--surface)', color: '#B42318', fontSize: 14, fontWeight: 800,
                 cursor: 'pointer', fontFamily: 'inherit',
               }}>Decline</button>
             </div>
@@ -384,19 +384,19 @@ function PersonDrawer({ person, org, primary, isMobile, isAdmin, canDecide, myRo
 
         <button onClick={onOpenHR} style={{
           width: '100%', minHeight: 48, borderRadius: 12, marginBottom: 18,
-          border: '1px solid #E2E8F0', background: '#fff', cursor: 'pointer',
+          border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer',
           fontFamily: 'inherit', display: 'flex', alignItems: 'center',
           justifyContent: 'space-between', gap: 12, padding: '0 14px', textAlign: 'left',
         }}>
           <span style={{ minWidth: 0 }}>
-            <span style={{ display: 'block', fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>
+            <span style={{ display: 'block', fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>
               Open HR record
             </span>
-            <span style={{ display: 'block', fontSize: 12.5, color: '#64748B', marginTop: 1 }}>
+            <span style={{ display: 'block', fontSize: 12.5, color: 'var(--text3)', marginTop: 1 }}>
               Employment, contract and probation
             </span>
           </span>
-          <span style={{ color: '#94A3B8', fontSize: 18, flexShrink: 0 }}>›</span>
+          <span style={{ color: 'var(--text-faint)', fontSize: 18, flexShrink: 0 }}>›</span>
         </button>
 
         <div style={{ marginBottom: 16 }}>
@@ -427,7 +427,7 @@ function PersonDrawer({ person, org, primary, isMobile, isAdmin, canDecide, myRo
             {person.role === 'owner' && <option value="owner">Owner</option>}
             {ASSIGNABLE_ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
           </select>
-          <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 6, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 6, lineHeight: 1.45 }}>
             {person.role === 'owner'
               ? 'Owners cannot be changed from here.'
               : isSelf ? 'You cannot change your own role.'
@@ -439,18 +439,18 @@ function PersonDrawer({ person, org, primary, isMobile, isAdmin, canDecide, myRo
         <div style={{ marginBottom: 18 }}>
           <label style={labelStyle}>PASSWORD</label>
           <button onClick={sendReset} disabled={savingField === 'reset' || !person.email} style={{
-            width: '100%', minHeight: 44, borderRadius: 11, border: '1px solid #E2E8F0',
-            background: '#fff', color: '#0F172A', fontSize: 14, fontWeight: 700,
+            width: '100%', minHeight: 44, borderRadius: 11, border: '1px solid var(--border)',
+            background: 'var(--surface)', color: 'var(--text)', fontSize: 14, fontWeight: 700,
             cursor: savingField === 'reset' ? 'default' : 'pointer', fontFamily: 'inherit',
           }}>
             {savingField === 'reset' ? 'Sending…' : resetSent ? 'Reset link sent ✓' : 'Send password reset link'}
           </button>
-          <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 6 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 6 }}>
             Emails {person.email} a link to set a new password. You never see it.
           </div>
         </div>
 
-        <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: 16 }}>
+        <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
           <label style={labelStyle}>MODULE ACCESS</label>
           <MemberAccess member={{ ...person, role }} org={org} viewerRole={myRole} />
         </div>
@@ -507,7 +507,7 @@ function InternalMail({ org, people, primary, isMobile, onFlash }) {
   return (
     <>
       <div style={card}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>New internal mail</div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 14 }}>New internal mail</div>
 
         <label style={labelStyle}>TO</label>
         <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
@@ -524,11 +524,11 @@ function InternalMail({ org, people, primary, isMobile, onFlash }) {
 
         {audience === 'selected' && (
           <div style={{
-            border: '1px solid #E2E8F0', borderRadius: 11, padding: 8,
+            border: '1px solid var(--border)', borderRadius: 11, padding: 8,
             maxHeight: 220, overflowY: 'auto', marginBottom: 14,
           }}>
             {addressable.length === 0 && (
-              <div style={{ fontSize: 13, color: '#64748B', padding: 8 }}>No approved staff to write to yet.</div>
+              <div style={{ fontSize: 13, color: 'var(--text3)', padding: 8 }}>No approved staff to write to yet.</div>
             )}
             {addressable.map(p => (
               <label key={p.id} style={{
@@ -541,9 +541,9 @@ function InternalMail({ org, people, primary, isMobile, onFlash }) {
                     ? [...s, p.id] : s.filter(x => x !== p.id))}
                   style={{ width: 18, height: 18, accentColor: primary, flexShrink: 0 }}
                 />
-                <span style={{ fontSize: 13.5, color: '#0F172A', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <span style={{ fontSize: 13.5, color: 'var(--text)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {p.full_name || p.email}
-                  <span style={{ color: '#94A3B8' }}> · {p.job_title || ROLE_LABELS[p.role] || p.role}</span>
+                  <span style={{ color: 'var(--text-faint)' }}> · {p.job_title || ROLE_LABELS[p.role] || p.role}</span>
                 </span>
               </label>
             ))}
@@ -573,18 +573,18 @@ function InternalMail({ org, people, primary, isMobile, onFlash }) {
           opacity: !canSend || sending ? 0.55 : 1,
         }}>{sending ? 'Sending…' : 'Send internal mail'}</button>
 
-        <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 8, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 8, lineHeight: 1.45 }}>
           Lands in each person&apos;s notifications inside LaunchSession. It is not sent to their email inbox.
         </div>
       </div>
 
       {sent.length > 0 && (
         <div style={card}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Recently sent</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Recently sent</div>
           {sent.map(m => (
-            <div key={m.id} style={{ padding: '10px 0', borderTop: '1px solid #F1F5F9' }}>
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A' }}>{m.subject}</div>
-              <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 2 }}>
+            <div key={m.id} style={{ padding: '10px 0', borderTop: '1px solid var(--border-soft)' }}>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>{m.subject}</div>
+              <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>
                 {m.recipient_count} recipient{m.recipient_count === 1 ? '' : 's'}
                 {' · '}{new Date(m.created_at).toLocaleString('en-GB', { timeZone: 'Europe/London', dateStyle: 'medium', timeStyle: 'short' })}
               </div>

@@ -4,7 +4,7 @@ import { useIsMobile } from '../../../hooks/useIsMobile'
 
 function Kpi({ icon, iconColor, iconBg, label, value, prefix, suffix, support }) {
   return (
-    <div style={{ background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 16, padding: '16px 18px' }}>
+    <div style={{ background: 'var(--surface)', border: `1px solid ${LS.border}`, borderRadius: 16, padding: '16px 18px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
         <div style={{ width: 30, height: 30, borderRadius: 9, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <IconGlyph name={icon} color={iconColor} size={15} />

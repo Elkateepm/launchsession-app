@@ -48,7 +48,7 @@ function RocketScene() {
           animate={{ opacity: [0.15, 0.9, 0.15] }}
           transition={{ duration: 2 + (i % 4), repeat: Infinity, delay: (i % 6) * 0.4, ease: 'easeInOut' }}
           style={{
-            position: 'absolute', width: i % 3 === 0 ? 3 : 2, height: i % 3 === 0 ? 3 : 2, borderRadius: '50%', background: '#fff',
+            position: 'absolute', width: i % 3 === 0 ? 3 : 2, height: i % 3 === 0 ? 3 : 2, borderRadius: '50%', background: 'var(--surface)',
             top: `${(i * 37) % 90}%`, left: `${(i * 53) % 100}%`,
           }} />
       ))}
@@ -265,7 +265,7 @@ export default function CreatePassword() {
       {[...Array(40)].map((_, i) => (
         <div key={i} style={{
           position: 'absolute', width: i % 5 === 0 ? 2.5 : 1.5, height: i % 5 === 0 ? 2.5 : 1.5, borderRadius: '50%',
-          background: '#fff', opacity: 0.5, top: `${(i * 23) % 100}%`, left: `${(i * 41) % 100}%`, pointerEvents: 'none',
+          background: 'var(--surface)', opacity: 0.5, top: `${(i * 23) % 100}%`, left: `${(i * 41) % 100}%`, pointerEvents: 'none',
         }} />
       ))}
       <div style={{ position: 'absolute', top: -180, left: -140, width: 520, height: 520, background: 'radial-gradient(circle, rgba(168,85,247,0.25), transparent 65%)', pointerEvents: 'none' }} />
@@ -327,7 +327,7 @@ export default function CreatePassword() {
                 style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: 32, backdropFilter: 'blur(18px)', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
 
                 <div style={{ textAlign: 'center', marginBottom: 26 }}>
-                  <div style={{ width: 76, height: 76, borderRadius: '50%', background: '#fff', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: `0 0 0 3px var(--org-a35)` }}>
+                  <div style={{ width: 76, height: 76, borderRadius: '50%', background: 'var(--surface)', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: `0 0 0 3px var(--org-a35)` }}>
                     {orgLogo ? (
                       <img src={orgLogo} alt={orgName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (

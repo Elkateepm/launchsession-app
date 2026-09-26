@@ -299,7 +299,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
   const registerGroups = [...new Set(rows.map(row => groupLabel(row.child.group_name)))].sort()
 
   if (loading) {
-    return <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF' }}>Loading register...</div>
+    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-faint)' }}>Loading register...</div>
   }
 
   if (registerState === 'closed') {
@@ -333,7 +333,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}
       style={{
-        position: 'fixed', inset: 0, background: '#F8FAFC', zIndex: 10200,
+        position: 'fixed', inset: 0, background: 'var(--surface2)', zIndex: 10200,
         display: 'flex', flexDirection: 'column',
         // inset: 0 puts the top of this overlay behind the status bar and notch
         // when the app is installed to the home screen, which is how staff
@@ -349,8 +349,8 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
         boxShadow: '0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 24px -18px rgba(15,23,42,0.25)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-          <button aria-label={backLabel} onClick={onClose} style={{ minHeight: 44, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', fontSize: 15.5, fontWeight: 800, color: '#111827', cursor: 'pointer', padding: '4px 6px 4px 2px', borderRadius: 8, letterSpacing: '-0.01em' }}>
-            <span style={{ fontSize: 20, color: org?.primary_color || '#1B9AAA' }}>‹</span><span style={{ textAlign: 'left', minWidth: 0 }}><span style={{ display: 'block', color: '#64748B', fontSize: 11, fontWeight: 600, marginBottom: 4 }}>{backLabel}</span><span style={{ display: 'block', overflowWrap: 'anywhere' }}>{session.title}</span></span>
+          <button aria-label={backLabel} onClick={onClose} style={{ minHeight: 44, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', fontSize: 15.5, fontWeight: 800, color: 'var(--text)', cursor: 'pointer', padding: '4px 6px 4px 2px', borderRadius: 8, letterSpacing: '-0.01em' }}>
+            <span style={{ fontSize: 20, color: org?.primary_color || '#1B9AAA' }}>‹</span><span style={{ textAlign: 'left', minWidth: 0 }}><span style={{ display: 'block', color: 'var(--text3)', fontSize: 11, fontWeight: 600, marginBottom: 4 }}>{backLabel}</span><span style={{ display: 'block', overflowWrap: 'anywhere' }}>{session.title}</span></span>
           </button>
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800,
@@ -373,7 +373,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
             could see a single child. The long weekday and the full month name
             are the first things to go: if you are standing at the door running
             this register, you know what day it is. */}
-        <div style={{ fontSize: isMobile ? 11.5 : 12.5, color: '#64748B', marginBottom: isMobile ? 10 : 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+        <div style={{ fontSize: isMobile ? 11.5 : 12.5, color: 'var(--text3)', marginBottom: isMobile ? 10 : 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
           <span>{new Date(session.session_date).toLocaleDateString('en-GB', isMobile
             ? { day: 'numeric', month: 'short' }
             : { weekday: 'long', day: 'numeric', month: 'long' })}</span>
@@ -396,7 +396,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
         )}
         {totalExpected > 0 && (
           <div style={{ marginTop: 13 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#64748B', fontWeight: 700, marginBottom: 5 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text3)', fontWeight: 700, marginBottom: 5 }}>
               <span>Register progress</span>
               <span>{processedCount} / {totalExpected}</span>
             </div>
@@ -413,15 +413,15 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
       </div>
 
       {loadError && <div role="alert" style={{ padding: 12, background: '#FEF2F2', color: '#B91C1C' }}>{loadError} <button onClick={load} style={{ minHeight: 44 }}>Retry</button></div>}
-      <div style={{ padding: '12px 16px', background: 'var(--surface, #fff)', borderBottom: '1px solid var(--border, #E5E7EB)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+      <div style={{ padding: '12px 16px', background: 'var(--surface, #fff)', borderBottom: '1px solid var(--border, var(--border))', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
         <div style={{ fontSize: 13, lineHeight: 1.5 }}>
           <strong>{!session.opened_at ? 'Ready for arrivals' : grouped.expected.length ? `${grouped.expected.length} arrivals to resolve` : signedInCount ? 'Delivery in progress' : 'Ready to finish'}</strong>
-          <div style={{ color: '#64748B', fontSize: 12 }}>{!session.opened_at ? `Check your team and plan, then start the ${terms.session}.` : 'Record arrivals and departures here. Changes save as you go.'}</div>
+          <div style={{ color: 'var(--text3)', fontSize: 12 }}>{!session.opened_at ? `Check your team and plan, then start the ${terms.session}.` : 'Record arrivals and departures here. Changes save as you go.'}</div>
         </div>
         {!session.opened_at && canCloseRegister && <button disabled={starting || !!loadError} onClick={startSession} style={{ ...ghostBtn, minHeight: 44, background: 'var(--org-primary, #2563EB)', color: 'var(--org-on-primary, #fff)' }}>{starting ? 'Starting…' : `Start ${terms.session}`}</button>}
       </div>
       {/* TABS */}
-      <div style={{ padding: '10px 14px 0', background: '#fff', borderBottom: '1px solid #F1F5F9' }}>
+      <div style={{ padding: '10px 14px 0', background: 'var(--surface)', borderBottom: '1px solid var(--border-soft)' }}>
         <div style={{ display: 'flex', gap: 4, background: '#F1F3F7', borderRadius: 12, padding: 4, overflowX: 'auto', marginBottom: 10 }}>
           {[
             { key: 'all', label: 'All', count: rows.length },
@@ -444,10 +444,10 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
       </div>
 
       {/* SEARCH + QUICK ACTIONS */}
-      <div style={{ padding: '0 14px 12px', background: '#fff', borderBottom: '1px solid #F1F5F9', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div style={{ padding: '0 14px 12px', background: 'var(--surface)', borderBottom: '1px solid var(--border-soft)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flex: '1 1 160px' }}>
-          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#94A3B8', pointerEvents: 'none' }}><Icon name="🔍" /></span>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${terms.people}...`} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px 10px 32px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 13, background: '#FAFBFC', outline: 'none', transition: 'border-color 0.15s ease' }} onFocus={e => e.target.style.borderColor = '#A78BFA'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
+          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--text-faint)', pointerEvents: 'none' }}><Icon name="🔍" /></span>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${terms.people}...`} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px 10px 32px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 13, background: '#FAFBFC', outline: 'none', transition: 'border-color 0.15s ease' }} onFocus={e => e.target.style.borderColor = '#A78BFA'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
         </div>
         {registerGroups.length > 1 && <select aria-label="Filter register by group" value={groupFilter} onChange={e => setGroupFilter(e.target.value)} style={{ ...ghostBtn, maxWidth: '100%' }}>
           <option value="all">All groups</option>{registerGroups.map(name => <option key={name} value={name}>{name}</option>)}
@@ -467,7 +467,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
           list rubber-banding the page behind this overlay. */}
       <div className="ls-scroll" style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 12 : 14, background: '#FAFBFD' }}>
         {activeList.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '48px 20px', color: '#94A3B8', fontSize: 13 }}>
+          <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text-faint)', fontSize: 13 }}>
             <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.5 }}><Icon name="✓" /></div>
             {search || groupFilter !== 'all' ? 'No matches. Try another name or clear your filters.' : tab === 'expected' && rows.length ? 'All arrivals accounted for. Switch to Signed in to record departures.' : rows.length ? 'Nobody in this list yet.' : `No ${terms.people} on this register yet. Add a walk-in or update the plan.`}
           </div>
@@ -489,23 +489,23 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
         )}
 
         {/* STAFF PANEL */}
-        <div style={{ marginTop: 20, background: '#fff', border: '1px solid #EDEFF3', borderRadius: 16, padding: 16, boxShadow: '0 1px 3px rgba(15,23,42,0.04)' }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#111827', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ marginTop: 20, background: 'var(--surface)', border: '1px solid #EDEFF3', borderRadius: 16, padding: 16, boxShadow: '0 1px 3px rgba(15,23,42,0.04)' }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ width: 22, height: 22, borderRadius: 7, background: '#F5F3FF', color: '#7C3AED', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}><Icon name="👤" /></span>
             Session team
           </div>
           {staffRows.length === 0 ? (
-            <div style={{ fontSize: 12, color: '#94A3B8' }}>No staff assigned to this session.</div>
+            <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>No staff assigned to this session.</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
               {staffRows.map(s => {
                 const pid = s.user_id || s.volunteer_id
                 return (
-                  <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12.5, paddingBottom: 9, borderBottom: '1px solid #F1F5F9' }}>
-                    <span style={{ fontWeight: 700, color: '#374151' }}>{staffProfiles[pid] || (s.volunteer_id ? 'Volunteer' : 'Team member')} <span style={{ color: '#94A3B8', fontWeight: 500 }}>· {s.role}</span></span>
+                  <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12.5, paddingBottom: 9, borderBottom: '1px solid var(--border-soft)' }}>
+                    <span style={{ fontWeight: 700, color: 'var(--text2)' }}>{staffProfiles[pid] || (s.volunteer_id ? 'Volunteer' : 'Team member')} <span style={{ color: 'var(--text-faint)', fontWeight: 500 }}>· {s.role}</span></span>
                     {s.signed_out_at ? (
                       <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ color: '#94A3B8', fontWeight: 700 }}>Signed out {fmtTime(s.signed_out_at)}</span>
+                        <span style={{ color: 'var(--text-faint)', fontWeight: 700 }}>Signed out {fmtTime(s.signed_out_at)}</span>
                         <button onClick={() => handleStaffSignIn(s)} style={{ ...ghostBtn, padding: '5px 10px', fontSize: 11 }}>Sign back in</button>
                       </span>
                     ) : s.signed_in_at ? (
@@ -539,7 +539,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
           canCloseRegister ? (
             <button onClick={() => setShowClosure(true)} style={{ padding: '11px 22px', borderRadius: 11, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px -3px rgba(124,58,237,0.5)' }}>Finish {terms.session}</button>
           ) : (
-            <span title="Only a staff member can close this register" style={{ fontSize: 12, fontWeight: 700, color: '#94A3B8' }}><Icon name="🔒" /> Staff only to close</span>
+            <span title="Only a staff member can close this register" style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-faint)' }}><Icon name="🔒" /> Staff only to close</span>
           )
         )}
       </div>
@@ -595,7 +595,7 @@ function MiniStat({ icon, label, value, color }) {
         display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0,
       }}>{icon}</span>
       <span style={{ fontSize: 15.5, fontWeight: 900, color, lineHeight: 1 }}>{value}</span>
-      <span style={{ fontSize: 10.5, color: '#64748B', fontWeight: 700 }}>{label}</span>
+      <span style={{ fontSize: 10.5, color: 'var(--text3)', fontWeight: 700 }}>{label}</span>
     </div>
   )
 }
@@ -642,7 +642,7 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
         // right child matters most.
         display: 'flex', alignItems: isMobile ? 'stretch' : 'center',
         flexDirection: isMobile ? 'column' : 'row',
-        gap: isMobile ? 10 : 12, background: '#fff',
+        gap: isMobile ? 10 : 12, background: 'var(--surface)',
         border: '1px solid #EDEFF3', borderRadius: 16, padding: 12,
         boxShadow: hover ? '0 6px 18px -10px rgba(15,23,42,0.18)' : '0 1px 2px rgba(15,23,42,0.04)',
         // Transform is left to framer here — an inline transform would be
@@ -668,12 +668,12 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
         {child.photo_url ? <SignedImg bucket="gallery" src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
       </div>
       <div onClick={onOpen} style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: '#111827', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
           {child.first_name} {child.last_name}
           {child.is_walk_in && child.profile_incomplete && <span style={{ fontSize: 9.5, fontWeight: 800, color: '#D97706', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 6, padding: '1px 6px' }}>WALK-IN · PROFILE INCOMPLETE</span>}
           <RegisterPaymentBadge org={org} session={{ user: { id: authUserId } }} childId={child.id} balance={paymentBalance} onChanged={onPaymentChanged} />
         </div>
-        <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 2, fontWeight: 500 }}>
+        <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2, fontWeight: 500 }}>
           {groupLabel(child.group_name)}
           {status === 'signed_in' && ` · Signed in at ${fmtTime(att.signed_in_at)}`}
           {status === 'signed_out' && ` · Signed out at ${fmtTime(att.signed_out_at)}`}
@@ -689,7 +689,7 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
       </div>
       <div style={{
         flexShrink: 0, display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 6,
-        ...(isMobile ? { borderTop: '1px solid #F1F5F9', paddingTop: 10 } : null),
+        ...(isMobile ? { borderTop: '1px solid var(--border-soft)', paddingTop: 10 } : null),
       }}>
         {status === 'signed_in' ? (
           <>
@@ -701,7 +701,7 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
         ) : (
           <>
             <button onClick={onSignIn} style={actionBtn('#16A34A', isMobile)}>Sign in</button>
-            <button onClick={onMarkAbsent} style={{ ...actionBtn('#6B7280', isMobile), background: '#fff', color: '#64748B', border: '1.5px solid #E5E7EB', boxShadow: 'none' }}>Absent</button>
+            <button onClick={onMarkAbsent} style={{ ...actionBtn('#6B7280', isMobile), background: 'var(--surface)', color: 'var(--text3)', border: '1.5px solid var(--border)', boxShadow: 'none' }}>Absent</button>
           </>
         )}
       </div>
@@ -722,8 +722,8 @@ function actionBtn(color, isMobile) {
   }
 }
 // Matches actionBtn's mobile floor via the wrapper's stretch.
-const correctBtn = { padding: '12px 14px', minHeight: 44, borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', color: '#64748B', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }
-const ghostBtn = { minHeight: 44, padding: '9px 13px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer' }
+const correctBtn = { padding: '12px 14px', minHeight: 44, borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }
+const ghostBtn = { minHeight: 44, padding: '9px 13px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }
 
 function SignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
   const [collectionType, setCollectionType] = useState('')
@@ -743,7 +743,7 @@ function SignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
   return (
     <OverlayPortal>
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480, padding: 20, maxHeight: '80dvh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480, padding: 20, maxHeight: '80dvh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 14 }}>Who is {child.first_name} leaving with?</div>
         {contacts.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
@@ -757,17 +757,17 @@ function SignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
               style={{ padding: '8px 14px', borderRadius: 10, border: collectionType === 'independent' ? '2px solid #7C3AED' : '1.5px solid #E5E7EB', background: collectionType === 'independent' ? '#F5F3FF' : '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Leaving independently</button>
           </div>
         )}
-        <div style={{ fontSize: 11.5, fontWeight: 700, color: '#6B7280', marginBottom: 8 }}>Or choose:</div>
+        <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text3)', marginBottom: 8 }}>Or choose:</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
           {COLLECTION_TYPES.map(t => (
             <button key={t.key} onClick={() => setCollectionType(t.key)} style={{ padding: '8px 14px', borderRadius: 10, border: collectionType === t.key ? '2px solid #7C3AED' : '1.5px solid #E5E7EB', background: collectionType === t.key ? '#F5F3FF' : '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>{t.label}</button>
           ))}
         </div>
         {collectionType && collectionType !== 'independent' && (
-          <input value={collectedByName} onChange={e => setCollectedByName(e.target.value)} placeholder="Name of person collecting" style={{ width: '100%', padding: '10px 12px', borderRadius: 9, border: '1.5px solid #E5E7EB', fontSize: 13, marginBottom: 10 }} />
+          <input value={collectedByName} onChange={e => setCollectedByName(e.target.value)} placeholder="Name of person collecting" style={{ width: '100%', padding: '10px 12px', borderRadius: 9, border: '1.5px solid var(--border)', fontSize: 13, marginBottom: 10 }} />
         )}
-        <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Collection note (optional)" style={{ width: '100%', padding: '10px 12px', borderRadius: 9, border: '1.5px solid #E5E7EB', fontSize: 13, minHeight: 44, marginBottom: 10 }} />
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, fontSize: 12.5, color: '#374151' }}>
+        <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Collection note (optional)" style={{ width: '100%', padding: '10px 12px', borderRadius: 9, border: '1.5px solid var(--border)', fontSize: 13, minHeight: 44, marginBottom: 10 }} />
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, fontSize: 12.5, color: 'var(--text2)' }}>
           <input type="checkbox" checked={identityChecked} onChange={e => setIdentityChecked(e.target.checked)} /> Identity checked{identityCheckRequired && ' *'}
         </label>
         <button onClick={confirm}
@@ -784,11 +784,11 @@ function AbsentSheet({ child, onClose, onMark }) {
   return (
     <OverlayPortal>
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 340, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: 'var(--surface)', borderRadius: 16, padding: 20, width: 340, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 14 }}>Mark {child.first_name} as...</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {ABSENCE_REASONS.map(r => (
-            <button key={r} onClick={() => onMark(r)} style={{ padding: '11px 14px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 13, fontWeight: 600, textAlign: 'left', cursor: 'pointer' }}>{r}</button>
+            <button key={r} onClick={() => onMark(r)} style={{ padding: '11px 14px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 13, fontWeight: 600, textAlign: 'left', cursor: 'pointer' }}>{r}</button>
           ))}
         </div>
       </div>
@@ -827,22 +827,22 @@ function WalkInModal({ org, session, allChildren, onClose, onDone, onSignIn }) {
   return (
     <OverlayPortal>
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 400, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '80dvh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: 'var(--surface)', borderRadius: 16, padding: 20, width: 400, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', maxHeight: '80dvh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Add Walk-in</div>
-        <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 14 }}>Search existing {terms.people} first — don't create a duplicate record.</div>
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name..." style={{ width: '100%', padding: '10px 12px', borderRadius: 9, border: '1.5px solid #E5E7EB', fontSize: 13, marginBottom: 10 }} />
+        <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 14 }}>Search existing {terms.people} first — don't create a duplicate record.</div>
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name..." style={{ width: '100%', padding: '10px 12px', borderRadius: 9, border: '1.5px solid var(--border)', fontSize: 13, marginBottom: 10 }} />
         {matches.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
             {matches.slice(0, 8).map(c => (
-              <button key={c.id} onClick={() => handleSelectExisting(c)} style={{ padding: '9px 12px', borderRadius: 9, border: '1.5px solid #E5E7EB', background: '#fff', textAlign: 'left', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{c.first_name} {c.last_name}</button>
+              <button key={c.id} onClick={() => handleSelectExisting(c)} style={{ padding: '9px 12px', borderRadius: 9, border: '1.5px solid var(--border)', background: 'var(--surface)', textAlign: 'left', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{c.first_name} {c.last_name}</button>
             ))}
           </div>
         )}
         {search.trim() && matches.length === 0 && (
-          <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 14 }}>No existing match — create a temporary walk-in record below.</div>
+          <div style={{ fontSize: 12, color: 'var(--text-faint)', marginBottom: 14 }}>No existing match — create a temporary walk-in record below.</div>
         )}
-        <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: 14, marginTop: 4 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#374151', marginBottom: 8 }}>Create temporary walk-in</div>
+        <div style={{ borderTop: '1px solid var(--border-soft)', paddingTop: 14, marginTop: 4 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text2)', marginBottom: 8 }}>Create temporary walk-in</div>
           <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
             <input value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} placeholder="First name *" style={inp} />
             <input value={form.last_name} onChange={e => setForm({ ...form, last_name: e.target.value })} placeholder="Last name" style={inp} />
@@ -881,7 +881,7 @@ function NotesPanel({ notes, onClose, onAdd, onRaiseSafeguarding, children }) {
   return (
     <OverlayPortal>
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', justifyContent: 'flex-end' }} onClick={onClose}>
-      <div style={{ width: 400, maxWidth: '100%', height: '100%', background: '#fff', overflowY: 'auto', padding: 20 }} onClick={e => e.stopPropagation()}>
+      <div style={{ width: 400, maxWidth: '100%', height: '100%', background: 'var(--surface)', overflowY: 'auto', padding: 20 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
           <div style={{ fontSize: 15, fontWeight: 800 }}>Session Notes</div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer' }}>×</button>
@@ -900,10 +900,10 @@ function NotesPanel({ notes, onClose, onAdd, onRaiseSafeguarding, children }) {
           {notes.map(n => {
             const nt = NOTE_TYPES.find(t => t.key === n.note_type)
             return (
-              <div key={n.id} style={{ background: '#F8FAFC', borderRadius: 10, padding: 10, fontSize: 12.5 }}>
+              <div key={n.id} style={{ background: 'var(--surface2)', borderRadius: 10, padding: 10, fontSize: 12.5 }}>
                 <div style={{ fontWeight: 700, marginBottom: 2 }}>{nt?.icon} {nt?.label}</div>
-                <div style={{ color: '#374151' }}>{n.content}</div>
-                <div style={{ color: '#9CA3AF', fontSize: 10.5, marginTop: 4 }}>{new Date(n.created_at).toLocaleString('en-GB')}</div>
+                <div style={{ color: 'var(--text2)' }}>{n.content}</div>
+                <div style={{ color: 'var(--text-faint)', fontSize: 10.5, marginTop: 4 }}>{new Date(n.created_at).toLocaleString('en-GB')}</div>
               </div>
             )
           })}
@@ -918,9 +918,9 @@ function ChildQuickInfo({ child, att, onClose, groupLabel }) {
   return (
     <OverlayPortal>
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: 340, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: 'var(--surface)', borderRadius: 16, padding: 20, width: 340, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>{child.first_name} {child.last_name}</div>
-        <div style={{ fontSize: 12.5, color: '#6B7280', marginBottom: 12 }}>{groupLabel(child.group_name)}{child.date_of_birth ? ` · ${new Date().getFullYear() - new Date(child.date_of_birth).getFullYear()} yrs` : ''}</div>
+        <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 12 }}>{groupLabel(child.group_name)}{child.date_of_birth ? ` · ${new Date().getFullYear() - new Date(child.date_of_birth).getFullYear()} yrs` : ''}</div>
         {child.allergies && <InfoLine label="Allergies" value={child.allergies} />}
         {child.medical_notes && <InfoLine label="Medical notes" value={child.medical_notes} />}
         {child.emergency_contact_name && <InfoLine label="Emergency contact" value={`${child.emergency_contact_name} · ${child.emergency_contact_phone || ''}`} />}
@@ -929,7 +929,7 @@ function ChildQuickInfo({ child, att, onClose, groupLabel }) {
           {child.parent_phone && <a href={`tel:${child.parent_phone.replace(/[^+0-9]/g, '')}`} style={{ ...ghostBtn, display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>Call parent / carer</a>}
         </div>
         {att?.status === 'signed_out' && <InfoLine label="Collected by" value={att.collected_by_name || att.collection_type} />}
-        <button onClick={onClose} style={{ width: '100%', marginTop: 14, padding: 10, borderRadius: 9, border: '1px solid #E5E7EB', background: '#fff', fontWeight: 700, cursor: 'pointer' }}>Close</button>
+        <button onClick={onClose} style={{ width: '100%', marginTop: 14, padding: 10, borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', fontWeight: 700, cursor: 'pointer' }}>Close</button>
       </div>
     </div>
     </OverlayPortal>
@@ -939,10 +939,10 @@ function ChildQuickInfo({ child, att, onClose, groupLabel }) {
 function InfoLine({ label, value }) {
   return (
     <div style={{ marginBottom: 8 }}>
-      <div style={{ fontSize: 10.5, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase' }}>{label}</div>
-      <div style={{ fontSize: 12.5, color: '#374151' }}>{value}</div>
+      <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase' }}>{label}</div>
+      <div style={{ fontSize: 12.5, color: 'var(--text2)' }}>{value}</div>
     </div>
   )
 }
 
-const inp = { padding: '9px 10px', borderRadius: 8, border: '1.5px solid #E5E7EB', fontSize: 12.5, flex: 1 }
+const inp = { padding: '9px 10px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 12.5, flex: 1 }

@@ -9,8 +9,8 @@ export default function ResourceCard({ resource, nextBooking, onBook, onOpen, on
   const isMulti = resource.quantity_total > 1
 
   const wrapStyle = view === 'grid'
-    ? { background: '#fff', border: '1px solid #E5E7EB', borderRadius: 16, padding: 16, position: 'relative', cursor: 'pointer', transition: 'box-shadow 0.15s' }
-    : { background: '#fff', border: '1px solid #E5E7EB', borderRadius: 14, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }
+    ? { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 16, position: 'relative', cursor: 'pointer', transition: 'box-shadow 0.15s' }
+    : { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }
 
   return (
     <div style={wrapStyle} onClick={() => onOpen(resource)}
@@ -24,20 +24,20 @@ export default function ResourceCard({ resource, nextBooking, onBook, onOpen, on
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#111827' }}>{resource.name}</div>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>{resource.name}</div>
           <div style={{ position: 'relative', flexShrink: 0 }} onClick={e => e.stopPropagation()}>
-            <button onClick={() => setMenuOpen(x => !x)} style={{ background: 'none', border: 'none', fontSize: 16, color: '#9CA3AF', cursor: 'pointer', padding: '0 4px' }}>⋯</button>
+            <button onClick={() => setMenuOpen(x => !x)} style={{ background: 'none', border: 'none', fontSize: 16, color: 'var(--text-faint)', cursor: 'pointer', padding: '0 4px' }}>⋯</button>
             {menuOpen && (
-              <div style={{ position: 'absolute', top: '110%', right: 0, background: '#fff', border: '1px solid #E5E7EB', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 20, minWidth: 160 }}>
+              <div style={{ position: 'absolute', top: '110%', right: 0, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 20, minWidth: 160 }}>
                 {['View details', 'Mark unavailable', 'Record maintenance', 'Edit'].map(a => (
                   <button key={a} onClick={() => { setMenuOpen(false); onQuickAction && onQuickAction(a, resource) }}
-                    style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 14px', border: 'none', background: 'none', fontSize: 12.5, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>{a}</button>
+                    style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 14px', border: 'none', background: 'none', fontSize: 12.5, fontWeight: 600, color: 'var(--text2)', cursor: 'pointer' }}>{a}</button>
                 ))}
               </div>
             )}
           </div>
         </div>
-        <div style={{ fontSize: 11.5, color: '#6B7280', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+        <div style={{ fontSize: 11.5, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
           <span><Icon name={cat.icon} /></span> {cat.label}
         </div>
 
@@ -47,7 +47,7 @@ export default function ResourceCard({ resource, nextBooking, onBook, onOpen, on
           </span>
         </div>
 
-        <div style={{ marginTop: 8, fontSize: 11.5, color: '#6B7280', display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <div style={{ marginTop: 8, fontSize: 11.5, color: 'var(--text3)', display: 'flex', flexDirection: 'column', gap: 2 }}>
           {resource.location && <div><Icon name="📍" /> {resource.location}</div>}
           {resource.capacity && <div><Icon name="👥" /> Capacity {resource.capacity}</div>}
           {isMulti && <div>{resource.quantity_available} available{resource.quantity_total > resource.quantity_available ? ` · ${resource.quantity_total - resource.quantity_available} in use` : ''}</div>}
@@ -57,7 +57,7 @@ export default function ResourceCard({ resource, nextBooking, onBook, onOpen, on
         <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
           <button onClick={e => { e.stopPropagation(); onBook(resource) }}
             disabled={resource.status === 'maintenance' || resource.status === 'unavailable'}
-            style={{ flex: 1, padding: '9px 12px', borderRadius: 9, border: '1.5px solid #7C3AED', background: '#fff', color: '#7C3AED', fontSize: 12.5, fontWeight: 700, cursor: resource.status === 'maintenance' || resource.status === 'unavailable' ? 'not-allowed' : 'pointer', opacity: resource.status === 'maintenance' || resource.status === 'unavailable' ? 0.4 : 1 }}>
+            style={{ flex: 1, padding: '9px 12px', borderRadius: 9, border: '1.5px solid #7C3AED', background: 'var(--surface)', color: '#7C3AED', fontSize: 12.5, fontWeight: 700, cursor: resource.status === 'maintenance' || resource.status === 'unavailable' ? 'not-allowed' : 'pointer', opacity: resource.status === 'maintenance' || resource.status === 'unavailable' ? 0.4 : 1 }}>
             Book
           </button>
         </div>

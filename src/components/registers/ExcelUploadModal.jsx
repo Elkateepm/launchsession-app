@@ -95,24 +95,24 @@ export default function ExcelUploadModal({ orgId, bubbles, onClose, onImported }
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 20, width: '100%', maxWidth: 560, maxHeight: '90vh', overflowY: 'auto' }}>
-        <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)' }}>Import from Excel / CSV</div>
             <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>Bulk add children to your register</div>
           </div>
-          <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', background: '#F3F4F6', border: 'none', cursor: 'pointer', fontSize: 16 }}>x</button>
+          <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--surface3)', border: 'none', cursor: 'pointer', fontSize: 16 }}>x</button>
         </div>
 
         <div style={{ padding: '18px 20px' }}>
           <div style={{ background: 'rgba(27,154,170,0.06)', border: '1px solid rgba(27,154,170,0.2)', borderRadius: 12, padding: '14px 16px', marginBottom: 18 }}>
             <div style={{ fontSize: 13, fontWeight: 800, color: '#1B9AAA', marginBottom: 6 }}>Step 1: Download the template</div>
             <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10 }}>Required columns: first_name, last_name. Optional: date_of_birth, group_name, allergies, medical_notes, emergency_contact_name, emergency_contact_phone.</div>
-            <button onClick={downloadTemplate} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(27,154,170,0.3)', background: '#fff', color: '#1B9AAA', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Download Template</button>
+            <button onClick={downloadTemplate} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(27,154,170,0.3)', background: 'var(--surface)', color: '#1B9AAA', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Download Template</button>
           </div>
 
           <div style={{ marginBottom: 18 }}>
             <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Step 2: Upload your file</div>
-            <div onClick={() => fileRef.current?.click()} style={{ border: '2px dashed #e5e7eb', borderRadius: 12, padding: '28px 20px', textAlign: 'center', cursor: 'pointer', background: '#FAFAFA' }}
+            <div onClick={() => fileRef.current?.click()} style={{ border: '2px dashed var(--border)', borderRadius: 12, padding: '28px 20px', textAlign: 'center', cursor: 'pointer', background: '#FAFAFA' }}
               onMouseEnter={e => e.currentTarget.style.borderColor = '#1B9AAA'}
               onMouseLeave={e => e.currentTarget.style.borderColor = '#e5e7eb'}>
               <div style={{ fontSize: 28, marginBottom: 8 }}><Icon name="📂" /></div>
@@ -136,18 +136,18 @@ export default function ExcelUploadModal({ orgId, bubbles, onClose, onImported }
                 Step 3: Review and import
                 <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 600, color: '#1B9AAA' }}>{rows.length} children found</span>
               </div>
-              <div style={{ border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden', maxHeight: 240, overflowY: 'auto' }}>
+              <div style={{ border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', maxHeight: 240, overflowY: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                   <thead>
-                    <tr style={{ background: '#F8FAFC' }}>
+                    <tr style={{ background: 'var(--surface2)' }}>
                       {['Name','DOB','Group','Allergies','Emergency Contact'].map(h => (
-                        <th key={h} style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 700, color: 'var(--text3)', borderBottom: '1px solid #e5e7eb', whiteSpace: 'nowrap' }}>{h}</th>
+                        <th key={h} style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 700, color: 'var(--text3)', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {rows.slice(0, 50).map((row, i) => (
-                      <tr key={i} style={{ borderBottom: '1px solid #F3F4F6' }}>
+                      <tr key={i} style={{ borderBottom: '1px solid var(--border-soft)' }}>
                         <td style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text)' }}>{row.first_name} {row.last_name}</td>
                         <td style={{ padding: '8px 12px', color: 'var(--text3)' }}>{row.date_of_birth ? String(row.date_of_birth).slice(0,10) : '-'}</td>
                         <td style={{ padding: '8px 12px', color: 'var(--text3)' }}>{row.group_name || '-'}</td>
@@ -163,7 +163,7 @@ export default function ExcelUploadModal({ orgId, bubbles, onClose, onImported }
           )}
 
           <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={onClose} style={{ flex: 1, padding: '12px', borderRadius: 10, border: '1px solid #e5e7eb', background: 'transparent', color: 'var(--text3)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+            <button onClick={onClose} style={{ flex: 1, padding: '12px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text3)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
             <button onClick={handleImport} disabled={!rows || rows.length === 0 || importing}
               style={{ flex: 2, padding: '12px', borderRadius: 10, border: 'none', background: !rows || importing ? 'rgba(27,154,170,0.4)' : '#1B9AAA', color: '#fff', fontSize: 14, fontWeight: 800, cursor: !rows || importing ? 'not-allowed' : 'pointer' }}>
               {importing ? 'Importing...' : rows ? 'Import ' + rows.length + ' Children' : 'Select a file first'}

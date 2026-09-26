@@ -8,7 +8,7 @@ export const attendanceToResolve = rows => ({
   unmarked: rows.filter(row => !['signed_in', 'signed_out', 'absent'].includes(row.status)).length,
 })
 
-const button = { minHeight: 44, padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border, #E5E7EB)', background: 'var(--surface, #fff)', color: 'var(--text, #111827)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }
+const button = { minHeight: 44, padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border, var(--border))', background: 'var(--surface, #fff)', color: 'var(--text, #111827)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }
 
 // All entry points use the same finish check. Read attendance again at the
 // point of closing; the list that opened this dialog may be stale.

@@ -23,7 +23,7 @@ export default function FundraisingHeader({ onNewCampaign, onOpenAssistant, isAd
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button onClick={onOpenAssistant} style={{
             display: 'flex', alignItems: 'center', gap: 7, padding: '10px 16px', borderRadius: 11,
-            border: `1.5px solid ${LS.lavenderBorder}`, background: '#fff', color: LS.purpleDark,
+            border: `1.5px solid ${LS.lavenderBorder}`, background: 'var(--surface)', color: LS.purpleDark,
             fontWeight: 700, fontSize: 13, cursor: 'pointer',
           }}>
             <IconGlyph name="sparkle" color={LS.purpleDark} size={14} /> AI Assistant

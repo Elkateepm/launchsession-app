@@ -110,7 +110,7 @@ export default function AddVolunteersToSessionModal({ session, orgId, primary, s
       }}>
         <span style={{
           position: 'absolute', top: 2, left: checked ? 18 : 2, width: 16, height: 16, borderRadius: '50%',
-          background: '#fff', transition: 'left 0.15s ease',
+          background: 'var(--surface)', transition: 'left 0.15s ease',
         }} />
       </span>
       <span style={{ minWidth: 0 }}>

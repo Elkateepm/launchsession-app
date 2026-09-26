@@ -84,7 +84,7 @@ function RotationPlanner({ slots, onChange, selectedBubbles, bubbleDefs }) {
         <div key={i} style={{ background: 'var(--surface2)', borderRadius: 12, border: '1.5px solid var(--border)', padding: 12, marginBottom: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
             <input type="time" value={slot.time} onChange={e => updateTime(i, e.target.value)}
-              style={{ padding: '6px 10px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 14, fontWeight: 700, width: 120 }} />
+              style={{ padding: '6px 10px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 14, fontWeight: 700, width: 120 }} />
             <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', flex: 1 }}>SLOT {i + 1}</span>
             <button onClick={() => removeSlot(i)} style={{ background: '#FEE2E2', border: 'none', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', color: '#C00', fontSize: 16 }}>×</button>
           </div>
@@ -140,7 +140,7 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, sessi
   const canNext0 = !!form.title.trim() && !!form.session_date
   const canSave  = canNext0
 
-  const fi = { width: '100%', padding: compact ? '13px 14px' : '12px 14px', borderRadius: 12, border: '1.5px solid var(--border, #e5e7eb)', fontSize: 15, outline: 'none', background: 'var(--surface, #fff)', boxSizing: 'border-box', color: 'var(--text, #111)', fontFamily: 'inherit' }
+  const fi = { width: '100%', padding: compact ? '13px 14px' : '12px 14px', borderRadius: 12, border: '1.5px solid var(--border, var(--border))', fontSize: 15, outline: 'none', background: 'var(--surface, #fff)', boxSizing: 'border-box', color: 'var(--text, #111)', fontFamily: 'inherit' }
   const lb = { fontSize: 11, fontWeight: 800, color: 'var(--text3, #6B7280)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6, display: 'block' }
 
   return (
@@ -356,7 +356,7 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, sessi
             />
 
             {/* Summary card */}
-            <div style={{ background: 'var(--surface2, #F9FAFB)', borderRadius: 14, border: '1.5px solid var(--border, #e5e7eb)', padding: '16px' }}>
+            <div style={{ background: 'var(--surface2, #F9FAFB)', borderRadius: 14, border: '1.5px solid var(--border, var(--border))', padding: '16px' }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3, #6B7280)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 }}>Summary</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {[
@@ -382,16 +382,16 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, sessi
       </div>
 
       {/* ── FOOTER ── */}
-      <div style={{ padding: compact ? '12px 18px' : '16px 24px', borderTop: '1px solid var(--border, #e5e7eb)', flexShrink: 0, display: 'flex', gap: 10, background: 'var(--surface, #fff)' }}>
+      <div style={{ padding: compact ? '12px 18px' : '16px 24px', borderTop: '1px solid var(--border, var(--border))', flexShrink: 0, display: 'flex', gap: 10, background: 'var(--surface, #fff)' }}>
         {step > 0 && (
           <motion.button onClick={() => setStep(s => s - 1)} whileTap={{ scale: 0.95 }}
-            style={{ padding: compact ? '14px 18px' : '13px 18px', borderRadius: 12, border: '1.5px solid var(--border, #e5e7eb)', background: 'var(--surface, #fff)', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text3, #6B7280)' }}>
+            style={{ padding: compact ? '14px 18px' : '13px 18px', borderRadius: 12, border: '1.5px solid var(--border, var(--border))', background: 'var(--surface, #fff)', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text3, #6B7280)' }}>
             ← Back
           </motion.button>
         )}
         {step === 0 && (
           <motion.button onClick={onCancel} whileTap={{ scale: 0.95 }}
-            style={{ padding: compact ? '14px 18px' : '13px 18px', borderRadius: 12, border: '1.5px solid var(--border, #e5e7eb)', background: 'var(--surface, #fff)', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text3, #6B7280)' }}>
+            style={{ padding: compact ? '14px 18px' : '13px 18px', borderRadius: 12, border: '1.5px solid var(--border, var(--border))', background: 'var(--surface, #fff)', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text3, #6B7280)' }}>
             Cancel
           </motion.button>
         )}
@@ -460,7 +460,7 @@ function VolunteerPanel({ session, org, onClose }) {
     <div style={{ padding: 16, background: covered ? '#F0FDF4' : '#FFFBEB', borderRadius: 12, marginBottom: 20 }}><strong>{assigned.length}{needed ? ` / ${needed}` : ''} volunteers assigned</strong><div style={{ marginTop: 6, fontSize: 13 }}>{covered ? 'Volunteer cover in place' : `${needed - assigned.length} more needed`}</div></div>
     <input type="search" aria-label="Search volunteers" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search available volunteers…" style={{ ...flowInput, marginBottom: 20 }} />
           {loading ? (
-            <div style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>Loading...</div>
+            <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-faint)' }}>Loading...</div>
           ) : (
             <>
               <div style={{ marginBottom: 24 }}>
@@ -477,10 +477,10 @@ function VolunteerPanel({ session, org, onClose }) {
                     </div>
                     <div style={{ flex: '1 1 110px', minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.volunteer?.full_name || 'Volunteer'}</div>
-                      {a.volunteer?.phone && <div style={{ fontSize: 11, color: '#6B7280' }}>{a.volunteer.phone}</div>}
+                      {a.volunteer?.phone && <div style={{ fontSize: 11, color: 'var(--text3)' }}>{a.volunteer.phone}</div>}
                     </div>
                     <select aria-label={`Status for ${a.volunteer?.full_name || 'volunteer'}`} value={a.status || 'pending'} onChange={e => updateStatus(a, e.target.value)} disabled={!!saving}
-                      style={{ minHeight: 44, fontSize: 16, fontWeight: 700, padding: '4px 8px', borderRadius: 8, border: '1.5px solid #E5E7EB', background: '#fff', cursor: 'pointer', color: a.status === 'confirmed' ? '#16A34A' : '#92400E' }}>
+                      style={{ minHeight: 44, fontSize: 16, fontWeight: 700, padding: '4px 8px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', color: a.status === 'confirmed' ? '#16A34A' : '#92400E' }}>
                       <option value="pending">Pending</option>
                       <option value="confirmed">Confirmed</option>
                     </select>
@@ -493,9 +493,9 @@ function VolunteerPanel({ session, org, onClose }) {
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)', marginBottom: 12 }}>Add Volunteers ({unassigned.length} available)</div>
                   {unassigned.map(v => (
-                    <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '10px 12px', background: 'var(--surface2, #F9FAFB)', borderRadius: 12, border: '1.5px solid var(--border, #E5E7EB)', marginBottom: 8 }}>
+                    <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '10px 12px', background: 'var(--surface2, #F9FAFB)', borderRadius: 12, border: '1.5px solid var(--border, var(--border))', marginBottom: 8 }}>
                       <div style={{ width: 36, height: 36, borderRadius: 10, background: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                        {v.photo_url ? <SignedImg bucket="staff-photos" src={v.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 14, fontWeight: 900, color: '#6B7280' }}>{(v.full_name || '?')[0]}</span>}
+                        {v.photo_url ? <SignedImg bucket="staff-photos" src={v.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 14, fontWeight: 900, color: 'var(--text3)' }}>{(v.full_name || '?')[0]}</span>}
                       </div>
                       <div style={{ flex: 1, fontSize: 13, fontWeight: 700, color: 'var(--text, #111)' }}>{v.full_name}</div>
                       <button onClick={() => addVolunteer(v)} disabled={!!saving} style={{ minHeight: 44, padding: '6px 14px', borderRadius: 8, border: 'none', background: primary, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}>
@@ -666,7 +666,7 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
           </div>
         ) : (
           <>
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid #E2E8F0', flexShrink: 0 }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
               {/* Progress dots */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, position: 'relative', zIndex: 1 }}>
                 {REFLECT_STEPS.map((s, i) => (
@@ -846,9 +846,9 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
             </div>
 
             {/* Footer */}
-            <div style={{ padding: '16px 20px calc(16px + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid var(--border, #F3F4F6)', display: 'flex', gap: 10, flexShrink: 0, background: 'var(--surface, #fff)' }}>
+            <div style={{ padding: '16px 20px calc(16px + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid var(--border, var(--border-soft))', display: 'flex', gap: 10, flexShrink: 0, background: 'var(--surface, #fff)' }}>
               {step > 0 && (
-                <motion.button whileTap={{ scale: 0.97 }} onClick={goBack} style={{ minHeight: 44, padding: '12px 16px', borderRadius: 12, border: '1.5px solid var(--border, #E5E7EB)', background: 'var(--surface, #fff)', color: 'var(--text3, #6B7280)', fontWeight: 700, cursor: 'pointer' }}><Icon name="←" /> Back</motion.button>
+                <motion.button whileTap={{ scale: 0.97 }} onClick={goBack} style={{ minHeight: 44, padding: '12px 16px', borderRadius: 12, border: '1.5px solid var(--border, var(--border))', background: 'var(--surface, #fff)', color: 'var(--text3, #6B7280)', fontWeight: 700, cursor: 'pointer' }}><Icon name="←" /> Back</motion.button>
               )}
               {!isLast ? (
                 <motion.button whileTap={{ scale: 0.97 }} disabled={!canAdvance} onClick={goNext} style={{ minHeight: 44, flex: 1, padding: 12, borderRadius: 12, border: 'none', background: canAdvance ? `linear-gradient(135deg, ${primary}, ${secondary})` : '#D1D5DB', color: '#fff', fontWeight: 800, fontSize: 14, cursor: canAdvance ? 'pointer' : 'default', boxShadow: canAdvance ? `0 8px 20px var(--org-a20)` : 'none' }}>
@@ -877,20 +877,20 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
 function Fact({ icon, label, value }) {
   if (!value) return null
   return (
-    <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, padding: '10px 12px' }}>
-      <div style={{ fontSize: 10, fontWeight: 800, color: '#94A3B8', letterSpacing: 0.4, marginBottom: 4 }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '10px 12px' }}>
+      <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-faint)', letterSpacing: 0.4, marginBottom: 4 }}>
         <Icon name={icon} /> {label.toUpperCase()}
       </div>
       {/* Long single values ("Cassiobury Park, Watford") have to wrap inside
           the cell rather than set its width. */}
-      <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', lineHeight: 1.3, overflowWrap: 'anywhere' }}>{value}</div>
+      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', lineHeight: 1.3, overflowWrap: 'anywhere' }}>{value}</div>
     </div>
   )
 }
 
 function Chipline({ icon, text }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: '#334155', fontWeight: 600 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: 'var(--text2)', fontWeight: 600 }}>
       <span style={{ fontSize: 13 }}>{icon}</span>{text}
     </div>
   )
@@ -912,7 +912,7 @@ function SessionDetailDrawer({ session, org, onClose, onEdit, onVolunteers, volC
   const timeLabel = session.start_time ? `${session.start_time.slice(0, 5)}${session.end_time ? ` – ${session.end_time.slice(0, 5)}` : ''}` : 'Time to be confirmed'
   return <SessionSheet title={session.title} subtitle={`${phase === 'live' ? 'Live now' : phase.charAt(0).toUpperCase() + phase.slice(1)} · ${dateLabel}`} onClose={onClose}
     footer={<div style={{ display: 'flex', gap: 8 }}><button onClick={() => { onEdit(session); onClose() }} style={{ ...flowButton, flex: 1 }}>Edit details</button>{phase !== 'cancelled' && <button onClick={() => { if (phase === 'draft') onEdit(session); else onOpenRegister(session); onClose() }} style={{ ...flowButton, flex: 2, background: primary, color: '#fff', borderColor: primary }}>{phase === 'draft' ? 'Continue planning' : isPast ? 'View register' : 'Open register →'}</button>}</div>}>
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 16, background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 12, marginBottom: 20 }}><div><div style={{ color: '#64748B', fontSize: 12, marginBottom: 5 }}>Attendance</div><strong style={{ fontSize: 22 }}>{phase === 'live' || isPast ? ac.signedIn : ac.total}</strong><span style={{ color: '#64748B', fontSize: 13 }}> {phase === 'live' ? 'signed in' : isPast ? 'attended' : 'expected'}</span></div><span style={{ fontSize: 13, color: '#64748B' }}>{ac.total ? `${ac.total} on the register` : 'No one added yet'}</span></div>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 16, background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 12, marginBottom: 20 }}><div><div style={{ color: 'var(--text3)', fontSize: 12, marginBottom: 5 }}>Attendance</div><strong style={{ fontSize: 22 }}>{phase === 'live' || isPast ? ac.signedIn : ac.total}</strong><span style={{ color: 'var(--text3)', fontSize: 13 }}> {phase === 'live' ? 'signed in' : isPast ? 'attended' : 'expected'}</span></div><span style={{ fontSize: 13, color: 'var(--text3)' }}>{ac.total ? `${ac.total} on the register` : 'No one added yet'}</span></div>
     {project && <button onClick={() => onOpenProject(project)} style={{ ...flowButton, width: '100%', textAlign: 'left', marginBottom: 14 }}>Project: {project.name} →</button>}
           {/* Key facts as a compact 2-up grid rather than one row each */}
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10, marginBottom: 14 }}>
@@ -934,17 +934,17 @@ function SessionDetailDrawer({ session, org, onClose, onEdit, onVolunteers, volC
                 <div style={{ fontSize: 12.5, fontWeight: 800, color: covered ? '#15803D' : '#B45309' }}>
                   {covered ? 'Volunteer cover confirmed' : `${needed - volCount} more volunteer${needed - volCount === 1 ? '' : 's'} needed`}
                 </div>
-                <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>{volCount} of {needed} places filled</div>
+                <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 1 }}>{volCount} of {needed} places filled</div>
               </div>
             </div>
           )}
 
           {session.bubbles?.length > 0 && (
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 10.5, fontWeight: 800, color: '#94A3B8', letterSpacing: 0.4, marginBottom: 7 }}>GROUPS</div>
+              <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--text-faint)', letterSpacing: 0.4, marginBottom: 7 }}>GROUPS</div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {session.bubbles.map(b => (
-                  <span key={b} style={{ fontSize: 11.5, fontWeight: 700, color: '#334155', background: '#F1F5F9', border: '1px solid #E2E8F0', borderRadius: 99, padding: '4px 11px' }}>{b}</span>
+                  <span key={b} style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text2)', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 99, padding: '4px 11px' }}>{b}</span>
                 ))}
               </div>
             </div>
@@ -952,7 +952,7 @@ function SessionDetailDrawer({ session, org, onClose, onEdit, onVolunteers, volC
 
           {(session.meeting_point || session.packed_lunch || session.consent_required) && (
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 10.5, fontWeight: 800, color: '#94A3B8', letterSpacing: 0.4, marginBottom: 7 }}>ON THE DAY</div>
+              <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--text-faint)', letterSpacing: 0.4, marginBottom: 7 }}>ON THE DAY</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {session.meeting_point && <Chipline icon="📌" text={`Meet at ${session.meeting_point}`} />}
                 {session.packed_lunch && <Chipline icon="🥪" text="Packed lunch required" />}
@@ -963,7 +963,7 @@ function SessionDetailDrawer({ session, org, onClose, onEdit, onVolunteers, volC
 
           {session.description && (
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 10.5, fontWeight: 800, color: '#94A3B8', letterSpacing: 0.4, marginBottom: 6 }}>DESCRIPTION</div>
+              <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--text-faint)', letterSpacing: 0.4, marginBottom: 6 }}>DESCRIPTION</div>
               <div style={{ fontSize: 12.5, color: '#475569', lineHeight: 1.55 }}>{session.description}</div>
             </div>
           )}
@@ -987,7 +987,7 @@ function SessionDetailDrawer({ session, org, onClose, onEdit, onVolunteers, volC
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {absentees.map((a, i) => a.children && (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#FEF2F2', borderRadius: 10, padding: '7px 10px' }}>
-                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: '#DC2626', flexShrink: 0, overflow: 'hidden' }}>
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: '#DC2626', flexShrink: 0, overflow: 'hidden' }}>
                       {a.children.photo_url ? <SignedImg bucket="gallery" src={a.children.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : `${a.children.first_name?.[0] || ''}${a.children.last_name?.[0] || ''}`}
                     </div>
                     <span style={{ fontSize: 12.5, fontWeight: 700, color: '#7F1D1D', flex: 1 }}>{a.children.first_name} {a.children.last_name}</span>
@@ -998,7 +998,7 @@ function SessionDetailDrawer({ session, org, onClose, onEdit, onVolunteers, volC
             </div>
           )}
 
-    <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: 16, marginTop: 16, display: 'grid', gap: 10 }}><div style={{ fontSize: 13, fontWeight: 800 }}>Next steps</div><button onClick={() => { onVolunteers(session); onClose() }} style={{ ...flowButton, textAlign: 'left' }}>Manage volunteer cover · {volCount} assigned →</button>{session.risk_assessment_required && <button onClick={onRisk} style={{ ...flowButton, textAlign: 'left' }}>{hasRiskAssessment ? 'View linked risk assessment' : 'Add a risk assessment'} →</button>}{isPast && <button onClick={() => { onReflect(session); onClose() }} style={{ ...flowButton, textAlign: 'left' }}>{hasReflection ? 'View or update reflection' : `Reflect on this ${terms.session}`} →</button>}</div>
+    <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 16, display: 'grid', gap: 10 }}><div style={{ fontSize: 13, fontWeight: 800 }}>Next steps</div><button onClick={() => { onVolunteers(session); onClose() }} style={{ ...flowButton, textAlign: 'left' }}>Manage volunteer cover · {volCount} assigned →</button>{session.risk_assessment_required && <button onClick={onRisk} style={{ ...flowButton, textAlign: 'left' }}>{hasRiskAssessment ? 'View linked risk assessment' : 'Add a risk assessment'} →</button>}{isPast && <button onClick={() => { onReflect(session); onClose() }} style={{ ...flowButton, textAlign: 'left' }}>{hasReflection ? 'View or update reflection' : `Reflect on this ${terms.session}`} →</button>}</div>
   </SessionSheet>
 }
 
@@ -1008,23 +1008,23 @@ const TEMPLATE_ICONS = ['📋', '⚽', '🏀', '🎨', '🏊', '🚌', '🎭', '
 function TemplateCard({ t, primary, onUse, onEdit, onDelete }) {
   const type = SESSION_TYPES.find(x => x.key === t.session_type) || SESSION_TYPES[0]
   return (
-    <div style={{ background: '#fff', border: '1px solid #EEF1F6', borderRadius: 20, padding: 18, boxShadow: '0 8px 24px -14px rgba(30,41,59,0.15)' }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid #EEF1F6', borderRadius: 20, padding: 18, boxShadow: '0 8px 24px -14px rgba(30,41,59,0.15)' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
         <div style={{ width: 44, height: 44, borderRadius: 13, background: type.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>{t.icon || '📋'}</div>
         <div style={{ display: 'flex', gap: 4 }}>
-          <button onClick={() => onEdit(t)} title="Edit template" style={{ width: 44, height: 44, borderRadius: 8, border: 'none', background: '#F1F5F9', cursor: 'pointer', fontSize: 12 }}><Icon name="✏️" /></button>
+          <button onClick={() => onEdit(t)} title="Edit template" style={{ width: 44, height: 44, borderRadius: 8, border: 'none', background: 'var(--surface-hover)', cursor: 'pointer', fontSize: 12 }}><Icon name="✏️" /></button>
           <button onClick={() => onDelete(t.id)} title="Delete template" style={{ width: 44, height: 44, borderRadius: 8, border: 'none', background: '#FFF0F0', cursor: 'pointer', fontSize: 12 }}><Icon name="🗑" /></button>
         </div>
       </div>
-      <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>{t.name}</div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, fontSize: 11.5, fontWeight: 600, color: '#64748B', marginBottom: 12 }}>
+      <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>{t.name}</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, fontSize: 11.5, fontWeight: 600, color: 'var(--text3)', marginBottom: 12 }}>
         <span>{type.icon} {type.label}</span>
         {t.start_time && t.end_time && <span><Icon name="🕐" /> {t.start_time.slice(0, 5)}–{t.end_time.slice(0, 5)}</span>}
         {t.max_capacity && <span><Icon name="👥" /> {t.max_capacity}</span>}
         {t.location && <span>📍 {t.location.split(',')[0]}</span>}
       </div>
       {t.use_count > 0 && (
-        <div style={{ fontSize: 10.5, color: '#94A3B8', marginBottom: 12 }}>Used {t.use_count} time{t.use_count === 1 ? '' : 's'}</div>
+        <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginBottom: 12 }}>Used {t.use_count} time{t.use_count === 1 ? '' : 's'}</div>
       )}
       <button onClick={() => onUse(t)} style={{ width: '100%', minHeight: 44, padding: '10px 0', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
         Use template →
@@ -1042,9 +1042,9 @@ function TemplatesView({ templates, loading, primary, onBack, onUse, onEdit, onD
       <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 28 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 22, flexWrap: 'wrap' }}>
           <div>
-            <button onClick={onBack} style={{ minHeight: 44, background: 'none', border: 'none', color: '#64748B', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', marginBottom: 6, padding: 0 }}><Icon name="←" /> Back to {terms.sessions}</button>
-            <div style={{ fontSize: 24, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5 }}>{terms.Session} templates</div>
-            <div style={{ fontSize: 13, color: '#64748B', marginTop: 2 }}>Reusable presets for sessions you run again and again.</div>
+            <button onClick={onBack} style={{ minHeight: 44, background: 'none', border: 'none', color: 'var(--text3)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', marginBottom: 6, padding: 0 }}><Icon name="←" /> Back to {terms.sessions}</button>
+            <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.5 }}>{terms.Session} templates</div>
+            <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>Reusable presets for sessions you run again and again.</div>
           </div>
           <button onClick={onCreateNew} style={{ padding: '12px 20px', borderRadius: 14, border: 'none', minHeight: 44, background: primary, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
             + New Template
@@ -1054,12 +1054,12 @@ function TemplatesView({ templates, loading, primary, onBack, onUse, onEdit, onD
         <input type="search" aria-label="Search templates" value={query} onChange={e => setQuery(e.target.value)} placeholder="Find a template…" style={{ ...flowInput, marginBottom: 20 }} />
         {!loading && templates.length > 0 && !filtered.length && <p>No templates match your search.</p>}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8', fontWeight: 700 }}>Loading templates...</div>
+          <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-faint)', fontWeight: 700 }}>Loading templates...</div>
         ) : templates.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '56px 20px', background: '#fff', borderRadius: 24, border: '1.5px dashed #E5E7EB' }}>
+          <div style={{ textAlign: 'center', padding: '56px 20px', background: 'var(--surface)', borderRadius: 24, border: '1.5px dashed var(--border)' }}>
             <div style={{ fontSize: 44, marginBottom: 14 }}>🗂️</div>
-            <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>No templates yet</div>
-            <div style={{ fontSize: 13.5, color: '#64748B', marginBottom: 22 }}>Build one from scratch, or save any existing session as a template from its card.</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', marginBottom: 6 }}>No templates yet</div>
+            <div style={{ fontSize: 13.5, color: 'var(--text3)', marginBottom: 22 }}>Build one from scratch, or save any existing session as a template from its card.</div>
             <button onClick={onCreateNew} style={{ padding: '12px 26px', borderRadius: 14, border: 'none', minHeight: 44, background: primary, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
               + New Template
             </button>
@@ -1101,8 +1101,8 @@ function TemplateFormModal({ initial, bubbleDefs, saving, onSave, onCancel, prim
   const canSave = form.name.trim().length > 0
   const isEditing = !!initial?.id
 
-  const fi = { width: '100%', padding: '11px 13px', borderRadius: 11, border: '1.5px solid #E5E7EB', fontSize: 16, minHeight: 44, background: '#fff', boxSizing: 'border-box', color: '#111', fontFamily: 'inherit' }
-  const lb = { fontSize: 11, fontWeight: 800, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6, display: 'block' }
+  const fi = { width: '100%', padding: '11px 13px', borderRadius: 11, border: '1.5px solid var(--border)', fontSize: 16, minHeight: 44, background: 'var(--surface)', boxSizing: 'border-box', color: '#111', fontFamily: 'inherit' }
+  const lb = { fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6, display: 'block' }
 
   return (
     <SessionSheet title={isEditing ? 'Edit template' : 'New template'} onClose={onCancel} busy={saving} footer={<div style={{ display: 'flex', gap: 8 }}><button onClick={onCancel} disabled={saving} style={flowButton}>Cancel</button><button onClick={() => canSave && onSave({ ...form, id: initial?.id })} disabled={!canSave || saving} style={{ ...flowButton, flex: 1, background: canSave ? primary : '#94A3B8', borderColor: 'transparent', color: '#fff' }}>{saving ? 'Saving…' : isEditing ? 'Save template' : 'Create template'}</button></div>}>
@@ -1276,7 +1276,7 @@ const REVIEW_TONES = {
   safeguarding: { color: '#B91C1C', bg: '#FEE2E2', icon: '\u{1F6E1}' },
   compliance:   { color: '#B45309', bg: '#FEF3C7', icon: '\u26A0' },
   attendance:   { color: '#B45309', bg: '#FEF3C7', icon: '\u26A0' },
-  admin:        { color: '#64748B', bg: '#F1F5F9', icon: '\u26A0' },
+  admin:        { color: 'var(--text3)', bg: '#F1F5F9', icon: '\u26A0' },
 }
 
 function fmtDayLabel(dateStr) {
@@ -1336,7 +1336,7 @@ function StatusPill({ ok, children, tone }) {
 function MetaStat({ value, label }) {
   return (
     <span style={{ fontSize: 12, color: '#475569', fontWeight: 600, whiteSpace: 'nowrap' }}>
-      <strong style={{ color: '#0F172A', fontWeight: 800 }}>{value}</strong> {label}
+      <strong style={{ color: 'var(--text)', fontWeight: 800 }}>{value}</strong> {label}
     </span>
   )
 }
@@ -1356,7 +1356,7 @@ function CardMenu({ status, onView, onEdit, onDuplicate, onDelete, onSaveTemplat
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
       <div style={{
         position: 'absolute', top: '100%', right: 0, zIndex: 41, minWidth: 172, marginTop: 4,
-        background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, boxShadow: '0 16px 40px -12px rgba(15,23,42,0.25)', padding: 5,
+        background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 16px 40px -12px rgba(15,23,42,0.25)', padding: 5,
       }}>
         {items.map((it, i) => (
           <button key={i} onClick={(e) => { e.stopPropagation(); onClose(); it.onClick && it.onClick() }}
@@ -1383,18 +1383,18 @@ function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, pr
   const accent = status === 'live' ? '#15803D' : status === 'review' ? '#B45309' : primary
   const action = status === 'draft' ? onEdit : past && !hasReflection ? onReflect : onOpenRegister
   const actionLabel = status === 'draft' ? 'Continue planning' : past && !hasReflection ? 'Add reflection' : past ? 'View register' : 'Open register'
-  return <article style={{ position: 'relative', background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14, padding: isMobile ? 16 : 20, marginBottom: 12 }}>
+  return <article style={{ position: 'relative', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: isMobile ? 16 : 20, marginBottom: 12 }}>
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-      {!isMobile && <div style={{ width: 58, flexShrink: 0, background: '#F1F5F9', borderRadius: 10, padding: '12px 0', textAlign: 'center' }}><div style={{ fontSize: 11, color: '#64748B', textTransform: 'uppercase' }}>{s.session_date ? format(parseISO(s.session_date), 'MMM') : 'Date'}</div><strong style={{ display: 'block', fontSize: 22, color: '#0F172A' }}>{s.session_date ? format(parseISO(s.session_date), 'dd') : '—'}</strong></div>}
+      {!isMobile && <div style={{ width: 58, flexShrink: 0, background: 'var(--surface-hover)', borderRadius: 10, padding: '12px 0', textAlign: 'center' }}><div style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase' }}>{s.session_date ? format(parseISO(s.session_date), 'MMM') : 'Date'}</div><strong style={{ display: 'block', fontSize: 22, color: 'var(--text)' }}>{s.session_date ? format(parseISO(s.session_date), 'dd') : '—'}</strong></div>}
       <div style={{ flex: 1, minWidth: 0 }}><span style={{ display: 'inline-flex', fontSize: 11, fontWeight: 800, color: accent, background: `${accent}12`, borderRadius: 6, padding: '4px 7px', marginBottom: 5 }}>{labels[status]}</span>
-        <button onClick={onView} style={{ display: 'block', textAlign: 'left', minHeight: 44, background: 'none', border: 0, padding: 0, fontSize: 17, fontWeight: 800, color: '#0F172A', cursor: 'pointer', overflowWrap: 'anywhere' }}>{s.title}</button>
-        <div style={{ fontSize: 13, lineHeight: 1.7, color: '#64748B' }}>{s.session_date ? fmtDayLabel(s.session_date) : 'Date to be confirmed'}{s.start_time ? ` · ${s.start_time.slice(0, 5)}${s.end_time ? `–${s.end_time.slice(0, 5)}` : ''}` : ''}</div>
-        {s.location && <div style={{ fontSize: 13, color: '#64748B', marginTop: 3, overflowWrap: 'anywhere' }}><Icon name="📍" /> {s.location}</div>}
+        <button onClick={onView} style={{ display: 'block', textAlign: 'left', minHeight: 44, background: 'none', border: 0, padding: 0, fontSize: 17, fontWeight: 800, color: 'var(--text)', cursor: 'pointer', overflowWrap: 'anywhere' }}>{s.title}</button>
+        <div style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--text3)' }}>{s.session_date ? fmtDayLabel(s.session_date) : 'Date to be confirmed'}{s.start_time ? ` · ${s.start_time.slice(0, 5)}${s.end_time ? `–${s.end_time.slice(0, 5)}` : ''}` : ''}</div>
+        {s.location && <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 3, overflowWrap: 'anywhere' }}><Icon name="📍" /> {s.location}</div>}
         {project && <button onClick={() => onOpenProject(project)} style={{ ...flowButton, border: 0, background: 'none', color: primary, padding: '6px 0', textAlign: 'left', fontSize: 12 }}>{project.name}{s.project_day_number ? ` · Day ${s.project_day_number}` : ''} →</button>}
       </div>
       <div style={{ position: 'relative', flexShrink: 0 }}><button aria-label={`Actions for ${s.title}`} aria-expanded={menuOpen} onClick={() => setMenuOpen(v => !v)} style={{ ...flowButton, width: 44, padding: 0, border: 0, fontSize: 18 }}>•••</button>{menuOpen && <CardMenu status={status} onClose={() => setMenuOpen(false)} onView={onView} onEdit={onEdit} onDuplicate={onDuplicate} onDelete={onDelete} onSaveTemplate={onSaveTemplate} />}</div>
     </div>
-    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', padding: '14px 0', marginTop: 10, borderTop: '1px solid #F1F5F9' }}><MetaStat value={status === 'live' || past ? counts?.signedIn || 0 : counts?.total || 0} label={status === 'live' ? 'signed in' : past ? 'attended' : 'expected'} />{status === 'live' && <MetaStat value={counts?.expected || 0} label="to arrive" />}<MetaStat value={volCount} label="volunteers" />{past && <MetaStat value={counts?.absent || 0} label="absent" />}</div>
+    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', padding: '14px 0', marginTop: 10, borderTop: '1px solid var(--border-soft)' }}><MetaStat value={status === 'live' || past ? counts?.signedIn || 0 : counts?.total || 0} label={status === 'live' ? 'signed in' : past ? 'attended' : 'expected'} />{status === 'live' && <MetaStat value={counts?.expected || 0} label="to arrive" />}<MetaStat value={volCount} label="volunteers" />{past && <MetaStat value={counts?.absent || 0} label="absent" />}</div>
     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: issues?.length || needsVols || s.risk_assessment_required ? 12 : 0 }}>{(issues || []).map((issue, i) => <span key={i} style={{ fontSize: 12, color: (REVIEW_TONES[issue.kind] || REVIEW_TONES.admin).color, background: (REVIEW_TONES[issue.kind] || REVIEW_TONES.admin).bg, padding: '5px 8px', borderRadius: 6 }}>{issue.label}</span>)}{!past && needsVols && <StatusPill tone="amber">{s.volunteer_limit - volCount} volunteers needed</StatusPill>}{!past && s.risk_assessment_required && !hasRiskAssessment && <StatusPill tone="amber">Risk assessment needed</StatusPill>}</div>
     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{status !== 'cancelled' && <button onClick={action} style={{ ...flowButton, flex: isMobile ? '1 1 auto' : undefined, background: primary, borderColor: primary, color: '#fff' }}>{actionLabel} →</button>}<button onClick={onView} aria-label={`View ${terms.session} details for ${s.title}`} style={flowButton}>Details</button>{!isMobile && !past && needsVols && <button onClick={onVolunteers} style={flowButton}>Assign volunteers</button>}</div>
   </article>
@@ -1411,8 +1411,8 @@ function InsightsStrip({ completed, attendancePct, noShows, reached }) {
     { v: reached, l: 'Attendances' },
   ]
   return (
-    <div style={{ background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: '14px 18px', marginTop: 20 }}>
-      <div style={{ fontSize: 10.5, fontWeight: 900, letterSpacing: 0.8, color: '#94A3B8', textTransform: 'uppercase', marginBottom: 10 }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid #EEF1F6', borderRadius: 16, padding: '14px 18px', marginTop: 20 }}>
+      <div style={{ fontSize: 10.5, fontWeight: 900, letterSpacing: 0.8, color: 'var(--text-faint)', textTransform: 'uppercase', marginBottom: 10 }}>
         {terms.Session} summary · last 7 days
       </div>
       {/* A wrapping flex row broke into a ragged 2-then-1-then-1 on a phone,
@@ -1426,8 +1426,8 @@ function InsightsStrip({ completed, attendancePct, noShows, reached }) {
       }}>
         {items.map(i => (
           <div key={i.l} style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 19, fontWeight: 900, color: '#0F172A', lineHeight: 1.1 }}>{i.v}</div>
-            <div style={{ fontSize: 11, color: '#64748B', fontWeight: 600, marginTop: 2 }}>{i.l}</div>
+            <div style={{ fontSize: 19, fontWeight: 900, color: 'var(--text)', lineHeight: 1.1 }}>{i.v}</div>
+            <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginTop: 2 }}>{i.l}</div>
           </div>
         ))}
       </div>
@@ -1998,11 +1998,11 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
       <div style={{ padding: isMobile ? 16 : 28, maxWidth: 1280, margin: '0 auto' }}>
 
         <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
-          <div><div style={{ fontSize: 11, letterSpacing: 1.2, color: '#64748B', fontWeight: 800, marginBottom: 8 }}>PLAN · RUN · REVIEW</div><h1 style={{ margin: 0, fontSize: isMobile ? 27 : 32, fontWeight: 800, color: '#0F172A', letterSpacing: '-1px' }}>{terms.Sessions}</h1><p style={{ margin: '7px 0 0', fontSize: 14, color: '#64748B' }}>Your plans, people and registers in one place.</p></div>
+          <div><div style={{ fontSize: 11, letterSpacing: 1.2, color: 'var(--text3)', fontWeight: 800, marginBottom: 8 }}>PLAN · RUN · REVIEW</div><h1 style={{ margin: 0, fontSize: isMobile ? 27 : 32, fontWeight: 800, color: 'var(--text)', letterSpacing: '-1px' }}>{terms.Sessions}</h1><p style={{ margin: '7px 0 0', fontSize: 14, color: 'var(--text3)' }}>Your plans, people and registers in one place.</p></div>
           <div style={{ display: 'flex', gap: 8, width: isMobile ? '100%' : undefined }}>
             <button onClick={() => setView('templates')} style={{ ...flowButton, flex: isMobile ? 1 : undefined }}>Templates</button><button onClick={() => openNew()} style={{ ...flowButton, flex: isMobile ? 2 : undefined, background: primary, borderColor: primary, color: '#fff' }}>+ New {terms.session}</button>
             <div style={{ position: 'relative' }}><button aria-label="More creation options" aria-expanded={showNewMenu} onClick={() => setShowNewMenu(v => !v)} style={{ ...flowButton, width: 44, padding: 0 }}>•••</button>
-              {showNewMenu && <><div onClick={() => setShowNewMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} /><div style={{ position: 'absolute', right: 0, top: 50, width: 240, zIndex: 41, padding: 6, background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, boxShadow: '0 12px 30px #0F172A20' }}>{[{ label: 'Duplicate a previous plan', action: () => setShowDuplicatePicker(true) }, { label: 'Create a multi-day project', action: () => setShowProjectWizard(true) }].map(item => <button key={item.label} onClick={() => { setShowNewMenu(false); item.action() }} style={{ ...flowButton, width: '100%', border: 0, textAlign: 'left' }}>{item.label}</button>)}</div></>}
+              {showNewMenu && <><div onClick={() => setShowNewMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} /><div style={{ position: 'absolute', right: 0, top: 50, width: 240, zIndex: 41, padding: 6, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 12px 30px #0F172A20' }}>{[{ label: 'Duplicate a previous plan', action: () => setShowDuplicatePicker(true) }, { label: 'Create a multi-day project', action: () => setShowProjectWizard(true) }].map(item => <button key={item.label} onClick={() => { setShowNewMenu(false); item.action() }} style={{ ...flowButton, width: '100%', border: 0, textAlign: 'left' }}>{item.label}</button>)}</div></>}
             </div>
           </div>
         </header>
@@ -2018,10 +2018,10 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
             }}>
             <span style={{ fontSize: 18, flexShrink: 0 }}><Icon name="🚀" /></span>
             <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'block', fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>
+              <span style={{ display: 'block', fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>
                 {runningProject.proj.name}
               </span>
-              <span style={{ display: 'block', fontSize: 11.5, color: '#64748B', fontWeight: 600, marginTop: 2 }}>
+              <span style={{ display: 'block', fontSize: 11.5, color: 'var(--text3)', fontWeight: 600, marginTop: 2 }}>
                 Day {runningProject.dayNo} of {runningProject.total}
                 {runningProject.todays ? ` · Today: ${runningProject.todays.title}` : ' · No session today'}
               </span>
@@ -2031,7 +2031,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
         )}
 
         {/* ═══ TABS ═══ */}
-        <div style={{ display: 'flex', gap: 4, marginBottom: 14, borderBottom: '1px solid #E2E8F0', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ display: 'flex', gap: 4, marginBottom: 14, borderBottom: '1px solid var(--border)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           {TABS.map(t => (
             <button key={t.key} aria-pressed={tab === t.key} onClick={() => setTab(t.key)}
               style={{ minHeight: 48, padding: '10px 14px', border: 'none', borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent', background: 'none', color: tab === t.key ? primary : '#64748B', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -2053,11 +2053,11 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
         {loading ? (
           <div>
             {[...Array(3)].map((_, i) => (
-              <div key={i} style={{ background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: 18, marginBottom: 10 }}>
+              <div key={i} style={{ background: 'var(--surface)', border: '1px solid #EEF1F6', borderRadius: 16, padding: 18, marginBottom: 10 }}>
                 <div style={{ display: 'flex', gap: 12 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 11, background: '#F1F5F9' }} />
+                  <div style={{ width: 40, height: 40, borderRadius: 11, background: 'var(--surface-hover)' }} />
                   <div style={{ flex: 1 }}>
-                    <div style={{ height: 13, width: '38%', background: '#F1F5F9', borderRadius: 6, marginBottom: 8 }} />
+                    <div style={{ height: 13, width: '38%', background: 'var(--surface-hover)', borderRadius: 6, marginBottom: 8 }} />
                     <div style={{ height: 11, width: '60%', background: '#F5F7FA', borderRadius: 6 }} />
                   </div>
                 </div>
@@ -2065,14 +2065,14 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
             ))}
           </div>
         ) : displayed.length === 0 && view === 'list' ? (
-          <div style={{ textAlign: 'center', padding: '52px 20px', background: '#fff', borderRadius: 20, border: '1px solid #EEF1F6' }}>
+          <div style={{ textAlign: 'center', padding: '52px 20px', background: 'var(--surface)', borderRadius: 20, border: '1px solid #EEF1F6' }}>
             <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}>
               {EMPTY_COPY.icon
                 ? <span style={{ fontSize: 40 }}><Icon name={EMPTY_COPY.icon} /></span>
                 : <img src="/assets/rockets/rocket-hero.png" alt="" style={{ height: 84, width: 'auto' }} />}
             </div>
-            <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>{activeFilterChips.length ? 'No matching results' : EMPTY_COPY.title}</div>
-            <div style={{ fontSize: 13.5, color: '#64748B', marginBottom: EMPTY_COPY.showCta ? 20 : 0, maxWidth: 420, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>{activeFilterChips.length ? 'Try another search or clear the filters to see more.' : EMPTY_COPY.text}</div>
+            <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)', marginBottom: 6 }}>{activeFilterChips.length ? 'No matching results' : EMPTY_COPY.title}</div>
+            <div style={{ fontSize: 13.5, color: 'var(--text3)', marginBottom: EMPTY_COPY.showCta ? 20 : 0, maxWidth: 420, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>{activeFilterChips.length ? 'Try another search or clear the filters to see more.' : EMPTY_COPY.text}</div>
             {activeFilterChips.length > 0 && <button onClick={clearFilters} style={{ ...flowButton, marginTop: 16 }}>Clear filters</button>}
             {EMPTY_COPY.showCta && activeFilterChips.length === 0 && (
               <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -2082,7 +2082,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
                 </button>
                 {templates.length > 0 && (
                   <button onClick={() => setView('templates')}
-                    style={{ padding: '11px 20px', borderRadius: 12, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>
+                    style={{ padding: '11px 20px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>
                     Use a template
                   </button>
                 )}
@@ -2093,7 +2093,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
           <div>
             {grouped.map(g => (
               <div key={g.label} style={{ marginBottom: 6 }}>
-                <div style={{ fontSize: 10.5, fontWeight: 900, letterSpacing: 0.8, color: '#94A3B8', textTransform: 'uppercase', margin: '10px 2px 8px' }}>
+                <div style={{ fontSize: 10.5, fontWeight: 900, letterSpacing: 0.8, color: 'var(--text-faint)', textTransform: 'uppercase', margin: '10px 2px 8px' }}>
                   {g.label} <span style={{ color: '#CBD5E1' }}>· {g.items.length}</span>
                 </div>
                 {g.items.map(s => (
@@ -2156,16 +2156,16 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
                       <div style={{ fontSize: isMobile ? 14.5 : 13, fontWeight: isToday ? 900 : 700, color: isToday ? primary : '#111' }}>
                         {format(day, isMobile ? 'EEEE d MMM' : 'EEE d')}{isMobile && isToday ? ' · Today' : ''}
                       </div>
-                      <div style={{ fontSize: isMobile ? 11.5 : 10, color: '#6B7280', fontWeight: 600, marginTop: isMobile ? 0 : 2, whiteSpace: 'nowrap' }}>{daySessions.length} session{daySessions.length !== 1 ? 's' : ''}</div>
+                      <div style={{ fontSize: isMobile ? 11.5 : 10, color: 'var(--text3)', fontWeight: 600, marginTop: isMobile ? 0 : 2, whiteSpace: 'nowrap' }}>{daySessions.length} session{daySessions.length !== 1 ? 's' : ''}</div>
                     </div>
                     {daySessions.length === 0 ? (
                       /* Seven tall dashed boxes stacked up is a lot of screen
                          spent saying "nothing here", so the empty state is a
                          slim row on mobile — still a 44px target. */
-                      <button onClick={() => openNew(dateStr)} style={{ width: '100%', border: '1.5px dashed #E5E7EB', borderRadius: 12, background: 'none', padding: isMobile ? '13px 0' : '24px 0', minHeight: isMobile ? 44 : 0, cursor: 'pointer', color: '#94a3b8', fontSize: 12, fontWeight: 700 }}>+ Add</button>
+                      <button onClick={() => openNew(dateStr)} style={{ width: '100%', border: '1.5px dashed var(--border)', borderRadius: 12, background: 'none', padding: isMobile ? '13px 0' : '24px 0', minHeight: isMobile ? 44 : 0, cursor: 'pointer', color: 'var(--text-faint)', fontSize: 12, fontWeight: 700 }}>+ Add</button>
                     ) : daySessions.map(s => {
                       const phase = sessionPhase(s, clock)
-                      return <div key={s.id} style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, padding: 12, marginBottom: 8 }}><button onClick={() => setViewingSession(s)} style={{ ...flowButton, border: 0, padding: 0, textAlign: 'left', width: '100%', overflowWrap: 'anywhere' }}>{s.title}</button><div style={{ fontSize: 12, color: '#64748B', margin: '6px 0', lineHeight: 1.7 }}>{(s.start_time || '').slice(0, 5)}{s.end_time ? `–${s.end_time.slice(0, 5)}` : ''}<br />{s.location}</div>{phase !== 'cancelled' && <button onClick={() => { if (phase === 'draft') { setEditing(s); setView('wizard') } else if (onNavigate) onNavigate('registers', { sessionId: s.id, returnTo: 'planner' }) }} style={{ ...flowButton, width: '100%', padding: '8px 5px', fontSize: 12, color: primary }}>{phase === 'draft' ? 'Continue plan' : 'Open register'} →</button>}</div>
+                      return <div key={s.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 12, marginBottom: 8 }}><button onClick={() => setViewingSession(s)} style={{ ...flowButton, border: 0, padding: 0, textAlign: 'left', width: '100%', overflowWrap: 'anywhere' }}>{s.title}</button><div style={{ fontSize: 12, color: 'var(--text3)', margin: '6px 0', lineHeight: 1.7 }}>{(s.start_time || '').slice(0, 5)}{s.end_time ? `–${s.end_time.slice(0, 5)}` : ''}<br />{s.location}</div>{phase !== 'cancelled' && <button onClick={() => { if (phase === 'draft') { setEditing(s); setView('wizard') } else if (onNavigate) onNavigate('registers', { sessionId: s.id, returnTo: 'planner' }) }} style={{ ...flowButton, width: '100%', padding: '8px 5px', fontSize: 12, color: primary }}>{phase === 'draft' ? 'Continue plan' : 'Open register'} →</button>}</div>
                     })}
                   </div>
                 )
@@ -2176,19 +2176,19 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
 
         {/* ═══ ATTENDANCE ATTENTION (compact) ═══ */}
         {!loading && frequentAbsentees.length > 0 && (
-          <div style={{ background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: '16px 18px', marginTop: 20 }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid #EEF1F6', borderRadius: 16, padding: '16px 18px', marginTop: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>Attendance attention</div>
-                <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 3 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>Attendance attention</div>
+                <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 3 }}>
                   {frequentAbsentees.length} young {frequentAbsentees.length === 1 ? 'person has' : 'people have'} missed 3+ recent sessions.
                 </div>
-                <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 5 }}>
+                <div style={{ fontSize: 11.5, color: 'var(--text-faint)', marginTop: 5 }}>
                   {frequentAbsentees.slice(0, 3).map(a => a.name).join(' · ')}
                 </div>
               </div>
               <button onClick={() => onNavigate && onNavigate('children')}
-                style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                 Review attendance
               </button>
             </div>
@@ -2248,16 +2248,16 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
       {showDuplicatePicker && <SessionSheet title="Duplicate a previous plan" subtitle="Choose a plan, then update its date and details." onClose={() => setShowDuplicatePicker(false)}>
             <div style={{ flex: 1, overflowY: 'auto', padding: 14 }}>
               {completedSessions.length === 0 ? (
-                <div style={{ padding: 30, textAlign: 'center', fontSize: 13, color: '#94A3B8' }}>No previous sessions to duplicate yet.</div>
+                <div style={{ padding: 30, textAlign: 'center', fontSize: 13, color: 'var(--text-faint)' }}>No previous sessions to duplicate yet.</div>
               ) : completedSessions.slice(0, 40).map(s => {
                 const type = SESSION_TYPES.find(t => t.key === s.session_type) || SESSION_TYPES[0]
                 return (
                   <button key={s.id} onClick={() => { setShowDuplicatePicker(false); handleDuplicateSession(s) }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 11, width: '100%', textAlign: 'left', padding: '11px 12px', borderRadius: 11, border: '1px solid #F1F5F9', background: '#fff', marginBottom: 7, cursor: 'pointer' }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 11, width: '100%', textAlign: 'left', padding: '11px 12px', borderRadius: 11, border: '1px solid var(--border-soft)', background: 'var(--surface)', marginBottom: 7, cursor: 'pointer' }}>
                     <span style={{ fontSize: 18 }}><Icon name={type.icon} /></span>
                     <span style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ display: 'block', fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{s.title}</span>
-                      <span style={{ display: 'block', fontSize: 11.5, color: '#94A3B8' }}>
+                      <span style={{ display: 'block', fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{s.title}</span>
+                      <span style={{ display: 'block', fontSize: 11.5, color: 'var(--text-faint)' }}>
                         {s.session_date ? format(parseISO(s.session_date), 'd MMM yyyy') : ''}{s.location ? ` · ${s.location}` : ''}
                       </span>
                     </span>

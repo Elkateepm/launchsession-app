@@ -76,7 +76,7 @@ export default function SupportersPanel({ org, isAdmin, campaigns = [] }) {
 
   const chip = (labelText, value) => (
     <div style={{
-      background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 14,
+      background: 'var(--surface)', border: `1px solid ${LS.border}`, borderRadius: 14,
       padding: '13px 15px', minWidth: 0,
     }}>
       <div style={{ fontSize: 22, fontWeight: 800, color: LS.text, lineHeight: 1.1 }}>{value}</div>
@@ -91,7 +91,7 @@ export default function SupportersPanel({ org, isAdmin, campaigns = [] }) {
   if (!supporters.length) {
     return (
       <div style={{
-        padding: '48px 24px', textAlign: 'center', background: '#fff',
+        padding: '48px 24px', textAlign: 'center', background: 'var(--surface)',
         border: `1px solid ${LS.border}`, borderRadius: 16,
       }}>
         <div style={{
@@ -135,7 +135,7 @@ export default function SupportersPanel({ org, isAdmin, campaigns = [] }) {
             placeholder="Search supporters…"
             style={{
               width: '100%', padding: '11px 13px 11px 34px', borderRadius: 11, fontSize: 14,
-              border: `1px solid ${LS.border}`, background: '#fff', color: LS.text,
+              border: `1px solid ${LS.border}`, background: 'var(--surface)', color: LS.text,
               outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
             }}
           />
@@ -145,7 +145,7 @@ export default function SupportersPanel({ org, isAdmin, campaigns = [] }) {
           onChange={e => setSort(e.target.value)}
           style={{
             padding: '11px 13px', borderRadius: 11, fontSize: 13.5, fontWeight: 700,
-            border: `1px solid ${LS.border}`, background: '#fff', color: LS.text,
+            border: `1px solid ${LS.border}`, background: 'var(--surface)', color: LS.text,
             fontFamily: 'inherit', cursor: 'pointer',
           }}
         >
@@ -157,7 +157,7 @@ export default function SupportersPanel({ org, isAdmin, campaigns = [] }) {
 
       {rows.length === 0 && (
         <div style={{
-          padding: '34px 24px', textAlign: 'center', background: '#fff',
+          padding: '34px 24px', textAlign: 'center', background: 'var(--surface)',
           border: `1px solid ${LS.border}`, borderRadius: 16, color: LS.muted, fontSize: 14,
         }}>No supporters match that search.</div>
       )}
@@ -175,7 +175,7 @@ export default function SupportersPanel({ org, isAdmin, campaigns = [] }) {
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: Math.min(i * 0.015, 0.2) }}
-              style={{ background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 14, overflow: 'hidden' }}
+              style={{ background: 'var(--surface)', border: `1px solid ${LS.border}`, borderRadius: 14, overflow: 'hidden' }}
             >
               <button
                 onClick={() => setOpenId(open ? null : s.id)}
@@ -273,7 +273,7 @@ export default function SupportersPanel({ org, isAdmin, campaigns = [] }) {
                   {s.notes && (
                     <div style={{
                       marginTop: 12, padding: '9px 11px', borderRadius: 9,
-                      background: '#fff', border: `1px solid ${LS.border}`,
+                      background: 'var(--surface)', border: `1px solid ${LS.border}`,
                       fontSize: 12.5, color: LS.text, lineHeight: 1.5,
                     }}>{s.notes}</div>
                   )}

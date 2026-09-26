@@ -50,7 +50,7 @@ export default function VerifyVolunteerApplication() {
     display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
   }
   const card = {
-    background: '#fff', borderRadius: 20, padding: 40, maxWidth: 460, width: '100%',
+    background: 'var(--surface)', borderRadius: 20, padding: 40, maxWidth: 460, width: '100%',
     textAlign: 'center', boxShadow: '0 20px 60px rgba(15,23,42,0.10)',
   }
 
@@ -58,7 +58,7 @@ export default function VerifyVolunteerApplication() {
     return (
       <div style={wrap}>
         <div style={card}>
-          <div style={{ fontSize: 15, color: '#64748B' }}>Confirming your application…</div>
+          <div style={{ fontSize: 15, color: 'var(--text3)' }}>Confirming your application…</div>
         </div>
       </div>
     )
@@ -69,8 +69,8 @@ export default function VerifyVolunteerApplication() {
       <div style={wrap}>
         <div style={card}>
           <div style={{ fontSize: 46, marginBottom: 14 }}><Icon name="🔗" /></div>
-          <div style={{ fontSize: 19, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>We couldn&rsquo;t confirm that link</div>
-          <div style={{ fontSize: 14, color: '#64748B', lineHeight: 1.6 }}>{message}</div>
+          <div style={{ fontSize: 19, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>We couldn&rsquo;t confirm that link</div>
+          <div style={{ fontSize: 14, color: 'var(--text3)', lineHeight: 1.6 }}>{message}</div>
         </div>
       </div>
     )
@@ -80,12 +80,12 @@ export default function VerifyVolunteerApplication() {
     <div style={wrap}>
       <div style={card}>
         <div style={{ fontSize: 46, marginBottom: 14 }}><Icon name="✅" /></div>
-        <div style={{ fontSize: 19, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>
+        <div style={{ fontSize: 19, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>
           {name ? `Thanks ${name}, you're all set` : "You're all set"}
         </div>
-        <div style={{ fontSize: 14, color: '#64748B', lineHeight: 1.6 }}>
+        <div style={{ fontSize: 14, color: 'var(--text3)', lineHeight: 1.6 }}>
           {org
-            ? <>Your email is confirmed and your application has gone to <strong style={{ color: '#0F172A' }}>{org}</strong> for review. They&rsquo;ll be in touch if it&rsquo;s a good fit.</>
+            ? <>Your email is confirmed and your application has gone to <strong style={{ color: 'var(--text)' }}>{org}</strong> for review. They&rsquo;ll be in touch if it&rsquo;s a good fit.</>
             : <>Your email is confirmed and your application has gone to the organisation for review.</>}
         </div>
       </div>

@@ -9,7 +9,7 @@ import { safetyStateOf, SAFETY_META } from './ra_safety'
 // to open each tab and judge for yourself. These two strips answer it directly:
 // what is still missing, and whether anyone has signed it off.
 
-const CARD = { background: '#fff', border: '1px solid #ECE9F5', borderRadius: 14 }
+const CARD = { background: 'var(--surface)', border: '1px solid #ECE9F5', borderRadius: 14 }
 
 /**
  * Which sections of an assessment are actually finished.
@@ -204,7 +204,7 @@ export function ApprovalPanel({ assessment, org, authSession, staff = [], isMana
           <span style={{ width: 7, height: 7, borderRadius: 7, background: meta.dot }} />
           {meta.label}
         </span>
-        <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>Approval</div>
+        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>Approval</div>
       </div>
 
       <div style={{
@@ -224,7 +224,7 @@ export function ApprovalPanel({ assessment, org, authSession, staff = [], isMana
             <div style={{ fontSize: 11, fontWeight: 700, color: '#8B87A3', letterSpacing: 0.3 }}>
               {label.toUpperCase()}
             </div>
-            <div style={{ fontSize: 13.5, color: '#0F172A', marginTop: 3 }}>{value}</div>
+            <div style={{ fontSize: 13.5, color: 'var(--text)', marginTop: 3 }}>{value}</div>
           </div>
         ))}
       </div>
@@ -261,7 +261,7 @@ export function ApprovalPanel({ assessment, org, authSession, staff = [], isMana
           {approved && isManager && (
             <button onClick={() => setReviewing(true)} style={{
               padding: '10px 18px', borderRadius: 11, border: '1px solid #ECE9F5',
-              background: '#fff', color: '#0F172A', fontSize: 13.5, fontWeight: 700,
+              background: 'var(--surface)', color: 'var(--text)', fontSize: 13.5, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
             }}>Start review</button>
           )}
@@ -272,10 +272,10 @@ export function ApprovalPanel({ assessment, org, authSession, staff = [], isMana
         <div style={{
           padding: 14, borderRadius: 12, background: '#FAF9FE', border: '1px solid #ECE9F5',
         }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', marginBottom: 5 }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', marginBottom: 5 }}>
             Has anything changed?
           </div>
-          <div style={{ fontSize: 12.5, color: '#64748B', lineHeight: 1.55, marginBottom: 12 }}>
+          <div style={{ fontSize: 12.5, color: 'var(--text3)', lineHeight: 1.55, marginBottom: 12 }}>
             The activity, venue, participants, staffing, transport, equipment, provider,
             hazards, controls or emergency procedure.
           </div>

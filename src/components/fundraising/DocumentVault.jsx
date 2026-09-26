@@ -69,7 +69,7 @@ export default function DocumentVault({ org, isAdmin }) {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 22, padding: '18px 20px', background: LS.softGradient, border: `1px solid ${LS.lavenderBorder}`, borderRadius: 18 }}>
         <div style={{ width: 54, height: 54, borderRadius: 999, background: `conic-gradient(${LS.purple} ${pct}%, #fff 0)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <div style={{ width: 42, height: 42, borderRadius: 999, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: LS.text }}>{pct}%</div>
+          <div style={{ width: 42, height: 42, borderRadius: 999, background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: LS.text }}>{pct}%</div>
         </div>
         <div>
           <div style={{ fontSize: 14, color: LS.text, fontWeight: 700 }}>{haveCount} of {docs.length} documents ready</div>
@@ -77,7 +77,7 @@ export default function DocumentVault({ org, isAdmin }) {
         </div>
       </div>
 
-      <div style={{ background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 16, padding: '4px 18px', marginBottom: 18 }}>
+      <div style={{ background: 'var(--surface)', border: `1px solid ${LS.border}`, borderRadius: 16, padding: '4px 18px', marginBottom: 18 }}>
         {docs.map((d, i) => {
           const meta = STATUS_META[d.status] || STATUS_META.missing
           return (
@@ -109,12 +109,12 @@ export default function DocumentVault({ org, isAdmin }) {
         <div style={{ display: 'flex', gap: 8 }}>
           <input value={newDoc.name} onChange={e => setNewDoc(n => ({ ...n, name: e.target.value }))} placeholder="Document name" style={{ ...inp, flex: 1 }} />
           <button onClick={addDoc} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: LS.gradient, color: '#fff', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>Add</button>
-          <button onClick={() => setShowAdd(false)} style={{ padding: '9px 16px', borderRadius: 10, border: `1.5px solid ${LS.lavenderBorder}`, background: '#fff', color: LS.muted, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>Cancel</button>
+          <button onClick={() => setShowAdd(false)} style={{ padding: '9px 16px', borderRadius: 10, border: `1.5px solid ${LS.lavenderBorder}`, background: 'var(--surface)', color: LS.muted, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>Cancel</button>
         </div>
       ) : (
         <button onClick={() => setShowAdd(true)} style={{
           display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 10,
-          border: `1.5px solid ${LS.lavenderBorder}`, background: '#fff', color: LS.purpleDark, fontWeight: 700, fontSize: 12.5, cursor: 'pointer',
+          border: `1.5px solid ${LS.lavenderBorder}`, background: 'var(--surface)', color: LS.purpleDark, fontWeight: 700, fontSize: 12.5, cursor: 'pointer',
         }}>
           <IconGlyph name="plus" color={LS.purpleDark} size={13} /> Add document
         </button>

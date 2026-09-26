@@ -117,7 +117,7 @@ export function PlanEndedWall({ org, isAdmin, onChoosePlan, onDismiss }) {
     >
       <div style={{
         width: '100%', maxWidth: 480, background: 'var(--surface, #fff)',
-        borderRadius: 18, border: '1px solid var(--border, #E2E8F0)',
+        borderRadius: 18, border: '1px solid var(--border, var(--border))',
         padding: isMobile ? '26px 20px' : '32px 30px',
         boxShadow: '0 30px 80px -20px rgba(0,0,0,0.5)',
       }}>
@@ -147,7 +147,7 @@ export function PlanEndedWall({ org, isAdmin, onChoosePlan, onDismiss }) {
           </button>
         ) : (
           <div style={{
-            background: 'var(--bg, #F8FAFC)', border: '1px solid var(--border, #E2E8F0)',
+            background: 'var(--bg, #F8FAFC)', border: '1px solid var(--border, var(--border))',
             borderRadius: 12, padding: '13px 15px', marginBottom: 10,
             fontSize: 13.5, lineHeight: 1.6, color: 'var(--text3, #64748B)',
           }}>
@@ -160,7 +160,7 @@ export function PlanEndedWall({ org, isAdmin, onChoosePlan, onDismiss }) {
           onClick={onDismiss}
           style={{
             width: '100%', minHeight: 44, borderRadius: 12,
-            border: '1.5px solid var(--border, #E2E8F0)', background: 'transparent',
+            border: '1.5px solid var(--border, var(--border))', background: 'transparent',
             color: 'var(--text3, #64748B)', fontSize: 14, fontWeight: 700,
             cursor: 'pointer', fontFamily: 'inherit',
           }}

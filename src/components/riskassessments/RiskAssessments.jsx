@@ -272,7 +272,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
     assessments.filter(a => !a.archived && a.next_review_date).sort((a, b) => new Date(a.next_review_date) - new Date(b.next_review_date)).slice(0, 4)
   , [assessments])
 
-  if (loading) return <div style={{ padding: 60, textAlign: 'center', color: '#94A3B8' }}>Loading risk assessments…</div>
+  if (loading) return <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-faint)' }}>Loading risk assessments…</div>
 
   const reviewerName = (id) => staff.find(s => s.id === id)?.full_name || '—'
 
@@ -281,8 +281,8 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
       {/* HEADER */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 18 }}>
         <div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 10 }}><Icon name="🛡️" /> Risk Assessments</div>
-          <div style={{ fontSize: 13.5, color: '#64748B', marginTop: 4 }}>Keep activities safe, reviewed and ready to run.</div>
+          <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 10 }}><Icon name="🛡️" /> Risk Assessments</div>
+          <div style={{ fontSize: 13.5, color: 'var(--text3)', marginTop: 4 }}>Keep activities safe, reviewed and ready to run.</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => setReuseFor({})} style={btnGhost}>♻️ Use Previous</button>
@@ -339,13 +339,13 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
           { label: 'All Assessments', value: kpis.total, icon: '🎮', color: '#7C5CFC', suffix: '' },
           { label: 'Require Review', value: kpis.requireReview, icon: '⏰', color: '#F59E0B', suffix: '' },
           { label: 'High Risk Activities', value: kpis.highRisk, icon: '🔥', color: '#EF4444', suffix: '' },
-          { label: 'Drafts', value: kpis.drafts, icon: '🗂', color: '#64748B', suffix: '' },
+          { label: 'Drafts', value: kpis.drafts, icon: '🗂', color: 'var(--text3)', suffix: '' },
           { label: 'Completion Rate', value: kpis.rate, icon: '✅', color: '#22C55E', suffix: '%' },
         ].map((k, i) => (
           <motion.div key={k.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} whileHover={{ y: -2 }} style={{ ...glass({ padding: '16px' }) }}>
             <div style={{ width: 34, height: 34, borderRadius: 10, background: `${k.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}><Icon name={k.icon} /></div>
             <div style={{ fontSize: 24, fontWeight: 900, color: k.color, lineHeight: 1 }}><CountUp value={k.value} />{k.suffix}</div>
-            <div style={{ fontSize: 12, color: '#64748B', fontWeight: 700, marginTop: 4 }}>{k.label}</div>
+            <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 700, marginTop: 4 }}>{k.label}</div>
           </motion.div>
         ))}
       </div>
@@ -353,7 +353,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
       {/* SEARCH + FILTERS */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flex: '1 1 240px' }}>
-          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', fontSize: 13 }}><Icon name="🔍" /></span>
+          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-faint)', fontSize: 13 }}><Icon name="🔍" /></span>
           <input style={{ ...inputStyle, paddingLeft: 32 }} placeholder="Search assessments…" value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} />
         </div>
         <select style={{ ...inputStyle, width: 140 }} value={filters.status} onChange={e => { setFilters(f => ({ ...f, status: e.target.value })); setPage(1) }}>
@@ -387,12 +387,12 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
         {/* LEFT: library list */}
         {(!isMobile || !selected) && (
           <div style={glass({ padding: 0, overflow: 'hidden' })}>
-            <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 13.5, color: '#0F172A' }}>Assessments ({filtered.length})</div>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 13.5, color: 'var(--text)' }}>Assessments ({filtered.length})</div>
             {paged.length === 0 ? (
               <div style={{ padding: '40px 20px', textAlign: 'center' }}>
                 <div style={{ fontSize: 34, marginBottom: 10 }}><Icon name="🛡️" /></div>
-                <div style={{ fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>{assessments.length === 0 ? 'No risk assessments yet' : 'No matching assessments'}</div>
-                <div style={{ fontSize: 12.5, color: '#94A3B8' }}>{assessments.length === 0 ? 'Create one from scratch or start from a template' : 'Try adjusting your filters'}</div>
+                <div style={{ fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>{assessments.length === 0 ? 'No risk assessments yet' : 'No matching assessments'}</div>
+                <div style={{ fontSize: 12.5, color: 'var(--text-faint)' }}>{assessments.length === 0 ? 'Create one from scratch or start from a template' : 'Try adjusting your filters'}</div>
               </div>
             ) : (
               <div>
@@ -406,8 +406,8 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                       onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = 'transparent' }}>
                       <div style={{ width: 38, height: 38, borderRadius: 11, background: 'var(--org-a05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{ACTIVITY_ICON[a.activity_type] || '📋'}</div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</div>
-                        <div style={{ fontSize: 11, color: '#94A3B8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.activity_type || '—'}{a.location ? ` · ${a.location}` : ''}</div>
+                        <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.activity_type || '—'}{a.location ? ` · ${a.location}` : ''}</div>
                         {a.next_review_date && <div style={{ fontSize: 10.5, color: reviewDays != null && reviewDays < 0 ? '#DC2626' : reviewDays != null && reviewDays <= 14 ? '#B45309' : '#94A3B8', fontWeight: 700, marginTop: 1 }}>Review {reviewDays != null && reviewDays < 0 ? `overdue ${Math.abs(reviewDays)}d` : `in ${reviewDays}d`}</div>}
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
@@ -415,18 +415,18 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                         <RAStatusChip status={a.status} />
                       </div>
                       <div style={{ position: 'relative', flexShrink: 0 }}>
-                        <button onClick={e => { e.stopPropagation(); setRowMenuFor(rowMenuFor === a.id ? null : a.id) }} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: 15, padding: 4 }}>⋯</button>
+                        <button onClick={e => { e.stopPropagation(); setRowMenuFor(rowMenuFor === a.id ? null : a.id) }} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', cursor: 'pointer', fontSize: 15, padding: 4 }}>⋯</button>
                         <AnimatePresence>
                           {rowMenuFor === a.id && (
                             <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} onClick={e => e.stopPropagation()}
-                              style={{ position: 'absolute', top: '110%', right: 0, background: '#fff', borderRadius: 10, boxShadow: '0 16px 40px rgba(0,0,0,0.15)', border: '1px solid rgba(15,23,42,0.06)', padding: 4, width: 160, zIndex: 60 }}>
+                              style={{ position: 'absolute', top: '110%', right: 0, background: 'var(--surface)', borderRadius: 10, boxShadow: '0 16px 40px rgba(0,0,0,0.15)', border: '1px solid rgba(15,23,42,0.06)', padding: 4, width: 160, zIndex: 60 }}>
                               {[
                                 ['📄 Download PDF', () => printRiskAssessment(a, [], org, staff)],
                                 ['📋 Duplicate', () => duplicate(a)],
                                 ['✅ Mark Reviewed', () => markReviewed(a)],
                                 [a.archived ? '📥 Unarchive' : '🗄 Archive', () => update(a.id, { archived: !a.archived }, 'archived', a.archived ? 'Unarchived' : 'Archived')],
                               ].map(([label, fn]) => (
-                                <button key={label} onClick={() => { fn(); setRowMenuFor(null) }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 10px', borderRadius: 6, border: 'none', background: 'none', fontSize: 12, fontWeight: 600, color: '#334155', cursor: 'pointer' }}>{label}</button>
+                                <button key={label} onClick={() => { fn(); setRowMenuFor(null) }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 10px', borderRadius: 6, border: 'none', background: 'none', fontSize: 12, fontWeight: 600, color: 'var(--text2)', cursor: 'pointer' }}>{label}</button>
                               ))}
                             </motion.div>
                           )}
@@ -437,7 +437,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                 })}
                 {pageCount > 1 && (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
-                    <span style={{ fontSize: 12, color: '#94A3B8' }}>Page {page} of {pageCount}</span>
+                    <span style={{ fontSize: 12, color: 'var(--text-faint)' }}>Page {page} of {pageCount}</span>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ ...btnGhost, padding: '5px 12px', fontSize: 12, opacity: page === 1 ? 0.4 : 1 }}><Icon name="←" /></button>
                       <button onClick={() => setPage(p => Math.min(pageCount, p + 1))} disabled={page === pageCount} style={{ ...btnGhost, padding: '5px 12px', fontSize: 12, opacity: page === pageCount ? 0.4 : 1 }}><Icon name="→" /></button>
@@ -458,8 +458,8 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
               <div style={{ width: 52, height: 52, borderRadius: 14, background: 'var(--org-a10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>{ACTIVITY_ICON[selected.activity_type] || '📋'}</div>
               <div style={{ flex: 1, minWidth: 180 }}>
                 <input value={selected.name || ''} onChange={e => setSelected(s => ({ ...s, name: e.target.value }))} onBlur={e => update(selected.id, { name: e.target.value }, 'edited', 'Renamed')}
-                  style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', border: 'none', outline: 'none', width: '100%', background: 'transparent' }} />
-                <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>{selected.activity_type || '—'}{selected.location ? ` · ${selected.location}` : ''}</div>
+                  style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', border: 'none', outline: 'none', width: '100%', background: 'transparent' }} />
+                <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{selected.activity_type || '—'}{selected.location ? ` · ${selected.location}` : ''}</div>
               </div>
               <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                 {selected.risk_rating && <RatingBadge rating={selected.risk_rating} />}
@@ -470,7 +470,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
             </div>
 
             {/* Tabs */}
-            <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: '#F1F5F9', borderRadius: 12, padding: 4, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: 'var(--surface-hover)', borderRadius: 12, padding: 4, flexWrap: 'wrap' }}>
               {[['overview', 'Overview'], ['hazards', `Hazards${selectedHazards.length ? ` (${selectedHazards.length})` : ''}`], ['matrix', 'Matrix'], ['emergency', 'Emergency'], ['attachments', 'Attachments'], ['sessions', 'Linked'], ['live', 'Live updates'], ['reviews', 'History']].map(([key, label]) => (
                 <button key={key} onClick={() => setTab(key)} style={{ flex: '1 1 auto', padding: '8px 10px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: tab === key ? '#fff' : 'transparent', color: tab === key ? '#0F172A' : '#64748B', whiteSpace: 'nowrap' }}>{label}</button>
               ))}
@@ -508,7 +508,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                 />
 
                 <div style={{ marginBottom: 14 }}>
-                  <label style={{ fontSize: 12, fontWeight: 800, color: '#64748B', display: 'block', marginBottom: 6 }}>Assessment Summary</label>
+                  <label style={{ fontSize: 12, fontWeight: 800, color: 'var(--text3)', display: 'block', marginBottom: 6 }}>Assessment Summary</label>
                   <textarea value={selected.summary || ''} onChange={e => setSelected(s => ({ ...s, summary: e.target.value }))} onBlur={e => update(selected.id, { summary: e.target.value })}
                     style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 11, border: '1.5px solid rgba(15,23,42,0.1)', fontSize: 13.5, outline: 'none', resize: 'vertical', minHeight: 60, fontFamily: 'inherit' }} placeholder="Brief description of this activity and its context…" />
                 </div>
@@ -518,7 +518,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                     ['location', 'Location', null],
                   ].map(([key, label, opts]) => (
                     <div key={key}>
-                      <label style={{ fontSize: 11.5, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>{label}</label>
+                      <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>{label}</label>
                       {opts ? (
                         <select value={selected[key] || ''} onChange={e => update(selected.id, { [key]: e.target.value })} style={inputStyle}>
                           <option value="">—</option>
@@ -530,11 +530,11 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                     </div>
                   ))}
                   <div>
-                    <label style={{ fontSize: 11.5, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>Review due date</label>
+                    <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Review due date</label>
                     <input type="date" value={selected.next_review_date || ''} onChange={e => update(selected.id, { next_review_date: e.target.value, review_date: e.target.value })} style={inputStyle} />
                   </div>
                   <div>
-                    <label style={{ fontSize: 11.5, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>Assigned reviewer</label>
+                    <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Assigned reviewer</label>
                     <select value={selected.assigned_reviewer_id || ''} onChange={e => update(selected.id, { assigned_reviewer_id: e.target.value || null })} style={inputStyle}>
                       <option value="">Unassigned</option>
                       {staff.map(s => <option key={s.id} value={s.id}>{s.full_name}</option>)}
@@ -542,15 +542,15 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                   </div>
                 </div>
                 {/* Risk rating summary */}
-                <div style={{ display: 'flex', gap: 16, alignItems: 'center', background: '#F8FAFC', borderRadius: 14, padding: 16, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 16, alignItems: 'center', background: 'var(--surface2)', borderRadius: 14, padding: 16, flexWrap: 'wrap' }}>
                   <div style={{ textAlign: 'center' }}>
                     <RiskGauge score={selected.risk_score || 0} />
-                    <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginTop: -6 }}>Risk Score {selected.risk_score || 0} / 25</div>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)', marginTop: -6 }}>Risk Score {selected.risk_score || 0} / 25</div>
                   </div>
                   <div style={{ flex: 1, minWidth: 140 }}>
-                    <div style={{ fontSize: 12, color: '#64748B', fontWeight: 700, marginBottom: 4 }}>Overall Rating</div>
-                    {selected.risk_rating ? <RatingBadge rating={selected.risk_rating} /> : <span style={{ fontSize: 13, color: '#94A3B8' }}>Add hazards to calculate</span>}
-                    <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 8 }}>
+                    <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 700, marginBottom: 4 }}>Overall Rating</div>
+                    {selected.risk_rating ? <RatingBadge rating={selected.risk_rating} /> : <span style={{ fontSize: 13, color: 'var(--text-faint)' }}>Add hazards to calculate</span>}
+                    <div style={{ fontSize: 11.5, color: 'var(--text-faint)', marginTop: 8 }}>
                       {selectedHazards.filter(h => riskRating(riskScore(h.likelihood, h.severity)) === 'high' || riskRating(riskScore(h.likelihood, h.severity)) === 'critical').length} high-risk hazard(s) · {selectedHazards.length} total
                     </div>
                   </div>
@@ -598,34 +598,34 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
             {selected ? (
               <>
                 <div style={glass({ padding: 18 })}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Quick Actions</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Quick Actions</div>
                   {[
                     ['📄 Download PDF', () => { printRiskAssessment(selected, selectedHazards, org, staff); logAudit(selected.id, 'downloaded', 'Exported PDF') }],
                     ['📋 Duplicate', () => duplicate(selected)],
                     ['✅ Mark Reviewed', () => markReviewed(selected)],
                     ['📎 Attach to Session', () => setTab('sessions')],
                   ].map(([label, fn]) => (
-                    <button key={label} onClick={fn} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 4px', border: 'none', borderTop: '1px solid rgba(15,23,42,0.05)', background: 'none', fontSize: 12.5, fontWeight: 700, color: '#334155', cursor: 'pointer' }}>{label}</button>
+                    <button key={label} onClick={fn} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 4px', border: 'none', borderTop: '1px solid rgba(15,23,42,0.05)', background: 'none', fontSize: 12.5, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>{label}</button>
                   ))}
                 </div>
                 <div style={glass({ padding: 18 })}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Details</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Details</div>
                   {selected.venue_id && (() => {
                     const v = venues.find(x => x.id === selected.venue_id)
                     return v ? (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12 }}><span style={{ color: '#64748B' }}>Venue</span><span style={{ fontWeight: 700 }}><Icon name="📍" /> {v.name}</span></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12 }}><span style={{ color: 'var(--text3)' }}>Venue</span><span style={{ fontWeight: 700 }}><Icon name="📍" /> {v.name}</span></div>
                     ) : null
                   })()}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12 }}><span style={{ color: '#64748B' }}>Created by</span><span style={{ fontWeight: 700 }}>{reviewerName(selected.created_by)}</span></div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12 }}><span style={{ color: '#64748B' }}>Reviewer</span><span style={{ fontWeight: 700 }}>{reviewerName(selected.assigned_reviewer_id)}</span></div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12 }}><span style={{ color: '#64748B' }}>Last reviewed</span><span style={{ fontWeight: 700 }}>{selected.last_reviewed_at ? new Date(selected.last_reviewed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}</span></div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12 }}><span style={{ color: '#64748B' }}>Next review</span><span style={{ fontWeight: 700 }}>{selected.next_review_date ? new Date(selected.next_review_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12 }}><span style={{ color: 'var(--text3)' }}>Created by</span><span style={{ fontWeight: 700 }}>{reviewerName(selected.created_by)}</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12 }}><span style={{ color: 'var(--text3)' }}>Reviewer</span><span style={{ fontWeight: 700 }}>{reviewerName(selected.assigned_reviewer_id)}</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12 }}><span style={{ color: 'var(--text3)' }}>Last reviewed</span><span style={{ fontWeight: 700 }}>{selected.last_reviewed_at ? new Date(selected.last_reviewed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12 }}><span style={{ color: 'var(--text3)' }}>Next review</span><span style={{ fontWeight: 700 }}>{selected.next_review_date ? new Date(selected.next_review_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}</span></div>
                 </div>
               </>
             ) : (
               <>
                 <div style={glass({ padding: 18 })}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>Risk by Category</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>Risk by Category</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                     <RiskDonut segments={ratingDonut} total={assessments.filter(a => !a.archived).length} />
                     <div style={{ flex: 1 }}>
@@ -639,26 +639,26 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                   </div>
                 </div>
                 <div style={glass({ padding: 18 })}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Quick Actions</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Quick Actions</div>
                   {[
                     ['📋 Duplicate Assessment', () => { if (assessments[0]) duplicate(assessments[0]); else alert('No assessment to duplicate yet') }],
                     ['📄 Create from Template', () => setShowTemplates(true)],
                     ['➕ New Assessment', () => setShowCreate(true)],
                   ].map(([label, fn]) => (
-                    <button key={label} onClick={fn} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 4px', border: 'none', borderTop: '1px solid rgba(15,23,42,0.05)', background: 'none', fontSize: 12.5, fontWeight: 700, color: '#334155', cursor: 'pointer' }}>{label}</button>
+                    <button key={label} onClick={fn} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 4px', border: 'none', borderTop: '1px solid rgba(15,23,42,0.05)', background: 'none', fontSize: 12.5, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>{label}</button>
                   ))}
                 </div>
                 <div style={glass({ padding: 18 })}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Upcoming Reviews</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Upcoming Reviews</div>
                   {upcomingReviews.length === 0 ? (
-                    <div style={{ fontSize: 12, color: '#94A3B8' }}>No reviews scheduled.</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>No reviews scheduled.</div>
                   ) : upcomingReviews.map(a => {
                     const d = daysUntil(a.next_review_date)
                     return (
                       <div key={a.id} onClick={() => { setSelected(a); setTab('overview') }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderTop: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer' }}>
                         <span style={{ fontSize: 15 }}>{ACTIVITY_ICON[a.activity_type] || '📋'}</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</div>
+                          <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</div>
                           <div style={{ fontSize: 10.5, color: d != null && d < 0 ? '#DC2626' : '#94A3B8' }}>Review {d != null && d < 0 ? `overdue ${Math.abs(d)}d` : `in ${d}d`}</div>
                         </div>
                         {a.risk_rating && <RatingBadge rating={a.risk_rating} size="sm" />}
@@ -668,13 +668,13 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                 </div>
                 <div style={glass({ padding: 18 })}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>Templates</div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>Templates</div>
                     <button onClick={() => setShowTemplates(true)} style={{ fontSize: 11, fontWeight: 800, color: primary, background: 'none', border: 'none', cursor: 'pointer' }}>Browse <Icon name="→" /></button>
                   </div>
                   {RA_TEMPLATES.slice(0, 4).map(t => (
                     <button key={t.key} onClick={() => setShowTemplates(true)} style={{ display: 'flex', width: '100%', alignItems: 'center', gap: 8, padding: '8px 0', borderTop: '1px solid rgba(15,23,42,0.05)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
                       <span style={{ fontSize: 15 }}><Icon name={t.icon} /></span>
-                      <span style={{ fontSize: 12.5, fontWeight: 700, color: '#334155', flex: 1 }}>{t.name}</span>
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text2)', flex: 1 }}>{t.name}</span>
                       <span style={{ color: '#CBD5E1' }}>›</span>
                     </button>
                   ))}
@@ -792,16 +792,16 @@ function ReviewHistory({ assessment, org, staff }) {
   }, [assessment.id])
   const name = (id) => staff.find(s => s.id === id)?.full_name || 'Team member'
   const ICON = { created: '✨', edited: '✏️', viewed: '👁️', printed: '🖨️', downloaded: '⬇️', attached: '📎', detached: '🔗', reviewed: '✅', archived: '🗄️' }
-  if (loading) return <div style={{ padding: 16, color: '#94A3B8', fontSize: 13 }}>Loading history…</div>
-  if (events.length === 0) return <div style={{ textAlign: 'center', padding: '24px', color: '#94A3B8', fontSize: 13 }}>No history yet.</div>
+  if (loading) return <div style={{ padding: 16, color: 'var(--text-faint)', fontSize: 13 }}>Loading history…</div>
+  if (events.length === 0) return <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-faint)', fontSize: 13 }}>No history yet.</div>
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {events.map(e => (
-        <div key={e.id} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(15,23,42,0.06)', background: '#fff' }}>
+        <div key={e.id} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(15,23,42,0.06)', background: 'var(--surface)' }}>
           <span style={{ fontSize: 16 }}>{ICON[e.action] || '•'}</span>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0F172A' }}>{e.detail || e.action}</div>
-            <div style={{ fontSize: 11, color: '#94A3B8' }}>{name(e.actor_id)} · {timeAgo(e.created_at)}</div>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)' }}>{e.detail || e.action}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{name(e.actor_id)} · {timeAgo(e.created_at)}</div>
           </div>
         </div>
       ))}
@@ -834,25 +834,25 @@ function CreateModal({ org, staff, venues, onClose, onCreate, primary, prefillSe
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}
       style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.6)', backdropFilter: 'blur(4px)', zIndex: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <motion.div initial={{ y: 20, scale: 0.97, opacity: 0 }} animate={{ y: 0, scale: 1, opacity: 1 }} exit={{ y: 14, scale: 0.97, opacity: 0 }} transition={{ type: 'spring', stiffness: 340, damping: 30 }} onClick={e => e.stopPropagation()}
-        style={{ background: '#fff', borderRadius: 22, width: '100%', maxWidth: 480, overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.35)' }}>
+        style={{ background: 'var(--surface)', borderRadius: 22, width: '100%', maxWidth: 480, overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.35)' }}>
         <div style={{ padding: '18px 22px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}><Icon name="🛡️" /> New Risk Assessment</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
+          <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text)' }}><Icon name="🛡️" /> New Risk Assessment</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text-faint)', cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
         <div style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>Name</label>
+            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Name</label>
             <input autoFocus style={inputStyle} value={form.name} onChange={e => set('name', e.target.value)} placeholder="e.g. Football Training Session" />
           </div>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>Activity Type</label>
+            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Activity Type</label>
             <select style={inputStyle} value={form.activity_type} onChange={e => set('activity_type', e.target.value)}>
               <option value="">Select…</option>
               {ACTIVITY_TYPES.map(a => <option key={a} value={a}>{a}</option>)}
             </select>
           </div>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>Location</label>
+            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Location</label>
             {activeVenues.length > 0 && !useCustomLocation ? (
               <>
                 <select style={inputStyle} value={form.venue_id || ''} onChange={e => {
@@ -885,7 +885,7 @@ function CreateModal({ org, staff, venues, onClose, onCreate, primary, prefillSe
             )}
           </div>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>Summary</label>
+            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Summary</label>
             <textarea style={{ ...inputStyle, minHeight: 70, resize: 'vertical' }} value={form.summary} onChange={e => set('summary', e.target.value)} placeholder="Brief description…" />
           </div>
         </div>
@@ -905,21 +905,21 @@ function TemplatesModal({ onClose, onPick, primary }) {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}
       style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.6)', backdropFilter: 'blur(4px)', zIndex: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <motion.div initial={{ y: 20, scale: 0.97, opacity: 0 }} animate={{ y: 0, scale: 1, opacity: 1 }} exit={{ y: 14, scale: 0.97, opacity: 0 }} transition={{ type: 'spring', stiffness: 340, damping: 30 }} onClick={e => e.stopPropagation()}
-        style={{ background: '#fff', borderRadius: 22, width: '100%', maxWidth: 560, maxHeight: '86vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 40px 100px rgba(0,0,0,0.35)' }}>
+        style={{ background: 'var(--surface)', borderRadius: 22, width: '100%', maxWidth: 560, maxHeight: '86vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 40px 100px rgba(0,0,0,0.35)' }}>
         <div style={{ padding: '18px 22px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}><Icon name="📄" /> Start from a Template</div>
-            <div style={{ fontSize: 12, color: '#94A3B8' }}>Pre-filled hazards you can edit after creating</div>
+            <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text)' }}><Icon name="📄" /> Start from a Template</div>
+            <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>Pre-filled hazards you can edit after creating</div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text-faint)', cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
         <div style={{ padding: 18, overflowY: 'auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           {RA_TEMPLATES.map(t => (
-            <div key={t.key} style={{ border: '1.5px solid rgba(15,23,42,0.08)', borderRadius: 14, padding: 16, background: '#fff' }}>
+            <div key={t.key} style={{ border: '1.5px solid rgba(15,23,42,0.08)', borderRadius: 14, padding: 16, background: 'var(--surface)' }}>
               <div style={{ fontSize: 26, marginBottom: 6 }}><Icon name={t.icon} /></div>
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>{t.name}</div>
-              <div style={{ fontSize: 11.5, color: '#94A3B8', margin: '4px 0 10px', minHeight: 46 }}>{t.summary}</div>
-              <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700, marginBottom: 10 }}>{t.hazards.length} starter hazards</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{t.name}</div>
+              <div style={{ fontSize: 11.5, color: 'var(--text-faint)', margin: '4px 0 10px', minHeight: 46 }}>{t.summary}</div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 700, marginBottom: 10 }}>{t.hazards.length} starter hazards</div>
               <button onClick={() => { setPicking(t.key); onPick(t) }} disabled={picking} style={{ width: '100%', ...btnPrimary(primary) }}>{picking === t.key ? 'Creating…' : 'Use Template'}</button>
             </div>
           ))}

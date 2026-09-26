@@ -78,17 +78,17 @@ export default function RAHazards({ assessment, org, session: authSession, venue
     </div>
   )
 
-  if (loading) return <div style={{ padding: 16, color: '#94A3B8', fontSize: 13 }}>Loading hazards…</div>
+  if (loading) return <div style={{ padding: 16, color: 'var(--text-faint)', fontSize: 13 }}>Loading hazards…</div>
 
   return (
     <div>
       {/* Live matrix summary */}
-      <div style={{ background: '#F8FAFC', borderRadius: 14, padding: 16, marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
+      <div style={{ background: 'var(--surface2)', borderRadius: 14, padding: 16, marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
         <RiskMatrix hazards={hazards} compact />
       </div>
 
       {hazards.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '24px 10px', color: '#94A3B8', fontSize: 13 }}>No hazards recorded yet. Add the first one below.</div>
+        <div style={{ textAlign: 'center', padding: '24px 10px', color: 'var(--text-faint)', fontSize: 13 }}>No hazards recorded yet. Add the first one below.</div>
       ) : (
         <AnimatePresence initial={false}>
           {hazards.map((h, idx) => {
@@ -98,14 +98,14 @@ export default function RAHazards({ assessment, org, session: authSession, venue
             const isOpen = expanded === h.id
             return (
               <motion.div key={h.id} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }}
-                style={{ border: '1.5px solid rgba(15,23,42,0.08)', borderRadius: 12, marginBottom: 10, overflow: 'hidden', background: '#fff' }}>
+                style={{ border: '1.5px solid rgba(15,23,42,0.08)', borderRadius: 12, marginBottom: 10, overflow: 'hidden', background: 'var(--surface)' }}>
                 <div onClick={() => setExpanded(isOpen ? null : h.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', cursor: 'pointer' }}>
                   <span style={{ fontSize: 11, fontWeight: 800, color: '#CBD5E1', width: 18 }}>{idx + 1}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13.5, fontWeight: 700, color: h.hazard ? '#0F172A' : '#94A3B8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.hazard || 'Untitled hazard'}</div>
-                    {h.who_at_risk && <div style={{ fontSize: 11.5, color: '#94A3B8' }}>At risk: {h.who_at_risk}</div>}
+                    {h.who_at_risk && <div style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>At risk: {h.who_at_risk}</div>}
                   </div>
-                  <span style={{ fontSize: 12, fontWeight: 800, color: '#64748B' }}>{score}</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--text3)' }}>{score}</span>
                   <RatingBadge rating={rating} size="sm" />
                   <span style={{ fontSize: 14, color: '#CBD5E1' }}>{isOpen ? '▾' : '▸'}</span>
                 </div>
@@ -114,39 +114,39 @@ export default function RAHazards({ assessment, org, session: authSession, venue
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
                       <div style={{ padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                         <div>
-                          <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 3 }}>Hazard</label>
+                          <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 3 }}>Hazard</label>
                           <input style={inp} value={h.hazard || ''} onChange={e => saveField(h.id, { hazard: e.target.value })} placeholder="e.g. Slips, trips and falls on wet flooring" />
                         </div>
                         <div>
-                          <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 3 }}>Who is at risk</label>
+                          <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 3 }}>Who is at risk</label>
                           <input style={inp} value={h.who_at_risk || ''} onChange={e => saveField(h.id, { who_at_risk: e.target.value })} placeholder="e.g. Young people, staff, volunteers" />
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                           <div>
-                            <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>Likelihood ({LIKELIHOOD_LABELS[h.likelihood - 1]})</label>
+                            <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Likelihood ({LIKELIHOOD_LABELS[h.likelihood - 1]})</label>
                             {scale(h.likelihood, v => saveField(h.id, { likelihood: v }))}
                           </div>
                           <div>
-                            <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>Severity ({SEVERITY_LABELS[h.severity - 1]})</label>
+                            <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Severity ({SEVERITY_LABELS[h.severity - 1]})</label>
                             {scale(h.severity, v => saveField(h.id, { severity: v }))}
                           </div>
                         </div>
                         <div>
-                          <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 3 }}>Control measures</label>
+                          <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 3 }}>Control measures</label>
                           <textarea style={{ ...inp, minHeight: 60, resize: 'vertical' }} value={h.control_measures || ''} onChange={e => saveField(h.id, { control_measures: e.target.value })} placeholder="What's in place to reduce this risk?" />
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                           <div>
-                            <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>Residual likelihood</label>
+                            <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Residual likelihood</label>
                             {scale(h.residual_likelihood, v => saveField(h.id, { residual_likelihood: v }))}
                           </div>
                           <div>
-                            <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>Residual severity</label>
+                            <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Residual severity</label>
                             {scale(h.residual_severity, v => saveField(h.id, { residual_severity: v }))}
                           </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: 12, color: '#64748B', fontWeight: 700 }}>Residual risk: {rScore}</span>
+                          <span style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 700 }}>Residual risk: {rScore}</span>
                           <RatingBadge rating={riskRating(rScore)} size="sm" />
                           <input style={{ ...inp, width: 140 }} value={h.owner || ''} onChange={e => saveField(h.id, { owner: e.target.value })} placeholder="Owner" />
                           <div style={{ flex: 1 }} />

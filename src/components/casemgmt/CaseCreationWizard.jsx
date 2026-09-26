@@ -90,12 +90,12 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
       style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.6)', backdropFilter: 'blur(4px)', zIndex: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <motion.div initial={{ y: 20, scale: 0.97, opacity: 0 }} animate={{ y: 0, scale: 1, opacity: 1 }} exit={{ y: 14, scale: 0.97, opacity: 0 }} transition={{ type: 'spring', stiffness: 340, damping: 30 }}
         onClick={e => e.stopPropagation()}
-        style={{ background: '#fff', borderRadius: 22, width: '100%', maxWidth: 560, maxHeight: '88vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.35)' }}>
+        style={{ background: 'var(--surface)', borderRadius: 22, width: '100%', maxWidth: 560, maxHeight: '88vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.35)' }}>
 
         <div style={{ padding: '18px 22px', borderBottom: '1px solid rgba(15,23,42,0.06)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}><Icon name="🛡️" /> Open New Case</div>
-            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
+            <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text)' }}><Icon name="🛡️" /> Open New Case</div>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text-faint)', cursor: 'pointer' }}><Icon name="✕" /></button>
           </div>
           <div style={{ display: 'flex', gap: 4 }}>
             {STEPS.map((s, i) => (
@@ -104,7 +104,7 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
               </div>
             ))}
           </div>
-          <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 6, fontWeight: 700 }}>Step {step + 1} of {STEPS.length} · {STEPS[step]}</div>
+          <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 6, fontWeight: 700 }}>Step {step + 1} of {STEPS.length} · {STEPS[step]}</div>
         </div>
 
         <div style={{ padding: 22, overflowY: 'auto', flex: 1, minHeight: 0 }}>
@@ -113,7 +113,7 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
 
               {step === 0 && (
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: '#0F172A' }}>Who is this case about?</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: 'var(--text)' }}>Who is this case about?</div>
                   <input style={inputStyle} placeholder="Search young person by name…" value={childQuery} onChange={e => { setChildQuery(e.target.value); set('child_name', e.target.value); set('child_id', null) }} autoFocus />
                   {childResults.length > 0 && (
                     <div style={{ marginTop: 8, border: '1.5px solid rgba(15,23,42,0.08)', borderRadius: 12, overflow: 'hidden' }}>
@@ -123,20 +123,20 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
                           <Avatar name={c.first_name} photoUrl={c.photo_url} size={28} />
                           <div>
                             <div style={{ fontSize: 13, fontWeight: 700 }}>{c.first_name} {c.last_name}</div>
-                            <div style={{ fontSize: 11, color: '#94A3B8' }}>{c.group_name || 'Ungrouped'}</div>
+                            <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{c.group_name || 'Ungrouped'}</div>
                           </div>
                         </div>
                       ))}
                     </div>
                   )}
                   {form.child_id && <div style={{ marginTop: 8, fontSize: 12, color: '#15803D', fontWeight: 700 }}><Icon name="✓" /> Linked to child record</div>}
-                  <div style={{ marginTop: 10, fontSize: 11.5, color: '#94A3B8' }}>Searches your active Registers roster. Can't find them? Just type their name — you can link the record later.</div>
+                  <div style={{ marginTop: 10, fontSize: 11.5, color: 'var(--text-faint)' }}>Searches your active Registers roster. Can't find them? Just type their name — you can link the record later.</div>
                 </div>
               )}
 
               {step === 1 && (
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, color: '#0F172A' }}>What category best fits this concern?</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, color: 'var(--text)' }}>What category best fits this concern?</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {CATEGORIES.map(c => (
                       <button key={c} onClick={() => set('category', c)}
@@ -150,13 +150,13 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
 
               {step === 2 && (
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, color: '#0F172A' }}>How urgent is this?</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, color: 'var(--text)' }}>How urgent is this?</div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
                     {RISK_LEVELS.map(r => (
                       <button key={r} onClick={() => set('risk_level', r)}
                         style={{ padding: '14px 10px', borderRadius: 14, border: `2px solid ${form.risk_level === r ? primary : 'rgba(15,23,42,0.08)'}`, background: form.risk_level === r ? 'var(--org-a05)' : '#fff', cursor: 'pointer', textAlign: 'left' }}>
                         <RiskBadge level={r} />
-                        <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 6 }}>
+                        <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 6 }}>
                           {r === 'low' && 'Monitor, no immediate action'}
                           {r === 'medium' && 'Needs attention this week'}
                           {r === 'high' && 'Requires review within 24 hours'}
@@ -165,7 +165,7 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
                       </button>
                     ))}
                   </div>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: '#334155', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: 'var(--text2)', cursor: 'pointer' }}>
                     <input type="checkbox" checked={form.requires_dsl} onChange={e => set('requires_dsl', e.target.checked)} style={{ width: 15, height: 15 }} />
                     Requires DSL (Designated Safeguarding Lead) sign-off
                   </label>
@@ -174,10 +174,10 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
 
               {step === 3 && (
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: '#0F172A' }}>Summarise the concern</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: 'var(--text)' }}>Summarise the concern</div>
                   <textarea style={{ ...inputStyle, minHeight: 120, resize: 'vertical' }} placeholder="What happened, when, who was involved…" value={form.summary} onChange={e => set('summary', e.target.value)} autoFocus />
                   <div style={{ marginTop: 10 }}>
-                    <label style={{ fontSize: 12, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>Next review date (optional)</label>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Next review date (optional)</label>
                     <input type="date" style={inputStyle} value={form.next_review_date} onChange={e => set('next_review_date', e.target.value)} />
                   </div>
                 </div>
@@ -185,7 +185,7 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
 
               {step === 4 && (
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, color: '#0F172A' }}>Assign to a staff member</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, color: 'var(--text)' }}>Assign to a staff member</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {staff.map(s => (
                       <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 12, border: `1.5px solid ${form.assigned_to_user_id === s.id ? primary : 'rgba(15,23,42,0.08)'}`, background: form.assigned_to_user_id === s.id ? 'var(--org-a05)' : '#fff', cursor: 'pointer' }}>
@@ -193,7 +193,7 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
                         <Avatar name={s.full_name} photoUrl={s.photo_url} size={26} />
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 700 }}>{s.full_name}</div>
-                          <div style={{ fontSize: 11, color: '#94A3B8' }}>{s.role}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{s.role}</div>
                         </div>
                       </label>
                     ))}
@@ -203,17 +203,17 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
 
               {step === 5 && (
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: '#0F172A' }}>Create a first action (optional)</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: 'var(--text)' }}>Create a first action (optional)</div>
                   <input style={{ ...inputStyle, marginBottom: 8 }} placeholder="e.g. Contact parent, speak with school…" value={form.first_action_title} onChange={e => set('first_action_title', e.target.value)} />
-                  <label style={{ fontSize: 12, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>Due date</label>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Due date</label>
                   <input type="date" style={inputStyle} value={form.first_action_due} onChange={e => set('first_action_due', e.target.value)} />
                 </div>
               )}
 
               {step === 6 && (
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: '#0F172A' }}>Upload any evidence (optional)</div>
-                  <div onClick={() => fileRef.current?.click()} style={{ border: '2px dashed rgba(15,23,42,0.15)', borderRadius: 14, padding: '22px 16px', textAlign: 'center', cursor: 'pointer', background: '#F8FAFC' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: 'var(--text)' }}>Upload any evidence (optional)</div>
+                  <div onClick={() => fileRef.current?.click()} style={{ border: '2px dashed rgba(15,23,42,0.15)', borderRadius: 14, padding: '22px 16px', textAlign: 'center', cursor: 'pointer', background: 'var(--surface2)' }}>
                     <div style={{ fontSize: 22 }}><Icon name="📎" /></div>
                     <div style={{ fontSize: 13, fontWeight: 700, marginTop: 4 }}>Click to select files</div>
                     <input ref={fileRef} type="file" multiple style={{ display: 'none' }} onChange={e => setEvidenceFiles(f => [...f, ...Array.from(e.target.files || [])])} />
@@ -221,7 +221,7 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
                   {evidenceFiles.length > 0 && (
                     <div style={{ marginTop: 10 }}>
                       {evidenceFiles.map((f, i) => (
-                        <div key={i} style={{ fontSize: 12.5, color: '#334155', padding: '4px 0' }}><Icon name="📄" /> {f.name}</div>
+                        <div key={i} style={{ fontSize: 12.5, color: 'var(--text2)', padding: '4px 0' }}><Icon name="📄" /> {f.name}</div>
                       ))}
                     </div>
                   )}
@@ -230,7 +230,7 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
 
               {step === 7 && (
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, color: '#0F172A' }}>Review & create</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, color: 'var(--text)' }}>Review & create</div>
                   {[
                     ['Young person', form.child_name || '—'],
                     ['Category', form.category || '—'],
@@ -240,12 +240,12 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
                     ['Evidence', `${evidenceFiles.length} file(s)`],
                   ].map(([label, val]) => (
                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid rgba(15,23,42,0.05)' }}>
-                      <span style={{ fontSize: 12, color: '#64748B', fontWeight: 700 }}>{label}</span>
-                      <span style={{ fontSize: 12.5, color: '#0F172A', fontWeight: 600, textAlign: 'right', maxWidth: 300 }}>{val}</span>
+                      <span style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 700 }}>{label}</span>
+                      <span style={{ fontSize: 12.5, color: 'var(--text)', fontWeight: 600, textAlign: 'right', maxWidth: 300 }}>{val}</span>
                     </div>
                   ))}
                   <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 12, color: '#64748B', fontWeight: 700 }}>Risk level</span>
+                    <span style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 700 }}>Risk level</span>
                     <RiskBadge level={form.risk_level} />
                   </div>
                 </div>

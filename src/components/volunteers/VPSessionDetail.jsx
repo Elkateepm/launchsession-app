@@ -27,15 +27,15 @@ export default function VPSessionDetail({ session, org, onClose, onNavigateTab, 
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '10px 0', borderBottom: '1px solid rgba(15,23,42,0.05)' }}>
       <span style={{ fontSize: 16, width: 22 }}>{icon}</span>
       <div>
-        <div style={{ fontSize: 10.5, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase' }}>{label}</div>
-        <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A', marginTop: 2 }}>{value}</div>
+        <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase' }}>{label}</div>
+        <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)', marginTop: 2 }}>{value}</div>
       </div>
     </div>
   ) : null
 
   return (
     <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', stiffness: 300, damping: 32 }}
-      style={{ position: 'fixed', inset: 0, background: '#fff', zIndex: 600, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      style={{ position: 'fixed', inset: 0, background: 'var(--surface)', zIndex: 600, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
       <div style={{ background: theme.gradient, padding: '18px 18px 22px', color: '#fff', position: 'relative', flexShrink: 0 }}>
         <button onClick={onClose} style={{ position: 'absolute', top: 16, left: 16, width: 32, height: 32, borderRadius: 10, background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer' }}><Icon name="←" /></button>
@@ -60,14 +60,14 @@ export default function VPSessionDetail({ session, org, onClose, onNavigateTab, 
         {isLiveNow && (
           <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <button onClick={() => setShowRegister(true)} style={{ padding: '13px', borderRadius: 14, border: 'none', background: theme.gradient, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}><Icon name="📖" /> Open Register</button>
-            <button onClick={() => onNavigateTab('messages')} style={{ padding: '13px', borderRadius: 14, border: '1.5px solid rgba(15,23,42,0.1)', background: '#fff', color: '#334155', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}><Icon name="💬" /> Message Staff</button>
+            <button onClick={() => onNavigateTab('messages')} style={{ padding: '13px', borderRadius: 14, border: '1.5px solid rgba(15,23,42,0.1)', background: 'var(--surface)', color: 'var(--text2)', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}><Icon name="💬" /> Message Staff</button>
           </div>
         )}
 
         <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: session.location ? '1fr 1fr' : '1fr', gap: 10 }}>
           {session.location && (
             <a href={`https://maps.google.com/?q=${encodeURIComponent(session.location)}`} target="_blank" rel="noreferrer"
-              style={{ padding: '13px', borderRadius: 14, border: '1.5px solid rgba(15,23,42,0.1)', textAlign: 'center', color: '#334155', fontWeight: 800, fontSize: 13, textDecoration: 'none' }}><Icon name="🧭" /> Navigate</a>
+              style={{ padding: '13px', borderRadius: 14, border: '1.5px solid rgba(15,23,42,0.1)', textAlign: 'center', color: 'var(--text2)', fontWeight: 800, fontSize: 13, textDecoration: 'none' }}><Icon name="🧭" /> Navigate</a>
           )}
           <a href="tel:999" style={{ padding: '13px', borderRadius: 14, border: '1.5px solid #FCA5A5', textAlign: 'center', color: '#DC2626', fontWeight: 800, fontSize: 13, textDecoration: 'none' }}><Icon name="📞" /> Emergency</a>
         </div>
@@ -106,7 +106,7 @@ function VPRegister({ session, org, primary, theme, onClose }) {
 
   return (
     <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', stiffness: 300, damping: 32 }}
-      style={{ position: 'fixed', inset: 0, background: '#fff', zIndex: 650, display: 'flex', flexDirection: 'column' }}>
+      style={{ position: 'fixed', inset: 0, background: 'var(--surface)', zIndex: 650, display: 'flex', flexDirection: 'column' }}>
       <div style={{ background: theme.gradient, padding: '16px 18px', color: '#fff', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
         <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: 15, cursor: 'pointer' }}><Icon name="✕" /></button>
         <div style={{ flex: 1 }}>
@@ -116,9 +116,9 @@ function VPRegister({ session, org, primary, theme, onClose }) {
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: '#94A3B8' }}>Loading register…</div>
+          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-faint)' }}>Loading register…</div>
         ) : rows.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, color: '#94A3B8' }}>No one on the register for this session yet.</div>
+          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-faint)' }}>No one on the register for this session yet.</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {rows.map(r => {
@@ -127,11 +127,11 @@ function VPRegister({ session, org, primary, theme, onClose }) {
               const alert = c.has_epipen || c.has_asthma || c.takes_medication
               return (
                 <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 14, border: '1.5px solid rgba(15,23,42,0.08)' }}>
-                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#F1F5F9', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#64748B', flexShrink: 0 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--surface-hover)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: 'var(--text3)', flexShrink: 0 }}>
                     {c.photo_url ? <SignedImg bucket="gallery" src={c.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : `${c.first_name?.[0] || ''}${c.last_name?.[0] || ''}`}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A' }}>{c.first_name} {c.last_name}</div>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>{c.first_name} {c.last_name}</div>
                     {alert && <div style={{ fontSize: 10.5, color: '#DC2626', fontWeight: 700 }}><Icon name="⚠" /> Medical alert</div>}
                   </div>
                   <button onClick={() => toggle(r)} disabled={busy === r.id}

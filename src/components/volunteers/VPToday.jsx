@@ -115,7 +115,7 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
               {isLiveNow && (
                 <motion.div animate={{ opacity: [1, 0.6, 1] }} transition={{ duration: 1.5, repeat: Infinity }}
                   style={{ position: 'absolute', top: 14, right: 14, background: 'rgba(255,255,255,0.25)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff' }} />LIVE NOW
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--surface)' }} />LIVE NOW
                 </motion.div>
               )}
               <div style={{ fontSize: 34, marginBottom: 6 }}><Icon name={theme.icon} /></div>
@@ -136,15 +136,15 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
                 </div>
               )}
             </div>
-            <div style={{ background: '#fff', padding: '12px 16px', display: 'flex', gap: 8 }}>
+            <div style={{ background: 'var(--surface)', padding: '12px 16px', display: 'flex', gap: 8 }}>
               {isLiveNow ? (
                 <>
                   <button onClick={e => { e.stopPropagation(); onOpenRegister(nextSession) }} style={{ flex: 1, padding: '10px', borderRadius: 12, border: 'none', background: theme.gradient, color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}><Icon name="📖" /> Open Register</button>
-                  <button onClick={e => { e.stopPropagation(); onNavigate('messages') }} style={{ flex: 1, padding: '10px', borderRadius: 12, border: '1.5px solid rgba(15,23,42,0.1)', background: '#fff', color: '#334155', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}><Icon name="💬" /> Message Staff</button>
+                  <button onClick={e => { e.stopPropagation(); onNavigate('messages') }} style={{ flex: 1, padding: '10px', borderRadius: 12, border: '1.5px solid rgba(15,23,42,0.1)', background: 'var(--surface)', color: 'var(--text2)', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}><Icon name="💬" /> Message Staff</button>
                 </>
               ) : (
                 <>
-                  {nextSession.location && <a onClick={e => e.stopPropagation()} href={`https://maps.google.com/?q=${encodeURIComponent(nextSession.location)}`} target="_blank" rel="noreferrer" style={{ flex: 1, padding: '10px', borderRadius: 12, border: '1.5px solid rgba(15,23,42,0.1)', background: '#fff', color: '#334155', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', textAlign: 'center', textDecoration: 'none' }}><Icon name="🧭" /> Navigate</a>}
+                  {nextSession.location && <a onClick={e => e.stopPropagation()} href={`https://maps.google.com/?q=${encodeURIComponent(nextSession.location)}`} target="_blank" rel="noreferrer" style={{ flex: 1, padding: '10px', borderRadius: 12, border: '1.5px solid rgba(15,23,42,0.1)', background: 'var(--surface)', color: 'var(--text2)', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', textAlign: 'center', textDecoration: 'none' }}><Icon name="🧭" /> Navigate</a>}
                   <button onClick={e => { e.stopPropagation(); onOpenSession(nextSession) }} style={{ flex: 1, padding: '10px', borderRadius: 12, border: 'none', background: theme.gradient, color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>View Details</button>
                 </>
               )}
@@ -153,8 +153,8 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
         ) : (
           <div style={{ ...glassCard({ padding: 22, textAlign: 'center', marginBottom: 14 }) }}>
             <div style={{ fontSize: 30, marginBottom: 8 }}>🌤️</div>
-            <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>No sessions scheduled</div>
-            <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 3 }}>Check Sessions to see what's coming up</div>
+            <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>No sessions scheduled</div>
+            <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 3 }}>Check Sessions to see what's coming up</div>
           </div>
         )}
 
@@ -170,7 +170,7 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
         </motion.button>
 
         {/* TODAY'S OVERVIEW */}
-        <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Today's Overview</div>
+        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Today's Overview</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 14 }}>
           {[
             { icon: '📅', value: todaySessions.length, label: todaySessions.length === 1 ? 'Session today' : 'Sessions today', bg: '#EFF6FF' },
@@ -179,8 +179,8 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
           ].map(k => (
             <div key={k.label} style={{ ...glassCard({ padding: '13px 8px', background: k.bg }) }}>
               <div style={{ fontSize: 18, marginBottom: 4 }}><Icon name={k.icon} /></div>
-              <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>{k.value}</div>
-              <div style={{ fontSize: 9.5, color: '#64748B', fontWeight: 700, lineHeight: 1.25, marginTop: 2 }}>{k.label}</div>
+              <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)' }}>{k.value}</div>
+              <div style={{ fontSize: 9.5, color: 'var(--text3)', fontWeight: 700, lineHeight: 1.25, marginTop: 2 }}>{k.label}</div>
             </div>
           ))}
         </div>
@@ -188,7 +188,7 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
         {/* TODAY'S ACTIONS CHECKLIST */}
         {checklist.length > 0 && (
           <div style={{ ...glassCard({ padding: 16, marginBottom: 14 }) }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Today's Actions</div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Today's Actions</div>
             {checklist.map(item => (
               <label key={item.key} onClick={() => setChecked(c => ({ ...c, [item.key]: !c[item.key] }))}
                 style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', cursor: 'pointer' }}>
@@ -203,7 +203,7 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
         )}
 
         {/* QUICK ACTION CARDS */}
-        <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Quick Actions</div>
+        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Quick Actions</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 18 }}>
           {[
             { key: 'sessions', icon: '📅', label: 'My Sessions', tab: 'sessions' },
@@ -216,21 +216,21 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
             <button key={a.key} onClick={() => onNavigate(a.tab, a.sub)}
               style={{ ...glassCard({ padding: '16px 8px' }), display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer', border: 'none' }}>
               <div style={{ fontSize: 22 }}><Icon name={a.icon} /></div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#334155', textAlign: 'center' }}>{a.label}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', textAlign: 'center' }}>{a.label}</span>
             </button>
           ))}
         </div>
 
         {/* ACHIEVEMENTS */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>My Badges</div>
+          <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>My Badges</div>
           <button onClick={() => onNavigate('profile', 'badges')} style={{ fontSize: 11, fontWeight: 800, color: primary, background: 'none', border: 'none', cursor: 'pointer' }}>View all <Icon name="→" /></button>
         </div>
         <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4, marginBottom: 18 }}>
           {achievements.map(a => (
             <button key={a.key} onClick={() => setViewingBadge(a)} style={{ ...glassCard({ padding: '14px 12px' }), flexShrink: 0, width: 84, textAlign: 'center', opacity: a.earned ? 1 : 0.35, border: 'none', cursor: 'pointer' }}>
               <div style={{ fontSize: 26, marginBottom: 4, filter: a.earned ? 'none' : 'grayscale(1)' }}><Icon name={a.icon} /></div>
-              <div style={{ fontSize: 9.5, fontWeight: 700, color: '#334155', lineHeight: 1.2 }}>{a.label}</div>
+              <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text2)', lineHeight: 1.2 }}>{a.label}</div>
             </button>
           ))}
         </div>
@@ -238,13 +238,13 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
         {/* ANNOUNCEMENTS */}
         {announcements.length > 0 && (
           <>
-            <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Announcements</div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Announcements</div>
             <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
               {announcements.slice(0, 6).map(a => (
                 <div key={a.id} style={{ ...glassCard({ padding: 14 }), flexShrink: 0, width: 240 }}>
                   <div style={{ fontSize: 20, marginBottom: 6 }}>{a.emoji || '📣'}</div>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 3 }}>{a.title}</div>
-                  <div style={{ fontSize: 11.5, color: '#64748B', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{a.content}</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 3 }}>{a.title}</div>
+                  <div style={{ fontSize: 11.5, color: 'var(--text3)', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{a.content}</div>
                   <div style={{ fontSize: 10, color: '#CBD5E1', marginTop: 8, fontWeight: 700 }}>{timeAgo(a.created_at)}</div>
                 </div>
               ))}
@@ -258,10 +258,10 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setViewingBadge(null)}
             style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.6)', backdropFilter: 'blur(4px)', zIndex: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
             <motion.div initial={{ scale: 0.9, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0 }}
-              onClick={e => e.stopPropagation()} style={{ ...glassCard({ padding: 26, maxWidth: 280, width: '100%', textAlign: 'center', background: '#fff' }) }}>
+              onClick={e => e.stopPropagation()} style={{ ...glassCard({ padding: 26, maxWidth: 280, width: '100%', textAlign: 'center', background: 'var(--surface)' }) }}>
               <div style={{ fontSize: 52, marginBottom: 12, filter: viewingBadge.earned ? 'none' : 'grayscale(1)', opacity: viewingBadge.earned ? 1 : 0.5 }}><Icon name={viewingBadge.icon} /></div>
-              <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>{viewingBadge.label}</div>
-              <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.5, marginBottom: 14 }}>{viewingBadge.desc}</div>
+              <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)', marginBottom: 6 }}>{viewingBadge.label}</div>
+              <div style={{ fontSize: 13, color: 'var(--text3)', lineHeight: 1.5, marginBottom: 14 }}>{viewingBadge.desc}</div>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: viewingBadge.earned ? '#F0FDF4' : '#F1F5F9', color: viewingBadge.earned ? '#16A34A' : '#94A3B8', borderRadius: 99, padding: '6px 14px', fontSize: 12, fontWeight: 800 }}>
                 {viewingBadge.earned ? '✓ Earned' : '🔒 Not yet earned'}
               </div>

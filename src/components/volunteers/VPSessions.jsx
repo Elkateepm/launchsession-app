@@ -27,8 +27,8 @@ export default function VPSessions({ sessions, myBookings, todayStr, onOpenSessi
 
   return (
     <div style={{ padding: '16px 16px 100px' }}>
-      <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A', marginBottom: 4 }}>Sessions</div>
-      <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 16 }}>Your upcoming and past sessions</div>
+      <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', marginBottom: 4 }}>Sessions</div>
+      <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 16 }}>Your upcoming and past sessions</div>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
         {FILTERS.map(f => (
@@ -42,8 +42,8 @@ export default function VPSessions({ sessions, myBookings, todayStr, onOpenSessi
       {grouped.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '50px 20px' }}>
           <div style={{ fontSize: 40, marginBottom: 10 }}><Icon name="🗓️" /></div>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>Nothing here yet</div>
-          <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 3 }}>{filter === 'completed' ? 'Past sessions will appear here' : 'Check back soon for new sessions'}</div>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>Nothing here yet</div>
+          <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 3 }}>{filter === 'completed' ? 'Past sessions will appear here' : 'Check back soon for new sessions'}</div>
         </div>
       ) : (
         grouped.map((group, gi) => (
@@ -59,11 +59,11 @@ export default function VPSessions({ sessions, myBookings, todayStr, onOpenSessi
                   <motion.div key={s.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min((gi * 3 + si) * 0.03, 0.3) }}
                     onClick={() => onOpenSession(s)}
                     style={{ borderRadius: 18, overflow: 'hidden', boxShadow: '0 6px 20px -10px rgba(0,0,0,0.2)', cursor: 'pointer' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: '#fff' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: 'var(--surface)' }}>
                       <div style={{ width: 46, height: 46, borderRadius: 14, background: theme.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 21, flexShrink: 0 }}><Icon name={theme.icon} /></div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>{s.title}</div>
-                        <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 2 }}>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{s.title}</div>
+                        <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2 }}>
                           {s.start_time}{s.end_time ? ` – ${s.end_time}` : ''}{s.location ? ` · ${s.location}` : ''}
                         </div>
                       </div>

@@ -39,13 +39,13 @@ function TimeFilterDropdown({ value, onChange }) {
     <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
       <button onClick={() => setOpen(v => !v)} style={{
         display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 9,
-        border: `1.5px solid ${LS.lavenderBorder}`, background: '#fff', color: LS.text, fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
+        border: `1.5px solid ${LS.lavenderBorder}`, background: 'var(--surface)', color: LS.text, fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
       }}>
         <IconGlyph name="clock" color={LS.muted} size={13} /> {current?.label}
         <span style={{ fontSize: 9, color: LS.muted, marginLeft: 2 }}>▾</span>
       </button>
       {open && (
-        <div style={{ position: 'absolute', top: '110%', right: 0, background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 10, boxShadow: '0 12px 28px rgba(76,50,200,0.14)', zIndex: 20, minWidth: 140, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '110%', right: 0, background: 'var(--surface)', border: `1px solid ${LS.border}`, borderRadius: 10, boxShadow: '0 12px 28px rgba(76,50,200,0.14)', zIndex: 20, minWidth: 140, overflow: 'hidden' }}>
           {PERIODS.map(p => (
             <div key={p.key} onClick={() => { onChange(p.key); setOpen(false) }}
               style={{ padding: '9px 14px', fontSize: 12.5, fontWeight: p.key === value ? 700 : 500, color: p.key === value ? LS.purpleDark : LS.text, cursor: 'pointer', background: p.key === value ? LS.lavender : 'transparent' }}>
@@ -67,7 +67,7 @@ export default function FundraisingHero({ campaigns, donationHistory, totalTarge
   return (
     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.15fr 0.85fr', gap: 16, marginBottom: 20 }}>
       {/* Total raised */}
-      <div style={{ background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 20, padding: '24px 26px' }}>
+      <div style={{ background: 'var(--surface)', border: `1px solid ${LS.border}`, borderRadius: 20, padding: '24px 26px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 4 }}>
           <div style={{ fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', color: LS.muted, fontWeight: 700 }}>Total Raised</div>
           <TimeFilterDropdown value={period} onChange={setPeriod} />
@@ -114,7 +114,7 @@ export default function FundraisingHero({ campaigns, donationHistory, totalTarge
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16, position: 'relative', maxWidth: '78%' }}>
             {focusItems.slice(0, 3).map((f, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 9 }}>
-                <div style={{ width: 22, height: 22, borderRadius: 7, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, boxShadow: '0 2px 6px rgba(76,50,200,0.15)' }}>
+                <div style={{ width: 22, height: 22, borderRadius: 7, background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, boxShadow: '0 2px 6px rgba(76,50,200,0.15)' }}>
                   <IconGlyph name={f.icon} color={LS.purpleDark} size={12} />
                 </div>
                 <span style={{ fontSize: 13, color: LS.text, lineHeight: 1.4, fontWeight: 500 }}>{f.text}</span>

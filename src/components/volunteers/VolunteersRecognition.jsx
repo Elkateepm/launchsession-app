@@ -42,8 +42,8 @@ export default function VolunteersRecognition({ org, volunteers, sessionStaff, s
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
             <Avatar name={spotlightVolunteer.full_name} photoUrl={spotlightVolunteer.photo_url} size={56} color={primary} />
             <div style={{ flex: 1, minWidth: 160 }}>
-              <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>{spotlightVolunteer.full_name}</div>
-              <div style={{ fontSize: 12.5, color: '#64748B' }}>{spotlightVolunteer.hours || totalHours(spotlightVolunteer, sessionStaff, sessions)} hours volunteered</div>
+              <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)' }}>{spotlightVolunteer.full_name}</div>
+              <div style={{ fontSize: 12.5, color: 'var(--text3)' }}>{spotlightVolunteer.hours || totalHours(spotlightVolunteer, sessionStaff, sessions)} hours volunteered</div>
             </div>
             <button onClick={() => award(spotlightVolunteer.id, 'spotlight', 'Volunteer of the Month')} disabled={saving}
               style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}>
@@ -55,14 +55,14 @@ export default function VolunteersRecognition({ org, volunteers, sessionStaff, s
 
       {milestoneHits.length > 0 && (
         <Card style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>Milestones reached</div>
+          <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>Milestones reached</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {milestoneHits.slice(0, 6).map(({ volunteer, milestone }) => (
-              <div key={volunteer.id + milestone} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid #F1F5F9' }}>
+              <div key={volunteer.id + milestone} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border-soft)' }}>
                 <Avatar name={volunteer.full_name} photoUrl={volunteer.photo_url} size={30} color={primary} />
-                <div style={{ flex: 1, fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{volunteer.full_name} <span style={{ color: '#94A3B8', fontWeight: 500 }}>hit {milestone} hours</span></div>
+                <div style={{ flex: 1, fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{volunteer.full_name} <span style={{ color: 'var(--text-faint)', fontWeight: 500 }}>hit {milestone} hours</span></div>
                 <button onClick={() => award(volunteer.id, 'milestone', `${milestone} Hours`)} disabled={saving}
-                  style={{ padding: '6px 12px', borderRadius: 8, border: '1.5px solid rgba(15,23,42,0.1)', background: '#fff', color: '#0F172A', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Send Thank You</button>
+                  style={{ padding: '6px 12px', borderRadius: 8, border: '1.5px solid rgba(15,23,42,0.1)', background: 'var(--surface)', color: 'var(--text)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Send Thank You</button>
               </div>
             ))}
           </div>
@@ -70,17 +70,17 @@ export default function VolunteersRecognition({ org, volunteers, sessionStaff, s
       )}
 
       <Card>
-        <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>Recognition history</div>
+        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>Recognition history</div>
         {recognition.length === 0 ? (
-          <div style={{ fontSize: 13, color: '#94A3B8', textAlign: 'center', padding: '20px 0' }}>No recognitions given yet — celebrate a volunteer above to get started.</div>
+          <div style={{ fontSize: 13, color: 'var(--text-faint)', textAlign: 'center', padding: '20px 0' }}>No recognitions given yet — celebrate a volunteer above to get started.</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {recognition.sort((a, b) => new Date(b.awarded_at) - new Date(a.awarded_at)).slice(0, 12).map(r => {
               const v = volunteers.find(x => x.id === r.volunteer_id)
               return (
-                <motion.div key={r.id} initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid #F1F5F9' }}>
+                <motion.div key={r.id} initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border-soft)' }}>
                   <Avatar name={v?.full_name} photoUrl={v?.photo_url} size={28} color={primary} />
-                  <div style={{ flex: 1, fontSize: 12.5, color: '#334155' }}><strong style={{ color: '#0F172A' }}>{v?.full_name || 'A volunteer'}</strong> — {r.title}</div>
+                  <div style={{ flex: 1, fontSize: 12.5, color: 'var(--text2)' }}><strong style={{ color: 'var(--text)' }}>{v?.full_name || 'A volunteer'}</strong> — {r.title}</div>
                   <Badge>{new Date(r.awarded_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</Badge>
                 </motion.div>
               )

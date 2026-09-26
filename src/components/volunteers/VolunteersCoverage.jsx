@@ -21,8 +21,8 @@ export default function VolunteersCoverage({ org, sessions, sessionStaff, volunt
       {upcoming.length === 0 ? (
         <Card style={{ textAlign: 'center', padding: '48px 24px' }}>
           <div style={{ fontSize: 36, marginBottom: 10 }}><Icon name="🗓️" /></div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>No upcoming sessions</div>
-          <div style={{ fontSize: 13, color: '#64748B', marginTop: 4 }}>Coverage will appear here once sessions are scheduled.</div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>No upcoming sessions</div>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 4 }}>Coverage will appear here once sessions are scheduled.</div>
         </Card>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -38,26 +38,26 @@ export default function VolunteersCoverage({ org, sessions, sessionStaff, volunt
                 style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(20px)', border: '1px solid rgba(15,23,42,0.06)', borderRadius: 20, padding: 18 }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>{s.title}</div>
-                    <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>{s.title}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>
                       {new Date(s.session_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} · 🕐 {s.start_time}–{s.end_time}{s.location ? ` · 📍 ${s.location}` : ''}
                     </div>
                   </div>
                   <Badge bg={status.bg} color={status.color}>{status.label}</Badge>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: suggestions.length ? 12 : 0 }}>
-                  <div style={{ flex: 1, height: 7, background: '#F1F5F9', borderRadius: 99, overflow: 'hidden' }}>
+                  <div style={{ flex: 1, height: 7, background: 'var(--surface-hover)', borderRadius: 99, overflow: 'hidden' }}>
                     <motion.div initial={{ width: 0 }} animate={{ width: `${status.pct}%` }} transition={{ duration: 0.6, ease: 'easeOut' }}
                       style={{ height: '100%', background: status.color, borderRadius: 99 }} />
                   </div>
-                  <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0F172A', flexShrink: 0 }}>{assigned.length} / {required}</div>
+                  <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)', flexShrink: 0 }}>{assigned.length} / {required}</div>
                 </div>
                 {status.pct < 100 && (
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                     <button onClick={() => onRequestCover?.(s)} style={{ padding: '6px 14px', borderRadius: 9, border: 'none', background: primary, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>Request Cover</button>
-                    <button onClick={() => onMessageAll?.(s)} style={{ padding: '6px 14px', borderRadius: 9, border: '1.5px solid rgba(15,23,42,0.1)', background: '#fff', color: '#0F172A', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Broadcast Request</button>
+                    <button onClick={() => onMessageAll?.(s)} style={{ padding: '6px 14px', borderRadius: 9, border: '1.5px solid rgba(15,23,42,0.1)', background: 'var(--surface)', color: 'var(--text)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Broadcast Request</button>
                     {suggestions.length > 0 && (
-                      <span style={{ fontSize: 11.5, color: '#94A3B8' }}>Suggested: {suggestions.map(v => v.full_name?.split(' ')[0]).join(', ')}</span>
+                      <span style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>Suggested: {suggestions.map(v => v.full_name?.split(' ')[0]).join(', ')}</span>
                     )}
                   </div>
                 )}

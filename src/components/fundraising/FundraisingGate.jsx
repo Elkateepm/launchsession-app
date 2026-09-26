@@ -115,7 +115,7 @@ export default function FundraisingGate({ org, session, children }) {
               autoFocus
               style={{
                 width: '100%', padding: '11px 14px', borderRadius: 10, border: `1.5px solid ${LS.lavenderBorder}`,
-                fontSize: 14, outline: 'none', boxSizing: 'border-box', background: '#fff',
+                fontSize: 14, outline: 'none', boxSizing: 'border-box', background: 'var(--surface)',
                 color: LS.text, marginBottom: 12, textAlign: 'center',
               }}
             />

@@ -154,11 +154,11 @@ function PlanPickerModal({ date, org, onClose, onNavigate }) {
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', zIndex: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, animation: 'cal-fade-in 0.2s ease' }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 22, width: '100%', maxWidth: 420, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.3)', animation: 'cal-bounce-in 0.3s cubic-bezier(0.22, 1, 0.36, 1)' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 22, width: '100%', maxWidth: 420, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.3)', animation: 'cal-bounce-in 0.3s cubic-bezier(0.22, 1, 0.36, 1)' }}>
         <div style={{ padding: '22px 24px 16px', borderBottom: `1px solid var(--org-a10)`, position: 'relative' }}>
-          <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, width: 30, height: 30, borderRadius: '50%', border: 'none', background: '#F3F4F6', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280' }}>×</button>
+          <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, width: 30, height: 30, borderRadius: '50%', border: 'none', background: 'var(--surface3)', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text3)' }}>×</button>
           <div style={{ fontSize: 17, fontWeight: 900, color: '#111' }}>What would you like to plan?</div>
-          {dateLabel && <div style={{ fontSize: 12.5, color: '#9CA3AF', fontWeight: 600, marginTop: 4 }}>{dateLabel}</div>}
+          {dateLabel && <div style={{ fontSize: 12.5, color: 'var(--text-faint)', fontWeight: 600, marginTop: 4 }}>{dateLabel}</div>}
         </div>
         <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
           {options.map((o, i) => (
@@ -169,7 +169,7 @@ function PlanPickerModal({ date, org, onClose, onNavigate }) {
               <div style={{ width: 42, height: 42, borderRadius: 12, background: o.colour + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}><Icon name={o.icon} /></div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>{o.title}</div>
-                <div style={{ fontSize: 12, color: '#6B7280', marginTop: 1, lineHeight: 1.3 }}>{o.desc}</div>
+                <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 1, lineHeight: 1.3 }}>{o.desc}</div>
               </div>
               <div style={{ color: o.colour, fontSize: 16 }}>›</div>
             </button>
@@ -193,7 +193,7 @@ function SessionModal({ session, org, onClose, onDelete, project, onOpenProject,
   }
   return <SessionSheet title={session.title} subtitle={phase === 'live' ? 'Live now' : phase.charAt(0).toUpperCase() + phase.slice(1)} onClose={onClose} busy={deleting}
     footer={<div style={{ display: 'flex', gap: 8 }}><button onClick={() => { onClose(); onNavigate && onNavigate('planner', { editSessionId: session.id }) }} style={{ ...flowButton, flex: 1 }}>{phase === 'draft' ? 'Continue planning' : 'Edit plan'}</button>{!['draft', 'cancelled'].includes(phase) && <button onClick={() => { onClose(); onNavigate && onNavigate('registers', { sessionId: session.id, returnTo: 'calendar' }) }} style={{ ...flowButton, flex: 1, background: primary, borderColor: primary, color: '#fff' }}>Open register →</button>}</div>}>
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12, marginBottom: 20 }}>{[['Date', session.session_date ? format(parseISO(session.session_date), 'EEE d MMM yyyy') : 'To be confirmed'], ['Time', timeRange(session.start_time, session.end_time) || 'To be confirmed'], ['Location', session.location || 'To be confirmed'], ['Capacity', session.max_capacity || 'Not set']].map(([label, value]) => <div key={label} style={{ padding: 14, borderRadius: 12, background: '#F8FAFC', overflowWrap: 'anywhere' }}><div style={{ fontSize: 12, color: '#64748B', marginBottom: 8 }}>{label}</div><strong style={{ fontSize: 14 }}>{value}</strong></div>)}</div>
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12, marginBottom: 20 }}>{[['Date', session.session_date ? format(parseISO(session.session_date), 'EEE d MMM yyyy') : 'To be confirmed'], ['Time', timeRange(session.start_time, session.end_time) || 'To be confirmed'], ['Location', session.location || 'To be confirmed'], ['Capacity', session.max_capacity || 'Not set']].map(([label, value]) => <div key={label} style={{ padding: 14, borderRadius: 12, background: 'var(--surface2)', overflowWrap: 'anywhere' }}><div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 8 }}>{label}</div><strong style={{ fontSize: 14 }}>{value}</strong></div>)}</div>
     {project && <button onClick={() => onOpenProject(project)} style={{ ...flowButton, width: '100%', textAlign: 'left', marginBottom: 16 }}>Project: {project.name} →</button>}{session.description && <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.7 }}>{session.description}</p>}{error && <p role="alert" style={{ color: '#B91C1C' }}>{error}</p>}{phase !== 'live' && <button onClick={handleDelete} disabled={deleting} style={{ ...flowButton, marginTop: 24, color: '#B91C1C' }}>{deleting ? 'Deleting…' : 'Delete plan'}</button>}
   </SessionSheet>
 }
@@ -405,30 +405,30 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
             <div>
               <div style={{ fontSize: 22, fontWeight: 900 }}><Icon name="📅" /> Calendar</div>
-              <div style={{ fontSize: 13, color: '#6B7280', marginTop: 3 }}>{thisMonthCount} session{thisMonthCount !== 1 ? 's' : ''} this month · {sessions.length} total</div>
+              <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 3 }}>{thisMonthCount} session{thisMonthCount !== 1 ? 's' : ''} this month · {sessions.length} total</div>
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
                 {['month','week','day','list'].map(v => (
                   <button key={v} onClick={() => { setNavDirection('right'); gridKey.current += 1; setViewMode(v) }} style={{ padding: '7px 12px', border: 'none', background: viewMode === v ? primary : 'transparent', color: viewMode === v ? '#fff' : '#6B7280', fontWeight: 700, fontSize: 12, cursor: 'pointer', textTransform: 'capitalize', transition: 'all 0.15s' }}>
                     {v === 'month' ? '📅 Month' : v === 'week' ? '📋 Week' : v === 'day' ? '☀️ Day' : '📃 List'}
                   </button>
                 ))}
               </div>
-              <button onClick={jumpToday} style={{ padding: '7px 14px', borderRadius: 10, border: `1.5px solid ${primary}`, background: '#fff', color: primary, fontWeight: 800, fontSize: 12, cursor: 'pointer', transition: 'transform 0.1s' }}
+              <button onClick={jumpToday} style={{ padding: '7px 14px', borderRadius: 10, border: `1.5px solid ${primary}`, background: 'var(--surface)', color: primary, fontWeight: 800, fontSize: 12, cursor: 'pointer', transition: 'transform 0.1s' }}
                 onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'}
                 onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>Today</button>
               <div style={{ position: 'relative', display: 'flex' }}>
                 <button onClick={() => handlePlanForDate(format(new Date(), 'yyyy-MM-dd'))} style={{ padding: '9px 16px', borderRadius: '10px 0 0 10px', border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: `0 8px 20px var(--org-a20)` }}>+ New Session</button>
                 <button onClick={() => setShowNewMenu(s => !s)} style={{ padding: '9px 10px', borderRadius: '0 10px 10px 0', border: 'none', borderLeft: '1px solid rgba(255,255,255,0.3)', background: primary, color: '#fff', fontWeight: 800, fontSize: 11, cursor: 'pointer' }}>▾</button>
                 {showNewMenu && (
-                  <div onMouseLeave={() => setShowNewMenu(false)} style={{ position: 'absolute', top: '110%', right: 0, background: '#fff', borderRadius: 14, boxShadow: '0 20px 50px rgba(0,0,0,0.18)', border: '1px solid #F3F4F6', padding: 6, width: 200, zIndex: 60 }}>
+                  <div onMouseLeave={() => setShowNewMenu(false)} style={{ position: 'absolute', top: '110%', right: 0, background: 'var(--surface)', borderRadius: 14, boxShadow: '0 20px 50px rgba(0,0,0,0.18)', border: '1px solid var(--border-soft)', padding: 6, width: 200, zIndex: 60 }}>
                     {[
                       ['📄 Duplicate Last Session', duplicateLastSession],
                       ['📆 Open Session Planner', () => onNavigate && onNavigate('planner')],
                       ['⬇ Export Calendar (.ics)', exportCalendarIcs],
                     ].map(([label, fn]) => (
-                      <button key={label} onClick={() => { fn(); setShowNewMenu(false) }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: 8, border: 'none', background: 'none', fontSize: 12.5, fontWeight: 600, color: '#374151', cursor: 'pointer' }}
+                      <button key={label} onClick={() => { fn(); setShowNewMenu(false) }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: 8, border: 'none', background: 'none', fontSize: 12.5, fontWeight: 600, color: 'var(--text2)', cursor: 'pointer' }}
                         onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>{label}</button>
                     ))}
                   </div>
@@ -456,10 +456,10 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
           </div>
         </div>
 
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.06)', flex: 1, minHeight: isMobile ? 320 : 0, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #F3F4F6' }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.06)', flex: 1, minHeight: isMobile ? 320 : 0, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border-soft)' }}>
             <button onClick={() => navigate(-1)} disabled={viewMode === 'list'}
-              style={{ width: 36, height: 36, borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#F9FAFB', cursor: viewMode === 'list' ? 'default' : 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#374151', transition: 'all 0.15s', opacity: viewMode === 'list' ? 0.35 : 1 }}
+              style={{ width: 36, height: 36, borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface2)', cursor: viewMode === 'list' ? 'default' : 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text2)', transition: 'all 0.15s', opacity: viewMode === 'list' ? 0.35 : 1 }}
               onMouseEnter={e => { if (viewMode !== 'list') { e.currentTarget.style.background = primary + '12'; e.currentTarget.style.borderColor = primary + '40' } }}
               onMouseLeave={e => { e.currentTarget.style.background = '#F9FAFB'; e.currentTarget.style.borderColor = '#e5e7eb' }}>‹</button>
             <div key={gridKey.current + '-label'} style={{ textAlign: 'center', animation: `${slideAnim} 0.25s ease` }}>
@@ -475,29 +475,29 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
               </div>
             </div>
             <button onClick={() => navigate(1)} disabled={viewMode === 'list'}
-              style={{ width: 36, height: 36, borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#F9FAFB', cursor: viewMode === 'list' ? 'default' : 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#374151', transition: 'all 0.15s', opacity: viewMode === 'list' ? 0.35 : 1 }}
+              style={{ width: 36, height: 36, borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface2)', cursor: viewMode === 'list' ? 'default' : 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text2)', transition: 'all 0.15s', opacity: viewMode === 'list' ? 0.35 : 1 }}
               onMouseEnter={e => { if (viewMode !== 'list') { e.currentTarget.style.background = primary + '12'; e.currentTarget.style.borderColor = primary + '40' } }}
               onMouseLeave={e => { e.currentTarget.style.background = '#F9FAFB'; e.currentTarget.style.borderColor = '#e5e7eb' }}>›</button>
           </div>
 
           {viewMode !== 'day' && viewMode !== 'list' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', background: '#F8FAFC', borderBottom: '1px solid #F3F4F6' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', background: 'var(--surface2)', borderBottom: '1px solid var(--border-soft)' }}>
               {DAYS.map(d => (
-                <div key={d} style={{ padding: '10px 0', textAlign: 'center', fontSize: 11, fontWeight: 800, color: '#9CA3AF', letterSpacing: 0.5, textTransform: 'uppercase' }}>{d}</div>
+                <div key={d} style={{ padding: '10px 0', textAlign: 'center', fontSize: 11, fontWeight: 800, color: 'var(--text-faint)', letterSpacing: 0.5, textTransform: 'uppercase' }}>{d}</div>
               ))}
             </div>
           )}
 
           {loading ? (
-            <div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF' }}>
+            <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-faint)' }}>
               <div style={{ width: 32, height: 32, border: `3px solid var(--org-a20)`, borderTopColor: primary, borderRadius: '50%', margin: '0 auto 12px', animation: 'spin 0.7s linear infinite' }} />
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
               Loading sessions...
             </div>
           ) : viewMode === 'month' ? (
-            <div key={gridKey.current} style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', borderLeft: '1px solid #F3F4F6', animation: `${slideAnim} 0.28s ease` }}>
+            <div key={gridKey.current} style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', borderLeft: '1px solid var(--border-soft)', animation: `${slideAnim} 0.28s ease` }}>
               {monthDays.map((day, i) => {
-                if (!day) return <div key={`e${i}`} style={{ minHeight: 110, borderRight: '1px solid #F3F4F6', borderBottom: '1px solid #F3F4F6', background: '#FAFAFA' }} />
+                if (!day) return <div key={`e${i}`} style={{ minHeight: 110, borderRight: '1px solid var(--border-soft)', borderBottom: '1px solid var(--border-soft)', background: '#FAFAFA' }} />
                 const key = format(day, 'yyyy-MM-dd')
                 const daySessions = sessionsByDate[key] || []
                 const today = isToday(day)
@@ -509,7 +509,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                 const specialBg = bankHoliday ? '#FEF3C799' : schoolHoliday ? 'var(--org-a05)' : 'transparent'
                 return (
                   <div key={key} onClick={() => daySessions.length === 0 && inMonth && !isPastEmpty ? handlePlanForDate(key) : null}
-                    style={{ minHeight: 110, minWidth: 0, overflow: 'hidden', borderRight: '1px solid #F3F4F6', borderBottom: '1px solid #F3F4F6', padding: '8px 6px', background: today ? 'var(--org-a05)' : inMonth ? '#fff' : '#FAFAFA', position: 'relative', transition: 'background 0.15s', cursor: inMonth && daySessions.length === 0 && !isPastEmpty ? 'pointer' : 'default', '--pulse-color': primary + '26', animation: today ? 'cal-today-pulse 2.5s ease-in-out infinite' : 'none' }}
+                    style={{ minHeight: 110, minWidth: 0, overflow: 'hidden', borderRight: '1px solid var(--border-soft)', borderBottom: '1px solid var(--border-soft)', padding: '8px 6px', background: today ? 'var(--org-a05)' : inMonth ? '#fff' : '#FAFAFA', position: 'relative', transition: 'background 0.15s', cursor: inMonth && daySessions.length === 0 && !isPastEmpty ? 'pointer' : 'default', '--pulse-color': primary + '26', animation: today ? 'cal-today-pulse 2.5s ease-in-out infinite' : 'none' }}
                     onMouseEnter={e => { if (inMonth) e.currentTarget.style.background = today ? 'var(--org-a10)' : '#FAFBFC' }}
                     onMouseLeave={e => { e.currentTarget.style.background = today ? 'var(--org-a05)' : inMonth ? '#fff' : '#FAFAFA' }}>
                     {inMonth && specialBg !== 'transparent' && (
@@ -522,7 +522,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                           <span title={bankHoliday} style={{ fontSize: 9, background: '#F59E0B26', color: '#B45309', borderRadius: 4, padding: '1px 4px', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>🏵️ {bankHoliday}</span>
                         )}
                         {inMonth && !bankHoliday && novelty && (
-                          <span title={novelty.title} style={{ fontSize: 9, fontWeight: 700, color: '#9CA3AF', opacity: 0.65, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>{novelty.title}</span>
+                          <span title={novelty.title} style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-faint)', opacity: 0.65, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>{novelty.title}</span>
                         )}
                       </div>
                       <div style={{ width: 26, height: 26, borderRadius: '50%', background: today ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: today ? 900 : 600, color: today ? '#fff' : inMonth ? '#374151' : '#D1D5DB', boxShadow: today ? `0 2px 8px var(--org-a35)` : 'none', flexShrink: 0 }}>
@@ -544,7 +544,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                       })}
                       {daySessions.length > 3 && (
                         <button onClick={(e) => { e.stopPropagation(); setNavDirection('right'); gridKey.current += 1; setCurrentDate(day); setViewMode('day') }}
-                          style={{ fontSize: 10, color: '#9CA3AF', fontWeight: 700, paddingLeft: 4, background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', width: '100%' }}
+                          style={{ fontSize: 10, color: 'var(--text-faint)', fontWeight: 700, paddingLeft: 4, background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', width: '100%' }}
                           onMouseEnter={e => e.currentTarget.style.color = primary}
                           onMouseLeave={e => e.currentTarget.style.color = '#9CA3AF'}>
                           +{daySessions.length - 3} more
@@ -556,13 +556,13 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
               })}
             </div>
           ) : viewMode === 'week' ? (
-            <div key={gridKey.current} style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', borderLeft: '1px solid #F3F4F6', animation: `${slideAnim} 0.28s ease` }}>
+            <div key={gridKey.current} style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', borderLeft: '1px solid var(--border-soft)', animation: `${slideAnim} 0.28s ease` }}>
               {weekDays.map(day => {
                 const key = format(day, 'yyyy-MM-dd')
                 const daySessions = sessionsByDate[key] || []
                 const today = isToday(day)
                 return (
-                  <div key={key} style={{ minHeight: 300, minWidth: 0, overflow: 'hidden', borderRight: '1px solid #F3F4F6', padding: '10px 8px', background: today ? 'var(--org-a05)' : '#fff', position: 'relative' }}>
+                  <div key={key} style={{ minHeight: 300, minWidth: 0, overflow: 'hidden', borderRight: '1px solid var(--border-soft)', padding: '10px 8px', background: today ? 'var(--org-a05)' : '#fff', position: 'relative' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
                       <div style={{ width: 32, height: 32, borderRadius: '50%', background: today ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: today ? 900 : 700, color: today ? '#fff' : '#374151', boxShadow: today ? `0 2px 8px var(--org-a35)` : 'none' }}>
                         {format(day, 'd')}
@@ -603,8 +603,8 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
               {daySessionsForDayView.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '50px 20px' }}>
                   <div style={{ fontSize: 48, marginBottom: 12, animation: 'cal-bounce-in 0.4s ease' }}>🌤️</div>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: '#374151', marginBottom: 6 }}>Nothing planned for this day</div>
-                  <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 20 }}>A free day — or the perfect time to plan something new.</div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text2)', marginBottom: 6 }}>Nothing planned for this day</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-faint)', marginBottom: 20 }}>A free day — or the perfect time to plan something new.</div>
                   <button onClick={() => handlePlanForDate(dayKey)} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: `0 8px 20px var(--org-a20)` }}>
                     + Plan a Session
                   </button>
@@ -647,8 +647,8 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                   return (
                     <div style={{ textAlign: 'center', padding: '50px 20px' }}>
                       <div style={{ fontSize: 48, marginBottom: 12 }}><Icon name="🚀" /></div>
-                      <div style={{ fontSize: 16, fontWeight: 800, color: '#374151', marginBottom: 6 }}>No sessions planned yet</div>
-                      <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 20 }}>Nothing coming up matching this filter.</div>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text2)', marginBottom: 6 }}>No sessions planned yet</div>
+                      <div style={{ fontSize: 13, color: 'var(--text-faint)', marginBottom: 20 }}>Nothing coming up matching this filter.</div>
                       <button onClick={() => handlePlanForDate(today)} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', boxShadow: `0 8px 20px var(--org-a20)` }}>+ Create Session</button>
                     </div>
                   )
@@ -695,8 +695,8 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
       </div>
 
       <div style={{ width: isMobile ? '100%' : 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div style={{ background: '#fff', border: '1px solid #EEF0F3', borderRadius: 16, padding: 16, boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 20px -14px rgba(15,23,42,0.18)' }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#374151', marginBottom: 12 }}>This Month</div>
+        <div style={{ background: 'var(--surface)', border: '1px solid #EEF0F3', borderRadius: 16, padding: 16, boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 20px -14px rgba(15,23,42,0.18)' }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text2)', marginBottom: 12 }}>This Month</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
             {[
               { label: 'Sessions', value: thisMonthCount, color: primary },
@@ -705,19 +705,19 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
             ].map(s => (
               <div key={s.label} style={{ background: `${s.color}12`, border: `1px solid ${s.color}25`, borderRadius: 10, padding: '10px 10px' }}>
                 <div style={{ fontSize: 20, fontWeight: 900, color: s.color }}>{s.value}</div>
-                <div style={{ fontSize: 10.5, color: '#9CA3AF', marginTop: 2 }}>{s.label}</div>
+                <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginTop: 2 }}>{s.label}</div>
               </div>
             ))}
           </div>
         </div>
 
-        <div style={{ background: '#fff', border: '1px solid #EEF0F3', borderRadius: 16, padding: 16, flex: 1, boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 20px -14px rgba(15,23,42,0.18)' }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid #EEF0F3', borderRadius: 16, padding: 16, flex: 1, boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 20px -14px rgba(15,23,42,0.18)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: '#374151' }}>Upcoming Sessions</div>
+            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text2)' }}>Upcoming Sessions</div>
             <button onClick={() => { setNavDirection('right'); gridKey.current += 1; setViewMode('list') }} style={{ background: 'none', border: 'none', color: primary, fontSize: 11, fontWeight: 800, cursor: 'pointer', padding: 0 }}>View all <Icon name="→" /></button>
           </div>
           {upcomingSessions.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '20px 0', color: '#9CA3AF', fontSize: 12 }}>
+            <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text-faint)', fontSize: 12 }}>
               <div style={{ fontSize: 28, marginBottom: 6 }}><Icon name="📅" /></div>
               No upcoming sessions.<br />Plan one in the Session Planner.
             </div>
@@ -736,7 +736,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 12, fontWeight: 800, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
                       <div style={{ fontSize: 11, color: cfg.color, fontWeight: 700, marginTop: 2 }}>{dateStr}</div>
-                      {s.start_time && <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 1 }}>{timeRange(s.start_time, s.end_time)}</div>}
+                      {s.start_time && <div style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 1 }}>{timeRange(s.start_time, s.end_time)}</div>}
                       {isSessionToday && <div style={{ fontSize: 10, fontWeight: 800, color: cfg.color, marginTop: 2 }}><Icon name="🔴" /> TODAY</div>}
                     </div>
                   </button>
@@ -746,8 +746,8 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
           )}
         </div>
 
-        <div style={{ background: '#fff', border: '1px solid #EEF0F3', borderRadius: 16, padding: 16, boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 20px -14px rgba(15,23,42,0.18)' }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#374151', marginBottom: 10 }}>Legend</div>
+        <div style={{ background: 'var(--surface)', border: '1px solid #EEF0F3', borderRadius: 16, padding: 16, boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 20px -14px rgba(15,23,42,0.18)' }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text2)', marginBottom: 10 }}>Legend</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {Object.entries(TYPE_CONFIG).map(([key, cfg]) => {
               const count = sessions.filter(s => s.session_type === key).length
@@ -755,24 +755,24 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
               return (
                 <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
                   <div style={{ width: 10, height: 10, borderRadius: 3, background: cfg.color, flexShrink: 0 }} />
-                  <span style={{ flex: 1, color: '#374151', fontWeight: 600 }}>{cfg.icon} {cfg.label}</span>
-                  <span style={{ color: '#9CA3AF', fontWeight: 700 }}>{count}</span>
+                  <span style={{ flex: 1, color: 'var(--text2)', fontWeight: 600 }}>{cfg.icon} {cfg.label}</span>
+                  <span style={{ color: 'var(--text-faint)', fontWeight: 700 }}>{count}</span>
                 </div>
               )
             })}
           </div>
-          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #F3F4F6', display: 'flex', flexDirection: 'column', gap: 5 }}>
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border-soft)', display: 'flex', flexDirection: 'column', gap: 5 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11 }}>
               <div style={{ width: 10, height: 10, borderRadius: 3, background: '#FEF3C7', border: '1px solid #FDE68A', flexShrink: 0 }} />
-              <span style={{ color: '#9CA3AF' }}>🏵️ UK Bank Holiday</span>
+              <span style={{ color: 'var(--text-faint)' }}>🏵️ UK Bank Holiday</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11 }}>
               <div style={{ width: 10, height: 10, borderRadius: 3, background: primary + '10', border: `1px solid var(--org-a20)`, flexShrink: 0 }} />
-              <span style={{ color: '#9CA3AF' }}>School Holiday (approx.)</span>
+              <span style={{ color: 'var(--text-faint)' }}>School Holiday (approx.)</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11 }}>
-              <span style={{ fontSize: 9, fontWeight: 700, color: '#9CA3AF', opacity: 0.65 }}>Aa</span>
-              <span style={{ color: '#9CA3AF' }}>Fun / awareness day</span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-faint)', opacity: 0.65 }}>Aa</span>
+              <span style={{ color: 'var(--text-faint)' }}>Fun / awareness day</span>
             </div>
           </div>
         </div>

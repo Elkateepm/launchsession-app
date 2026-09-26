@@ -21,7 +21,7 @@ export const STATUS_STYLE = {
   child_protection: { bg: 'rgba(239,68,68,0.14)', color: '#B91C1C' },
   resolved: { bg: 'rgba(34,197,94,0.12)', color: '#15803D' },
   closed: { bg: 'rgba(100,116,139,0.14)', color: '#475569' },
-  archived: { bg: 'rgba(148,163,184,0.16)', color: '#64748B' },
+  archived: { bg: 'rgba(148,163,184,0.16)', color: 'var(--text3)' },
 }
 
 export const RISK_LEVELS = ['low', 'medium', 'high', 'critical']

@@ -72,11 +72,11 @@ function ModalShell({ title, icon, color, onClose, children, footer }) {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}
       style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.6)', backdropFilter: 'blur(4px)', zIndex: 700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
       <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-        onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 480, background: '#fff', borderRadius: '26px 26px 0 0', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 480, background: 'var(--surface)', borderRadius: '26px 26px 0 0', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ padding: '18px 20px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 36, height: 36, borderRadius: 12, background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>{icon}</div>
-          <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A', flex: 1 }}>{title}</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
+          <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)', flex: 1 }}>{title}</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text-faint)', cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
         <div style={{ padding: 20, overflowY: 'auto', flex: 1 }}>{children}</div>
         {footer && <div style={{ padding: '14px 20px', borderTop: '1px solid rgba(15,23,42,0.06)' }}>{footer}</div>}
@@ -108,7 +108,7 @@ function ConcernModal({ org, user, onClose }) {
       {done ? (
         <div style={{ textAlign: 'center', padding: '20px 0' }}>
           <div style={{ fontSize: 36, marginBottom: 10 }}><Icon name="✅" /></div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>Sent to your Designated Safeguarding Lead</div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>Sent to your Designated Safeguarding Lead</div>
         </div>
       ) : (
         <>
@@ -145,14 +145,14 @@ function LogHoursModal({ org, user, todaySession, onClose }) {
       {done ? (
         <div style={{ textAlign: 'center', padding: '20px 0' }}>
           <div style={{ fontSize: 36, marginBottom: 10 }}><Icon name="🎉" /></div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>Hours logged — thank you!</div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>Hours logged — thank you!</div>
         </div>
       ) : (
         <>
-          {todaySession && <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 12 }}>For: <strong>{todaySession.title}</strong></div>}
-          <label style={{ fontSize: 12, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 6 }}>Hours</label>
+          {todaySession && <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 12 }}>For: <strong>{todaySession.title}</strong></div>}
+          <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 6 }}>Hours</label>
           <input autoFocus type="number" step="0.5" min="0" value={hours} onChange={e => setHours(e.target.value)} placeholder="e.g. 2.5" style={{ ...inp, marginBottom: 14 }} />
-          <label style={{ fontSize: 12, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 6 }}>Notes (optional)</label>
+          <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 6 }}>Notes (optional)</label>
           <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} style={{ ...inp, resize: 'vertical' }} />
         </>
       )}
@@ -180,7 +180,7 @@ function IncidentModal({ org, user, onClose }) {
       {done ? (
         <div style={{ textAlign: 'center', padding: '20px 0' }}>
           <div style={{ fontSize: 36, marginBottom: 10 }}><Icon name="✅" /></div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>Incident report submitted</div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>Incident report submitted</div>
         </div>
       ) : (
         <textarea autoFocus value={body} onChange={e => setBody(e.target.value)} placeholder="Describe what happened — injuries, near-misses, equipment issues…" rows={6} style={{ ...inp, resize: 'vertical' }} />
@@ -198,14 +198,14 @@ function EmergencyModal({ org, onClose }) {
           <div><div style={{ fontSize: 14, fontWeight: 800, color: '#7F1D1D' }}>999 — Emergency Services</div><div style={{ fontSize: 11.5, color: '#B91C1C' }}>Life-threatening emergency</div></div>
         </a>
         {org?.emergency_phone && (
-          <a href={`tel:${org.emergency_phone}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, background: '#F8FAFC', textDecoration: 'none' }}>
+          <a href={`tel:${org.emergency_phone}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, background: 'var(--surface2)', textDecoration: 'none' }}>
             <span style={{ fontSize: 22 }}><Icon name="🛡️" /></span>
-            <div><div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>Designated Safeguarding Lead</div><div style={{ fontSize: 11.5, color: '#64748B' }}>{org.emergency_phone}</div></div>
+            <div><div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>Designated Safeguarding Lead</div><div style={{ fontSize: 11.5, color: 'var(--text3)' }}>{org.emergency_phone}</div></div>
           </a>
         )}
-        <a href={org?.phone ? `tel:${org.phone}` : undefined} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, background: '#F8FAFC', textDecoration: 'none', opacity: org?.phone ? 1 : 0.5, pointerEvents: org?.phone ? 'auto' : 'none' }}>
+        <a href={org?.phone ? `tel:${org.phone}` : undefined} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, background: 'var(--surface2)', textDecoration: 'none', opacity: org?.phone ? 1 : 0.5, pointerEvents: org?.phone ? 'auto' : 'none' }}>
           <span style={{ fontSize: 22 }}><Icon name="🏢" /></span>
-          <div><div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>{org?.name || 'Your organisation'}</div><div style={{ fontSize: 11.5, color: '#64748B' }}>{org?.phone || 'No number on file'}</div></div>
+          <div><div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{org?.name || 'Your organisation'}</div><div style={{ fontSize: 11.5, color: 'var(--text3)' }}>{org?.phone || 'No number on file'}</div></div>
         </a>
       </div>
     </ModalShell>
@@ -234,13 +234,13 @@ function UploadDocModal({ org, user, onClose }) {
       {done ? (
         <div style={{ textAlign: 'center', padding: '20px 0' }}>
           <div style={{ fontSize: 36, marginBottom: 10 }}><Icon name="✅" /></div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>Uploaded</div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>Uploaded</div>
         </div>
       ) : (
-        <div onClick={() => fileRef.current?.click()} style={{ border: '2px dashed rgba(15,23,42,0.15)', borderRadius: 16, padding: '28px 16px', textAlign: 'center', cursor: 'pointer', background: '#F8FAFC' }}>
+        <div onClick={() => fileRef.current?.click()} style={{ border: '2px dashed rgba(15,23,42,0.15)', borderRadius: 16, padding: '28px 16px', textAlign: 'center', cursor: 'pointer', background: 'var(--surface2)' }}>
           <div style={{ fontSize: 28, marginBottom: 8 }}><Icon name="📎" /></div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>{uploading ? 'Uploading…' : 'Tap to choose a file'}</div>
-          <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>Certificates, ID, or other documents</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{uploading ? 'Uploading…' : 'Tap to choose a file'}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 4 }}>Certificates, ID, or other documents</div>
           <input ref={fileRef} type="file" style={{ display: 'none' }} onChange={e => upload(e.target.files?.[0])} />
         </div>
       )}

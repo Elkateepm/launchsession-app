@@ -15,16 +15,16 @@ import { ukDate, daysUntil } from '../../lib/hrAccess'
 // side, investigation material.
 
 const card = {
-  background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14,
+  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14,
   padding: 16, marginBottom: 12,
 }
 const field = {
   width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
-  border: '1px solid #E2E8F0', fontSize: 15, fontFamily: 'inherit', outline: 'none',
-  background: '#fff',
+  border: '1px solid var(--border)', fontSize: 15, fontFamily: 'inherit', outline: 'none',
+  background: 'var(--surface)',
 }
 const lbl = {
-  display: 'block', fontSize: 11.5, fontWeight: 800, color: '#64748B',
+  display: 'block', fontSize: 11.5, fontWeight: 800, color: 'var(--text3)',
   marginBottom: 6, letterSpacing: 0.4, textTransform: 'uppercase',
 }
 
@@ -91,7 +91,7 @@ export default function StaffDocuments({ org, staff, primary, canEdit, sensitive
   }
 
   if (rows === null) {
-    return <div style={{ ...card, color: '#64748B', fontSize: 14 }}>Loading documents…</div>
+    return <div style={{ ...card, color: 'var(--text3)', fontSize: 14 }}>Loading documents…</div>
   }
 
   return (
@@ -119,7 +119,7 @@ export default function StaffDocuments({ org, staff, primary, canEdit, sensitive
       )}
 
       {rows.length === 0 && !adding && (
-        <div style={{ ...card, textAlign: 'center', padding: 24, color: '#64748B', fontSize: 13.5, lineHeight: 1.55 }}>
+        <div style={{ ...card, textAlign: 'center', padding: 24, color: 'var(--text3)', fontSize: 13.5, lineHeight: 1.55 }}>
           No documents on file for {staff.full_name} yet.
         </div>
       )}
@@ -130,12 +130,12 @@ export default function StaffDocuments({ org, staff, primary, canEdit, sensitive
           <div key={d.id} style={card}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>{d.title}</div>
-                <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 2 }}>
+                <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>{d.title}</div>
+                <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>
                   {typeLabel(d.document_type)} · added {ukDate(d.uploaded_at)}
                   {d.expiry_date ? ` · ${days < 0 ? 'expired' : 'expires'} ${ukDate(d.expiry_date)}` : ''}
                 </div>
-                {d.notes && <div style={{ fontSize: 12.5, color: '#94A3B8', marginTop: 4 }}>{d.notes}</div>}
+                {d.notes && <div style={{ fontSize: 12.5, color: 'var(--text-faint)', marginTop: 4 }}>{d.notes}</div>}
               </div>
               {d.confidentiality === 'sensitive' && (
                 <span style={{
@@ -147,14 +147,14 @@ export default function StaffDocuments({ org, staff, primary, canEdit, sensitive
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={() => open(d)} disabled={busyId === d.id} style={{
-                minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid #E2E8F0',
-                background: '#fff', color: '#0F172A', fontSize: 13.5, fontWeight: 700,
+                minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid var(--border)',
+                background: 'var(--surface)', color: 'var(--text)', fontSize: 13.5, fontWeight: 700,
                 cursor: busyId === d.id ? 'default' : 'pointer', fontFamily: 'inherit',
               }}>{busyId === d.id ? 'Opening…' : 'Open'}</button>
               {canEdit && (
                 <button onClick={() => archive(d)} disabled={busyId === d.id} style={{
-                  minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid #E2E8F0',
-                  background: '#fff', color: '#64748B', fontSize: 13.5, fontWeight: 700,
+                  minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid var(--border)',
+                  background: 'var(--surface)', color: 'var(--text3)', fontSize: 13.5, fontWeight: 700,
                   cursor: busyId === d.id ? 'default' : 'pointer', fontFamily: 'inherit',
                 }}>Archive</button>
               )}
@@ -233,13 +233,13 @@ function UploadForm({ org, staff, primary, sensitiveView, onCancel, onSaved }) {
 
   return (
     <div style={card}>
-      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>Upload a document</div>
+      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 14 }}>Upload a document</div>
 
       <div style={{ marginBottom: 12 }}>
         <label style={lbl}>File</label>
         <input type="file" onChange={e => pick(e.target.files?.[0] || null)}
           style={{ ...field, padding: 10 }} />
-        <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 6 }}>Up to 25MB.</div>
+        <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 6 }}>Up to 25MB.</div>
       </div>
 
       <div style={{ marginBottom: 12 }}>
@@ -272,7 +272,7 @@ function UploadForm({ org, staff, primary, sensitiveView, onCancel, onSaved }) {
             <option value="hr">Anyone with HR access to this person</option>
             <option value="sensitive">Restricted — disciplinary access only</option>
           </select>
-          <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 6, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 6, lineHeight: 1.45 }}>
             Restricted documents are hidden from managers who do not hold disciplinary access,
             enforced in the database rather than by hiding the row.
           </div>
@@ -292,8 +292,8 @@ function UploadForm({ org, staff, primary, sensitiveView, onCancel, onSaved }) {
           fontFamily: 'inherit', opacity: busy || !file || !title.trim() ? 0.55 : 1,
         }}>{busy ? 'Uploading…' : 'Upload'}</button>
         <button onClick={onCancel} style={{
-          minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid #E2E8F0',
-          background: '#fff', color: '#64748B', fontSize: 14, fontWeight: 700,
+          minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid var(--border)',
+          background: 'var(--surface)', color: 'var(--text3)', fontSize: 14, fontWeight: 700,
           cursor: 'pointer', fontFamily: 'inherit',
         }}>Cancel</button>
       </div>

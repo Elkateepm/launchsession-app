@@ -38,10 +38,10 @@ export function SectionTitle({ icon, title, subtitle, right }) {
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
       <div>
-        <div style={{ fontSize: 17, fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
           {icon && <span>{icon}</span>}{title}
         </div>
-        {subtitle && <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 2 }}>{subtitle}</div>}
+        {subtitle && <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>{subtitle}</div>}
       </div>
       {right}
     </div>
@@ -121,7 +121,7 @@ export function sessionHours(s) {
 
 export const inputStyle = {
   width: '100%', padding: '9px 12px', borderRadius: 10, border: '1.5px solid rgba(15,23,42,0.1)',
-  fontSize: 13.5, outline: 'none', boxSizing: 'border-box', background: '#fff', color: '#0F172A',
+  fontSize: 13.5, outline: 'none', boxSizing: 'border-box', background: 'var(--surface)', color: 'var(--text)',
 }
 
 export const btnPrimary = (color) => ({
@@ -130,6 +130,6 @@ export const btnPrimary = (color) => ({
 })
 
 export const btnGhost = {
-  padding: '9px 18px', borderRadius: 10, border: '1.5px solid rgba(15,23,42,0.1)', background: '#fff',
-  color: '#0F172A', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+  padding: '9px 18px', borderRadius: 10, border: '1.5px solid rgba(15,23,42,0.1)', background: 'var(--surface)',
+  color: 'var(--text)', fontSize: 13, fontWeight: 700, cursor: 'pointer',
 }

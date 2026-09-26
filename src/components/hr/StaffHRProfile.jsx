@@ -25,16 +25,16 @@ import DisciplinaryRecord from './DisciplinaryRecord'
 // client guessing at an org_id.
 
 const card = {
-  background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14,
+  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14,
   padding: 16, marginBottom: 12,
 }
 const field = {
   width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
-  border: '1px solid #E2E8F0', fontSize: 15, fontFamily: 'inherit', outline: 'none',
-  background: '#fff',
+  border: '1px solid var(--border)', fontSize: 15, fontFamily: 'inherit', outline: 'none',
+  background: 'var(--surface)',
 }
 const lbl = {
-  display: 'block', fontSize: 11.5, fontWeight: 800, color: '#64748B',
+  display: 'block', fontSize: 11.5, fontWeight: 800, color: 'var(--text3)',
   marginBottom: 6, letterSpacing: 0.4, textTransform: 'uppercase',
 }
 
@@ -130,7 +130,7 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
 
   if (loading || access.loading) {
     return shell(
-      <div style={{ ...card, color: '#64748B', fontSize: 14, marginBottom: 0 }}>
+      <div style={{ ...card, color: 'var(--text3)', fontSize: 14, marginBottom: 0 }}>
         Opening {person.full_name || person.email}&apos;s HR record…
         <button style={{ ...HR.button, marginLeft: 12 }} onClick={onClose}>Close</button>
       </div>
@@ -143,7 +143,7 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
         <div style={{ fontSize: 15, fontWeight: 800, color: '#B42318', marginBottom: 6 }}>
           Could not open this HR record
         </div>
-        <div style={{ fontSize: 13.5, color: '#64748B', lineHeight: 1.55, marginBottom: 14 }}>
+        <div style={{ fontSize: 13.5, color: 'var(--text3)', lineHeight: 1.55, marginBottom: 14 }}>
           {error || 'No employment record was returned.'}
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -152,8 +152,8 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
             color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
           }}>Try again</button>
           <button onClick={onClose} aria-label="Close HR profile" style={{
-            flex: 1, minHeight: 44, borderRadius: 11, border: '1px solid #E2E8F0',
-            background: '#fff', color: '#64748B', fontSize: 14, fontWeight: 700,
+            flex: 1, minHeight: 44, borderRadius: 11, border: '1px solid var(--border)',
+            background: 'var(--surface)', color: 'var(--text3)', fontSize: 14, fontWeight: 700,
             cursor: 'pointer', fontFamily: 'inherit',
           }}>Close</button>
         </div>
@@ -214,7 +214,7 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
           <div style={{ fontSize: isMobile ? 23 : 28, fontWeight: 750, color: HR.ink, letterSpacing: -0.8 }}>
             {staff.full_name}
           </div>
-          <div style={{ fontSize: 13, color: '#64748B', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {staff.job_title || empType?.label || 'Staff'}{lineManager ? ` · Managed by ${lineManager.full_name}` : ''}
           </div>
           <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
@@ -237,7 +237,7 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
           </div>
         </div>
         <button onClick={onClose} style={{
-          background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8',
+          background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-faint)',
           minHeight: 44, minWidth: 44, fontFamily: 'inherit', fontSize: 15,
         }}><Icon name="✕" /></button>
       </div>
@@ -357,7 +357,7 @@ function Offboarding({ org, staff, primary, canEdit, onChanged }) {
   React.useEffect(() => { load() }, [load])
 
   if (rec === undefined) {
-    return <div style={{ ...card, color: '#64748B', fontSize: 14 }}>Loading…</div>
+    return <div style={{ ...card, color: 'var(--text3)', fontSize: 14 }}>Loading…</div>
   }
 
   const checklist = rec?.checklist || {}
@@ -402,13 +402,13 @@ function Offboarding({ org, staff, primary, canEdit, onChanged }) {
   return (
     <>
       {!canEdit && (
-        <div style={{ ...card, background: '#F1F5F9', color: '#64748B', fontSize: 13, lineHeight: 1.5 }}>
+        <div style={{ ...card, background: 'var(--surface-hover)', color: 'var(--text3)', fontSize: 13, lineHeight: 1.5 }}>
           Offboarding is recorded by an administrator.
         </div>
       )}
 
       <div style={card}>
-        <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>Leaving</div>
+        <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 14 }}>Leaving</div>
         <div style={{ marginBottom: 12 }}>
           <label style={lbl}>REASON</label>
           <select value={f.reason} disabled={!canEdit}
@@ -445,20 +445,20 @@ function Offboarding({ org, staff, primary, canEdit, onChanged }) {
       {rec && (
         <div style={card}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>Checklist</span>
-            <span style={{ fontSize: 13, color: '#64748B' }}>
+            <span style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>Checklist</span>
+            <span style={{ fontSize: 13, color: 'var(--text3)' }}>
               {done} / {OFFBOARD_STEPS.length}
             </span>
           </div>
           {OFFBOARD_STEPS.map(([k, l]) => (
             <label key={k} style={{
               display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0',
-              borderTop: '1px solid #F1F5F9', cursor: canEdit ? 'pointer' : 'default', minHeight: 44,
+              borderTop: '1px solid var(--border-soft)', cursor: canEdit ? 'pointer' : 'default', minHeight: 44,
             }}>
               <input type="checkbox" checked={!!checklist[k]} disabled={!canEdit || busy}
                 onChange={() => toggle(k)}
                 style={{ width: 18, height: 18, accentColor: primary, flexShrink: 0 }} />
-              <span style={{ fontSize: 13.5, color: '#0F172A' }}>{l}</span>
+              <span style={{ fontSize: 13.5, color: 'var(--text)' }}>{l}</span>
             </label>
           ))}
         </div>
@@ -477,7 +477,7 @@ function Offboarding({ org, staff, primary, canEdit, onChanged }) {
             color: '#fff', fontSize: 14.5, fontWeight: 800, cursor: busy ? 'default' : 'pointer',
             fontFamily: 'inherit', opacity: busy ? 0.6 : 1,
           }}>{busy ? 'Completing…' : 'Complete offboarding'}</button>
-          <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 8, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 8, lineHeight: 1.45 }}>
             Marks them as having left and removes them from active lists. Nothing is deleted —
             their HR history stays readable.
           </div>
@@ -505,11 +505,11 @@ function DisciplinaryList({ org, staff, primary, onOpen }) {
   }, [staff.id])
 
   if (rows === null) {
-    return <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14, padding: 16, color: '#64748B', fontSize: 14 }}>Loading…</div>
+    return <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 16, color: 'var(--text3)', fontSize: 14 }}>Loading…</div>
   }
   if (rows.length === 0) {
     return (
-      <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14, padding: 24, textAlign: 'center', color: '#64748B', fontSize: 13.5, lineHeight: 1.55 }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 24, textAlign: 'center', color: 'var(--text3)', fontSize: 13.5, lineHeight: 1.55 }}>
         No active disciplinary processes for {staff.full_name}. A disciplinary is only
         opened by escalating an HR case.
       </div>
@@ -518,11 +518,11 @@ function DisciplinaryList({ org, staff, primary, onOpen }) {
   return rows.map(r => (
     <button key={r.id} onClick={() => onOpen(r.id)} style={{
       display: 'block', width: '100%', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit',
-      background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14, padding: 16, marginBottom: 12,
+      background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 16, marginBottom: 12,
     }}>
-      <div style={{ fontSize: 12, fontWeight: 800, color: '#94A3B8', letterSpacing: 0.4 }}>{r.reference}</div>
-      <div style={{ fontSize: 14, color: '#0F172A', marginTop: 4 }}>{r.allegation}</div>
-      <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 4, textTransform: 'capitalize' }}>
+      <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-faint)', letterSpacing: 0.4 }}>{r.reference}</div>
+      <div style={{ fontSize: 14, color: 'var(--text)', marginTop: 4 }}>{r.allegation}</div>
+      <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 4, textTransform: 'capitalize' }}>
         {r.locked ? 'Closed' : r.stage} · opened {ukDate(r.created_at)}
       </div>
     </button>
@@ -596,14 +596,14 @@ function EmploymentForm({ staff, managers, primary, canEdit, onSaved }) {
   return (
     <>
       {!canEdit && (
-        <div style={{ ...card, background: '#F1F5F9', color: '#64748B', fontSize: 13, lineHeight: 1.5 }}>
+        <div style={{ ...card, background: 'var(--surface-hover)', color: 'var(--text3)', fontSize: 13, lineHeight: 1.5 }}>
           You can see this record but not change it. Employment terms, line manager and
           leaving details are set by an administrator.
         </div>
       )}
 
       <div style={card}>
-        <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>Role</div>
+        <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 14 }}>Role</div>
         <T k="job_title" label="Job title" placeholder="e.g. Youth Worker" />
         <T k="staff_ref" label="Staff / employee ID" />
         <T k="department" label="Department or team" />
@@ -621,7 +621,7 @@ function EmploymentForm({ staff, managers, primary, canEdit, onSaved }) {
             <option value="">Not set</option>
             {managers.map(m => <option key={m.id} value={m.id}>{m.full_name}</option>)}
           </select>
-          <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 6, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 6, lineHeight: 1.45 }}>
             Decides who can open this person&apos;s HR record. A manager reaches their own
             reports; administrators reach everyone.
           </div>
@@ -629,7 +629,7 @@ function EmploymentForm({ staff, managers, primary, canEdit, onSaved }) {
       </div>
 
       <div style={card}>
-        <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>Contract</div>
+        <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 14 }}>Contract</div>
         <div style={{ marginBottom: 14 }}>
           <label style={lbl}>Contract type</label>
           <select value={form.contract_type || ''} disabled={!canEdit}
@@ -647,12 +647,12 @@ function EmploymentForm({ staff, managers, primary, canEdit, onSaved }) {
       </div>
 
       <div style={card}>
-        <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>Probation</div>
+        <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 14 }}>Probation</div>
         <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, cursor: canEdit ? 'pointer' : 'default', minHeight: 44 }}>
           <input type="checkbox" checked={!!form.probation_required} disabled={!canEdit}
             onChange={e => set('probation_required', e.target.checked)}
             style={{ width: 18, height: 18, accentColor: primary, flexShrink: 0 }} />
-          <span style={{ fontSize: 14, color: '#0F172A' }}>This role has a probation period</span>
+          <span style={{ fontSize: 14, color: 'var(--text)' }}>This role has a probation period</span>
         </label>
         {form.probation_required && (
           <>
@@ -664,7 +664,7 @@ function EmploymentForm({ staff, managers, primary, canEdit, onSaved }) {
                 onChange={e => set('probation_status', e.target.value)} style={{ ...field, minHeight: 44 }}>
                 {PROBATION_STATUSES.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
               </select>
-              <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 6 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 6 }}>
                 Recorded by you. Nothing here decides a probation outcome.
               </div>
             </div>
@@ -673,7 +673,7 @@ function EmploymentForm({ staff, managers, primary, canEdit, onSaved }) {
       </div>
 
       <div style={card}>
-        <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>Status</div>
+        <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 14 }}>Status</div>
         <div style={{ marginBottom: 14 }}>
           <label style={lbl}>Employment status</label>
           <select value={form.employment_status || 'active'} disabled={!canEdit}
@@ -684,7 +684,7 @@ function EmploymentForm({ staff, managers, primary, canEdit, onSaved }) {
         {(form.employment_status === 'suspended' || form.employment_status === 'on_leave') && (
           <>
             <T k="status_reason" label="Reason" />
-            <div style={{ fontSize: 12, color: '#94A3B8', marginTop: -6, marginBottom: 14, lineHeight: 1.45 }}>
+            <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: -6, marginBottom: 14, lineHeight: 1.45 }}>
               A change of duties or a period away from work is a neutral record. It does
               not imply any disciplinary process.
             </div>

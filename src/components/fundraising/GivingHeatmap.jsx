@@ -30,15 +30,15 @@ export default function GivingHeatmap({ donations }) {
   const hasEnoughData = donations.length >= 5
 
   return (
-    <div style={{ border: '1px solid #E5E3DC', borderRadius: 16, padding: '18px 20px', marginBottom: 20, background: '#fff' }}>
+    <div style={{ border: '1px solid #E5E3DC', borderRadius: 16, padding: '18px 20px', marginBottom: 20, background: 'var(--surface)' }}>
       <div style={{ fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#9B9890', marginBottom: 2 }}>Giving activity</div>
-      <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 14 }}>
+      <div style={{ fontSize: 12, color: 'var(--text-faint)', marginBottom: 14 }}>
         {hasEnoughData ? `Which days tend to bring in donations, last ${weeks} weeks` : `Record a few more donations to see which days tend to bring them in`}
       </div>
       <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <div style={{ display: 'inline-flex', gap: 4 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginRight: 4 }}>
-            {DAYS.map(d => <div key={d} style={{ height: 16, fontSize: 10, color: '#9CA3AF', display: 'flex', alignItems: 'center' }}>{d}</div>)}
+            {DAYS.map(d => <div key={d} style={{ height: 16, fontSize: 10, color: 'var(--text-faint)', display: 'flex', alignItems: 'center' }}>{d}</div>)}
           </div>
           {Array.from({ length: weeks }, (_, weekIdx) => (
             <div key={weekIdx} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>

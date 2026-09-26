@@ -96,7 +96,7 @@ export default function BodyMap({ value, onChange }) {
       </svg>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 12.5, fontWeight: 700, color: '#64748B', lineHeight: 1.55 }}>
+        <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text3)', lineHeight: 1.55 }}>
           Tap the nearest area, or choose from the list below.
         </div>
         {value && (

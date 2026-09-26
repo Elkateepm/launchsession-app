@@ -68,7 +68,7 @@ export default function Payments({ org, session, isAdmin }) {
   const primary = PB.blue
 
   if (loading) {
-    return <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94A3B8', fontSize: 14 }}>Loading Payments…</div>
+    return <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-faint)', fontSize: 14 }}>Loading Payments…</div>
   }
 
   return (
@@ -83,7 +83,7 @@ export default function Payments({ org, session, isAdmin }) {
       />
 
       <div style={{ position: 'relative', flexShrink: 0 }}>
-        <div style={{ padding: isMobile ? '0 14px' : '0 24px', borderBottom: '1px solid #E5E7EB', background: '#fff', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ padding: isMobile ? '0 14px' : '0 24px', borderBottom: '1px solid var(--border)', background: 'var(--surface)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <div style={{ display: 'flex', gap: 2 }}>
             {TABS.map(t => (
               <button key={t.key} onClick={() => setTab(t.key)} style={{
@@ -186,7 +186,7 @@ function PickChildThenPay({ children, onClose, onPick, isMobile }) {
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 10400, backdropFilter: 'blur(2px)' }} />
       <div onClick={e => e.stopPropagation()} style={{
-        position: 'fixed', zIndex: 10401, background: '#fff', borderRadius: isMobile ? '22px 22px 0 0' : 20,
+        position: 'fixed', zIndex: 10401, background: 'var(--surface)', borderRadius: isMobile ? '22px 22px 0 0' : 20,
         ...(isMobile ? { left: 0, right: 0, bottom: 0, maxHeight: '75vh' } : { top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 420, maxHeight: '70vh' }),
         display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.35)', overflow: 'hidden',
       }}>
@@ -195,36 +195,36 @@ function PickChildThenPay({ children, onClose, onPick, isMobile }) {
             <div style={{ width: 36, height: 4, borderRadius: 99, background: '#E2E8F0' }} />
           </div>
         )}
-        <div style={{ padding: isMobile ? '4px 20px 14px' : '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: isMobile ? '4px 20px 14px' : '18px 20px', borderBottom: '1px solid var(--border-soft)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>Who's paying?</div>
-            <div style={{ fontSize: 12, color: '#94A3B8', fontWeight: 600, marginTop: 2 }}>Select a child to record their payment</div>
+            <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)' }}>Who's paying?</div>
+            <div style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 600, marginTop: 2 }}>Select a child to record their payment</div>
           </div>
-          <button onClick={onClose} style={{ background: '#F1F5F9', border: 'none', width: 30, height: 30, borderRadius: '50%', fontSize: 15, color: '#64748B', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="✕" /></button>
+          <button onClick={onClose} style={{ background: 'var(--surface-hover)', border: 'none', width: 30, height: 30, borderRadius: '50%', fontSize: 15, color: 'var(--text3)', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="✕" /></button>
         </div>
         <div style={{ padding: '14px 20px 10px' }}>
           <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#94A3B8', pointerEvents: 'none' }}><Icon name="🔍" /></span>
+            <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: 'var(--text-faint)', pointerEvents: 'none' }}><Icon name="🔍" /></span>
             <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search children…" autoFocus
               style={{ ...inputStyle, padding: '11px 14px 11px 36px', borderRadius: 12, fontSize: 14.5 }} />
           </div>
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '4px 16px', paddingBottom: `calc(${isMobile ? '96px' : '16px'} + env(safe-area-inset-bottom, 0px))` }}>
           {filtered.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '36px 20px', color: '#94A3B8' }}>
+            <div style={{ textAlign: 'center', padding: '36px 20px', color: 'var(--text-faint)' }}>
               <div style={{ fontSize: 26, marginBottom: 8 }}><Icon name="🔍" /></div>
               <div style={{ fontSize: 13, fontWeight: 700 }}>No children match "{q}"</div>
             </div>
           ) : filtered.slice(0, 100).map(c => (
             <button key={c.id} onClick={() => onPick(c.id)} style={{
               width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: 12, border: '1px solid transparent',
-              background: '#fff', marginBottom: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12,
+              background: 'var(--surface)', marginBottom: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12,
               transition: 'background 0.15s, border-color 0.15s',
             }}
               onMouseEnter={e => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0' }}
               onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = 'transparent' }}>
               <ChildAvatar child={c} size={36} />
-              <span style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 700, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {c.first_name} {c.last_name}
               </span>
               <span style={{ fontSize: 14, color: '#CBD5E1', flexShrink: 0 }}>›</span>
@@ -275,15 +275,15 @@ function OverviewTab({ charges, summary, childMap, isMobile, onRecordPayment, on
         {cards.map(c => (
           <div key={c.label} style={card({ padding: 16 })}>
             <div style={{ width: 34, height: 34, borderRadius: 10, background: c.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}><Icon name={c.icon} /></div>
-            <div style={{ fontSize: isMobile ? 18 : 21, fontWeight: 900, color: '#0F172A' }}>{fmtMoney(c.value)}</div>
-            <div style={{ fontSize: 11.5, color: '#64748B', fontWeight: 600, marginTop: 2 }}>{c.label}</div>
+            <div style={{ fontSize: isMobile ? 18 : 21, fontWeight: 900, color: 'var(--text)' }}>{fmtMoney(c.value)}</div>
+            <div style={{ fontSize: 11.5, color: 'var(--text3)', fontWeight: 600, marginTop: 2 }}>{c.label}</div>
           </div>
         ))}
       </div>
 
       <div style={card({ padding: 18 })}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>Outstanding payments</div>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>Outstanding payments</div>
         </div>
 
         <div style={{ marginBottom: 14 }}>
@@ -306,7 +306,7 @@ function OverviewTab({ charges, summary, childMap, isMobile, onRecordPayment, on
         </div>
 
         {outstanding.length === 0 ? (
-          <div style={{ padding: '30px 10px', textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>Nothing outstanding matches those filters. <Icon name="🎉" /></div>
+          <div style={{ padding: '30px 10px', textAlign: 'center', color: 'var(--text-faint)', fontSize: 13 }}>Nothing outstanding matches those filters. <Icon name="🎉" /></div>
         ) : isMobile ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {outstanding.map(c => <ChargeCardMobile key={c.id} charge={c} child={childMap[c.child_id]} onRecordPayment={() => onRecordPayment(c)} />)}
@@ -323,8 +323,8 @@ function EmptyState({ onCreateCharge }) {
   return (
     <div style={{ ...card({ padding: 40 }), textAlign: 'center', maxWidth: 460, margin: '40px auto' }}>
       <div style={{ fontSize: 40, marginBottom: 12 }}><Icon name="💳" /></div>
-      <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>No payments yet</div>
-      <div style={{ fontSize: 13, color: '#64748B', marginBottom: 20, lineHeight: 1.6 }}>Create a charge to start tracking payments for your children.</div>
+      <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>No payments yet</div>
+      <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 20, lineHeight: 1.6 }}>Create a charge to start tracking payments for your children.</div>
       <button onClick={onCreateCharge} style={{ ...btnPrimary(PB.blue), margin: '0 auto' }}>+ Create first charge</button>
     </div>
   )
@@ -335,7 +335,7 @@ function ChargesTable({ rows, childMap, onRecordPayment }) {
     <div style={{ overflowX: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
         <thead>
-          <tr style={{ textAlign: 'left', color: '#94A3B8', fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+          <tr style={{ textAlign: 'left', color: 'var(--text-faint)', fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.4 }}>
             <th style={th}>Child</th><th style={th}>Charge</th><th style={th}>Amount</th><th style={th}>Paid</th><th style={th}>Remaining</th><th style={th}>Due date</th><th style={th}>Status</th><th style={th}></th>
           </tr>
         </thead>
@@ -343,16 +343,16 @@ function ChargesTable({ rows, childMap, onRecordPayment }) {
           {rows.map(c => {
             const child = childMap[c.child_id]
             return (
-              <tr key={c.id} style={{ borderTop: '1px solid #F1F5F9' }}>
+              <tr key={c.id} style={{ borderTop: '1px solid var(--border-soft)' }}>
                 <td style={td}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <ChildAvatar child={child} size={30} />
-                    <span style={{ fontWeight: 700, color: '#0F172A' }}>{child ? `${child.first_name} ${child.last_name}` : 'Unknown'}</span>
+                    <span style={{ fontWeight: 700, color: 'var(--text)' }}>{child ? `${child.first_name} ${child.last_name}` : 'Unknown'}</span>
                   </div>
                 </td>
                 <td style={td}>
                   <div style={{ fontWeight: 600 }}>{c.title}</div>
-                  <span style={{ fontSize: 10, color: '#94A3B8' }}>{chargeTypeLabel(c.charge_type)}</span>
+                  <span style={{ fontSize: 10, color: 'var(--text-faint)' }}>{chargeTypeLabel(c.charge_type)}</span>
                 </td>
                 <td style={td}>{fmtMoney(c.amount)}</td>
                 <td style={{ ...td, color: PB.green, fontWeight: 700 }}>{fmtMoney(c.paid_amount)}</td>
@@ -375,16 +375,16 @@ function ChargesTable({ rows, childMap, onRecordPayment }) {
 
 function ChargeCardMobile({ charge, child, onRecordPayment, extraAction }) {
   return (
-    <div style={{ border: '1px solid #F1F5F9', borderRadius: 14, padding: 12 }}>
+    <div style={{ border: '1px solid var(--border-soft)', borderRadius: 14, padding: 12 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <ChildAvatar child={child} size={32} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{child ? `${child.first_name} ${child.last_name}` : 'Unknown'}</div>
-          <div style={{ fontSize: 11, color: '#64748B' }}>{charge.title}</div>
+          <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{child ? `${child.first_name} ${child.last_name}` : 'Unknown'}</div>
+          <div style={{ fontSize: 11, color: 'var(--text3)' }}>{charge.title}</div>
         </div>
         <span style={chipStyle(charge.computed_status, 'sm')}>{labelFor(charge.computed_status)}</span>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: '#64748B', marginBottom: 8 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: 'var(--text3)', marginBottom: 8 }}>
         <span>{fmtMoney(charge.amount)} total</span>
         <span style={{ color: PB.green, fontWeight: 700 }}>{fmtMoney(charge.paid_amount)} paid</span>
         <span style={{ color: PB.red, fontWeight: 700 }}>{fmtMoney(charge.remaining)} left</span>
@@ -426,7 +426,7 @@ function ChargesTab({ charges, childMap, isMobile, isAdmin, session, onRecordPay
   return (
     <div style={card({ padding: 18 })}>
       <div style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>All charges <span style={{ color: '#94A3B8', fontWeight: 600 }}>({filtered.length})</span></div>
+        <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>All charges <span style={{ color: 'var(--text-faint)', fontWeight: 600 }}>({filtered.length})</span></div>
         <FilterPills
           value={statusFilter} onChange={setStatusFilter}
           options={[{ value: 'all', label: 'All statuses' }, ...['unpaid', 'part_paid', 'paid', 'overdue', 'waived', 'refunded'].map(s => ({ value: s, label: labelFor(s) }))]}
@@ -446,7 +446,7 @@ function ChargesTab({ charges, childMap, isMobile, isAdmin, session, onRecordPay
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
             <thead>
-              <tr style={{ textAlign: 'left', color: '#94A3B8', fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+              <tr style={{ textAlign: 'left', color: 'var(--text-faint)', fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.4 }}>
                 <th style={th}>Child</th><th style={th}>Charge</th><th style={th}>Amount</th><th style={th}>Paid</th><th style={th}>Remaining</th><th style={th}>Due date</th><th style={th}>Status</th><th style={th}></th>
               </tr>
             </thead>
@@ -454,16 +454,16 @@ function ChargesTab({ charges, childMap, isMobile, isAdmin, session, onRecordPay
               {filtered.map(c => {
                 const child = childMap[c.child_id]
                 return (
-                  <tr key={c.id} style={{ borderTop: '1px solid #F1F5F9' }}>
+                  <tr key={c.id} style={{ borderTop: '1px solid var(--border-soft)' }}>
                     <td style={td}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <ChildAvatar child={child} size={30} />
-                        <span style={{ fontWeight: 700, color: '#0F172A' }}>{child ? `${child.first_name} ${child.last_name}` : 'Unknown'}</span>
+                        <span style={{ fontWeight: 700, color: 'var(--text)' }}>{child ? `${child.first_name} ${child.last_name}` : 'Unknown'}</span>
                       </div>
                     </td>
                     <td style={td}>
                       <div style={{ fontWeight: 600 }}>{c.title}</div>
-                      <span style={{ fontSize: 10, color: '#94A3B8' }}>{chargeTypeLabel(c.charge_type)}</span>
+                      <span style={{ fontSize: 10, color: 'var(--text-faint)' }}>{chargeTypeLabel(c.charge_type)}</span>
                     </td>
                     <td style={td}>{fmtMoney(c.amount)}</td>
                     <td style={{ ...td, color: PB.green, fontWeight: 700 }}>{fmtMoney(c.paid_amount)}</td>
@@ -511,9 +511,9 @@ function WaiveModal({ charge, session, onClose, onWaived }) {
   return createPortal(
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 10400 }} />
-      <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 10401, background: '#fff', borderRadius: 18, width: 'min(400px, 90vw)', padding: 20, boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }}>
-        <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>Waive charge</div>
-        <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 14 }}>{charge.title} — {fmtMoney(charge.remaining)} remaining will be waived. This is recorded, not deleted.</div>
+      <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 10401, background: 'var(--surface)', borderRadius: 18, width: 'min(400px, 90vw)', padding: 20, boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }}>
+        <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text)', marginBottom: 6 }}>Waive charge</div>
+        <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 14 }}>{charge.title} — {fmtMoney(charge.remaining)} remaining will be waived. This is recorded, not deleted.</div>
         <textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Reason (optional)" style={{ ...inputStyle, minHeight: 60, resize: 'vertical', fontFamily: 'inherit', marginBottom: 14 }} />
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={onClose} style={{ ...btnGhost, flex: 1, justifyContent: 'center' }}>Cancel</button>
@@ -537,8 +537,8 @@ function TransactionsTab({ transactions, charges, childMap, staffMap, isMobile, 
     return (
       <div style={{ ...card({ padding: 40 }), textAlign: 'center', maxWidth: 460, margin: '40px auto' }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}><Icon name="💰" /></div>
-        <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>No payments recorded yet</div>
-        <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.6 }}>Payments recorded against charges will show up here.</div>
+        <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>No payments recorded yet</div>
+        <div style={{ fontSize: 13, color: 'var(--text3)', lineHeight: 1.6 }}>Payments recorded against charges will show up here.</div>
       </div>
     )
   }
@@ -546,7 +546,7 @@ function TransactionsTab({ transactions, charges, childMap, staffMap, isMobile, 
   return (
     <div style={card({ padding: 18 })}>
       <div style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Transactions <span style={{ color: '#94A3B8', fontWeight: 600 }}>({filtered.length})</span></div>
+        <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Transactions <span style={{ color: 'var(--text-faint)', fontWeight: 600 }}>({filtered.length})</span></div>
         <FilterPills
           value={methodFilter} onChange={setMethodFilter}
           options={[{ value: 'all', label: 'All methods' }, ...PAYMENT_METHODS.map(m => ({ value: m.key, label: `${m.icon} ${m.label}` }))]}
@@ -559,15 +559,15 @@ function TransactionsTab({ transactions, charges, childMap, staffMap, isMobile, 
             const child = childMap[t.child_id]
             const chg = chargeMap[t.charge_id]
             return (
-              <div key={t.id} style={{ border: '1px solid #F1F5F9', borderRadius: 14, padding: 12 }}>
+              <div key={t.id} style={{ border: '1px solid var(--border-soft)', borderRadius: 14, padding: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                   <span style={{ fontSize: 13, fontWeight: 800, color: t.transaction_type === 'refund' ? PB.red : PB.green }}>
                     {t.transaction_type === 'refund' ? '−' : '+'}{fmtMoney(t.amount)}
                   </span>
-                  <span style={{ fontSize: 11, color: '#94A3B8' }}>{fmtDateShort(t.payment_date)}</span>
+                  <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>{fmtDateShort(t.payment_date)}</span>
                 </div>
-                <div style={{ fontSize: 12, color: '#334155' }}>{child ? `${child.first_name} ${child.last_name}` : 'Unknown'} · {chg?.title || '—'}</div>
-                <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>{methodLabel(t.payment_method)} · {staffMap[t.recorded_by] || 'Staff'}</div>
+                <div style={{ fontSize: 12, color: 'var(--text2)' }}>{child ? `${child.first_name} ${child.last_name}` : 'Unknown'} · {chg?.title || '—'}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 2 }}>{methodLabel(t.payment_method)} · {staffMap[t.recorded_by] || 'Staff'}</div>
                 {t.transaction_type === 'payment' && (
                   <button onClick={() => setRefundTarget(t)} style={{ ...btnGhost, marginTop: 8, padding: '6px 10px', fontSize: 11 }}>Refund</button>
                 )}
@@ -579,7 +579,7 @@ function TransactionsTab({ transactions, charges, childMap, staffMap, isMobile, 
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
             <thead>
-              <tr style={{ textAlign: 'left', color: '#94A3B8', fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+              <tr style={{ textAlign: 'left', color: 'var(--text-faint)', fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.4 }}>
                 <th style={th}>Date</th><th style={th}>Child</th><th style={th}>Charge</th><th style={th}>Amount</th><th style={th}>Method</th><th style={th}>Recorded by</th><th style={th}>Reference</th><th style={th}>Status</th><th style={th}></th>
               </tr>
             </thead>
@@ -588,7 +588,7 @@ function TransactionsTab({ transactions, charges, childMap, staffMap, isMobile, 
                 const child = childMap[t.child_id]
                 const chg = chargeMap[t.charge_id]
                 return (
-                  <tr key={t.id} style={{ borderTop: '1px solid #F1F5F9' }}>
+                  <tr key={t.id} style={{ borderTop: '1px solid var(--border-soft)' }}>
                     <td style={td}>{fmtDateShort(t.payment_date)}</td>
                     <td style={td}>{child ? `${child.first_name} ${child.last_name}` : 'Unknown'}</td>
                     <td style={td}>{chg?.title || '—'}</td>
@@ -646,12 +646,12 @@ function RefundModal({ transaction, charge, session, onClose, onRefunded }) {
   return createPortal(
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 10400 }} />
-      <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 10401, background: '#fff', borderRadius: 18, width: 'min(380px, 90vw)', padding: 20, boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }}>
-        <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>Refund payment</div>
-        <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 14 }}>{charge?.title} — original payment {fmtMoney(transaction.amount)}. This creates a linked refund transaction; the original record is kept.</div>
-        <label style={{ fontSize: 11, fontWeight: 800, color: '#64748B', display: 'block', marginBottom: 6 }}>Refund amount</label>
+      <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 10401, background: 'var(--surface)', borderRadius: 18, width: 'min(380px, 90vw)', padding: 20, boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }}>
+        <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text)', marginBottom: 6 }}>Refund payment</div>
+        <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 14 }}>{charge?.title} — original payment {fmtMoney(transaction.amount)}. This creates a linked refund transaction; the original record is kept.</div>
+        <label style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', display: 'block', marginBottom: 6 }}>Refund amount</label>
         <div style={{ position: 'relative', marginBottom: 14 }}>
-          <span style={{ position: 'absolute', left: 12, top: 10, fontSize: 13, color: '#64748B', fontWeight: 700 }}>£</span>
+          <span style={{ position: 'absolute', left: 12, top: 10, fontSize: 13, color: 'var(--text3)', fontWeight: 700 }}>£</span>
           <input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} style={{ ...inputStyle, paddingLeft: 24 }} />
         </div>
         {error && <div style={{ fontSize: 12, color: PB.red, marginBottom: 10 }}>{error}</div>}
@@ -683,8 +683,8 @@ function ReconciliationTab({ transactions, childMap, staffMap, isMobile, onRecon
     return (
       <div style={{ ...card({ padding: 40 }), textAlign: 'center', maxWidth: 460, margin: '40px auto' }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}><Icon name="🧾" /></div>
-        <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>No cash payments yet</div>
-        <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.6 }}>Cash payments will show up here for reconciliation once recorded.</div>
+        <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>No cash payments yet</div>
+        <div style={{ fontSize: 13, color: 'var(--text3)', lineHeight: 1.6 }}>Cash payments will show up here for reconciliation once recorded.</div>
       </div>
     )
   }
@@ -693,25 +693,25 @@ function ReconciliationTab({ transactions, childMap, staffMap, isMobile, onRecon
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr', gap: 12, marginBottom: 20 }}>
         <div style={card({ padding: 16 })}>
-          <div style={{ fontSize: 11.5, color: '#64748B', fontWeight: 700, marginBottom: 4 }}>Cash awaiting reconciliation</div>
+          <div style={{ fontSize: 11.5, color: 'var(--text3)', fontWeight: 700, marginBottom: 4 }}>Cash awaiting reconciliation</div>
           <div style={{ fontSize: 22, fontWeight: 900, color: PB.amber }}>{fmtMoney(awaitingTotal)}</div>
         </div>
         <div style={card({ padding: 16 })}>
-          <div style={{ fontSize: 11.5, color: '#64748B', fontWeight: 700, marginBottom: 4 }}>Reconciled today</div>
+          <div style={{ fontSize: 11.5, color: 'var(--text3)', fontWeight: 700, marginBottom: 4 }}>Reconciled today</div>
           <div style={{ fontSize: 22, fontWeight: 900, color: PB.green }}>{fmtMoney(reconciledTodayTotal)}</div>
         </div>
       </div>
 
       <div style={card({ padding: 18 })}>
-        <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>Cash transactions</div>
+        <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 14 }}>Cash transactions</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {cashTx.map(t => {
             const child = childMap[t.child_id]
             return (
-              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', border: '1px solid #F1F5F9', borderRadius: 12, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
+              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', border: '1px solid var(--border-soft)', borderRadius: 12, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
                 <div style={{ flex: 1, minWidth: 180 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{fmtMoney(t.amount)} cash recorded by {staffMap[t.recorded_by] || 'staff'}</div>
-                  <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{fmtMoney(t.amount)} cash recorded by {staffMap[t.recorded_by] || 'staff'}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 2 }}>
                     {child ? `${child.first_name} ${child.last_name}` : 'Unknown'} · {new Date(t.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>

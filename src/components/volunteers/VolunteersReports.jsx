@@ -7,9 +7,9 @@ function BarChart({ data, color, height = 140 }) {
     <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height, padding: '0 4px' }}>
       {data.map((d, i) => (
         <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: '#64748B' }}>{d.value}</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)' }}>{d.value}</div>
           <div style={{ width: '100%', maxWidth: 28, height: `${Math.max(4, (d.value / max) * (height - 40))}px`, background: color, borderRadius: 6, transition: 'height 0.4s ease' }} />
-          <div style={{ fontSize: 9.5, color: '#94A3B8', fontWeight: 600 }}>{d.label}</div>
+          <div style={{ fontSize: 9.5, color: 'var(--text-faint)', fontWeight: 600 }}>{d.label}</div>
         </div>
       ))}
     </div>
@@ -92,32 +92,32 @@ export default function VolunteersReports({ org, volunteers, sessionStaff, sessi
           { label: 'Active Volunteers', value: volunteers.filter(v => v.status === 'active').length },
         ].map(k => (
           <Card key={k.label} style={{ padding: 16 }}>
-            <div style={{ fontSize: 22, fontWeight: 900, color: '#0F172A' }}>{k.value}</div>
-            <div style={{ fontSize: 11.5, color: '#94A3B8', fontWeight: 700 }}>{k.label}</div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)' }}>{k.value}</div>
+            <div style={{ fontSize: 11.5, color: 'var(--text-faint)', fontWeight: 700 }}>{k.label}</div>
           </Card>
         ))}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14, marginBottom: 14 }}>
         <Card>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>Volunteer Growth (6 months)</div>
+          <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>Volunteer Growth (6 months)</div>
           <BarChart data={growth} color={primary} />
         </Card>
         <Card>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>Hours Volunteered (6 months)</div>
+          <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>Hours Volunteered (6 months)</div>
           <BarChart data={hoursByMonth} color={PURPLE} />
         </Card>
       </div>
 
       <Card>
-        <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>Most Active Volunteers</div>
+        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>Most Active Volunteers</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {activity.length === 0 ? (
-            <div style={{ fontSize: 13, color: '#94A3B8' }}>No session activity recorded yet.</div>
+            <div style={{ fontSize: 13, color: 'var(--text-faint)' }}>No session activity recorded yet.</div>
           ) : activity.map(({ v, count }) => (
             <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0' }}>
               <Avatar name={v.full_name} photoUrl={v.photo_url} size={28} color={primary} />
-              <div style={{ flex: 1, fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{v.full_name}</div>
+              <div style={{ flex: 1, fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{v.full_name}</div>
               <div style={{ fontSize: 12.5, fontWeight: 800, color: primary }}>{count} sessions</div>
             </div>
           ))}

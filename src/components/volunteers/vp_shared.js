@@ -29,7 +29,7 @@ export function activityTheme(sessionType) {
 export function tierFor(hours) {
   if (hours >= 100) return { name: 'Champion', color: '#F5D000', next: null, prevThreshold: 100 }
   if (hours >= 50) return { name: 'Gold', color: '#F0A500', next: 'Champion', nextThreshold: 100, prevThreshold: 50 }
-  if (hours >= 25) return { name: 'Silver', color: '#94A3B8', next: 'Gold', nextThreshold: 50, prevThreshold: 25 }
+  if (hours >= 25) return { name: 'Silver', color: 'var(--text-faint)', next: 'Gold', nextThreshold: 50, prevThreshold: 25 }
   return { name: 'Green', color: '#4ADE80', next: 'Silver', nextThreshold: 25, prevThreshold: 0 }
 }
 

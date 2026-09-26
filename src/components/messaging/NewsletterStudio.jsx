@@ -267,13 +267,13 @@ function Preview({ subject, preheader, blocks, org, compact }) {
     <div style={{ background: '#EEF1F6', padding: compact ? 14 : 20, borderRadius: 16 }}>
       <div style={{
         display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12,
-        fontSize: 11, fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.6,
+        fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6,
       }}>
         <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22C55E' }} />
         Live preview
       </div>
 
-      <div style={{ maxWidth: 560, margin: '0 auto', background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 10px rgba(15,23,42,0.10)' }}>
+      <div style={{ maxWidth: 560, margin: '0 auto', background: 'var(--surface)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 10px rgba(15,23,42,0.10)' }}>
         <div style={{ background: '#0F172A', padding: '26px 30px', textAlign: 'center', borderTop: `4px solid ${primary}` }}>
           {org?.logo_url
             ? <img src={org.logo_url} alt="" style={{ maxHeight: 44, maxWidth: 150, objectFit: 'contain' }} />
@@ -283,26 +283,26 @@ function Preview({ subject, preheader, blocks, org, compact }) {
         <div style={{ height: 4, background: primary }} />
         <div style={{ padding: '30px 30px 34px' }}>
           {blocks.length === 0 && (
-            <div style={{ color: '#94A3B8', fontSize: 13.5, textAlign: 'center', padding: '30px 10px', lineHeight: 1.6 }}>
+            <div style={{ color: 'var(--text-faint)', fontSize: 13.5, textAlign: 'center', padding: '30px 10px', lineHeight: 1.6 }}>
               Your newsletter will appear here as you build it.
             </div>
           )}
           {blocks.map(b => {
-            if (b.type === 'heading' && b.text) return <h2 key={b.id} style={{ margin: '0 0 12px', fontSize: 19, fontWeight: 800, color: '#0F172A' }}>{b.text}</h2>
-            if (b.type === 'text' && b.text) return <div key={b.id} style={{ margin: '0 0 14px', fontSize: 15, lineHeight: 1.7, color: '#334155', whiteSpace: 'pre-wrap' }}>{fill(b.text)}</div>
+            if (b.type === 'heading' && b.text) return <h2 key={b.id} style={{ margin: '0 0 12px', fontSize: 19, fontWeight: 800, color: 'var(--text)' }}>{b.text}</h2>
+            if (b.type === 'text' && b.text) return <div key={b.id} style={{ margin: '0 0 14px', fontSize: 15, lineHeight: 1.7, color: 'var(--text2)', whiteSpace: 'pre-wrap' }}>{fill(b.text)}</div>
             if (b.type === 'image' && b.url) return (
               <div key={b.id} style={{ marginBottom: 18, textAlign: 'center' }}>
                 <img src={b.url} alt={b.alt || ''} style={{
                   width: imageWidth(b.size), maxWidth: '100%', height: 'auto',
                   borderRadius: 8, display: 'inline-block',
                 }} />
-                {b.caption && <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 6 }}>{b.caption}</div>}
+                {b.caption && <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 6 }}>{b.caption}</div>}
               </div>
             )
             if (b.type === 'callout' && (b.title || b.text)) return (
               <div key={b.id} style={{ background: 'var(--org-a05)', borderLeft: `4px solid ${primary}`, padding: '14px 16px', marginBottom: 18 }}>
-                {b.title && <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>{b.title}</div>}
-                <div style={{ fontSize: 14.5, color: '#334155', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{fill(b.text)}</div>
+                {b.title && <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>{b.title}</div>}
+                <div style={{ fontSize: 14.5, color: 'var(--text2)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{fill(b.text)}</div>
               </div>
             )
             if (b.type === 'button' && b.label) return (
@@ -310,14 +310,14 @@ function Preview({ subject, preheader, blocks, org, compact }) {
                 <span style={{ display: 'inline-block', background: primary, color: '#fff', padding: '14px 30px', borderRadius: 8, fontSize: 15, fontWeight: 700 }}>{b.label}</span>
               </div>
             )
-            if (b.type === 'divider') return <div key={b.id} style={{ borderTop: '1px solid #E2E8F0', margin: '0 0 20px' }} />
+            if (b.type === 'divider') return <div key={b.id} style={{ borderTop: '1px solid var(--border)', margin: '0 0 20px' }} />
             return null
           })}
         </div>
       </div>
 
-      <div style={{ textAlign: 'center', fontSize: 11.5, color: '#64748B', marginTop: 12, lineHeight: 1.6 }}>
-        <strong style={{ color: '#334155' }}>{subject || 'No subject yet'}</strong>
+      <div style={{ textAlign: 'center', fontSize: 11.5, color: 'var(--text3)', marginTop: 12, lineHeight: 1.6 }}>
+        <strong style={{ color: 'var(--text2)' }}>{subject || 'No subject yet'}</strong>
         {preheader ? <> — {preheader}</> : null}
         <br />Personalisation is shown as "Sam".
       </div>

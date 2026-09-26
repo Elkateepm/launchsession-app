@@ -4,7 +4,7 @@ import FundraisingEmptyState from './FundraisingEmptyState'
 
 const STATUS_META = {
   active:    { label: 'Active',    color: '#16803C', bg: '#E7F6EC' },
-  planning:  { label: 'Draft',     color: '#6B7280', bg: '#F3F2F7' },
+  planning:  { label: 'Draft',     color: 'var(--text3)', bg: '#F3F2F7' },
   completed: { label: 'Completed', color: '#375A82', bg: '#E9F0F7' },
 }
 
@@ -27,7 +27,7 @@ function CampaignCard({ c, onSelect, isMobile }) {
   const typeLabel = CAMPAIGN_TYPES.find(t => t.key === c.campaign_type)?.label
 
   return (
-    <div onClick={() => onSelect(c)} style={{ display: 'flex', gap: 14, padding: 14, borderRadius: 16, border: `1px solid ${LS.border}`, background: '#fff', cursor: 'pointer', marginBottom: 12 }}>
+    <div onClick={() => onSelect(c)} style={{ display: 'flex', gap: 14, padding: 14, borderRadius: 16, border: `1px solid ${LS.border}`, background: 'var(--surface)', cursor: 'pointer', marginBottom: 12 }}>
       <div style={{
         width: isMobile ? 56 : 72, height: isMobile ? 56 : 72, borderRadius: 12, flexShrink: 0,
         background: TYPE_GRADIENT[c.campaign_type] || TYPE_GRADIENT.general,
@@ -59,7 +59,7 @@ function CampaignCard({ c, onSelect, isMobile }) {
             <span style={{ fontSize: 10.5, color: LS.muted, fontWeight: 600 }}>{daysLeftLabel(c, status)}</span>
           </div>
           <button onClick={e => { e.stopPropagation(); onSelect(c) }} style={{
-            padding: '6px 12px', borderRadius: 9, border: `1.5px solid ${LS.lavenderBorder}`, background: '#fff',
+            padding: '6px 12px', borderRadius: 9, border: `1.5px solid ${LS.lavenderBorder}`, background: 'var(--surface)',
             color: LS.purpleDark, fontWeight: 700, fontSize: 11.5, cursor: 'pointer', flexShrink: 0,
           }}>
             {status.key === 'completed' ? 'View Report' : 'Manage'}
@@ -74,7 +74,7 @@ export default function ActiveCampaignsPanel({ campaigns, isMobile, onSelect, on
   const [showAll, setShowAll] = React.useState(false)
   const visible = showAll ? campaigns : campaigns.slice(0, 5)
   return (
-    <div style={{ background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 18, padding: '18px 18px' }}>
+    <div style={{ background: 'var(--surface)', border: `1px solid ${LS.border}`, borderRadius: 18, padding: '18px 18px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ fontSize: 14.5, fontWeight: 800, color: LS.text }}>Active Campaigns</div>
         {campaigns.length > 5 && (

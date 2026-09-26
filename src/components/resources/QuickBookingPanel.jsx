@@ -97,10 +97,10 @@ export default function QuickBookingPanel({ org, resources, bookings, sessions, 
       <div style={cardStyle}>
         <div style={{ textAlign: 'center', padding: '12px 0' }}>
           <div style={{ fontSize: 40, marginBottom: 10 }}>{confirmedBooking.status === 'pending' ? '⏳' : '✅'}</div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#111827', marginBottom: 4 }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>
             {confirmedBooking.status === 'pending' ? 'Booking submitted for approval' : 'Booking confirmed'}
           </div>
-          <div style={{ background: '#F8FAFC', borderRadius: 10, padding: 14, textAlign: 'left', marginTop: 14, fontSize: 12.5, color: '#374151', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: 14, textAlign: 'left', marginTop: 14, fontSize: 12.5, color: 'var(--text2)', display: 'flex', flexDirection: 'column', gap: 6 }}>
             <div><strong>Resource:</strong> {cResource?.name}</div>
             <div><strong>Date:</strong> {fmtDate(confirmedBooking.start_time)}</div>
             <div><strong>Time:</strong> {fmtTime(confirmedBooking.start_time)}–{fmtTime(confirmedBooking.end_time)}</div>
@@ -116,13 +116,13 @@ export default function QuickBookingPanel({ org, resources, bookings, sessions, 
 
   return (
     <div style={cardStyle}>
-      <div style={{ fontSize: 15, fontWeight: 800, color: '#111827', marginBottom: 14 }}>Quick Booking Flow</div>
+      <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 14 }}>Quick Booking Flow</div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
         {['Select resource', 'Choose date & time', 'Assign to session/staff', 'Confirm booking'].map((s, i) => (
           <div key={s} style={{ flex: 1, textAlign: 'center' }}>
             <div style={{ width: 26, height: 26, borderRadius: '50%', margin: '0 auto 4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, background: step > i ? '#7C3AED' : '#E5E7EB', color: step > i ? '#fff' : '#9CA3AF' }}>{i + 1}</div>
-            <div style={{ fontSize: 9, color: '#9CA3AF', fontWeight: 600 }}>{s}</div>
+            <div style={{ fontSize: 9, color: 'var(--text-faint)', fontWeight: 600 }}>{s}</div>
           </div>
         ))}
       </div>
@@ -193,7 +193,7 @@ export default function QuickBookingPanel({ org, resources, bookings, sessions, 
       </div>
 
       {resource && (
-        <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 8 }}>
+        <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 8 }}>
           📍 {resourceVenue ? resourceVenue.name : (resource.location || 'No location set')} {resource.requires_approval && <span style={{ color: '#D97706', fontWeight: 700 }}> · Requires approval</span>}
         </div>
       )}
@@ -215,7 +215,7 @@ export default function QuickBookingPanel({ org, resources, bookings, sessions, 
         </div>
       )}
 
-      <button onClick={handleCheckAvailability} disabled={!resource || !startISO || !endISO} style={{ width: '100%', marginTop: 16, padding: 12, borderRadius: 10, border: '1.5px solid #7C3AED', background: '#fff', color: '#7C3AED', fontSize: 13.5, fontWeight: 700, cursor: !resource ? 'not-allowed' : 'pointer', opacity: !resource ? 0.5 : 1 }}>
+      <button onClick={handleCheckAvailability} disabled={!resource || !startISO || !endISO} style={{ width: '100%', marginTop: 16, padding: 12, borderRadius: 10, border: '1.5px solid #7C3AED', background: 'var(--surface)', color: '#7C3AED', fontSize: 13.5, fontWeight: 700, cursor: !resource ? 'not-allowed' : 'pointer', opacity: !resource ? 0.5 : 1 }}>
         📅 Check Availability
       </button>
       <button onClick={handleConfirm} disabled={!checked || (conflict && true) || saving} style={{ width: '100%', marginTop: 10, padding: 13, borderRadius: 10, border: 'none', background: (!checked || conflict) ? '#D1D5DB' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: (!checked || conflict) ? 'not-allowed' : 'pointer' }}>
@@ -226,8 +226,8 @@ export default function QuickBookingPanel({ org, resources, bookings, sessions, 
 }
 
 function FieldLabel({ children }) {
-  return <div style={{ fontSize: 11.5, fontWeight: 700, color: '#374151', marginBottom: 5 }}>{children}</div>
+  return <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text2)', marginBottom: 5 }}>{children}</div>
 }
 
-const cardStyle = { background: '#fff', border: '1px solid #E5E7EB', borderRadius: 18, padding: 20 }
-const inp = { width: '100%', padding: '10px 12px', borderRadius: 9, border: '1.5px solid #E5E7EB', fontSize: 13, fontFamily: 'inherit' }
+const cardStyle = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: 20 }
+const inp = { width: '100%', padding: '10px 12px', borderRadius: 9, border: '1.5px solid var(--border)', fontSize: 13, fontFamily: 'inherit' }

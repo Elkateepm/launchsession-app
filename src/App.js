@@ -284,7 +284,7 @@ function AwaitingApproval({ org, status, note, email }) {
         {org?.logo_url
           ? <span style={{
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              background: '#fff', borderRadius: 18, padding: '12px 16px',
+              background: 'var(--surface)', borderRadius: 18, padding: '12px 16px',
               boxShadow: '0 10px 30px -18px rgba(0,0,0,0.9)',
               maxWidth: '100%', marginBottom: 20,
             }}>

@@ -13,16 +13,16 @@ import { ukDate, todayLondon } from '../../lib/hrAccess'
 // was away and whether the conversation afterwards happened.
 
 const card = {
-  background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14,
+  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14,
   padding: 16, marginBottom: 12,
 }
 const field = {
   width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
-  border: '1px solid #E2E8F0', fontSize: 15, fontFamily: 'inherit', outline: 'none',
-  background: '#fff',
+  border: '1px solid var(--border)', fontSize: 15, fontFamily: 'inherit', outline: 'none',
+  background: 'var(--surface)',
 }
 const lbl = {
-  display: 'block', fontSize: 11.5, fontWeight: 800, color: '#64748B',
+  display: 'block', fontSize: 11.5, fontWeight: 800, color: 'var(--text3)',
   marginBottom: 6, letterSpacing: 0.4, textTransform: 'uppercase',
 }
 
@@ -67,7 +67,7 @@ export default function StaffAbsence({ org, staff, primary, canEdit }) {
 
   useEffect(() => { load() }, [load])
 
-  if (rows === null) return <div style={{ ...card, color: '#64748B', fontSize: 14 }}>Loading absence…</div>
+  if (rows === null) return <div style={{ ...card, color: 'var(--text3)', fontSize: 14 }}>Loading absence…</div>
 
   const rtwDue = rows.filter(a => a.rtw_required && !a.rtw_completed)
 
@@ -106,7 +106,7 @@ export default function StaffAbsence({ org, staff, primary, canEdit }) {
       )}
 
       {rows.length === 0 && !adding && (
-        <div style={{ ...card, textAlign: 'center', padding: 24, color: '#64748B', fontSize: 13.5, lineHeight: 1.55 }}>
+        <div style={{ ...card, textAlign: 'center', padding: 24, color: 'var(--text3)', fontSize: 13.5, lineHeight: 1.55 }}>
           No absence recorded for {staff.full_name}.
         </div>
       )}
@@ -118,15 +118,15 @@ export default function StaffAbsence({ org, staff, primary, canEdit }) {
           <div key={a.id} style={card}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>
+                <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>
                   {catLabel(a.category)}
                 </div>
-                <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 2 }}>
+                <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>
                   {ukDate(a.start_date)}
                   {a.end_date && a.end_date !== a.start_date ? ` – ${ukDate(a.end_date)}` : ''}
                   {span ? ` · ${span} day${span === 1 ? '' : 's'}` : ''}
                 </div>
-                {a.notes && <div style={{ fontSize: 12.5, color: '#94A3B8', marginTop: 4 }}>{a.notes}</div>}
+                {a.notes && <div style={{ fontSize: 12.5, color: 'var(--text-faint)', marginTop: 4 }}>{a.notes}</div>}
               </div>
               {a.rtw_required && (
                 <span style={{
@@ -139,14 +139,14 @@ export default function StaffAbsence({ org, staff, primary, canEdit }) {
             </div>
 
             {meeting && (
-              <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: 10, marginTop: 4 }}>
-                <div style={{ fontSize: 12.5, color: '#64748B' }}>
+              <div style={{ borderTop: '1px solid var(--border-soft)', paddingTop: 10, marginTop: 4 }}>
+                <div style={{ fontSize: 12.5, color: 'var(--text3)' }}>
                   Return-to-work {ukDate(meeting.meeting_date)}
                   {meeting.fit_to_return === true ? ' · fit to return' : ''}
                   {meeting.fit_to_return === false ? ' · not yet fit to return' : ''}
                 </div>
                 {meeting.adjustments && (
-                  <div style={{ fontSize: 13, color: '#0F172A', marginTop: 4 }}>
+                  <div style={{ fontSize: 13, color: 'var(--text)', marginTop: 4 }}>
                     Adjustments: {meeting.adjustments}
                   </div>
                 )}
@@ -156,7 +156,7 @@ export default function StaffAbsence({ org, staff, primary, canEdit }) {
             {canEdit && a.rtw_required && !a.rtw_completed && (
               <button onClick={() => setRtwFor(a)} style={{
                 marginTop: 10, minHeight: 44, padding: '0 16px', borderRadius: 11,
-                border: '1px solid #E2E8F0', background: '#fff', color: '#0F172A',
+                border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)',
                 fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
               }}>Record return-to-work</button>
             )}
@@ -207,7 +207,7 @@ function AbsenceForm({ org, staff, primary, onCancel, onSaved }) {
 
   return (
     <div style={card}>
-      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>Record an absence</div>
+      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 14 }}>Record an absence</div>
       <div style={{ marginBottom: 12 }}>
         <label style={lbl}>Category</label>
         <select value={f.category} onChange={e => set('category', e.target.value)} style={{ ...field, minHeight: 44 }}>
@@ -221,7 +221,7 @@ function AbsenceForm({ org, staff, primary, onCancel, onSaved }) {
       <div style={{ marginBottom: 12 }}>
         <label style={lbl}>Last day</label>
         <input type="date" value={f.end_date} onChange={e => set('end_date', e.target.value)} style={field} />
-        <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 6 }}>
+        <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 6 }}>
           Leave blank for a single day.
         </div>
       </div>
@@ -233,7 +233,7 @@ function AbsenceForm({ org, staff, primary, onCancel, onSaved }) {
       <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, cursor: 'pointer', minHeight: 44 }}>
         <input type="checkbox" checked={f.rtw_required} onChange={e => set('rtw_required', e.target.checked)}
           style={{ width: 18, height: 18, accentColor: primary, flexShrink: 0 }} />
-        <span style={{ fontSize: 14, color: '#0F172A' }}>A return-to-work meeting is needed</span>
+        <span style={{ fontSize: 14, color: 'var(--text)' }}>A return-to-work meeting is needed</span>
       </label>
       {err && (
         <div style={{ padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
@@ -247,8 +247,8 @@ function AbsenceForm({ org, staff, primary, onCancel, onSaved }) {
           opacity: busy || !f.start_date ? 0.55 : 1,
         }}>{busy ? 'Saving…' : 'Save absence'}</button>
         <button onClick={onCancel} style={{
-          minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid #E2E8F0',
-          background: '#fff', color: '#64748B', fontSize: 14, fontWeight: 700,
+          minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid var(--border)',
+          background: 'var(--surface)', color: 'var(--text3)', fontSize: 14, fontWeight: 700,
           cursor: 'pointer', fontFamily: 'inherit',
         }}>Cancel</button>
       </div>
@@ -296,8 +296,8 @@ function RtwForm({ org, staff, absence, primary, onCancel, onSaved }) {
 
   return (
     <div style={card}>
-      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>Return-to-work meeting</div>
-      <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 14 }}>
+      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>Return-to-work meeting</div>
+      <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 14 }}>
         Following {catLabel(absence.category).toLowerCase()} from {ukDate(absence.start_date)}
       </div>
       <div style={{ marginBottom: 12 }}>
@@ -336,8 +336,8 @@ function RtwForm({ org, staff, absence, primary, onCancel, onSaved }) {
           cursor: busy ? 'default' : 'pointer', fontFamily: 'inherit', opacity: busy ? 0.55 : 1,
         }}>{busy ? 'Saving…' : 'Save meeting'}</button>
         <button onClick={onCancel} style={{
-          minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid #E2E8F0',
-          background: '#fff', color: '#64748B', fontSize: 14, fontWeight: 700,
+          minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid var(--border)',
+          background: 'var(--surface)', color: 'var(--text3)', fontSize: 14, fontWeight: 700,
           cursor: 'pointer', fontFamily: 'inherit',
         }}>Cancel</button>
       </div>

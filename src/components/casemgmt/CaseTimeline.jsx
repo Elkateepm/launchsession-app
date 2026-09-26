@@ -76,9 +76,9 @@ export default function CaseTimeline({ caseId, org, session: authSession, staff 
 
       {/* Feed */}
       {loading ? (
-        <div style={{ padding: 16, color: '#94A3B8', fontSize: 13 }}>Loading timeline…</div>
+        <div style={{ padding: 16, color: 'var(--text-faint)', fontSize: 13 }}>Loading timeline…</div>
       ) : items.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '20px 10px', color: '#94A3B8', fontSize: 13 }}>No entries yet — the first note or logged contact will appear here.</div>
+        <div style={{ textAlign: 'center', padding: '20px 10px', color: 'var(--text-faint)', fontSize: 13 }}>No entries yet — the first note or logged contact will appear here.</div>
       ) : (
         <div style={{ position: 'relative', paddingLeft: 4 }}>
           <div style={{ position: 'absolute', left: 19, top: 6, bottom: 6, width: 2, background: 'rgba(15,23,42,0.06)' }} />
@@ -87,19 +87,19 @@ export default function CaseTimeline({ caseId, org, session: authSession, staff 
               const meta = EVENT_META[item.event_type] || EVENT_META.note
               return (
                 <motion.div key={item.id} layout initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: Math.min(i * 0.03, 0.2) }} style={{ display: 'flex', gap: 12, marginBottom: 16, position: 'relative' }}>
-                  <div style={{ width: 38, height: 38, borderRadius: '50%', background: '#fff', border: '1.5px solid rgba(15,23,42,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0, zIndex: 1 }}>
+                  <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--surface)', border: '1.5px solid rgba(15,23,42,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0, zIndex: 1 }}>
                     <Icon name={meta.icon} />
                   </div>
-                  <div style={{ flex: 1, minWidth: 0, background: '#fff', border: '1.5px solid rgba(15,23,42,0.06)', borderRadius: 12, padding: '10px 14px' }}>
+                  <div style={{ flex: 1, minWidth: 0, background: 'var(--surface)', border: '1.5px solid rgba(15,23,42,0.06)', borderRadius: 12, padding: '10px 14px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4, gap: 8 }}>
-                      <span style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6 }}>
                         <Avatar name={authorName(item.created_by)} photoUrl={authorPhoto(item.created_by)} size={16} />
                         {authorName(item.created_by)}
-                        <span style={{ fontWeight: 600, color: '#94A3B8' }}>· {meta.label}</span>
+                        <span style={{ fontWeight: 600, color: 'var(--text-faint)' }}>· {meta.label}</span>
                       </span>
-                      <span style={{ fontSize: 11, color: '#94A3B8', flexShrink: 0 }}>{timeAgo(item.created_at)}</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-faint)', flexShrink: 0 }}>{timeAgo(item.created_at)}</span>
                     </div>
-                    <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{item.body}</div>
+                    <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{item.body}</div>
                   </div>
                 </motion.div>
               )

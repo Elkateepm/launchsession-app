@@ -100,8 +100,8 @@ export default function ImpactOutcomes({ org, isAdmin }) {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 18 }}>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 24, fontWeight: 900, color: '#0F172A', letterSpacing: -0.4 }}>Impact &amp; Outcomes</div>
-          <div style={{ fontSize: 13, color: '#64748B', marginTop: 3 }}>
+          <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.4 }}>Impact &amp; Outcomes</div>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 3 }}>
             How far the {terms.people} you work with have travelled, and what you can show for it
           </div>
         </div>
@@ -111,7 +111,7 @@ export default function ImpactOutcomes({ org, isAdmin }) {
               Record outcome
             </button>
           )}
-          <button onClick={() => setShowMoreMenu(v => !v)} style={{ ...btn, border: '1.5px solid #E2E8F0', background: '#fff', color: '#475569', padding: '11px 14px' }}>
+          <button onClick={() => setShowMoreMenu(v => !v)} style={{ ...btn, border: '1.5px solid var(--border)', background: 'var(--surface)', color: '#475569', padding: '11px 14px' }}>
             <Icon name="⋯" />
           </button>
           {showMoreMenu && (
@@ -119,7 +119,7 @@ export default function ImpactOutcomes({ org, isAdmin }) {
               <div onClick={() => setShowMoreMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
               <div style={{
                 position: 'absolute', top: '100%', right: 0, marginTop: 6, zIndex: 41,
-                background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14,
+                background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14,
                 boxShadow: '0 18px 40px rgba(15,23,42,0.14)', padding: 6, minWidth: 200,
               }}>
                 {[
@@ -131,7 +131,7 @@ export default function ImpactOutcomes({ org, isAdmin }) {
                     style={{
                       display: 'block', width: '100%', textAlign: 'left', minHeight: 42,
                       padding: '10px 12px', borderRadius: 9, border: 'none', background: 'none',
-                      fontSize: 13, fontWeight: 700, color: '#334155', cursor: 'pointer', fontFamily: 'inherit',
+                      fontSize: 13, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer', fontFamily: 'inherit',
                     }}>{o.label}</button>
                 ))}
               </div>
@@ -140,7 +140,7 @@ export default function ImpactOutcomes({ org, isAdmin }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 3, background: '#F8FAFC', borderRadius: 12, padding: 4, marginBottom: 18, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 3, background: 'var(--surface2)', borderRadius: 12, padding: 4, marginBottom: 18, flexWrap: 'wrap' }}>
         {PERIODS.map(p => (
           <button key={p.key} onClick={() => setPeriod(p.key)} style={{
             flex: isMobile ? '1 1 40%' : 'none', minHeight: 40,
@@ -154,7 +154,7 @@ export default function ImpactOutcomes({ org, isAdmin }) {
       </div>
 
       {loading ? (
-        <div style={{ padding: '60px 0', textAlign: 'center', color: '#94A3B8', fontSize: 13, fontWeight: 600 }}>Loading…</div>
+        <div style={{ padding: '60px 0', textAlign: 'center', color: 'var(--text-faint)', fontSize: 13, fontWeight: 600 }}>Loading…</div>
       ) : scores.length === 0 ? (
         <EmptyState
           icon="📊"

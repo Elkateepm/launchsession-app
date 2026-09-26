@@ -246,7 +246,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
 
   const cardStyle = glass({ padding: 20 })
 
-  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#94A3B8' }}>Loading volunteers...</div>
+  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-faint)' }}>Loading volunteers...</div>
 
   return (
     <div style={{ background: PAGE_BG, minHeight: '100%', padding: '20px 24px' }}>
@@ -258,9 +258,9 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', position: 'relative', zIndex: 1 }}>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 900, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 10 }}><Icon name="❤️" /> Volunteers</div>
-            <div style={{ fontSize: 14, color: '#334155', marginTop: 6 }}>Manage your volunteer workforce, communication and availability.</div>
-            <div style={{ fontSize: 12.5, color: '#94A3B8', marginTop: 2 }}>Keep every volunteer informed, engaged and ready for every session.</div>
+            <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 10 }}><Icon name="❤️" /> Volunteers</div>
+            <div style={{ fontSize: 14, color: 'var(--text2)', marginTop: 6 }}>Manage your volunteer workforce, communication and availability.</div>
+            <div style={{ fontSize: 12.5, color: 'var(--text-faint)', marginTop: 2 }}>Keep every volunteer informed, engaged and ready for every session.</div>
             <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
               <button onClick={() => { setInviteMsg(''); setShowInviteModal(true) }} style={btnPrimary(primary)}>+ Invite Volunteer</button>
               <button onClick={() => setShowBroadcastModal(true)} style={btnGhost}><Icon name="📢" /> Send Broadcast</button>
@@ -280,7 +280,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
             <div style={{ position: 'absolute', inset: -24, borderRadius: '50%', background: `radial-gradient(circle, var(--org-a20), transparent 70%)`, filter: 'blur(14px)', pointerEvents: 'none' }} />
             {/* the org's own logo — falls back to the LaunchSession badge only if they haven't set one */}
             <div style={{
-              position: 'relative', width: 130, height: 130, borderRadius: '50%', background: '#fff',
+              position: 'relative', width: 130, height: 130, borderRadius: '50%', background: 'var(--surface)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
               border: `2px solid var(--org-a20)`, boxShadow: `0 8px 20px var(--org-a20)`,
             }}>
@@ -317,7 +317,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                     <div style={{ fontSize: 24, fontWeight: 900, color: k.color }}>
                       {typeof k.value === 'number' ? <CountUp value={k.value} /> : k.value}
                     </div>
-                    <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700 }}>{k.label}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 700 }}>{k.label}</div>
                   </motion.div>
                 ))}
               </div>
@@ -328,17 +328,17 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                   <Card style={{ marginBottom: 20 }}>
                     <SectionTitle icon="💬" title="Volunteer Feed" />
                     {activityFeed.length === 0 ? (
-                      <div style={{ fontSize: 12.5, color: '#94A3B8', textAlign: 'center', padding: '16px 0' }}>Activity will show up here as your team gets going.</div>
+                      <div style={{ fontSize: 12.5, color: 'var(--text-faint)', textAlign: 'center', padding: '16px 0' }}>Activity will show up here as your team gets going.</div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                         {activityFeed.map(a => (
                           <div key={a.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 4px', borderRadius: 10, transition: 'background 0.15s' }}>
                             <div style={{ width: 30, height: 30, borderRadius: 9, background: `${a.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}><Icon name={a.icon} /></div>
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{a.title}</div>
-                              <div style={{ fontSize: 11.5, color: '#94A3B8' }}>{a.sub}</div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{a.title}</div>
+                              <div style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>{a.sub}</div>
                             </div>
-                            <div style={{ fontSize: 10.5, color: '#94A3B8', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                            <div style={{ fontSize: 10.5, color: 'var(--text-faint)', flexShrink: 0, whiteSpace: 'nowrap' }}>
                               {new Date(a.ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                             </div>
                           </div>
@@ -350,7 +350,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                   <Card>
                     <SectionTitle icon="📅" title="Upcoming Sessions" right={<button onClick={() => setTab('coverage')} style={{ background: 'none', border: 'none', color: primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View calendar <Icon name="→" /></button>} />
                     {upcomingSessionsList.length === 0 ? (
-                      <div style={{ fontSize: 12.5, color: '#94A3B8' }}>No upcoming sessions scheduled.</div>
+                      <div style={{ fontSize: 12.5, color: 'var(--text-faint)' }}>No upcoming sessions scheduled.</div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                         {upcomingSessionsList.map(s => {
@@ -360,11 +360,11 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                           const covered = assigned >= required
                           const barColor = covered ? '#16A34A' : assigned === 0 ? '#DC2626' : '#D97706'
                           return (
-                            <div key={s.id} style={{ padding: '12px 14px', borderRadius: 14, background: '#F8FAFC', border: '1px solid #F1F5F9' }}>
+                            <div key={s.id} style={{ padding: '12px 14px', borderRadius: 14, background: 'var(--surface2)', border: '1px solid var(--border-soft)' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
                                 <div>
-                                  <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{s.title}</div>
-                                  <div style={{ fontSize: 11.5, color: '#94A3B8' }}>{new Date(s.session_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} · {s.start_time}–{s.end_time}{s.location ? ` · ${s.location}` : ''}</div>
+                                  <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>{s.title}</div>
+                                  <div style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>{new Date(s.session_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} · {s.start_time}–{s.end_time}{s.location ? ` · ${s.location}` : ''}</div>
                                 </div>
                                 <Badge bg={`${barColor}18`} color={barColor}>{assigned}/{required}</Badge>
                               </div>
@@ -372,8 +372,8 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                                 <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6 }} style={{ height: '100%', background: barColor, borderRadius: 99 }} />
                               </div>
                               <div style={{ display: 'flex', gap: 6 }}>
-                                <button onClick={() => setTab('coverage')} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid #E2E8F0', background: '#fff', fontSize: 11, fontWeight: 700, color: '#475569', cursor: 'pointer' }}>Open Register</button>
-                                <button onClick={() => openComposerForSession(s)} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid #E2E8F0', background: '#fff', fontSize: 11, fontWeight: 700, color: '#475569', cursor: 'pointer' }}>Message Volunteers</button>
+                                <button onClick={() => setTab('coverage')} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 11, fontWeight: 700, color: '#475569', cursor: 'pointer' }}>Open Register</button>
+                                <button onClick={() => openComposerForSession(s)} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 11, fontWeight: 700, color: '#475569', cursor: 'pointer' }}>Message Volunteers</button>
                                 {!covered && <button onClick={() => openComposerForSession(s)} style={{ padding: '5px 10px', borderRadius: 8, border: 'none', background: barColor, fontSize: 11, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>Find Cover</button>}
                               </div>
                             </div>
@@ -389,7 +389,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                   <Card style={{ marginBottom: 20 }}>
                     <SectionTitle icon="📍" title="Today's Coverage" right={<button onClick={() => setTab('coverage')} style={{ background: 'none', border: 'none', color: primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View all <Icon name="→" /></button>} />
                     {todaySessionsWithCoverage.length === 0 ? (
-                      <div style={{ fontSize: 12.5, color: '#94A3B8' }}>No sessions running today.</div>
+                      <div style={{ fontSize: 12.5, color: 'var(--text-faint)' }}>No sessions running today.</div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: needCoverToday > 0 ? 14 : 0 }}>
                         {todaySessionsWithCoverage.map(s => {
@@ -398,10 +398,10 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                           return (
                             <div key={s.id} style={{ padding: 12, borderRadius: 14, background: `${barColor}0c`, border: `1px solid ${barColor}30` }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                                <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{s.title}</div>
+                                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{s.title}</div>
                                 <span style={{ fontSize: 11, fontWeight: 800, color: barColor }}>{s.covered ? '🟢 Ready' : `🟡 Need ${s.required - s.assigned}`}</span>
                               </div>
-                              <div style={{ fontSize: 11, color: '#94A3B8', marginBottom: 6 }}>{s.required} needed · {s.assigned} confirmed</div>
+                              <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 6 }}>{s.required} needed · {s.assigned} confirmed</div>
                               <div style={{ height: 5, borderRadius: 99, background: '#E2E8F0', overflow: 'hidden' }}>
                                 <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6 }} style={{ height: '100%', background: barColor, borderRadius: 99 }} />
                               </div>
@@ -425,8 +425,8 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                           return (
                             <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
                               <div style={{ minWidth: 0 }}>
-                                <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{t.training_type}</div>
-                                <div style={{ fontSize: 11, color: '#94A3B8' }}>{v?.full_name || 'Volunteer'}</div>
+                                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{t.training_type}</div>
+                                <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{v?.full_name || 'Volunteer'}</div>
                               </div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                                 <span style={{ fontSize: 11, fontWeight: 800, color: urgent ? '#DC2626' : '#D97706' }}>{t.daysLeft}d left</span>
@@ -442,7 +442,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                   <Card>
                     <SectionTitle icon="📮" title="New Applications" right={(applicants.length + publicApplications.length) > 0 && <Badge bg="rgba(220,38,38,0.1)" color="#DC2626">New</Badge>} />
                     {applicants.length === 0 && publicApplications.length === 0 ? (
-                      <div style={{ fontSize: 12.5, color: '#94A3B8' }}>No pending applications.</div>
+                      <div style={{ fontSize: 12.5, color: 'var(--text-faint)' }}>No pending applications.</div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                         {publicApplications.length > 0 && (
@@ -454,14 +454,14 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                           <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             <Avatar name={a.full_name} photoUrl={a.photo_url} size={32} color={primary} />
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0F172A' }}>{a.full_name}</div>
-                              <div style={{ fontSize: 10.5, color: '#94A3B8' }}>Applied {new Date(a.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                              <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)' }}>{a.full_name}</div>
+                              <div style={{ fontSize: 10.5, color: 'var(--text-faint)' }}>Applied {new Date(a.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                             </div>
-                            <button onClick={() => setTab('applications')} style={{ padding: '5px 10px', borderRadius: 8, border: `1.5px solid ${primary}`, background: '#fff', fontSize: 11, fontWeight: 700, color: primary, cursor: 'pointer', whiteSpace: 'nowrap' }}>Review <Icon name="→" /></button>
+                            <button onClick={() => setTab('applications')} style={{ padding: '5px 10px', borderRadius: 8, border: `1.5px solid ${primary}`, background: 'var(--surface)', fontSize: 11, fontWeight: 700, color: primary, cursor: 'pointer', whiteSpace: 'nowrap' }}>Review <Icon name="→" /></button>
                           </div>
                         ))}
                         {applicants.length === 0 && publicApplications.length > 0 && (
-                          <button onClick={() => setTab('applications')} style={{ padding: '8px 10px', borderRadius: 8, border: `1.5px solid ${primary}`, background: '#fff', fontSize: 12, fontWeight: 700, color: primary, cursor: 'pointer' }}>Review sign-ups <Icon name="→" /></button>
+                          <button onClick={() => setTab('applications')} style={{ padding: '8px 10px', borderRadius: 8, border: `1.5px solid ${primary}`, background: 'var(--surface)', fontSize: 12, fontWeight: 700, color: primary, cursor: 'pointer' }}>Review sign-ups <Icon name="→" /></button>
                         )}
                       </div>
                     )}
@@ -475,17 +475,17 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                   <SectionTitle icon="👥" title="Recent Volunteers" right={<button onClick={() => setTab('directory')} style={{ background: 'none', border: 'none', color: primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View all <Icon name="→" /></button>} />
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
                     {volunteers.slice(0, 5).map(v => (
-                      <div key={v.id} style={{ padding: 14, borderRadius: 16, background: '#F8FAFC', border: '1px solid #F1F5F9', textAlign: 'center' }}>
+                      <div key={v.id} style={{ padding: 14, borderRadius: 16, background: 'var(--surface2)', border: '1px solid var(--border-soft)', textAlign: 'center' }}>
                         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
                           <Avatar name={v.full_name} photoUrl={v.photo_url} size={52} color={primary} />
                         </div>
-                        <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{v.full_name}</div>
-                        <div style={{ fontSize: 11, color: '#94A3B8', marginBottom: 6 }}>{v.role_title || 'Volunteer'}</div>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{v.full_name}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 6 }}>{v.role_title || 'Volunteer'}</div>
                         <Badge bg={statusStyle(v.status || 'active').bg} color={statusStyle(v.status || 'active').color}>{statusStyle(v.status || 'active').label}</Badge>
                         <div style={{ display: 'flex', justifyContent: 'center', gap: 4, marginTop: 10 }}>
-                          <button onClick={() => openComposerFor(v)} title="Message" style={{ width: 26, height: 26, borderRadius: 8, border: 'none', background: '#fff', cursor: 'pointer', fontSize: 12 }}><Icon name="💬" /></button>
-                          <button onClick={() => setTab('directory')} title="Availability" style={{ width: 26, height: 26, borderRadius: 8, border: 'none', background: '#fff', cursor: 'pointer', fontSize: 12 }}><Icon name="📅" /></button>
-                          <button onClick={() => setTab('directory')} title="Edit" style={{ width: 26, height: 26, borderRadius: 8, border: 'none', background: '#fff', cursor: 'pointer', fontSize: 12 }}><Icon name="✏️" /></button>
+                          <button onClick={() => openComposerFor(v)} title="Message" style={{ width: 26, height: 26, borderRadius: 8, border: 'none', background: 'var(--surface)', cursor: 'pointer', fontSize: 12 }}><Icon name="💬" /></button>
+                          <button onClick={() => setTab('directory')} title="Availability" style={{ width: 26, height: 26, borderRadius: 8, border: 'none', background: 'var(--surface)', cursor: 'pointer', fontSize: 12 }}><Icon name="📅" /></button>
+                          <button onClick={() => setTab('directory')} title="Edit" style={{ width: 26, height: 26, borderRadius: 8, border: 'none', background: 'var(--surface)', cursor: 'pointer', fontSize: 12 }}><Icon name="✏️" /></button>
                         </div>
                       </div>
                     ))}
@@ -525,18 +525,18 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowInviteModal(false)}
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} onClick={e => e.stopPropagation()}
-              style={{ background: '#fff', borderRadius: 20, padding: 28, width: '100%', maxWidth: 420, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+              style={{ background: 'var(--surface)', borderRadius: 20, padding: 28, width: '100%', maxWidth: 420, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A' }}>Invite a volunteer</div>
-                <button onClick={() => setShowInviteModal(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#94A3B8' }}>×</button>
+                <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)' }}>Invite a volunteer</div>
+                <button onClick={() => setShowInviteModal(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--text-faint)' }}>×</button>
               </div>
               <form onSubmit={async e => { const ok = await handleInvite(e); if (ok) setTimeout(() => setShowInviteModal(false), 1800) }}>
                 <div style={{ marginBottom: 14 }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#64748B', display: 'block', marginBottom: 5 }}>Full name (optional)</label>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text3)', display: 'block', marginBottom: 5 }}>Full name (optional)</label>
                   <input value={inviteName} onChange={e => setInviteName(e.target.value)} placeholder="Jane Smith" style={inputStyle} />
                 </div>
                 <div style={{ marginBottom: 18 }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#64748B', display: 'block', marginBottom: 5 }}>Email address</label>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text3)', display: 'block', marginBottom: 5 }}>Email address</label>
                   <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="jane@email.com" required style={inputStyle} />
                 </div>
                 {inviteMsg && (
@@ -567,14 +567,14 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowQR(false)}
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} onClick={e => e.stopPropagation()}
-              style={{ background: '#fff', borderRadius: 20, padding: 32, width: '100%', maxWidth: 320, textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+              style={{ background: 'var(--surface)', borderRadius: 20, padding: 32, width: '100%', maxWidth: 320, textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>Volunteer Portal QR</div>
-                <button onClick={() => setShowQR(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#94A3B8' }}>×</button>
+                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>Volunteer Portal QR</div>
+                <button onClick={() => setShowQR(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--text-faint)' }}>×</button>
               </div>
-              <div style={{ fontSize: 13, color: '#64748B', marginBottom: 20 }}>Print or display this for volunteers to scan.</div>
+              <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 20 }}>Print or display this for volunteers to scan.</div>
               <div ref={qrRef} style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }} />
-              <div style={{ fontSize: 11, color: '#94A3B8', wordBreak: 'break-all', marginBottom: 16 }}>{portalUrl}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-faint)', wordBreak: 'break-all', marginBottom: 16 }}>{portalUrl}</div>
               <button onClick={copyLink} style={{ ...btnGhost, width: '100%' }}>{copied ? '✓ Copied!' : 'Copy portal link'}</button>
             </motion.div>
           </motion.div>
@@ -584,13 +584,13 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowBroadcastModal(false)}
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
             <motion.div initial={{ scale: 0.95, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} onClick={e => e.stopPropagation()}
-              style={{ background: '#fff', borderRadius: 22, padding: 26, width: '100%', maxWidth: 520, maxHeight: '86vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}>
+              style={{ background: 'var(--surface)', borderRadius: 22, padding: 26, width: '100%', maxWidth: 520, maxHeight: '86vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
                 <div>
-                  <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}><Icon name="💬" /> Volunteer Communications</div>
-                  <div style={{ fontSize: 12, color: '#94A3B8' }}>Keep your team informed and engaged</div>
+                  <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)' }}><Icon name="💬" /> Volunteer Communications</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>Keep your team informed and engaged</div>
                 </div>
-                <button onClick={() => setShowBroadcastModal(false)} style={{ background: '#F1F5F9', border: 'none', borderRadius: '50%', width: 30, height: 30, fontSize: 18, cursor: 'pointer', color: '#64748B' }}>×</button>
+                <button onClick={() => setShowBroadcastModal(false)} style={{ background: 'var(--surface-hover)', border: 'none', borderRadius: '50%', width: 30, height: 30, fontSize: 18, cursor: 'pointer', color: 'var(--text3)' }}>×</button>
               </div>
 
               <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
@@ -612,12 +612,12 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
 
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
                 {QUICK_INSERTS.map(q => (
-                  <button key={q.label} onClick={() => setBody(q.text)} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.08)', background: '#fff', color: '#475569', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>{q.label}</button>
+                  <button key={q.label} onClick={() => setBody(q.text)} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.08)', background: 'var(--surface)', color: '#475569', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>{q.label}</button>
                 ))}
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 11.5, fontWeight: 700, color: '#64748B' }}>Audience:</span>
+                <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text3)' }}>Audience:</span>
                 {['all', 'active', 'pending', 'custom'].map(m => (
                   <button key={m} onClick={() => setAudienceMode(m)} style={{
                     padding: '5px 12px', borderRadius: 99, border: 'none', cursor: 'pointer', fontSize: 11.5, fontWeight: 700,
@@ -627,7 +627,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
               </div>
 
               {audienceMode === 'custom' && (
-                <div style={{ maxHeight: 120, overflowY: 'auto', border: '1px solid #F1F5F9', borderRadius: 10, padding: 8, marginBottom: 12 }}>
+                <div style={{ maxHeight: 120, overflowY: 'auto', border: '1px solid var(--border-soft)', borderRadius: 10, padding: 8, marginBottom: 12 }}>
                   {volunteers.map(v => (
                     <label key={v.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, padding: '4px 2px', cursor: 'pointer' }}>
                       <input type="checkbox" checked={customIds.includes(v.id)}
@@ -647,15 +647,15 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
               </div>
 
               {broadcasts.length > 0 && (
-                <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: 14 }}>
-                  <div style={{ fontSize: 12.5, fontWeight: 800, color: '#64748B', marginBottom: 10 }}>RECENT BROADCASTS</div>
+                <div style={{ borderTop: '1px solid var(--border-soft)', paddingTop: 14 }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--text3)', marginBottom: 10 }}>RECENT BROADCASTS</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {broadcasts.slice(0, 4).map(b => (
                       <div key={b.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 0', borderBottom: '1px solid #F8FAFC' }}>
                         <div style={{ fontSize: 16 }}>{b.channel === 'email' ? '📧' : b.channel === 'portal' ? '🔔' : '📝'}</div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0F172A' }}>{b.subject || b.body?.slice(0, 60)}</div>
-                          <div style={{ fontSize: 11, color: '#94A3B8' }}>{b.audience_label} · {new Date(b.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+                          <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)' }}>{b.subject || b.body?.slice(0, 60)}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{b.audience_label} · {new Date(b.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
                         </div>
                         <Badge bg="rgba(34,197,94,0.12)" color="#15803D">{b.sent_count}/{b.recipient_count}</Badge>
                       </div>

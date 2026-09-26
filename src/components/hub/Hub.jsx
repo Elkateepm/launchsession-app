@@ -292,20 +292,20 @@ function AttendanceBreakdownModal({ session, attendance, onClose }) {
 
   return createPortal(
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 10400, background: 'rgba(15,23,42,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 18, padding: 20, width: 300, maxWidth: 'calc(100vw - 40px)', boxShadow: '0 24px 60px rgba(0,0,0,0.3)' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 18, padding: 20, width: 300, maxWidth: 'calc(100vw - 40px)', boxShadow: '0 24px 60px rgba(0,0,0,0.3)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-          <div style={{ fontSize: 15, fontWeight: 900, color: '#111827' }}>Attendance breakdown</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#9CA3AF', cursor: 'pointer', lineHeight: 1 }}>×</button>
+          <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text)' }}>Attendance breakdown</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text-faint)', cursor: 'pointer', lineHeight: 1 }}>×</button>
         </div>
-        <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.title}</div>
+        <div style={{ fontSize: 12, color: 'var(--text-faint)', marginBottom: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.title}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {rows.map(r => (
-            <div key={r.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: '#F8FAFC', borderRadius: 10 }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, color: '#374151' }}>
+            <div key={r.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: 'var(--surface2)', borderRadius: 10 }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, color: 'var(--text2)' }}>
                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: r.color, flexShrink: 0 }} />
                 {r.label}
               </span>
-              <span style={{ fontSize: 14, fontWeight: 900, color: '#111827' }}>{r.value}</span>
+              <span style={{ fontSize: 14, fontWeight: 900, color: 'var(--text)' }}>{r.value}</span>
             </div>
           ))}
         </div>
@@ -344,17 +344,17 @@ function TimeBreakdownModal({ session, onClose }) {
 
   return createPortal(
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 10400, background: 'rgba(15,23,42,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 18, padding: 20, width: 300, maxWidth: 'calc(100vw - 40px)', boxShadow: '0 24px 60px rgba(0,0,0,0.3)' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 18, padding: 20, width: 300, maxWidth: 'calc(100vw - 40px)', boxShadow: '0 24px 60px rgba(0,0,0,0.3)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-          <div style={{ fontSize: 15, fontWeight: 900, color: '#111827' }}>Session timing</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#9CA3AF', cursor: 'pointer', lineHeight: 1 }}>×</button>
+          <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text)' }}>Session timing</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text-faint)', cursor: 'pointer', lineHeight: 1 }}>×</button>
         </div>
-        <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.title}</div>
+        <div style={{ fontSize: 12, color: 'var(--text-faint)', marginBottom: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.title}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {rows.map(r => (
-            <div key={r.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: '#F8FAFC', borderRadius: 10 }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#374151' }}>{r.label}</span>
-              <span style={{ fontSize: 14, fontWeight: 900, color: '#111827' }}>{r.value}</span>
+            <div key={r.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: 'var(--surface2)', borderRadius: 10 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2)' }}>{r.label}</span>
+              <span style={{ fontSize: 14, fontWeight: 900, color: 'var(--text)' }}>{r.value}</span>
             </div>
           ))}
         </div>
@@ -440,7 +440,7 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
       </div>
 
       {composing && (
-        <div style={{ background: '#F9FAFB', border: '1.5px solid #F1F5F9', borderRadius: 16, padding: 16, marginBottom: 14 }}>
+        <div style={{ background: 'var(--surface2)', border: '1.5px solid var(--border-soft)', borderRadius: 16, padding: 16, marginBottom: 14 }}>
           {error && (
             <div style={{ background: '#FFF0F0', border: '1px solid #FFD0D0', color: '#C00', borderRadius: 8, padding: '8px 12px', fontSize: 12, marginBottom: 10, fontWeight: 600 }}>
               {error}
@@ -458,16 +458,16 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
 
           <input
             value={title} onChange={e => setTitle(e.target.value)} placeholder="Give it a headline..."
-            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 14, fontWeight: 700, outline: 'none', marginBottom: 8 }}
+            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, fontWeight: 700, outline: 'none', marginBottom: 8 }}
           />
           <textarea
             value={content} onChange={e => setContent(e.target.value)} placeholder="What's the news? Keep it short and sweet 🎉"
             rows={3}
-            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 13, outline: 'none', marginBottom: 10, fontFamily: 'inherit', resize: 'vertical' }}
+            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 13, outline: 'none', marginBottom: 10, fontFamily: 'inherit', resize: 'vertical' }}
           />
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: '#6B7280', cursor: 'pointer' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: 'var(--text3)', cursor: 'pointer' }}>
               <input type="checkbox" checked={pinned} onChange={e => setPinned(e.target.checked)} />
               📌 Pin to top
             </label>
@@ -482,22 +482,22 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
         <div style={{ background: `linear-gradient(135deg, var(--org-a05), var(--org-a05))`, border: `1.5px dashed var(--org-a20)`, borderRadius: 20, padding: '28px 24px', textAlign: 'center' }}>
           <div style={{ fontSize: 32, marginBottom: 8 }}><Icon name="📣" /></div>
           <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text,#111)', marginBottom: 4 }}>No announcements yet</div>
-          <div style={{ fontSize: 12, color: '#9CA3AF' }}>Share news, shout-outs, or reminders with your team</div>
+          <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>Share news, shout-outs, or reminders with your team</div>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {visible.map(a => (
-            <div key={a.id} style={{ background: '#fff', border: '1.5px solid #F1F5F9', borderRadius: 16, padding: '14px 16px', position: 'relative' }}>
+            <div key={a.id} style={{ background: 'var(--surface)', border: '1.5px solid var(--border-soft)', borderRadius: 16, padding: '14px 16px', position: 'relative' }}>
               {a.pinned && (
                 <div style={{ position: 'absolute', top: 12, right: 12, fontSize: 11 }}><Icon name="📌" /></div>
               )}
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                 <div style={{ fontSize: 22, flexShrink: 0, lineHeight: 1 }}>{a.emoji || '📣'}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 900, color: '#0F172A', marginBottom: 3, paddingRight: a.pinned ? 20 : 0 }}>{a.title}</div>
+                  <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--text)', marginBottom: 3, paddingRight: a.pinned ? 20 : 0 }}>{a.title}</div>
                   <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{a.content}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-                    <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600 }}>{timeAgo(a.created_at)}</span>
+                    <span style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 600 }}>{timeAgo(a.created_at)}</span>
                     {a.created_by === userId && (
                       <button onClick={() => remove(a.id)} style={{ fontSize: 11, color: '#DC2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>
                         Delete
@@ -1174,7 +1174,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
         </div>
         {canCloseRegister ? (
           <button onClick={() => setShowClosure(true)}
-            style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: '#fff', color: '#9A3412', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: 'var(--surface)', color: '#9A3412', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
             Review & close session
           </button>
         ) : (
@@ -2503,7 +2503,7 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
               animate={isMobile ? { y: 0 } : { opacity: 1, y: 0, scale: 1 }}
               exit={isMobile ? { y: '100%' } : { opacity: 0, y: -6, scale: 0.98 }}
               transition={{ duration: isMobile ? 0.26 : 0.16, ease: [0.4, 0, 0.2, 1] }}
-              style={{ ...panelStyle, display: 'flex', flexDirection: 'column', background: '#fff', boxShadow: '0 1px 0 rgba(255,255,255,0.6) inset, 0 20px 50px -12px rgba(15,23,42,0.28), 0 0 0 1px rgba(15,23,42,0.06)', zIndex: 200, overflow: 'hidden' }}>
+              style={{ ...panelStyle, display: 'flex', flexDirection: 'column', background: 'var(--surface)', boxShadow: '0 1px 0 rgba(255,255,255,0.6) inset, 0 20px 50px -12px rgba(15,23,42,0.28), 0 0 0 1px rgba(15,23,42,0.06)', zIndex: 200, overflow: 'hidden' }}>
 
               {isMobile && (
                 <div style={{ padding: '10px 0 2px', flexShrink: 0 }}>
@@ -2512,18 +2512,18 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
               )}
 
               {/* Header */}
-              <div style={{ padding: isMobile ? '12px 16px 12px' : '16px 18px 12px', borderBottom: '1px solid #F1F5F9', flexShrink: 0, background: 'linear-gradient(180deg, #FAFBFF 0%, #fff 100%)' }}>
+              <div style={{ padding: isMobile ? '12px 16px 12px' : '16px 18px 12px', borderBottom: '1px solid var(--border-soft)', flexShrink: 0, background: 'linear-gradient(180deg, #FAFBFF 0%, #fff 100%)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: isMobile ? 19 : 15, fontWeight: 900, color: '#0F172A', letterSpacing: -0.3 }}>Notifications</span>
+                    <span style={{ fontSize: isMobile ? 19 : 15, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.3 }}>Notifications</span>
                     {total > 0 && (
                       <span style={{ fontSize: isMobile ? 12 : 10.5, fontWeight: 800, color: primary, background: primary + '14', borderRadius: 99, padding: isMobile ? '3px 9px' : '2px 8px' }}>{total} new</span>
                     )}
                   </div>
-                  <button onClick={() => setOpen(false)} style={{ width: isMobile ? 34 : 26, height: isMobile ? 34 : 26, borderRadius: isMobile ? 11 : 8, border: 'none', background: '#F1F5F9', color: '#64748B', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} aria-label="Close"><Icon name="✕" /></button>
+                  <button onClick={() => setOpen(false)} style={{ width: isMobile ? 34 : 26, height: isMobile ? 34 : 26, borderRadius: isMobile ? 11 : 8, border: 'none', background: 'var(--surface-hover)', color: 'var(--text3)', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} aria-label="Close"><Icon name="✕" /></button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                  <div style={{ display: 'flex', gap: 4, background: '#F1F5F9', borderRadius: 10, padding: 3 }}>
+                  <div style={{ display: 'flex', gap: 4, background: 'var(--surface-hover)', borderRadius: 10, padding: 3 }}>
                     {[{ key: 'all', label: 'All' }, { key: 'unread', label: `Unread${total ? ` (${total})` : ''}` }].map(f => (
                       <button key={f.key} onClick={() => setFilter(f.key)}
                         style={{ padding: isMobile ? '8px 15px' : '5px 11px', borderRadius: isMobile ? 9 : 7, border: 'none', background: filter === f.key ? '#fff' : 'transparent', color: filter === f.key ? '#0F172A' : '#64748B', fontSize: isMobile ? 13 : 11, fontWeight: 700, cursor: 'pointer', boxShadow: filter === f.key ? '0 1px 3px rgba(15,23,42,0.12)' : 'none', transition: 'all 0.15s' }}>
@@ -2540,14 +2540,14 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
                 {visibleItems.length === 0 ? (
                   <div style={{ padding: '40px 20px', textAlign: 'center' }}>
                     <div style={{ width: 52, height: 52, borderRadius: 16, background: primary + '12', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, margin: '0 auto 12px' }}>{filter === 'unread' ? '🎉' : '🔔'}</div>
-                    <div style={{ fontSize: isMobile ? 16 : 13, fontWeight: 700, color: '#334155' }}>{filter === 'unread' ? "You're all caught up" : 'No notifications yet'}</div>
-                    <div style={{ fontSize: isMobile ? 13.5 : 11.5, color: '#94A3B8', marginTop: 4 }}>{filter === 'unread' ? 'New updates will show up here.' : "We'll let you know when something needs attention."}</div>
+                    <div style={{ fontSize: isMobile ? 16 : 13, fontWeight: 700, color: 'var(--text2)' }}>{filter === 'unread' ? "You're all caught up" : 'No notifications yet'}</div>
+                    <div style={{ fontSize: isMobile ? 13.5 : 11.5, color: 'var(--text-faint)', marginTop: 4 }}>{filter === 'unread' ? 'New updates will show up here.' : "We'll let you know when something needs attention."}</div>
                   </div>
                 ) : (
                   <div style={{ padding: isMobile ? '4px 10px calc(18px + env(safe-area-inset-bottom))' : '4px 8px 10px' }}>
                     {groupedItems.map(group => (
                       <div key={group.label}>
-                        <div style={{ fontSize: isMobile ? 11.5 : 10.5, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.6, padding: isMobile ? '14px 8px 7px' : '12px 8px 6px' }}>{group.label}</div>
+                        <div style={{ fontSize: isMobile ? 11.5 : 10.5, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.6, padding: isMobile ? '14px 8px 7px' : '12px 8px 6px' }}>{group.label}</div>
                         {group.items.map(n => {
                           const color = notifColor(n, primary)
                           const isCritical = n.priority === 'critical'
@@ -2566,10 +2566,10 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
                               </div>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
-                                  <div style={{ fontSize: isMobile ? 15 : 12.5, fontWeight: n.read_at ? 600 : 800, color: '#0F172A', lineHeight: 1.3 }}>{n.title}</div>
+                                  <div style={{ fontSize: isMobile ? 15 : 12.5, fontWeight: n.read_at ? 600 : 800, color: 'var(--text)', lineHeight: 1.3 }}>{n.title}</div>
                                   <div style={{ fontSize: isMobile ? 11.5 : 10, color: '#A1A9B8', fontWeight: 600, flexShrink: 0 }}>{timeAgo(n.created_at)}</div>
                                 </div>
-                                <div style={{ fontSize: isMobile ? 13.5 : 11.5, color: '#64748B', marginTop: 3, lineHeight: 1.42, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{n.body}</div>
+                                <div style={{ fontSize: isMobile ? 13.5 : 11.5, color: 'var(--text3)', marginTop: 3, lineHeight: 1.42, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{n.body}</div>
                                 {repeats > 1 && (
                                   <div style={{ fontSize: isMobile ? 12 : 10.5, color: color, fontWeight: 700, marginTop: 4 }}>{repeats} times</div>
                                 )}
@@ -3096,7 +3096,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           {/* Org identity */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0, padding: '4px 0' }}>
             <div style={{ position: 'relative' }}>
-              <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: 48, height: 48, borderRadius: 13, objectFit: 'contain', border: `1.5px solid var(--org-a20)`, background: '#fff', padding: 3, boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 20px -6px var(--org-a20)` }} />
+              <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: 48, height: 48, borderRadius: 13, objectFit: 'contain', border: `1.5px solid var(--org-a20)`, background: 'var(--surface)', padding: 3, boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 20px -6px var(--org-a20)` }} />
               <div style={{ position: 'absolute', bottom: -2, right: -2, width: 12, height: 12, borderRadius: '50%', background: '#22C55E', border: '2px solid #fff' }} />
             </div>
             {!isMobile ? (
@@ -3139,26 +3139,26 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   onChange={e => setSearch(e.target.value)}
                   onKeyDown={e => e.key === 'Escape' && setSearch('')}
                   placeholder="Search young people, sessions..."
-                  style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px 10px 37px', borderRadius: 12, border: `1.5px solid var(--org-a10)`, background: '#fff', fontSize: 13, color: 'var(--text, #111)', outline: 'none', fontFamily: 'inherit', transition: 'all 0.2s', boxShadow: `0 1px 0 rgba(255,255,255,0.8) inset, 0 2px 8px -4px var(--org-a10)` }}
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px 10px 37px', borderRadius: 12, border: `1.5px solid var(--org-a10)`, background: 'var(--surface)', fontSize: 13, color: 'var(--text, #111)', outline: 'none', fontFamily: 'inherit', transition: 'all 0.2s', boxShadow: `0 1px 0 rgba(255,255,255,0.8) inset, 0 2px 8px -4px var(--org-a10)` }}
                   onFocus={e => { e.target.style.borderColor = primary; e.target.style.boxShadow = `0 0 0 3px var(--org-a10), 0 2px 10px -4px var(--org-a20)` }}
                   onBlur={e => { e.target.style.borderColor = primary + '22'; e.target.style.boxShadow = `0 1px 0 rgba(255,255,255,0.8) inset, 0 2px 8px -4px var(--org-a10)` }}
                 />
                 {searchResults && (
-                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 14, boxShadow: '0 16px 40px -8px rgba(0,0,0,0.18)', zIndex: 100, marginTop: 6, overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, boxShadow: '0 16px 40px -8px rgba(0,0,0,0.18)', zIndex: 100, marginTop: 6, overflow: 'hidden' }}>
                   {searchResults.children.length === 0 && searchResults.sessions.length === 0 ? (
-                    <div style={{ padding: '14px 16px', fontSize: 13, color: '#6B7280', textAlign: 'center' }}>No results for "{search}"</div>
+                    <div style={{ padding: '14px 16px', fontSize: 13, color: 'var(--text3)', textAlign: 'center' }}>No results for "{search}"</div>
                   ) : (
                     <>
                       {searchResults.children.length > 0 && (
                         <div>
-                          <div style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Young People</div>
+                          <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Young People</div>
                           {searchResults.children.map(c => (
                             <button key={c.id} onClick={() => { go('registers'); setSearch('') }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
                               onMouseEnter={e => e.currentTarget.style.background = primary + '08'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
                               <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: primary, flexShrink: 0 }}>{c.first_name[0]}</div>
                               <div>
                                 <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{c.first_name} {c.last_name}</div>
-                                {c.group_name && <div style={{ fontSize: 11, color: '#6B7280' }}>{c.group_name}</div>}
+                                {c.group_name && <div style={{ fontSize: 11, color: 'var(--text3)' }}>{c.group_name}</div>}
                               </div>
                             </button>
                           ))}
@@ -3166,14 +3166,14 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       )}
                       {searchResults.sessions.length > 0 && (
                         <div>
-                          <div style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Sessions</div>
+                          <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Sessions</div>
                           {searchResults.sessions.map(s => (
                             <button key={s.id} onClick={() => { openRegisterForSession(s.id); setSearch('') }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
                               onMouseEnter={e => e.currentTarget.style.background = primary + '08'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
                               <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}><Icon name="📅" /></div>
                               <div>
                                 <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{s.title}</div>
-                                <div style={{ fontSize: 11, color: '#6B7280' }}>{formatDate(s.session_date)} · {s.start_time ? s.start_time.slice(0, 5) : 'No time'}</div>
+                                <div style={{ fontSize: 11, color: 'var(--text3)' }}>{formatDate(s.session_date)} · {s.start_time ? s.start_time.slice(0, 5) : 'No time'}</div>
                               </div>
                             </button>
                           ))}
@@ -3217,7 +3217,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               onNavigate={go}
             />
             {!isMobile && <DateTimeInline primary={primary} />}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '5px 10px 5px 5px', borderRadius: 12, border: `1.5px solid var(--org-a10)`, background: '#fff', transition: 'all 0.2s', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px var(--org-a10)` }}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '5px 10px 5px 5px', borderRadius: 12, border: `1.5px solid var(--org-a10)`, background: 'var(--surface)', transition: 'all 0.2s', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px var(--org-a10)` }}
               onClick={onAvatarClick}
               onMouseEnter={e => { e.currentTarget.style.borderColor = primary + '50'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 6px 16px -6px var(--org-a20)` }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = primary + '22'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px var(--org-a10)` }}>
@@ -3262,7 +3262,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                     onChange={e => setSearch(e.target.value)}
                     onKeyDown={e => e.key === 'Escape' && (setSearch(''), setShowMobileSearch(false))}
                     placeholder="Search young people, sessions..."
-                    style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px 10px 37px', borderRadius: 12, border: `1.5px solid var(--org-a20)`, background: '#fff', fontSize: 14, color: 'var(--text, #111)', outline: 'none', fontFamily: 'inherit', boxShadow: `0 1px 0 rgba(255,255,255,0.8) inset, 0 2px 8px -4px var(--org-a10)`, transition: 'box-shadow 0.2s, border-color 0.2s' }}
+                    style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px 10px 37px', borderRadius: 12, border: `1.5px solid var(--org-a20)`, background: 'var(--surface)', fontSize: 14, color: 'var(--text, #111)', outline: 'none', fontFamily: 'inherit', boxShadow: `0 1px 0 rgba(255,255,255,0.8) inset, 0 2px 8px -4px var(--org-a10)`, transition: 'box-shadow 0.2s, border-color 0.2s' }}
                     onFocus={e => { e.target.style.borderColor = primary; e.target.style.boxShadow = `0 0 0 3px var(--org-a10), 0 2px 10px -4px var(--org-a20)` }}
                     onBlur={e => { e.target.style.borderColor = primary + '30'; e.target.style.boxShadow = `0 1px 0 rgba(255,255,255,0.8) inset, 0 2px 8px -4px var(--org-a10)` }}
                   />
@@ -3275,21 +3275,21 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -8, scale: 0.97 }}
                       transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                      style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 14, boxShadow: '0 16px 40px -8px rgba(0,0,0,0.18)', zIndex: 100, marginTop: 6, overflow: 'hidden', transformOrigin: 'top center' }}
+                      style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, boxShadow: '0 16px 40px -8px rgba(0,0,0,0.18)', zIndex: 100, marginTop: 6, overflow: 'hidden', transformOrigin: 'top center' }}
                     >
                       {searchResults.children.length === 0 && searchResults.sessions.length === 0 ? (
-                        <div style={{ padding: '14px 16px', fontSize: 13, color: '#6B7280', textAlign: 'center' }}>No results for "{search}"</div>
+                        <div style={{ padding: '14px 16px', fontSize: 13, color: 'var(--text3)', textAlign: 'center' }}>No results for "{search}"</div>
                       ) : (
                         <>
                           {searchResults.children.length > 0 && (
                             <div>
-                              <div style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Young People</div>
+                              <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Young People</div>
                               {searchResults.children.map(c => (
                                 <button key={c.id} onClick={() => { go('registers'); setSearch(''); setShowMobileSearch(false) }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}>
                                   <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: primary, flexShrink: 0 }}>{c.first_name[0]}</div>
                                   <div>
                                     <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{c.first_name} {c.last_name}</div>
-                                    {c.group_name && <div style={{ fontSize: 11, color: '#6B7280' }}>{c.group_name}</div>}
+                                    {c.group_name && <div style={{ fontSize: 11, color: 'var(--text3)' }}>{c.group_name}</div>}
                                   </div>
                                 </button>
                               ))}
@@ -3297,13 +3297,13 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                           )}
                           {searchResults.sessions.length > 0 && (
                             <div>
-                              <div style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Sessions</div>
+                              <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Sessions</div>
                               {searchResults.sessions.map(s => (
                                 <button key={s.id} onClick={() => { openRegisterForSession(s.id); setSearch(''); setShowMobileSearch(false) }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}>
                                   <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}><Icon name="📅" /></div>
                                   <div>
                                     <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{s.title}</div>
-                                    <div style={{ fontSize: 11, color: '#6B7280' }}>{formatDate(s.session_date)} · {s.start_time ? s.start_time.slice(0, 5) : 'No time'}</div>
+                                    <div style={{ fontSize: 11, color: 'var(--text3)' }}>{formatDate(s.session_date)} · {s.start_time ? s.start_time.slice(0, 5) : 'No time'}</div>
                                   </div>
                                 </button>
                               ))}
@@ -3370,10 +3370,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   admin jobs that already live on their own screens, and sitting
                   them beside the register competed with the one thing this
                   header exists to get you to. */}
-              {todaySessions.length === 0 && canEdit('planner') && <button onClick={() => go('planner', { autoOpenWizard: true })} style={{ ...heroGlassBtn, background: '#fff', color: 'var(--org-ink)', gridColumn: '1 / -1' }}>Plan a {terms.session} →</button>}
+              {todaySessions.length === 0 && canEdit('planner') && <button onClick={() => go('planner', { autoOpenWizard: true })} style={{ ...heroGlassBtn, background: 'var(--surface)', color: 'var(--org-ink)', gridColumn: '1 / -1' }}>Plan a {terms.session} →</button>}
               {todaySessions.length > 0 && hasModule('registers') && (
                 <button onClick={() => go('registers')} style={{
-                  ...heroGlassBtn, background: '#fff', color: 'var(--org-ink)', fontWeight: 800,
+                  ...heroGlassBtn, background: 'var(--surface)', color: 'var(--org-ink)', fontWeight: 800,
                   ...(isMobile ? { gridColumn: '1 / -1' } : null),
                 }}>
                   {todayHasLiveSession ? 'Open live register →' : "Open today's register →"}
@@ -3832,7 +3832,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               )}
               <div className="ls-hub-today-sessions" style={{ display: 'flex', flexWrap: 'wrap', gap: 16, padding: '0 0 8px' }}>
               {displayList.length === 0 && todaySessionsView === 'closed' ? (
-                <div style={{ boxSizing: 'border-box', width: '100%', background: '#F8FAFC', border: '1.5px dashed #E5E7EB', borderRadius: 20, padding: '28px 24px', textAlign: 'center', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>
+                <div style={{ boxSizing: 'border-box', width: '100%', background: 'var(--surface2)', border: '1.5px dashed var(--border)', borderRadius: 20, padding: '28px 24px', textAlign: 'center', color: 'var(--text-faint)', fontSize: 13, fontWeight: 600 }}>
                   No registers closed yet today
                 </div>
               ) : displayList.map(s => {
@@ -3948,8 +3948,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.6, color: 'var(--org-ink)', marginBottom: 5 }}>ACTIVE PROJECT</div>
-                  <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>{activeProject.project.name}</div>
-                  <div style={{ fontSize: 12.5, color: '#64748B', fontWeight: 600, marginTop: 3 }}>
+                  <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)' }}>{activeProject.project.name}</div>
+                  <div style={{ fontSize: 12.5, color: 'var(--text3)', fontWeight: 600, marginTop: 3 }}>
                     Day {activeProject.dayNumber} of {activeProject.total}
                     {activeProject.todaysDay ? ` · Today: ${activeProject.todaysDay.title}` : ' · No session today'}
                   </div>
@@ -4077,27 +4077,27 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
       {showReflectionsModal && createPortal(
         <div onClick={() => setShowReflectionsModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 460, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 70px rgba(0,0,0,0.3)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', borderBottom: '1px solid #F1F5F9' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 20, width: '100%', maxWidth: 460, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 70px rgba(0,0,0,0.3)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', borderBottom: '1px solid var(--border-soft)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ width: 36, height: 36, borderRadius: 11, background: 'var(--org-a10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}><Icon name="⭐" /></span>
                 <div>
                   <div style={{ fontSize: 15.5, fontWeight: 900, color: 'var(--text, #111)' }}>Outstanding reflections</div>
-                  <div style={{ fontSize: 12, color: '#9CA3AF' }}>{completedWithoutReflection.length} session{completedWithoutReflection.length > 1 ? 's' : ''} to write up</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>{completedWithoutReflection.length} session{completedWithoutReflection.length > 1 ? 's' : ''} to write up</div>
                 </div>
               </div>
-              <button onClick={() => setShowReflectionsModal(false)} style={{ background: 'none', border: 'none', fontSize: 20, color: '#9CA3AF', cursor: 'pointer', lineHeight: 1, padding: 4 }}>×</button>
+              <button onClick={() => setShowReflectionsModal(false)} style={{ background: 'none', border: 'none', fontSize: 20, color: 'var(--text-faint)', cursor: 'pointer', lineHeight: 1, padding: 4 }}>×</button>
             </div>
             <div style={{ overflowY: 'auto', padding: 14, flex: 1 }}>
               {completedWithoutReflection.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '32px 16px', color: '#9CA3AF', fontSize: 13 }}>
+                <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--text-faint)', fontSize: 13 }}>
                   <div style={{ fontSize: 28, marginBottom: 8 }}><Icon name="✅" /></div>
                   All caught up — no reflections outstanding.
                 </div>
               ) : (
                 completedWithoutReflection.map(s => (
                   <button key={s.id} onClick={() => { setShowReflectionsModal(false); go('planner', { reflectSessionId: s.id }) }}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', border: '1px solid #F1F5F9', background: '#FFFBEB', borderRadius: 14, padding: '12px 14px', marginBottom: 8, cursor: 'pointer' }}>
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', border: '1px solid var(--border-soft)', background: '#FFFBEB', borderRadius: 14, padding: '12px 14px', marginBottom: 8, cursor: 'pointer' }}>
                     <span style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg, #FBBF24, #D97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0, color: '#fff' }}><Icon name="📝" /></span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text, #111)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.title || 'Untitled session'}</div>

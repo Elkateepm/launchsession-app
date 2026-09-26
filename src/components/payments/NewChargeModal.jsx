@@ -84,15 +84,15 @@ export default function NewChargeModal({ org, session, children, sessions, onClo
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 10400, backdropFilter: 'blur(2px)' }} />
       <div onClick={e => e.stopPropagation()} style={{
-        position: 'fixed', zIndex: 10401, background: '#fff',
+        position: 'fixed', zIndex: 10401, background: 'var(--surface)',
         ...(isMobile
           ? { left: 0, right: 0, bottom: 0, maxHeight: '92vh', borderRadius: '20px 20px 0 0' }
           : { top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(560px, 92vw)', maxHeight: '88vh', borderRadius: 20, boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }),
         display: 'flex', flexDirection: 'column',
       }}>
-        <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-          <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>+ New Charge</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer', padding: 4 }}><Icon name="✕" /></button>
+        <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--border-soft)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)' }}>+ New Charge</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text-faint)', cursor: 'pointer', padding: 4 }}><Icon name="✕" /></button>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
@@ -108,7 +108,7 @@ export default function NewChargeModal({ org, session, children, sessions, onClo
             </Field>
             <Field label="Amount">
               <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: 12, top: 10, fontSize: 13, color: '#64748B', fontWeight: 700 }}>£</span>
+                <span style={{ position: 'absolute', left: 12, top: 10, fontSize: 13, color: 'var(--text3)', fontWeight: 700 }}>£</span>
                 <input type="number" step="0.01" min="0" value={amount} onChange={e => setAmount(e.target.value)} style={{ ...inputStyle, paddingLeft: 24 }} placeholder="0.00" />
               </div>
             </Field>
@@ -128,7 +128,7 @@ export default function NewChargeModal({ org, session, children, sessions, onClo
                 <button key={key} onClick={() => { setAssignMode(key); setSelectedChildIds([]); setSelectedSessionId('') }} style={{
                   padding: '7px 12px', borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer',
                   border: assignMode === key ? `2px solid ${PB.blue}` : '1.5px solid #E2E8F0',
-                  background: assignMode === key ? '#EFF6FF' : '#fff', color: '#334155',
+                  background: assignMode === key ? '#EFF6FF' : '#fff', color: 'var(--text2)',
                 }}>{label}</button>
               ))}
             </div>
@@ -137,7 +137,7 @@ export default function NewChargeModal({ org, session, children, sessions, onClo
           {(assignMode === 'single' || assignMode === 'multiple') && (
             <Field label={assignMode === 'single' ? 'Child' : `Children ${selectedChildIds.length ? `(${selectedChildIds.length} selected)` : ''}`}>
               <input value={childSearch} onChange={e => setChildSearch(e.target.value)} style={{ ...inputStyle, marginBottom: 8 }} placeholder="Search children…" />
-              <div style={{ maxHeight: 180, overflowY: 'auto', border: '1px solid #F1F5F9', borderRadius: 10 }}>
+              <div style={{ maxHeight: 180, overflowY: 'auto', border: '1px solid var(--border-soft)', borderRadius: 10 }}>
                 {filteredChildren.slice(0, 100).map(c => {
                   const selected = selectedChildIds.includes(c.id)
                   return (
@@ -147,14 +147,14 @@ export default function NewChargeModal({ org, session, children, sessions, onClo
                     }} style={{
                       width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left',
                       padding: '11px 12px', border: 'none', borderBottom: '1px solid #F8FAFC', cursor: 'pointer',
-                      background: selected ? '#EFF6FF' : '#fff', fontSize: 13, color: '#0F172A', fontWeight: selected ? 700 : 500,
+                      background: selected ? '#EFF6FF' : '#fff', fontSize: 13, color: 'var(--text)', fontWeight: selected ? 700 : 500,
                     }}>
                       {c.first_name} {c.last_name}
                       {selected && <span style={{ color: PB.blue }}><Icon name="✓" /></span>}
                     </button>
                   )
                 })}
-                {filteredChildren.length === 0 && <div style={{ padding: 14, fontSize: 12, color: '#94A3B8' }}>No children match.</div>}
+                {filteredChildren.length === 0 && <div style={{ padding: 14, fontSize: 12, color: 'var(--text-faint)' }}>No children match.</div>}
               </div>
             </Field>
           )}
@@ -177,7 +177,7 @@ export default function NewChargeModal({ org, session, children, sessions, onClo
           {error && <div style={{ fontSize: 12.5, color: PB.red, fontWeight: 600, marginBottom: 6 }}>{error}</div>}
         </div>
 
-        <div style={{ padding: '16px 16px calc(16px + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid #F1F5F9', flexShrink: 0 }}>
+        <div style={{ padding: '16px 16px calc(16px + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid var(--border-soft)', flexShrink: 0 }}>
           <button onClick={handleCreate} disabled={saving} style={{
             width: '100%', padding: '13px', borderRadius: 12, border: 'none', cursor: saving ? 'default' : 'pointer',
             background: saving ? '#93C5FD' : PB.gradient, color: '#fff', fontSize: 14, fontWeight: 800,
@@ -194,7 +194,7 @@ export default function NewChargeModal({ org, session, children, sessions, onClo
 function Field({ label, children }) {
   return (
     <div style={{ marginBottom: 14 }}>
-      <label style={{ fontSize: 11, fontWeight: 800, color: '#64748B', display: 'block', marginBottom: 6 }}>{label}</label>
+      <label style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', display: 'block', marginBottom: 6 }}>{label}</label>
       {children}
     </div>
   )

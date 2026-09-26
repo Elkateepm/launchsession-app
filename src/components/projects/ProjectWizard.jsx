@@ -25,9 +25,9 @@ const WEEKDAYS = [
 
 const fi = {
   width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10,
-  border: '1.5px solid #E2E8F0', fontSize: 16, minHeight: 44, background: '#fff', color: '#0F172A',
+  border: '1.5px solid var(--border)', fontSize: 16, minHeight: 44, background: 'var(--surface)', color: 'var(--text)',
 }
-const lbl = { fontSize: 11, fontWeight: 800, color: '#64748B', display: 'block', marginBottom: 6 }
+const lbl = { fontSize: 11, fontWeight: 800, color: 'var(--text3)', display: 'block', marginBottom: 6 }
 
 function toISO(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -159,7 +159,7 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
   const previewDates = useMemo(() => computeProjectDates({ ...form, excluded: [] }), [form])
 
   return (
-    <SessionSheet title="New project" subtitle="Plan a programme and prepare its daily registers." onClose={onClose} busy={saving} width={760} bodyStyle={{ padding: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}><div style={{ padding: '16px 20px', borderBottom: '1px solid #E2E8F0' }}>
+    <SessionSheet title="New project" subtitle="Plan a programme and prepare its daily registers." onClose={onClose} busy={saving} width={760} bodyStyle={{ padding: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}><div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', gap: 6 }}>
             {STEPS.map((s, i) => (
               <div key={s} style={{ flex: 1 }}>
@@ -216,8 +216,8 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
                     border: form.schedule_mode === o.key ? '2px solid #6D5DF6' : '1.5px solid #E2E8F0',
                     background: form.schedule_mode === o.key ? '#F5F3FF' : '#fff',
                   }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{o.t}</div>
-                    <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 2 }}>{o.d}</div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{o.t}</div>
+                    <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2 }}>{o.d}</div>
                   </button>
                 ))}
               </div>
@@ -232,7 +232,7 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
                   <button key={d.idx} onClick={() => toggleWeekday(d.idx)} style={{
                     padding: '7px 12px', borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: 'pointer',
                     border: form.weekdays.includes(d.idx) ? '2px solid #6D5DF6' : '1.5px solid #E2E8F0',
-                    background: form.weekdays.includes(d.idx) ? '#F5F3FF' : '#fff', color: '#334155',
+                    background: form.weekdays.includes(d.idx) ? '#F5F3FF' : '#fff', color: 'var(--text2)',
                   }}>{isMobile ? d.short : d.label}</button>
                 ))}
               </div>
@@ -289,7 +289,7 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
 
           {step === 2 && (
             <>
-              <div style={{ fontSize: 12, color: '#64748B', marginBottom: 16, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 16, lineHeight: 1.5 }}>
                 Every project day starts with these. You can change any individual day afterwards without affecting the rest.
               </div>
 
@@ -351,7 +351,7 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
                   ['default_sign_out_required', 'Sign-out required'],
                   ['default_risk_assessment_required', 'Risk assessment required'],
                 ].map(([k, label]) => (
-                  <label key={k} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#334155' }}>
+                  <label key={k} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--text2)' }}>
                     <input type="checkbox" checked={form[k]} onChange={e => set(k, e.target.checked)} />
                     {label}
                   </label>
@@ -364,9 +364,9 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
         </div>
 
         {/* Footer */}
-        <div style={{ padding: '16px 16px calc(16px + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid #F1F5F9', display: 'flex', gap: 8, flexShrink: 0 }}>
+        <div style={{ padding: '16px 16px calc(16px + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid var(--border-soft)', display: 'flex', gap: 8, flexShrink: 0 }}>
           {step > 0 && (
-            <button onClick={() => setStep(s => s - 1)} style={{ minHeight: 44, padding: '11px 18px', borderRadius: 11, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Back</button>
+            <button onClick={() => setStep(s => s - 1)} style={{ minHeight: 44, padding: '11px 18px', borderRadius: 11, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Back</button>
           )}
           <div style={{ flex: 1 }} />
           {step < 2 ? (

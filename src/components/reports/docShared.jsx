@@ -90,7 +90,7 @@ export function Distribution({ rows, total, suffix = '' }) {
         return (
           <div key={r.label} style={{ display: 'grid', gridTemplateColumns: '132px 1fr 82px', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 12, color: INK, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.label}</span>
-            <span style={{ height: 9, background: '#F3F4F6', borderRadius: 2, overflow: 'hidden', display: 'block' }}>
+            <span style={{ height: 9, background: 'var(--surface3)', borderRadius: 2, overflow: 'hidden', display: 'block' }}>
               <span style={{ display: 'block', height: '100%', width: `${pct}%`, background: INK, borderRadius: 2 }} />
             </span>
             <span style={{ fontSize: 12, color: MUTED, fontWeight: 700, textAlign: 'right' }}>{r.n}{suffix} · {pct}%</span>
@@ -138,7 +138,7 @@ export function Table({ columns, rows }) {
             <tr key={ri}>
               {columns.map((c, i) => (
                 <td key={c.key} style={{
-                  padding: '8px 0', borderBottom: '1px solid #F3F4F6',
+                  padding: '8px 0', borderBottom: '1px solid var(--border-soft)',
                   textAlign: i === 0 ? 'left' : 'right',
                   fontWeight: i === 0 ? 700 : c.strong ? 900 : 400,
                   color: i === 0 || c.strong ? INK : MUTED,
@@ -183,18 +183,18 @@ export function DocShell({
   loading, error, generatedAt, children, isMobile, footerNote,
 }) {
   const ctl = {
-    padding: '9px 11px', borderRadius: 9, border: '1.5px solid #E2E8F0',
-    fontSize: 13, fontFamily: 'inherit', minHeight: 40, background: '#fff', color: INK,
+    padding: '9px 11px', borderRadius: 9, border: '1.5px solid var(--border)',
+    fontSize: 13, fontFamily: 'inherit', minHeight: 40, background: 'var(--surface)', color: INK,
   }
   return (
-    <div id="ls-doc-print-root" style={{ position: 'fixed', inset: 0, zIndex: 10500, background: '#F1F5F9', overflowY: 'auto' }}>
+    <div id="ls-doc-print-root" style={{ position: 'fixed', inset: 0, zIndex: 10500, background: 'var(--surface-hover)', overflowY: 'auto' }}>
       <style>{PRINT_CSS}</style>
 
       <div id="ls-doc-toolbar" style={{
-        position: 'sticky', top: 0, zIndex: 2, background: '#fff', borderBottom: '1px solid #E2E8F0',
+        position: 'sticky', top: 0, zIndex: 2, background: 'var(--surface)', borderBottom: '1px solid var(--border)',
         padding: isMobile ? '10px 14px' : '12px 20px', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap',
       }}>
-        <button onClick={onClose} style={{ ...ctl, cursor: 'pointer', fontWeight: 800, border: 'none', background: '#F1F5F9' }}>← Back</button>
+        <button onClick={onClose} style={{ ...ctl, cursor: 'pointer', fontWeight: 800, border: 'none', background: 'var(--surface-hover)' }}>← Back</button>
         <div style={{ fontSize: 13.5, fontWeight: 900, color: INK, marginRight: 'auto' }}>{title}</div>
         <input type="date" value={from} onChange={e => onFrom(e.target.value)} style={ctl} aria-label="Period start" />
         <input type="date" value={to} onChange={e => onTo(e.target.value)} style={ctl} aria-label="Period end" />
@@ -205,7 +205,7 @@ export function DocShell({
       </div>
 
       <div id="ls-doc-paper" style={{
-        maxWidth: 820, margin: isMobile ? '14px 10px' : '22px auto', background: '#fff',
+        maxWidth: 820, margin: isMobile ? '14px 10px' : '22px auto', background: 'var(--surface)',
         padding: isMobile ? '26px 20px' : '46px 52px', borderRadius: isMobile ? 12 : 4,
         boxShadow: '0 10px 40px rgba(15,23,42,0.10)', color: INK, boxSizing: 'border-box',
       }}>

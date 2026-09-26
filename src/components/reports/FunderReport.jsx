@@ -79,7 +79,7 @@ function Distribution({ rows, total }) {
         return (
           <div key={r.label} style={{ display: 'grid', gridTemplateColumns: '108px 1fr 76px', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 12, color: INK, fontWeight: 600 }}>{r.label}</span>
-            <span style={{ height: 9, background: '#F3F4F6', borderRadius: 2, overflow: 'hidden', display: 'block' }}>
+            <span style={{ height: 9, background: 'var(--surface3)', borderRadius: 2, overflow: 'hidden', display: 'block' }}>
               <span style={{ display: 'block', height: '100%', width: `${pct}%`, background: INK, borderRadius: 2 }} />
             </span>
             <span style={{ fontSize: 12, color: MUTED, fontWeight: 700, textAlign: 'right' }}>{r.n} · {pct}%</span>
@@ -128,22 +128,22 @@ export default function FunderReport({ org, range, onClose }) {
   const doseRows = DOSE_BANDS.map(b => ({ label: b.label, n: eng[b.key] || 0 })).filter(r => r.n > 0)
 
   const ctl = {
-    padding: '9px 11px', borderRadius: 9, border: '1.5px solid #E2E8F0',
-    fontSize: 13, fontFamily: 'inherit', minHeight: 40, background: '#fff', color: INK,
+    padding: '9px 11px', borderRadius: 9, border: '1.5px solid var(--border)',
+    fontSize: 13, fontFamily: 'inherit', minHeight: 40, background: 'var(--surface)', color: INK,
   }
 
   return (
     <div id="ls-funder-print-root" style={{
-      position: 'fixed', inset: 0, zIndex: 10500, background: '#F1F5F9', overflowY: 'auto',
+      position: 'fixed', inset: 0, zIndex: 10500, background: 'var(--surface-hover)', overflowY: 'auto',
     }}>
       <style>{PRINT_CSS}</style>
 
       <div id="ls-funder-toolbar" style={{
-        position: 'sticky', top: 0, zIndex: 2, background: '#fff', borderBottom: '1px solid #E2E8F0',
+        position: 'sticky', top: 0, zIndex: 2, background: 'var(--surface)', borderBottom: '1px solid var(--border)',
         padding: isMobile ? '10px 14px' : '12px 20px',
         display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap',
       }}>
-        <button onClick={onClose} style={{ ...ctl, cursor: 'pointer', fontWeight: 800, border: 'none', background: '#F1F5F9' }}>
+        <button onClick={onClose} style={{ ...ctl, cursor: 'pointer', fontWeight: 800, border: 'none', background: 'var(--surface-hover)' }}>
           <Icon name="←" /> Back
         </button>
         <div style={{ fontSize: 13.5, fontWeight: 900, color: INK, marginRight: 'auto' }}>Funder report</div>
@@ -156,7 +156,7 @@ export default function FunderReport({ org, range, onClose }) {
       </div>
 
       <div id="ls-funder-doc" style={{
-        maxWidth: 820, margin: isMobile ? '14px 10px' : '22px auto', background: '#fff',
+        maxWidth: 820, margin: isMobile ? '14px 10px' : '22px auto', background: 'var(--surface)',
         padding: isMobile ? '26px 20px' : '46px 52px',
         borderRadius: isMobile ? 12 : 4, boxShadow: '0 10px 40px rgba(15,23,42,0.10)',
         color: INK, boxSizing: 'border-box',
@@ -266,11 +266,11 @@ export default function FunderReport({ org, range, onClose }) {
                       <tbody>
                         {out.by_area.map(a => (
                           <tr key={a.area}>
-                            <td style={{ padding: '8px 0', borderBottom: '1px solid #F3F4F6', fontWeight: 700 }}>{areaByKey(a.area).label}</td>
-                            <td style={{ padding: '8px 0', borderBottom: '1px solid #F3F4F6', textAlign: 'right', color: MUTED }}>{a.people}</td>
-                            <td style={{ padding: '8px 0', borderBottom: '1px solid #F3F4F6', textAlign: 'right', color: MUTED }}>{Number(a.baseline).toFixed(1)}</td>
-                            <td style={{ padding: '8px 0', borderBottom: '1px solid #F3F4F6', textAlign: 'right' }}>{Number(a.latest).toFixed(1)}</td>
-                            <td style={{ padding: '8px 0', borderBottom: '1px solid #F3F4F6', textAlign: 'right', fontWeight: 900 }}>
+                            <td style={{ padding: '8px 0', borderBottom: '1px solid var(--border-soft)', fontWeight: 700 }}>{areaByKey(a.area).label}</td>
+                            <td style={{ padding: '8px 0', borderBottom: '1px solid var(--border-soft)', textAlign: 'right', color: MUTED }}>{a.people}</td>
+                            <td style={{ padding: '8px 0', borderBottom: '1px solid var(--border-soft)', textAlign: 'right', color: MUTED }}>{Number(a.baseline).toFixed(1)}</td>
+                            <td style={{ padding: '8px 0', borderBottom: '1px solid var(--border-soft)', textAlign: 'right' }}>{Number(a.latest).toFixed(1)}</td>
+                            <td style={{ padding: '8px 0', borderBottom: '1px solid var(--border-soft)', textAlign: 'right', fontWeight: 900 }}>
                               {signedTenth(a.delta)}
                             </td>
                           </tr>

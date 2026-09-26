@@ -33,7 +33,7 @@ export default function FundingOpportunitiesPanel({ org, campaigns, onOpen, onVi
   }, [grants, campaigns])
 
   return (
-    <div style={{ background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 18, padding: '18px 18px' }}>
+    <div style={{ background: 'var(--surface)', border: `1px solid ${LS.border}`, borderRadius: 18, padding: '18px 18px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ fontSize: 14.5, fontWeight: 800, color: LS.text }}>Funding Opportunities</div>
         {scored.length > 0 && <button onClick={onViewAll} style={{ background: 'none', border: 'none', color: LS.purpleDark, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>View all <Icon name="→" /></button>}

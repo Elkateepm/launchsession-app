@@ -149,7 +149,7 @@ export default function MedicalAlerts({ org, session, onNavigate }) {
   }
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#F8FAFC' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--surface2)' }}>
       <PageHeader
         icon="💊"
         iconImg="/icons/medical-icon.png"
@@ -178,7 +178,7 @@ export default function MedicalAlerts({ org, session, onNavigate }) {
         ]}
       />
 
-      <div style={{ display: 'flex', gap: 8, padding: '12px 16px', background: '#fff', borderBottom: '1px solid #F1F5F9', flexWrap: 'wrap', flexShrink: 0 }}>
+      <div style={{ display: 'flex', gap: 8, padding: '12px 16px', background: 'var(--surface)', borderBottom: '1px solid var(--border-soft)', flexWrap: 'wrap', flexShrink: 0 }}>
         {TABS.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
             padding: '8px 14px', borderRadius: 99, minHeight: 40, fontFamily: 'inherit',
@@ -191,7 +191,7 @@ export default function MedicalAlerts({ org, session, onNavigate }) {
           }}>{t.label} {t.count}</button>
         ))}
         <div style={{ flex: '1 1 160px', minWidth: 160, position: 'relative' }}>
-          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#9CA3AF' }}><Icon name="🔍" /></span>
+          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--text-faint)' }}><Icon name="🔍" /></span>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name..."
             style={{ ...inputStyle, paddingLeft: 32 }} />
         </div>
@@ -212,7 +212,7 @@ export default function MedicalAlerts({ org, session, onNavigate }) {
 
       <div style={{ flex: 1, overflowY: 'auto', padding: 14 }}>
         {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF', fontWeight: 600 }}>Loading…</div>
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-faint)', fontWeight: 600 }}>Loading…</div>
         ) : list.length === 0 ? (
           <EmptyState tab={tab} rows={rows} todaySessions={todaySessions} terms={terms} onSeeAll={() => setTab('all')} />
         ) : (
@@ -263,7 +263,7 @@ function EmptyState({ tab, rows, todaySessions, terms, onSeeAll }) {
       <div style={{ fontSize: 38, marginBottom: 10, color: '#CBD5E1' }}>
         <Icon name={nothingAtAll ? '💊' : '✅'} />
       </div>
-      <div style={{ fontSize: 15, fontWeight: 800, color: '#374151', marginBottom: 5 }}>
+      <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text2)', marginBottom: 5 }}>
         {nothingAtAll
           ? 'Nothing recorded yet'
           : tab === 'today'
@@ -276,7 +276,7 @@ function EmptyState({ tab, rows, todaySessions, terms, onSeeAll }) {
                 ? 'Everything is signed off and in date'
                 : 'No matches'}
       </div>
-      <div style={{ fontSize: 13, color: '#9CA3AF', maxWidth: 420, margin: '0 auto', lineHeight: 1.55 }}>
+      <div style={{ fontSize: 13, color: 'var(--text-faint)', maxWidth: 420, margin: '0 auto', lineHeight: 1.55 }}>
         {nothingAtAll
           ? `Allergies, medication and medical notes recorded on a ${terms.person}'s record appear here.`
           : tab === 'today'
@@ -286,7 +286,7 @@ function EmptyState({ tab, rows, todaySessions, terms, onSeeAll }) {
       {tab === 'today' && rows.length > 0 && (
         <button onClick={onSeeAll} style={{
           marginTop: 14, minHeight: 40, padding: '0 18px', borderRadius: 10, cursor: 'pointer',
-          border: '1.5px solid #E2E8F0', background: '#fff', color: '#475569', fontSize: 13, fontWeight: 800, fontFamily: 'inherit',
+          border: '1.5px solid var(--border)', background: 'var(--surface)', color: '#475569', fontSize: 13, fontWeight: 800, fontFamily: 'inherit',
         }}>See everyone</button>
       )}
     </div>
@@ -306,7 +306,7 @@ function AlertCard({ row, primary, showToday, onOpen, onSignOff }) {
       onClick={onOpen}
       style={{
         display: 'flex', alignItems: 'flex-start', gap: 12, padding: '13px 15px 13px 12px',
-        background: '#fff', borderRadius: 16, cursor: 'pointer',
+        background: 'var(--surface)', borderRadius: 16, cursor: 'pointer',
         border: '1px solid #E9EDF2', borderLeft: `4px solid ${t.colour}`,
         boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
       }}>
@@ -314,7 +314,7 @@ function AlertCard({ row, primary, showToday, onOpen, onSignOff }) {
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>
+          <span style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>
             {child.first_name} {child.last_name}
           </span>
           {showToday && todayStatus && todayStatus !== 'absent' && (
@@ -339,13 +339,13 @@ function AlertCard({ row, primary, showToday, onOpen, onSignOff }) {
         {named.length > 0 && (
           <div style={{ marginTop: 7, display: 'flex', flexDirection: 'column', gap: 3 }}>
             {named.slice(0, 2).map((f, i) => (
-              <div key={i} style={{ fontSize: 12.5, color: '#334155', lineHeight: 1.45 }}>
+              <div key={i} style={{ fontSize: 12.5, color: 'var(--text2)', lineHeight: 1.45 }}>
                 <span style={{ fontWeight: 800, color: TIERS[f.tier].colour }}>{f.label}:</span>{' '}
                 {f.detail.length > 140 ? `${f.detail.slice(0, 140)}…` : f.detail}
               </div>
             ))}
             {named.length > 2 && (
-              <div style={{ fontSize: 11.5, color: '#94A3B8', fontWeight: 700 }}>+{named.length - 2} more — tap to read</div>
+              <div style={{ fontSize: 11.5, color: 'var(--text-faint)', fontWeight: 700 }}>+{named.length - 2} more — tap to read</div>
             )}
           </div>
         )}
@@ -377,9 +377,9 @@ function SignOffModal({ child, onClose, onConfirm }) {
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 10700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 420, padding: 22, boxShadow: '0 32px 80px rgba(0,0,0,0.35)', boxSizing: 'border-box' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 20, width: '100%', maxWidth: 420, padding: 22, boxShadow: '0 32px 80px rgba(0,0,0,0.35)', boxSizing: 'border-box' }}>
         <div style={{ fontSize: 16, fontWeight: 900, color: '#111', marginBottom: 4 }}>Sign off medical info</div>
-        <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 16 }}>
+        <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>
           {child.first_name} {child.last_name} — confirms you have read and understood their current medical information.
           It will come round again in {REVIEW_INTERVAL_DAYS} days.
         </div>
@@ -413,7 +413,7 @@ function MedicalDetailDrawer({ row, reviews, primary, isMobile, onClose, onSignO
         dragConstraints={{ top: 0, bottom: 400 }}
         dragElastic={{ top: 0.05, bottom: 0.6 }}
         onDragEnd={(e, info) => { if (info.offset.y > 100 || info.velocity.y > 500) onClose() }}
-        style={{ background: '#fff', borderRadius: isMobile ? '24px 24px 0 0' : 24, width: '100%', maxWidth: isMobile ? '100%' : 440, maxHeight: isMobile ? '90vh' : '88vh', overflowY: 'auto', boxShadow: '0 32px 80px rgba(0,0,0,0.4)', boxSizing: 'border-box' }}
+        style={{ background: 'var(--surface)', borderRadius: isMobile ? '24px 24px 0 0' : 24, width: '100%', maxWidth: isMobile ? '100%' : 440, maxHeight: isMobile ? '90vh' : '88vh', overflowY: 'auto', boxShadow: '0 32px 80px rgba(0,0,0,0.4)', boxSizing: 'border-box' }}
       >
         {isMobile && (
           <div onPointerDown={e => dragControls.start(e)} style={{ display: 'flex', justifyContent: 'center', paddingTop: 12, paddingBottom: 4, cursor: 'grab', touchAction: 'none' }}>
@@ -425,9 +425,9 @@ function MedicalDetailDrawer({ row, reviews, primary, isMobile, onClose, onSignO
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
             <div>
               <div style={{ fontSize: 17, fontWeight: 900, color: '#111' }}>{name}</div>
-              <div style={{ fontSize: 12, color: '#9CA3AF' }}>{child.group_name || 'Ungrouped'}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>{child.group_name || 'Ungrouped'}</div>
             </div>
-            <button onClick={onClose} aria-label="Close" style={{ width: 30, height: 30, borderRadius: '50%', background: '#F1F5F9', border: 'none', cursor: 'pointer', fontSize: 15, flexShrink: 0 }}>
+            <button onClick={onClose} aria-label="Close" style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--surface-hover)', border: 'none', cursor: 'pointer', fontSize: 15, flexShrink: 0 }}>
               <Icon name="✕" />
             </button>
           </div>
@@ -437,7 +437,7 @@ function MedicalDetailDrawer({ row, reviews, primary, isMobile, onClose, onSignO
           {(child.emergency_contact_name || child.emergency_contact_phone) && (
             <div style={{ background: '#FEF2F2', border: '1.5px solid #FECACA', borderRadius: 12, padding: '11px 13px', marginBottom: 14 }}>
               <div style={{ fontSize: 10, fontWeight: 800, color: '#B91C1C', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 }}>Emergency contact</div>
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>{child.emergency_contact_name || 'Not named'}</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{child.emergency_contact_name || 'Not named'}</div>
               {child.emergency_contact_phone && (
                 <a href={`tel:${child.emergency_contact_phone}`} onClick={e => e.stopPropagation()}
                   style={{ fontSize: 14, fontWeight: 800, color: '#B91C1C', textDecoration: 'none' }}>
@@ -460,7 +460,7 @@ function MedicalDetailDrawer({ row, reviews, primary, isMobile, onClose, onSignO
           ))}
 
           {(child.parent_name || child.parent_phone) && (
-            <div style={{ marginBottom: 14, fontSize: 12.5, color: '#64748B' }}>
+            <div style={{ marginBottom: 14, fontSize: 12.5, color: 'var(--text3)' }}>
               <span style={{ fontWeight: 800 }}>Parent or carer:</span> {child.parent_name || '—'}
               {child.parent_phone ? ` · ${child.parent_phone}` : ''}
             </div>
@@ -470,16 +470,16 @@ function MedicalDetailDrawer({ row, reviews, primary, isMobile, onClose, onSignO
             Sign off / re-confirm
           </button>
 
-          <div style={{ fontSize: 11, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Sign-off history</div>
+          <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Sign-off history</div>
           {sortedReviews.length === 0 ? (
-            <div style={{ fontSize: 12.5, color: '#9CA3AF' }}>No sign-offs recorded yet.</div>
+            <div style={{ fontSize: 12.5, color: 'var(--text-faint)' }}>No sign-offs recorded yet.</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {sortedReviews.map(r => (
-                <div key={r.id} style={{ background: '#F8FAFC', borderRadius: 10, padding: 10, fontSize: 12.5 }}>
+                <div key={r.id} style={{ background: 'var(--surface2)', borderRadius: 10, padding: 10, fontSize: 12.5 }}>
                   <div style={{ fontWeight: 700, color: '#111' }}>{r.reviewed_by_name || 'Team member'}</div>
-                  <div style={{ color: '#6B7280' }}>{format(new Date(r.reviewed_at), 'd MMM yyyy, HH:mm')}</div>
-                  {r.notes && <div style={{ color: '#374151', marginTop: 4 }}>{r.notes}</div>}
+                  <div style={{ color: 'var(--text3)' }}>{format(new Date(r.reviewed_at), 'd MMM yyyy, HH:mm')}</div>
+                  {r.notes && <div style={{ color: 'var(--text2)', marginTop: 4 }}>{r.notes}</div>}
                 </div>
               ))}
             </div>

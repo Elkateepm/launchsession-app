@@ -49,7 +49,7 @@ const BRANDING_PREMIUM_FEATURES = [
 function SettingCard({ title, description, children }) {
   return (
     <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, marginBottom: 16, overflow: 'hidden' }}>
-      <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6' }}>
+      <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-soft)' }}>
         <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{title}</div>
         {description && <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>{description}</div>}
       </div>
@@ -72,7 +72,7 @@ const inp = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5p
 
 function Toggle({ value, onChange, label }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #f3f4f6' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid var(--border-soft)' }}>
       <span style={{ fontSize: 14, color: 'var(--text2)', fontWeight: 500 }}>{label}</span>
       <div onClick={() => onChange(!value)} style={{ width: 40, height: 22, borderRadius: 11, background: value ? '#1B9AAA' : '#D1D5DB', position: 'relative', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0 }}>
         <div style={{ position: 'absolute', top: 2, left: value ? 20 : 2, width: 18, height: 18, borderRadius: '50%', background: 'var(--surface)', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
@@ -192,7 +192,7 @@ function SidebarDisplayCard({ org, isAdmin }) {
                   }}>
                     <span style={{
                       position: 'absolute', top: 3, left: on ? 19 : 3, width: 16, height: 16,
-                      borderRadius: '50%', background: '#fff', transition: 'left 0.15s',
+                      borderRadius: '50%', background: 'var(--surface)', transition: 'left 0.15s',
                       boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
                     }} />
                   </span>
@@ -340,7 +340,7 @@ function OrgSection({ org }) {
   return (
     <div>
       <div style={{ background: 'linear-gradient(135deg, #0A0F1E, #1a2744)', borderRadius: 12, padding: '20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
-        <div style={{ width: 56, height: 56, borderRadius: 14, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
+        <div style={{ width: 56, height: 56, borderRadius: 14, background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
           <img src={org?.logo_url || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 14 }} />
         </div>
         <div>
@@ -536,7 +536,7 @@ function GroupCard({ group, count, onRename, onColorChange, onDelete }) {
       <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600 }}>{count} {count === 1 ? 'child' : 'children'}</div>
 
       {showColors && (
-        <div style={{ position: 'absolute', top: '100%', left: 12, marginTop: 6, background: '#fff', border: '1px solid #E5E7EB', borderRadius: 10, padding: 8, display: 'flex', gap: 5, flexWrap: 'wrap', width: 150, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 10 }}>
+        <div style={{ position: 'absolute', top: '100%', left: 12, marginTop: 6, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: 8, display: 'flex', gap: 5, flexWrap: 'wrap', width: 150, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 10 }}>
           {GROUP_COLOR_PRESETS.map(c => (
             <button key={c} onClick={() => { onColorChange(group.id, c); setShowColors(false) }}
               style={{ width: 22, height: 22, borderRadius: '50%', background: c, border: c === group.color ? '2px solid #111' : '2px solid #fff', boxShadow: '0 0 0 1px #E5E7EB', cursor: 'pointer' }} />
@@ -866,7 +866,7 @@ function NotificationsSection({ org, session: authSession }) {
 
   const status = !supported ? 'unsupported' : permission === 'denied' ? 'blocked' : isSubscribedHere ? 'enabled' : 'not_enabled'
   const statusMeta = {
-    unsupported: { label: 'Unsupported', color: '#94A3B8', bg: '#F1F5F9' },
+    unsupported: { label: 'Unsupported', color: 'var(--text-faint)', bg: '#F1F5F9' },
     blocked:     { label: 'Blocked', color: '#DC2626', bg: '#FEF2F2' },
     enabled:     { label: 'Enabled', color: '#16A34A', bg: '#F0FDF4' },
     not_enabled: { label: 'Not enabled', color: '#D97706', bg: '#FFFBEB' },
@@ -933,10 +933,10 @@ function NotificationsSection({ org, session: authSession }) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 12, fontWeight: 800, color: statusMeta.color, background: statusMeta.bg, borderRadius: 99, padding: '5px 12px' }}>{statusMeta.label}</span>
-            {status === 'blocked' && <span style={{ fontSize: 12, color: '#64748B' }}>Update this in your browser's site settings, then reload.</span>}
+            {status === 'blocked' && <span style={{ fontSize: 12, color: 'var(--text3)' }}>Update this in your browser's site settings, then reload.</span>}
           </div>
           {status === 'enabled' ? (
-            <button onClick={handleDisable} disabled={busy} style={{ padding: '9px 16px', borderRadius: 9, border: '1.5px solid #E2E8F0', background: '#fff', color: '#374151', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+            <button onClick={handleDisable} disabled={busy} style={{ padding: '9px 16px', borderRadius: 9, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
               {busy ? 'Working…' : 'Disable on this device'}
             </button>
           ) : status === 'not_enabled' ? (
@@ -953,7 +953,7 @@ function NotificationsSection({ org, session: authSession }) {
         )}
 
         {status === 'enabled' && (
-          <button onClick={handleTest} disabled={testState === 'sending'} style={{ padding: '9px 16px', borderRadius: 9, border: '1.5px solid #E2E8F0', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', marginBottom: 4 }}>
+          <button onClick={handleTest} disabled={testState === 'sending'} style={{ padding: '9px 16px', borderRadius: 9, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', marginBottom: 4 }}>
             {testState === 'sending' ? 'Sending…' : testState === 'sent' ? '✅ Sent — check your notifications' : testState === 'error' ? '⚠ Could not send' : 'Send test notification'}
           </button>
         )}
@@ -978,7 +978,7 @@ function NotificationsSection({ org, session: authSession }) {
           const isExpanded = !!expandedGroups[g.key]
           const groupOn = g.locked ? true : !!prefs[g.key]
           return (
-            <div key={g.key} style={{ borderBottom: '1px solid #f3f4f6' }}>
+            <div key={g.key} style={{ borderBottom: '1px solid var(--border-soft)' }}>
               <div style={{ opacity: g.locked ? 0.75 : 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0 4px' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -1059,7 +1059,7 @@ function IntegrationsSection() {
     <SettingCard title="Integrations" description="Connect LaunchSession with your other tools">
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10 }}>
         {integrations.map(i => (
-          <div key={i.name} style={{ border: '1px solid #e5e7eb', borderRadius: 10, padding: '14px' }}>
+          <div key={i.name} style={{ border: '1px solid var(--border)', borderRadius: 10, padding: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
               <span style={{ fontSize: 24 }}><Icon name={i.icon} /></span>
               <div>
@@ -1069,8 +1069,8 @@ function IntegrationsSection() {
             </div>
             <div>
               {i.status === 'connected' && <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>● Connected</span>}
-              {i.status === 'available' && <button style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid #1B9AAA', background: '#fff', color: '#1B9AAA', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Connect</button>}
-              {i.status === 'coming_soon' && <span style={{ background: '#F3F4F6', color: '#9ca3af', borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>Coming Soon</span>}
+              {i.status === 'available' && <button style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid #1B9AAA', background: 'var(--surface)', color: '#1B9AAA', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Connect</button>}
+              {i.status === 'coming_soon' && <span style={{ background: 'var(--surface3)', color: 'var(--text-faint)', borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>Coming Soon</span>}
             </div>
           </div>
         ))}
@@ -1226,7 +1226,7 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
             <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--text)' }}>
               {currentEntitlement?.label || currentPlan}
             </div>
-            <div style={{ fontSize: 13, color: '#6b7280' }}>
+            <div style={{ fontSize: 13, color: 'var(--text3)' }}>
               {planEnded
                 ? 'Read-only — choose a plan to start making changes again'
                 : daysLeft !== null
@@ -1379,15 +1379,15 @@ function HelpSection() {
     <SettingCard title="Help & Support">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {links.map(l => (
-          <a key={l.title} href={l.href} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', border: '1px solid #e5e7eb', borderRadius: 10, textDecoration: 'none', transition: 'background 0.15s' }}
+          <a key={l.title} href={l.href} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', border: '1px solid var(--border)', borderRadius: 10, textDecoration: 'none', transition: 'background 0.15s' }}
             onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
             onMouseLeave={e => e.currentTarget.style.background = '#fff'}>
             <span style={{ fontSize: 22 }}><Icon name={l.icon} /></span>
             <div>
               <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{l.title}</div>
-              <div style={{ fontSize: 12, color: '#9ca3af' }}>{l.desc}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>{l.desc}</div>
             </div>
-            <span style={{ marginLeft: 'auto', color: '#9ca3af', fontSize: 16 }}>›</span>
+            <span style={{ marginLeft: 'auto', color: 'var(--text-faint)', fontSize: 16 }}>›</span>
           </a>
         ))}
       </div>
@@ -1473,7 +1473,7 @@ function SafeguardingSection({ org }) {
               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Policy document uploaded</div>
               <button type="button" onClick={async () => { const u = await signOne('safeguarding-docs', policyUrl, 300); if (u) window.open(u, '_blank', 'noopener,noreferrer') }} style={{ fontSize: 12, color: '#DC2626', fontWeight: 600, textDecoration: 'none', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>View / Download <Icon name="↗" /></button>
             </div>
-            <button onClick={() => setPolicyUrl('')} style={{ background: 'none', border: 'none', color: '#9ca3af', fontSize: 18, cursor: 'pointer', padding: 4 }}>×</button>
+            <button onClick={() => setPolicyUrl('')} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 18, cursor: 'pointer', padding: 4 }}>×</button>
           </div>
         ) : (
           <div style={{ border: '2px dashed var(--border)', borderRadius: 12, padding: '28px 20px', textAlign: 'center', marginBottom: 14 }}>
@@ -1527,7 +1527,7 @@ function SafeguardingSection({ org }) {
             ['Childline', '0800 1111'],
             ['LADO referral', 'via your Local Authority'],
           ].map(([label, value]) => (
-            <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
+            <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border-soft)' }}>
               <span style={{ fontSize: 13, color: 'var(--text2)' }}>{label}</span>
               <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{value}</span>
             </div>
@@ -1540,9 +1540,9 @@ function SafeguardingSection({ org }) {
 
 function ComingSoon({ label }) {
   return (
-    <div style={{ textAlign: 'center', padding: '60px 20px', color: '#9ca3af' }}>
+    <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-faint)' }}>
       <div style={{ fontSize: 40, marginBottom: 12 }}>🚧</div>
-      <div style={{ fontSize: 16, fontWeight: 700, color: '#374151', marginBottom: 6 }}>{label} Settings</div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text2)', marginBottom: 6 }}>{label} Settings</div>
       <div style={{ fontSize: 14 }}>This section is coming soon.</div>
     </div>
   )
@@ -1743,10 +1743,10 @@ function VenuesSection({ org, isAdmin }) {
           <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--text3)', fontSize: 13 }}>No venues yet — add your first one below.</div>
         ) : (
           venues.map(v => (
-            <div key={v.id} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #f3f4f6', opacity: v.is_active ? 1 : 0.5 }}>
+            <div key={v.id} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid var(--border-soft)', opacity: v.is_active ? 1 : 0.5 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>
-                  {v.name} {!v.is_active && <span style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', marginLeft: 6 }}>INACTIVE</span>}
+                  {v.name} {!v.is_active && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-faint)', marginLeft: 6 }}>INACTIVE</span>}
                 </div>
                 {v.address && <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{v.address}</div>}
                 <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -1771,7 +1771,7 @@ function VenuesSection({ org, isAdmin }) {
         )}
 
         {isAdmin && adding && (
-          <div style={{ marginTop: 16, padding: 16, background: '#F8FAFC', borderRadius: 10, border: '1px solid var(--border)' }}>
+          <div style={{ marginTop: 16, padding: 16, background: 'var(--surface2)', borderRadius: 10, border: '1px solid var(--border)' }}>
             <Field label="Venue name *"><input style={inp} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Cassiobury Park Sports Hall" /></Field>
             <Field label="Address"><input style={inp} value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="Street, town, postcode" /></Field>
             <div style={{ display: 'flex', gap: 12 }}>
@@ -1814,7 +1814,7 @@ function VenueDefaultHazardsEditor({ hazards, onChange }) {
       {(hazards || []).length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
           {hazards.map((h, i) => (
-            <div key={i} style={{ background: '#F8FAFC', border: '1px solid var(--border)', borderRadius: 9, padding: 10 }}>
+            <div key={i} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 9, padding: 10 }}>
               <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
                 <input style={{ ...smallInp, flex: 1 }} value={h.hazard} onChange={e => update(i, { hazard: e.target.value })} placeholder="e.g. Slips on wet flooring" />
                 <button onClick={() => remove(i)} style={{ padding: '0 10px', borderRadius: 7, border: '1px solid #FECACA', background: '#FEF2F2', color: '#B91C1C', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Remove</button>
@@ -1850,7 +1850,7 @@ const ROLE_CONFIG = {
 }
 // A role we do not recognise reads as exactly that. Falling back to Volunteer
 // understated someone's access on the one screen that exists to show it.
-const ROLE_UNKNOWN = { label: 'Unknown role', color: '#64748B', bg: '#F1F5F9' }
+const ROLE_UNKNOWN = { label: 'Unknown role', color: 'var(--text3)', bg: '#F1F5F9' }
 
 // Access tiers, most privileged first. `always` keeps a card on screen when it
 // is empty, because "no admins" is information; an empty Managers card is not.
@@ -2083,17 +2083,17 @@ export default function Settings({ org, session, userProfile, initialSection }) 
   const renderContent = () => {
     switch(active) {
       case 'organisation':   return isAdmin ? <OrgSection org={org} /> : (
-        <div style={{ textAlign: 'center', padding: '60px 24px', background: '#F8FAFC', borderRadius: 16, border: '1.5px dashed #CBD5E1' }}>
+        <div style={{ textAlign: 'center', padding: '60px 24px', background: 'var(--surface2)', borderRadius: 16, border: '1.5px dashed #CBD5E1' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}><Icon name="🔒" /></div>
-          <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>Admins only</div>
-          <div style={{ fontSize: 14, color: '#64748B' }}>Organisation settings can only be changed by an admin. Ask your organisation's admin if you need something updated here.</div>
+          <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>Admins only</div>
+          <div style={{ fontSize: 14, color: 'var(--text3)' }}>Organisation settings can only be changed by an admin. Ask your organisation's admin if you need something updated here.</div>
         </div>
       )
       case 'branding':       return brandingEnabled ? (isAdmin ? <BrandingCentre key={org.id} org={org} refreshOrg={refreshOrg} /> : (
-        <div style={{ textAlign: 'center', padding: '60px 24px', background: '#F8FAFC', borderRadius: 16, border: '1.5px dashed #CBD5E1' }}>
+        <div style={{ textAlign: 'center', padding: '60px 24px', background: 'var(--surface2)', borderRadius: 16, border: '1.5px dashed #CBD5E1' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}><Icon name="🎨" /></div>
-          <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>Admin access required</div>
-          <div style={{ fontSize: 14, color: '#64748B' }}>Branding can only be changed by an admin. Ask your organisation's admin if you need something updated here.</div>
+          <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>Admin access required</div>
+          <div style={{ fontSize: 14, color: 'var(--text3)' }}>Branding can only be changed by an admin. Ask your organisation's admin if you need something updated here.</div>
         </div>
       )) : (
         <div style={{ background: '#07120E', color: '#F7F5EC', borderRadius: 18, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 26px 70px rgba(7,18,14,0.18)' }}>
@@ -2122,10 +2122,10 @@ export default function Settings({ org, session, userProfile, initialSection }) 
         </div>
       )
       case 'display':        return isAdmin ? <SidebarDisplayCard org={org} isAdmin={isAdmin} /> : (
-        <div style={{ textAlign: 'center', padding: '60px 24px', background: '#F8FAFC', borderRadius: 16, border: '1.5px dashed #CBD5E1' }}>
+        <div style={{ textAlign: 'center', padding: '60px 24px', background: 'var(--surface2)', borderRadius: 16, border: '1.5px dashed #CBD5E1' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}><Icon name="🔒" /></div>
-          <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>Admins only</div>
-          <div style={{ fontSize: 14, color: '#64748B' }}>The sidebar is shared by everyone in the organisation, so only an admin can change what appears in it.</div>
+          <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>Admins only</div>
+          <div style={{ fontSize: 14, color: 'var(--text3)' }}>The sidebar is shared by everyone in the organisation, so only an admin can change what appears in it.</div>
         </div>
       )
       case 'users':           return <UsersSection org={org} session={session} isAdmin={isAdmin} currentUserId={session?.user?.id} />
@@ -2146,12 +2146,12 @@ export default function Settings({ org, session, userProfile, initialSection }) 
   if (initialSection === 'branding') return renderContent()
 
   return (
-    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', background: '#F8FAFC' }}>
+    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', background: 'var(--surface2)' }}>
 
       {/* MOBILE NAV TOGGLE */}
       {isMobile && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#fff', borderBottom: '1px solid #e5e7eb', flexShrink: 0 }}>
-          <button onClick={() => setShowSidebar(!showSidebar)} style={{ padding: '7px 12px', borderRadius: 8, border: '1.5px solid #e5e7eb', background: '#F9FAFB', fontSize: 12, fontWeight: 700, cursor: 'pointer', color: '#374151' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: 'var(--surface)', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+          <button onClick={() => setShowSidebar(!showSidebar)} style={{ padding: '7px 12px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface2)', fontSize: 12, fontWeight: 700, cursor: 'pointer', color: 'var(--text2)' }}>
             {showSidebar ? '✕ Close' : '☰ Settings'}
           </button>
           <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{NAV.find(n => n.key === active)?.icon} {NAV.find(n => n.key === active)?.label}</div>
@@ -2159,19 +2159,19 @@ export default function Settings({ org, session, userProfile, initialSection }) 
       )}
 
       {/* SETTINGS SIDEBAR */}
-      <div style={{ width: isMobile ? '100%' : 190, background: '#fff', borderRight: isMobile ? 'none' : '1px solid #e5e7eb', borderBottom: isMobile ? '1px solid #e5e7eb' : 'none', display: isMobile ? (showSidebar ? 'flex' : 'none') : 'flex', flexDirection: 'column', flexShrink: 0, maxHeight: isMobile ? 320 : 'none', overflowY: isMobile ? 'auto' : 'visible', position: isMobile ? 'static' : 'sticky', top: isMobile ? 'auto' : 0, alignSelf: isMobile ? 'auto' : 'flex-start' }}>
-        <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #e5e7eb' }}>
+      <div style={{ width: isMobile ? '100%' : 190, background: 'var(--surface)', borderRight: isMobile ? 'none' : '1px solid #e5e7eb', borderBottom: isMobile ? '1px solid #e5e7eb' : 'none', display: isMobile ? (showSidebar ? 'flex' : 'none') : 'flex', flexDirection: 'column', flexShrink: 0, maxHeight: isMobile ? 320 : 'none', overflowY: isMobile ? 'auto' : 'visible', position: isMobile ? 'static' : 'sticky', top: isMobile ? 'auto' : 0, alignSelf: isMobile ? 'auto' : 'flex-start' }}>
+        <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--border)' }}>
           <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}><Icon name="⚙️" /> Settings</div>
           <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#9ca3af' }}><Icon name="🔍" /></span>
+            <span style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--text-faint)' }}><Icon name="🔍" /></span>
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search settings..."
-              style={{ width: '100%', padding: '7px 9px 7px 28px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 12, outline: 'none', boxSizing: 'border-box', background: '#F9FAFB' }} />
+              style={{ width: '100%', padding: '7px 9px 7px 28px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 12, outline: 'none', boxSizing: 'border-box', background: 'var(--surface2)' }} />
           </div>
         </div>
         <div style={{ padding: '8px 8px', flex: 1 }}>
           {groups.map(({ group, items }) => (
             <div key={group} style={{ marginBottom: 4 }}>
-              <div style={{ fontSize: 10, fontWeight: 800, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, padding: '8px 10px 4px' }}>{group}</div>
+              <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1, padding: '8px 10px 4px' }}>{group}</div>
               {items.map(n => (
                 <button key={n.key} onClick={() => { setActive(n.key); if (isMobile) setShowSidebar(false) }}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: 'none', background: active === n.key ? `${org?.primary_color || '#1B9AAA'}12` : 'transparent', color: active === n.key ? (org?.primary_color || '#1B9AAA') : '#374151', fontSize: 13, fontWeight: active === n.key ? 700 : 500, cursor: 'pointer', textAlign: 'left', marginBottom: 1, transition: 'all 0.1s' }}

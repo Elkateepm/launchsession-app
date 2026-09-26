@@ -13,7 +13,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 // Admin only — it aggregates attendance and staffing across every session,
 // which is more than a volunteer running one group should see.
 
-const CARD = { background: '#fff', border: '1px solid #ECE9F5', borderRadius: 16 }
+const CARD = { background: 'var(--surface)', border: '1px solid #ECE9F5', borderRadius: 16 }
 
 const londonToday = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' })
 
@@ -188,7 +188,7 @@ export default function Today({ org, session: authSession, userProfile, onNaviga
 
   const Stat = ({ value, label }) => (
     <div style={{ ...CARD, padding: '14px 16px', minWidth: 0 }}>
-      <div style={{ fontSize: 24, fontWeight: 800, color: '#0F172A', lineHeight: 1.1 }}>{value}</div>
+      <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text)', lineHeight: 1.1 }}>{value}</div>
       <div style={{ fontSize: 12, color: '#8B87A3', marginTop: 3 }}>{label}</div>
     </div>
   )
@@ -216,7 +216,7 @@ export default function Today({ org, session: authSession, userProfile, onNaviga
           </span>
         </div>
 
-        <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>
+        <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>
           {s.title || 'Session'}
         </div>
 
@@ -228,16 +228,16 @@ export default function Today({ org, session: authSession, userProfile, onNaviga
             <div style={{ fontSize: 11.5, color: '#8B87A3' }}>signed in</div>
           </div>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: '#0F172A' }}>{s.signedOut}</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>{s.signedOut}</div>
             <div style={{ fontSize: 11.5, color: '#8B87A3' }}>signed out</div>
           </div>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: '#0F172A' }}>{s.absent}</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>{s.absent}</div>
             <div style={{ fontSize: 11.5, color: '#8B87A3' }}>absent</div>
           </div>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: '#0F172A' }}>
-              {s.staffOnSite}<span style={{ fontSize: 13, color: '#94A3B8' }}>/{s.staffAssigned}</span>
+            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>
+              {s.staffOnSite}<span style={{ fontSize: 13, color: 'var(--text-faint)' }}>/{s.staffAssigned}</span>
             </div>
             <div style={{ fontSize: 11.5, color: '#8B87A3' }}>staff on site</div>
           </div>
@@ -274,10 +274,10 @@ export default function Today({ org, session: authSession, userProfile, onNaviga
   return (
     <div style={{ padding: isMobile ? '16px 12px 80px' : '20px 24px', minHeight: '100%' }}>
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: isMobile ? 22 : 24, fontWeight: 900, color: '#0F172A', letterSpacing: -0.4 }}>
+        <div style={{ fontSize: isMobile ? 22 : 24, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.4 }}>
           Today
         </div>
-        <div style={{ fontSize: 13.5, color: '#64748B', marginTop: 3 }}>{heading}</div>
+        <div style={{ fontSize: 13.5, color: 'var(--text3)', marginTop: 3 }}>{heading}</div>
       </div>
 
       {loading && (
@@ -288,7 +288,7 @@ export default function Today({ org, session: authSession, userProfile, onNaviga
 
       {!loading && error && (
         <div style={{ ...CARD, padding: '26px 22px', textAlign: 'center' }}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 5 }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 5 }}>
             Couldn't load today
           </div>
           <div style={{ fontSize: 13.5, color: '#8B87A3', marginBottom: 14 }}>
@@ -313,7 +313,7 @@ export default function Today({ org, session: authSession, userProfile, onNaviga
             }}>
               <span style={{ fontSize: 20, flexShrink: 0 }}>🧑‍💼</span>
               <span style={{ minWidth: 0, flex: 1 }}>
-                <span style={{ display: 'block', fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>
+                <span style={{ display: 'block', fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>
                   {hrAttention.count} HR item{hrAttention.count > 1 ? 's' : ''} to deal with
                 </span>
                 <span style={{ display: 'block', fontSize: 12.5, color: '#8B87A3', marginTop: 1 }}>
@@ -343,7 +343,7 @@ export default function Today({ org, session: authSession, userProfile, onNaviga
             <div style={{ ...CARD, marginBottom: 16, overflow: 'hidden' }}>
               <div style={{
                 padding: '13px 16px', borderBottom: '1px solid #ECE9F5',
-                fontSize: 14.5, fontWeight: 800, color: '#0F172A',
+                fontSize: 14.5, fontWeight: 800, color: 'var(--text)',
               }}>Needs attention</div>
               {attention.map((a, i) => (
                 <div key={a.id} style={{
@@ -353,7 +353,7 @@ export default function Today({ org, session: authSession, userProfile, onNaviga
                 }}>
                   <span style={{ width: 8, height: 8, borderRadius: 8, background: a.tone, flexShrink: 0 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>{a.title}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{a.title}</div>
                     <div style={{ fontSize: 12.5, color: '#8B87A3', marginTop: 2 }}>{a.detail}</div>
                   </div>
                   <button onClick={() => onNavigate?.('registers')} style={{
@@ -370,7 +370,7 @@ export default function Today({ org, session: authSession, userProfile, onNaviga
           {sessions.length === 0 && (
             <div style={{ ...CARD, padding: '38px 24px', textAlign: 'center' }}>
               <div style={{ fontSize: 30, marginBottom: 10 }}>☕</div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', marginBottom: 5 }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)', marginBottom: 5 }}>
                 Nothing scheduled today
               </div>
               <div style={{ fontSize: 13.5, color: '#8B87A3', maxWidth: 340, margin: '0 auto 16px', lineHeight: 1.5 }}>
@@ -378,8 +378,8 @@ export default function Today({ org, session: authSession, userProfile, onNaviga
                 and anything that needs attention.
               </div>
               <button onClick={() => onNavigate?.('calendar')} style={{
-                padding: '10px 18px', borderRadius: 11, border: '1px solid #E2E8F0',
-                background: '#fff', color: '#0F172A', fontSize: 13.5, fontWeight: 700,
+                padding: '10px 18px', borderRadius: 11, border: '1px solid var(--border)',
+                background: 'var(--surface)', color: 'var(--text)', fontSize: 13.5, fontWeight: 700,
                 cursor: 'pointer', fontFamily: 'inherit',
               }}>Open calendar</button>
             </div>
@@ -387,7 +387,7 @@ export default function Today({ org, session: authSession, userProfile, onNaviga
 
           {running.length > 0 && (
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>
+              <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>
                 Running now
               </div>
               <div style={{
@@ -402,7 +402,7 @@ export default function Today({ org, session: authSession, userProfile, onNaviga
 
           {upcoming.length > 0 && (
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>
+              <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>
                 Later today
               </div>
               <div style={{
@@ -417,7 +417,7 @@ export default function Today({ org, session: authSession, userProfile, onNaviga
 
           {finished.length > 0 && (
             <div>
-              <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>
+              <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>
                 Earlier today
               </div>
               <div style={{

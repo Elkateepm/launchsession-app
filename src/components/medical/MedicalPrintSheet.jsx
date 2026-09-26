@@ -28,21 +28,21 @@ const PRINT_CSS = `
 
 export default function MedicalPrintSheet({ org, rows, scopeLabel, todaySessions, onClose }) {
   const ctl = {
-    padding: '9px 13px', borderRadius: 9, border: '1.5px solid #E2E8F0',
+    padding: '9px 13px', borderRadius: 9, border: '1.5px solid var(--border)',
     fontSize: 13, fontWeight: 800, fontFamily: 'inherit', minHeight: 40,
-    background: '#fff', color: '#111827', cursor: 'pointer',
+    background: 'var(--surface)', color: 'var(--text)', cursor: 'pointer',
   }
 
   return (
-    <div id="ls-med-print-root" style={{ position: 'fixed', inset: 0, zIndex: 10800, background: '#F1F5F9', overflowY: 'auto' }}>
+    <div id="ls-med-print-root" style={{ position: 'fixed', inset: 0, zIndex: 10800, background: 'var(--surface-hover)', overflowY: 'auto' }}>
       <style>{PRINT_CSS}</style>
 
       <div id="ls-med-print-toolbar" style={{
-        position: 'sticky', top: 0, zIndex: 2, background: '#fff', borderBottom: '1px solid #E2E8F0',
+        position: 'sticky', top: 0, zIndex: 2, background: 'var(--surface)', borderBottom: '1px solid var(--border)',
         padding: '12px 20px', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap',
       }}>
-        <button onClick={onClose} style={{ ...ctl, border: 'none', background: '#F1F5F9' }}>← Back</button>
-        <div style={{ fontSize: 13.5, fontWeight: 900, color: '#111827', marginRight: 'auto' }}>
+        <button onClick={onClose} style={{ ...ctl, border: 'none', background: 'var(--surface-hover)' }}>← Back</button>
+        <div style={{ fontSize: 13.5, fontWeight: 900, color: 'var(--text)', marginRight: 'auto' }}>
           Medication list — {scopeLabel}
         </div>
         <button onClick={() => window.print()} style={{ ...ctl, border: 'none', background: '#111827', color: '#fff' }}>
@@ -51,12 +51,12 @@ export default function MedicalPrintSheet({ org, rows, scopeLabel, todaySessions
       </div>
 
       <div id="ls-med-paper" style={{
-        maxWidth: 820, margin: '22px auto', background: '#fff', padding: '40px 46px',
-        borderRadius: 4, boxShadow: '0 10px 40px rgba(15,23,42,0.10)', color: '#111827', boxSizing: 'border-box',
+        maxWidth: 820, margin: '22px auto', background: 'var(--surface)', padding: '40px 46px',
+        borderRadius: 4, boxShadow: '0 10px 40px rgba(15,23,42,0.10)', color: 'var(--text)', boxSizing: 'border-box',
       }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.2, color: '#6B7280', textTransform: 'uppercase' }}>{org?.name}</div>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.2, color: 'var(--text3)', textTransform: 'uppercase' }}>{org?.name}</div>
         <h1 style={{ margin: '8px 0 0', fontSize: 26, fontWeight: 900, letterSpacing: -0.6 }}>Medication and allergy list</h1>
-        <div style={{ fontSize: 12.5, color: '#6B7280', marginTop: 6 }}>
+        <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 6 }}>
           {scopeLabel}
           {todaySessions?.length > 0 && ` · ${todaySessions.map(s => s.title).join(', ')}`}
         </div>
@@ -72,16 +72,16 @@ export default function MedicalPrintSheet({ org, rows, scopeLabel, todaySessions
         <div style={{ height: 1, background: '#E5E7EB', margin: '20px 0 4px' }} />
 
         {rows.length === 0 ? (
-          <div style={{ padding: '30px 0', fontSize: 13, color: '#6B7280' }}>Nobody in this list.</div>
+          <div style={{ padding: '30px 0', fontSize: 13, color: 'var(--text3)' }}>Nobody in this list.</div>
         ) : rows.map(({ child, flags, tier }) => (
           <div className="ls-med-row" key={child.id} style={{
-            padding: '14px 0', borderBottom: '1px solid #F3F4F6',
+            padding: '14px 0', borderBottom: '1px solid var(--border-soft)',
             borderLeft: tier === 1 ? '3px solid #B91C1C' : 'none',
             paddingLeft: tier === 1 ? 11 : 0,
           }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 15.5, fontWeight: 900 }}>{child.first_name} {child.last_name}</span>
-              {child.group_name && <span style={{ fontSize: 11.5, color: '#6B7280', fontWeight: 700 }}>{child.group_name}</span>}
+              {child.group_name && <span style={{ fontSize: 11.5, color: 'var(--text3)', fontWeight: 700 }}>{child.group_name}</span>}
               {tier === 1 && (
                 <span style={{ fontSize: 10, fontWeight: 900, color: '#B91C1C', letterSpacing: 0.5, textTransform: 'uppercase' }}>
                   {TIERS[1].label}
@@ -110,7 +110,7 @@ export default function MedicalPrintSheet({ org, rows, scopeLabel, todaySessions
           </div>
         ))}
 
-        <div style={{ marginTop: 26, paddingTop: 12, borderTop: '1px solid #E5E7EB', fontSize: 11, color: '#6B7280', lineHeight: 1.6 }}>
+        <div style={{ marginTop: 26, paddingTop: 12, borderTop: '1px solid var(--border)', fontSize: 11, color: 'var(--text3)', lineHeight: 1.6 }}>
           Printed {format(new Date(), 'd MMMM yyyy, HH:mm')} · {rows.length} {rows.length === 1 ? 'person' : 'people'}.
           {' '}Information is only as current as the records it came from — check the app if anything here looks wrong.
         </div>

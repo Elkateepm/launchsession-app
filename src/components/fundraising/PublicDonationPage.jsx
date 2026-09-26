@@ -73,7 +73,7 @@ export default function PublicDonationPage() {
         {/* org */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 22 }}>
           {page.org_logo_url
-            ? <img src={page.org_logo_url} alt="" style={{ width: 40, height: 40, borderRadius: 11, objectFit: 'contain', background: '#fff', padding: 4, boxSizing: 'border-box' }} />
+            ? <img src={page.org_logo_url} alt="" style={{ width: 40, height: 40, borderRadius: 11, objectFit: 'contain', background: 'var(--surface)', padding: 4, boxSizing: 'border-box' }} />
             : <div style={{
                 width: 40, height: 40, borderRadius: 11, background: brand,
                 display: 'grid', placeItems: 'center', color: '#fff', fontWeight: 800, fontSize: 16,
@@ -101,7 +101,7 @@ export default function PublicDonationPage() {
 
         {/* progress */}
         <div style={{
-          background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 16,
+          background: 'var(--surface)', border: `1px solid ${BORDER}`, borderRadius: 16,
           padding: '18px 18px 16px', marginBottom: 22,
         }}>
           <div style={{ fontSize: 25, fontWeight: 800, color: TEXT, marginBottom: 3 }}>
@@ -151,7 +151,7 @@ export default function PublicDonationPage() {
               inputMode="decimal"
               style={{
                 width: '100%', padding: '14px 14px 14px 32px', borderRadius: 12, fontSize: 16,
-                border: `1.5px solid ${custom ? brand : BORDER}`, background: '#fff',
+                border: `1.5px solid ${custom ? brand : BORDER}`, background: 'var(--surface)',
                 color: TEXT, outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
               }}
             />
@@ -192,7 +192,7 @@ export default function PublicDonationPage() {
         <div style={{ marginTop: 26 }}>
           <SectionTitle>Payment</SectionTitle>
           <div style={{
-            background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 16,
+            background: 'var(--surface)', border: `1px solid ${BORDER}`, borderRadius: 16,
             padding: '20px 18px', textAlign: 'center',
           }}>
             <div style={{ fontSize: 15.5, fontWeight: 800, color: TEXT, marginBottom: 6 }}>
@@ -254,7 +254,7 @@ function Check({ checked, onToggle, children, brand, disabled }) {
         width: '100%', display: 'flex', alignItems: 'flex-start', gap: 11, textAlign: 'left',
         padding: '13px 14px', borderRadius: 12, cursor: disabled ? 'not-allowed' : 'pointer',
         fontFamily: 'inherit', opacity: disabled ? 0.5 : 1,
-        border: `1px solid ${checked ? brand : BORDER}`, background: '#fff',
+        border: `1px solid ${checked ? brand : BORDER}`, background: 'var(--surface)',
       }}
     >
       <div style={{

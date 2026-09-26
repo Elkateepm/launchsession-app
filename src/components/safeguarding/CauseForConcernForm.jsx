@@ -11,7 +11,7 @@ function Toggle({ checked, onChange, label, sublabel }) {
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
       <div onClick={() => onChange(!checked)} style={{ width: 44, height: 26, borderRadius: 13, background: checked ? '#EF4444' : '#D1D5DB', cursor: 'pointer', position: 'relative', flexShrink: 0, transition: 'background 0.2s', marginTop: 2 }}>
-        <div style={{ position: 'absolute', top: 3, left: checked ? 21 : 3, width: 20, height: 20, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+        <div style={{ position: 'absolute', top: 3, left: checked ? 21 : 3, width: 20, height: 20, borderRadius: '50%', background: 'var(--surface)', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
       </div>
       <div>
         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{label}</div>

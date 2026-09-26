@@ -22,7 +22,7 @@ const fmtRange = (a, b) => {
 }
 
 const card = (extra = {}) => ({
-  background: '#fff', border: '1px solid #E2E8F0', borderRadius: 16,
+  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16,
   boxShadow: '0 4px 16px -12px rgba(15,23,42,0.18)', ...extra,
 })
 
@@ -223,9 +223,9 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
   if (loading) {
     return (
       <div style={{ padding: isMobile ? 16 : 28 }}>
-        <div style={{ height: 28, width: 240, background: '#F1F5F9', borderRadius: 8, marginBottom: 12 }} />
-        <div style={{ height: 14, width: 180, background: '#F1F5F9', borderRadius: 8, marginBottom: 24 }} />
-        {[0, 1, 2].map(i => <div key={i} style={{ height: 90, background: '#F8FAFC', border: '1px solid #F1F5F9', borderRadius: 16, marginBottom: 12 }} />)}
+        <div style={{ height: 28, width: 240, background: 'var(--surface-hover)', borderRadius: 8, marginBottom: 12 }} />
+        <div style={{ height: 14, width: 180, background: 'var(--surface-hover)', borderRadius: 8, marginBottom: 24 }} />
+        {[0, 1, 2].map(i => <div key={i} style={{ height: 90, background: 'var(--surface2)', border: '1px solid var(--border-soft)', borderRadius: 16, marginBottom: 12 }} />)}
       </div>
     )
   }
@@ -233,7 +233,7 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
   if (!project) {
     return (
       <div style={{ padding: 40, textAlign: 'center' }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}>Project not found</div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 8 }}>Project not found</div>
         <button onClick={onBack} style={btnGhost}><Icon name="←" /> Back to Sessions</button>
       </div>
     )
@@ -253,8 +253,8 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
             <>
               <div onClick={() => setShowMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 10380 }} />
               <div style={{
-                position: 'absolute', top: '110%', right: 0, zIndex: 10390, background: '#fff', borderRadius: 12,
-                boxShadow: '0 12px 32px rgba(15,23,42,0.18)', border: '1px solid #E2E8F0', minWidth: 180, overflow: 'hidden',
+                position: 'absolute', top: '110%', right: 0, zIndex: 10390, background: 'var(--surface)', borderRadius: 12,
+                boxShadow: '0 12px 32px rgba(15,23,42,0.18)', border: '1px solid var(--border)', minWidth: 180, overflow: 'hidden',
               }}>
                 <button onClick={() => { setShowMenu(false); setShowEdit(true) }} style={menuItemStyle}>Edit project</button>
                 <button onClick={() => { setShowMenu(false); setShowDuplicate(true) }} style={menuItemStyle}>Duplicate project</button>
@@ -308,7 +308,7 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
           {todayDay && (
             <button onClick={() => onNavigate && onNavigate('registers', { sessionId: todayDay.id, returnTo: 'projects', projectId })}
               style={{
-                padding: '12px 22px', borderRadius: 12, border: 'none', background: '#fff', color: '#5B21B6',
+                padding: '12px 22px', borderRadius: 12, border: 'none', background: 'var(--surface)', color: '#5B21B6',
                 fontSize: 13.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
                 boxShadow: '0 8px 20px -8px rgba(0,0,0,0.4)',
               }}>
@@ -321,7 +321,7 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
       {/* ── Tabs ── */}
       <div style={{
         display: 'inline-flex', gap: 3, marginBottom: 18, padding: 4, borderRadius: 13,
-        background: '#F1F5F9', border: '1px solid #E2E8F0', overflowX: 'auto',
+        background: 'var(--surface-hover)', border: '1px solid var(--border)', overflowX: 'auto',
         WebkitOverflowScrolling: 'touch', maxWidth: '100%',
       }}>
         {TABS.map(t => {
@@ -361,8 +361,8 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
           {todayDay && (
             <div style={card({ padding: 18, marginBottom: 14, border: '1.5px solid #BBF7D0', background: 'linear-gradient(180deg,#F0FDF4,#fff)' })}>
               <div style={{ fontSize: 11, fontWeight: 800, color: '#15803D', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6 }}>Today</div>
-              <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>{todayDay.title}</div>
-              <div style={{ fontSize: 12.5, color: '#64748B', fontWeight: 600, margin: '3px 0 10px' }}>
+              <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)' }}>{todayDay.title}</div>
+              <div style={{ fontSize: 12.5, color: 'var(--text3)', fontWeight: 600, margin: '3px 0 10px' }}>
                 {todayDay.start_time}{todayDay.end_time ? `–${todayDay.end_time}` : ''}{todayDay.location ? ` · ${todayDay.location}` : ''}
               </div>
               <DayCounts counts={countsFor(todayDay.id)} />
@@ -375,9 +375,9 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
           {/* Up next */}
           {nextDay && (
             <div style={card({ padding: 18, marginBottom: 14 })}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6 }}>Up next</div>
-              <div style={{ fontSize: 15.5, fontWeight: 800, color: '#0F172A' }}>{nextDay.title}</div>
-              <div style={{ fontSize: 12.5, color: '#64748B', fontWeight: 600, margin: '3px 0 10px' }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6 }}>Up next</div>
+              <div style={{ fontSize: 15.5, fontWeight: 800, color: 'var(--text)' }}>{nextDay.title}</div>
+              <div style={{ fontSize: 12.5, color: 'var(--text3)', fontWeight: 600, margin: '3px 0 10px' }}>
                 {fmtDay(nextDay.session_date)} · {nextDay.start_time}{nextDay.end_time ? `–${nextDay.end_time}` : ''}{nextDay.location ? ` · ${nextDay.location}` : ''}
               </div>
               <DayCounts counts={countsFor(nextDay.id)} />
@@ -409,10 +409,10 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
             <div style={card({ padding: 18, marginBottom: 14 })}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                 <div>
-                  <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>
+                  <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>
                     {projectReflection ? 'Project reflection complete' : 'This project has finished'}
                   </div>
-                  <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 3 }}>
+                  <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 3 }}>
                     {projectReflection
                       ? 'You can update it any time.'
                       : 'Capture what worked while it\u2019s fresh — the numbers are filled in for you.'}
@@ -431,11 +431,11 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
           <div style={{ minWidth: 0 }}>
           {/* Needs attention */}
           <div style={card({ padding: 18, marginBottom: 14 })}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>Needs attention</div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>Needs attention</div>
             {attentionItems.length === 0 ? (
               <div style={{ padding: '18px 0', textAlign: 'center' }}>
                 <div style={{ fontSize: 14, fontWeight: 800, color: '#15803D' }}><Icon name="✓" /> Everything is ready</div>
-                <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 3 }}>No outstanding actions for this project.</div>
+                <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 3 }}>No outstanding actions for this project.</div>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
@@ -520,8 +520,8 @@ function ScheduleTab({ days, countsFor, reflections, raLinked, isMobile, onNavig
   if (days.length === 0) {
     return (
       <div style={card({ padding: 40, textAlign: 'center' })}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>No project days yet</div>
-        <div style={{ fontSize: 13, color: '#64748B' }}>Build the schedule for this project.</div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>No project days yet</div>
+        <div style={{ fontSize: 13, color: 'var(--text3)' }}>Build the schedule for this project.</div>
       </div>
     )
   }
@@ -542,7 +542,7 @@ function ScheduleTab({ days, countsFor, reflections, raLinked, isMobile, onNavig
     <div>
       {weeks.map((w, wi) => (
         <div key={w.key} style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>
             Week {wi + 1}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -556,17 +556,17 @@ function ScheduleTab({ days, countsFor, reflections, raLinked, isMobile, onNavig
               return (
                 <div key={d.id} style={card({ padding: 14, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' })}>
                   <div style={{ minWidth: 78 }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase' }}>Day {d.project_day_number || '—'}</div>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{fmtDay(d.session_date)}</div>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase' }}>Day {d.project_day_number || '—'}</div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{fmtDay(d.session_date)}</div>
                   </div>
                   <div style={{ flex: 1, minWidth: 160 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>{d.title}</span>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{d.title}</span>
                       {isTrip && <span style={{ fontSize: 10, fontWeight: 800, color: '#1D4ED8', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 99, padding: '2px 8px' }}>Trip</span>}
                       {st === 'completed' && <span style={{ fontSize: 10, fontWeight: 800, color: '#15803D', background: '#DCFCE7', borderRadius: 99, padding: '2px 8px' }}><Icon name="✓" /> Completed</span>}
                       {st === 'today' && <span style={{ fontSize: 10, fontWeight: 800, color: '#15803D', background: '#DCFCE7', borderRadius: 99, padding: '2px 8px' }}>Today</span>}
                     </div>
-                    <div style={{ fontSize: 12, color: '#64748B', fontWeight: 600, marginTop: 2 }}>
+                    <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600, marginTop: 2 }}>
                       {(d.start_time || '').slice(0, 5)}{d.end_time ? `–${d.end_time.slice(0, 5)}` : ''}{d.location ? ` · ${d.location}` : ''} · {c.total} expected
                     </div>
                     {issues.length > 0 && (
@@ -606,8 +606,8 @@ function PeopleTab({ participants, days, attendance, isMobile, onAdd, onWithdraw
       <>
         <AddBar label="+ Add young person" onAdd={onAdd} />
         <div style={card({ padding: 40, textAlign: 'center' })}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>No young people added yet</div>
-          <div style={{ fontSize: 13, color: '#64748B' }}>Add participants so LaunchSession can prepare your daily registers.</div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>No young people added yet</div>
+          <div style={{ fontSize: 13, color: 'var(--text3)' }}>Add participants so LaunchSession can prepare your daily registers.</div>
         </div>
       </>
     )
@@ -616,7 +616,7 @@ function PeopleTab({ participants, days, attendance, isMobile, onAdd, onWithdraw
     <>
       <AddBar label="+ Add young person" onAdd={onAdd} />
       <div style={card({ padding: 16 })}>
-        <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>
+        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>
           {participants.filter(p => p.status === 'active').length} active young {participants.length === 1 ? 'person' : 'people'}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -628,22 +628,22 @@ function PeopleTab({ participants, days, attendance, isMobile, onAdd, onWithdraw
             const pct = totalDays > 0 ? Math.round((attended / totalDays) * 100) : 0
             const withdrawn = p.status !== 'active'
             return (
-              <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 11, border: '1px solid #F1F5F9', flexWrap: 'wrap', opacity: withdrawn ? 0.6 : 1 }}>
+              <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 11, border: '1px solid var(--border-soft)', flexWrap: 'wrap', opacity: withdrawn ? 0.6 : 1 }}>
                 <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#EDE9FE', color: '#5B21B6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, flexShrink: 0 }}>
                   {`${ch?.first_name?.[0] || ''}${ch?.last_name?.[0] || ''}`.toUpperCase()}
                 </div>
                 <div style={{ flex: 1, minWidth: 120 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{ch ? `${ch.first_name} ${ch.last_name}` : 'Unknown'}</div>
-                  <div style={{ fontSize: 11, color: '#94A3B8' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{ch ? `${ch.first_name} ${ch.last_name}` : 'Unknown'}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>
                     {attended} / {totalDays} days{absent > 0 ? ` · ${absent} absent` : ''}
                   </div>
                 </div>
                 {withdrawn && (
-                  <span style={{ fontSize: 10, fontWeight: 800, color: '#64748B', background: '#F1F5F9', borderRadius: 99, padding: '2px 8px' }}>{p.status.replace('_', ' ')}</span>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3)', background: 'var(--surface-hover)', borderRadius: 99, padding: '2px 8px' }}>{p.status.replace('_', ' ')}</span>
                 )}
                 {!withdrawn && <span style={{ fontSize: 12, fontWeight: 800, color: pct >= 75 ? '#15803D' : pct >= 50 ? '#B45309' : '#B91C1C' }}>{pct}%</span>}
                 <button onClick={() => withdrawn ? onReactivate(p) : onWithdraw(p)} style={{
-                  background: 'none', border: '1px solid #E2E8F0', borderRadius: 8, padding: '4px 9px', fontSize: 11, fontWeight: 700,
+                  background: 'none', border: '1px solid var(--border)', borderRadius: 8, padding: '4px 9px', fontSize: 11, fontWeight: 700,
                   color: withdrawn ? '#15803D' : '#B91C1C', cursor: 'pointer',
                 }}>{withdrawn ? 'Reactivate' : 'Withdraw'}</button>
               </div>
@@ -661,8 +661,8 @@ function TeamTab({ team, staffProfiles, onAdd, onRemove, onToggleLead }) {
       <>
         <AddBar label="+ Add team member" onAdd={onAdd} />
         <div style={card({ padding: 40, textAlign: 'center' })}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>No project team yet</div>
-          <div style={{ fontSize: 13, color: '#64748B' }}>Add a default team and every project day will inherit it.</div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>No project team yet</div>
+          <div style={{ fontSize: 13, color: 'var(--text3)' }}>Add a default team and every project day will inherit it.</div>
         </div>
       </>
     )
@@ -671,11 +671,11 @@ function TeamTab({ team, staffProfiles, onAdd, onRemove, onToggleLead }) {
     <>
       <AddBar label="+ Add team member" onAdd={onAdd} />
       <div style={card({ padding: 16 })}>
-        <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>{team.length} team {team.length === 1 ? 'member' : 'members'}</div>
+        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>{team.length} team {team.length === 1 ? 'member' : 'members'}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {team.map(t => (
-            <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '9px 10px', borderRadius: 11, border: '1px solid #F1F5F9', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>
+            <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '9px 10px', borderRadius: 11, border: '1px solid var(--border-soft)', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>
                 {t.user_id ? (staffProfiles[t.user_id] || 'Team member') : 'Volunteer'}
               </span>
               <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -683,8 +683,8 @@ function TeamTab({ team, staffProfiles, onAdd, onRemove, onToggleLead }) {
                   fontSize: 10, fontWeight: 800, borderRadius: 99, padding: '2px 8px', cursor: 'pointer', border: 'none',
                   color: t.is_lead ? '#5B21B6' : '#94A3B8', background: t.is_lead ? '#F5F3FF' : '#F1F5F9',
                 }}>{t.is_lead ? 'Lead' : 'Make lead'}</button>
-                <span style={{ fontSize: 11, color: '#64748B', fontWeight: 600 }}>{t.role}</span>
-                <button onClick={() => onRemove(t)} style={{ background: 'none', border: '1px solid #E2E8F0', borderRadius: 8, padding: '4px 9px', fontSize: 11, fontWeight: 700, color: '#B91C1C', cursor: 'pointer' }}>Remove</button>
+                <span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600 }}>{t.role}</span>
+                <button onClick={() => onRemove(t)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 8, padding: '4px 9px', fontSize: 11, fontWeight: 700, color: '#B91C1C', cursor: 'pointer' }}>Remove</button>
               </span>
             </div>
           ))}
@@ -713,7 +713,7 @@ function Metric({ value, label, icon, tone = 'purple' }) {
     }}>
       {icon && <div style={{ fontSize: 15, marginBottom: 6 }}>{icon}</div>}
       <div style={{ fontSize: 23, fontWeight: 900, color: t.fg, letterSpacing: -0.5, lineHeight: 1 }}>{value}</div>
-      <div style={{ fontSize: 11.5, fontWeight: 700, color: '#64748B', marginTop: 4 }}>{label}</div>
+      <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text3)', marginTop: 4 }}>{label}</div>
     </div>
   )
 }
@@ -721,9 +721,9 @@ function Metric({ value, label, icon, tone = 'purple' }) {
 function DayCounts({ counts }) {
   return (
     <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-      <span style={{ fontSize: 12.5, color: '#64748B' }}><b style={{ color: '#0F172A' }}>{counts.total}</b> expected</span>
-      {counts.signedIn > 0 && <span style={{ fontSize: 12.5, color: '#64748B' }}><b style={{ color: '#15803D' }}>{counts.signedIn}</b> signed in</span>}
-      {counts.absent > 0 && <span style={{ fontSize: 12.5, color: '#64748B' }}><b style={{ color: '#B91C1C' }}>{counts.absent}</b> absent</span>}
+      <span style={{ fontSize: 12.5, color: 'var(--text3)' }}><b style={{ color: 'var(--text)' }}>{counts.total}</b> expected</span>
+      {counts.signedIn > 0 && <span style={{ fontSize: 12.5, color: 'var(--text3)' }}><b style={{ color: '#15803D' }}>{counts.signedIn}</b> signed in</span>}
+      {counts.absent > 0 && <span style={{ fontSize: 12.5, color: 'var(--text3)' }}><b style={{ color: '#B91C1C' }}>{counts.absent}</b> absent</span>}
     </div>
   )
 }
@@ -757,10 +757,10 @@ const btnPrimary = {
   fontSize: 13, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
 }
 const btnGhost = {
-  padding: '9px 16px', borderRadius: 11, border: '1.5px solid #E2E8F0',
-  background: '#fff', color: '#334155', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+  padding: '9px 16px', borderRadius: 11, border: '1.5px solid var(--border)',
+  background: 'var(--surface)', color: 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
 }
 const menuItemStyle = {
-  display: 'block', width: '100%', textAlign: 'left', padding: '11px 14px', border: 'none', background: '#fff',
-  fontSize: 13, fontWeight: 700, color: '#334155', cursor: 'pointer',
+  display: 'block', width: '100%', textAlign: 'left', padding: '11px 14px', border: 'none', background: 'var(--surface)',
+  fontSize: 13, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer',
 }

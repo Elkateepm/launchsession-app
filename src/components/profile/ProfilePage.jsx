@@ -18,12 +18,12 @@ function EditFieldModal({ label, value, onClose, onSave }) {
   const [saving, setSaving] = useState(false)
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 400, padding: 24, boxShadow: '0 24px 60px rgba(0,0,0,0.2)' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 16, width: '100%', maxWidth: 400, padding: 24, boxShadow: '0 24px 60px rgba(0,0,0,0.2)' }}>
         <div style={{ fontSize: 16, fontWeight: 800, color: '#111', marginBottom: 16 }}>Change {label}</div>
         <input autoFocus value={val} onChange={e => setVal(e.target.value)}
-          style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', marginBottom: 16 }} />
+          style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', marginBottom: 16 }} />
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: 10, borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>Cancel</button>
+          <button onClick={onClose} style={{ flex: 1, padding: 10, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>Cancel</button>
           <button onClick={async () => { setSaving(true); await onSave(val); setSaving(false); onClose() }}
             style={{ flex: 2, padding: 10, borderRadius: 8, border: 'none', background: '#4F6EF7', color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>
             {saving ? 'Saving...' : 'Save'}
@@ -40,7 +40,7 @@ function ChangePasswordModal({ onClose }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
-  const inp = { width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', marginBottom: 12 }
+  const inp = { width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', marginBottom: 12 }
 
   const handleSave = async () => {
     if (newPw !== confirm) { setError('Passwords do not match.'); return }
@@ -54,14 +54,14 @@ function ChangePasswordModal({ onClose }) {
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 400, padding: 24, boxShadow: '0 24px 60px rgba(0,0,0,0.2)' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 16, width: '100%', maxWidth: 400, padding: 24, boxShadow: '0 24px 60px rgba(0,0,0,0.2)' }}>
         <div style={{ fontSize: 16, fontWeight: 800, color: '#111', marginBottom: 16 }}>Change Password</div>
         {error && <div style={{ background: '#FEF2F2', borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontSize: 13, color: '#DC2626', fontWeight: 600 }}>{error}</div>}
         {success && <div style={{ background: '#F0FDF4', borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontSize: 13, color: '#15803D', fontWeight: 600 }}><Icon name="✓" /> Password updated!</div>}
         <input style={inp} type="password" placeholder="New password (min. 8 chars)" value={newPw} onChange={e => setNewPw(e.target.value)} />
         <input style={{ ...inp, marginBottom: 16 }} type="password" placeholder="Confirm new password" value={confirm} onChange={e => setConfirm(e.target.value)} />
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: 10, borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>Cancel</button>
+          <button onClick={onClose} style={{ flex: 1, padding: 10, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>Cancel</button>
           <button onClick={handleSave} disabled={saving} style={{ flex: 2, padding: 10, borderRadius: 8, border: 'none', background: '#4F6EF7', color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>
             {saving ? 'Updating...' : 'Update Password'}
           </button>
@@ -132,14 +132,14 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
   ]
 
   const InfoRow = ({ icon, label, value, actionLabel, onAction }) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px', borderBottom: '1px solid #f3f4f6' }}>
-      <div style={{ width: 36, height: 36, borderRadius: 10, background: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{icon}</div>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px', borderBottom: '1px solid var(--border-soft)' }}>
+      <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--surface2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{icon}</div>
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 12, color: '#9ca3af', fontWeight: 500 }}>{label}</div>
+        <div style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 500 }}>{label}</div>
         <div style={{ fontSize: 14, fontWeight: 600, color: value ? '#111' : '#d1d5db', marginTop: 1 }}>{value || 'Not set'}</div>
       </div>
       {onAction && (
-        <button onClick={onAction} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: '#374151', flexShrink: 0 }}>{actionLabel || 'Change'}</button>
+        <button onClick={onAction} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: 'var(--text2)', flexShrink: 0 }}>{actionLabel || 'Change'}</button>
       )}
     </div>
   )
@@ -150,7 +150,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isMobile ? 0 : 24 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: isMobile ? 0 : 20, width: '100%', maxWidth: isMobile ? '100%' : 860, height: isMobile ? '100%' : 'auto', maxHeight: isMobile ? '100%' : '90vh', overflow: 'hidden', display: 'flex', flexDirection: isMobile ? 'column' : 'row', boxShadow: '0 32px 80px rgba(0,0,0,0.25)' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: isMobile ? 0 : 20, width: '100%', maxWidth: isMobile ? '100%' : 860, height: isMobile ? '100%' : 'auto', maxHeight: isMobile ? '100%' : '90vh', overflow: 'hidden', display: 'flex', flexDirection: isMobile ? 'column' : 'row', boxShadow: '0 32px 80px rgba(0,0,0,0.25)' }}>
 
         {/* LEFT SIDEBAR */}
         <div style={{ width: isMobile ? '100%' : 260, background: '#fafafa', borderRight: isMobile ? 'none' : '1px solid #f0f0f0', borderBottom: isMobile ? '1px solid #f0f0f0' : 'none', display: 'flex', flexDirection: 'column', flexShrink: 0, maxHeight: isMobile ? '40vh' : 'none', overflowY: isMobile ? 'auto' : 'visible' }}>
@@ -168,7 +168,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
               <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoUpload} />
             </div>
             <div style={{ fontSize: 16, fontWeight: 800, color: '#111' }}>{profile?.full_name || 'Your Name'}</div>
-            <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>{role.label}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 2 }}>{role.label}</div>
             <div style={{ marginTop: 6, display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: role.color, background: role.light, borderRadius: 20, padding: '3px 10px' }}>{role.badge}</span>
             </div>
@@ -176,13 +176,13 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
 
           {/* Org info */}
           <div style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, background: '#fff', border: '1px solid #f0f0f0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, background: 'var(--surface)', border: '1px solid #f0f0f0' }}>
               {org?.logo_url
                 ? <img src={org.logo_url} alt="" style={{ width: 28, height: 28, borderRadius: 6, objectFit: 'contain' }} />
                 : <div style={{ width: 28, height: 28, borderRadius: 6, background: primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: '#fff' }}>{(org?.name || 'O')[0]}</div>}
               <div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>{org?.name || 'Organisation'}</div>
-                <div style={{ fontSize: 10, color: '#9ca3af', textTransform: 'capitalize' }}>{org?.plan || 'Starter'} Plan</div>
+                <div style={{ fontSize: 10, color: 'var(--text-faint)', textTransform: 'capitalize' }}>{org?.plan || 'Starter'} Plan</div>
               </div>
             </div>
           </div>
@@ -194,7 +194,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
                 <span style={{ fontSize: 16, width: 24, textAlign: 'center' }}><Icon name={n.icon} /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: activeSection === n.key ? '#4F6EF7' : '#374151' }}>{n.label}</div>
-                  <div style={{ fontSize: 11, color: '#9ca3af' }}>{n.sub}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{n.sub}</div>
                 </div>
                 {activeSection === n.key && <span style={{ color: '#4F6EF7', fontSize: 16 }}>›</span>}
               </button>
@@ -216,12 +216,12 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
         {/* RIGHT CONTENT */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {/* Header */}
-          <div style={{ padding: '20px 28px 16px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexShrink: 0 }}>
+          <div style={{ padding: '20px 28px 16px', borderBottom: '1px solid var(--border-soft)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexShrink: 0 }}>
             <div>
               <div style={{ fontSize: 20, fontWeight: 800, color: '#111' }}>{NAV.find(n => n.key === activeSection)?.label}</div>
-              <div style={{ fontSize: 13, color: '#9ca3af', marginTop: 2 }}>Manage your personal information and account details.</div>
+              <div style={{ fontSize: 13, color: 'var(--text-faint)', marginTop: 2 }}>Manage your personal information and account details.</div>
             </div>
-            <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', flexShrink: 0 }}>×</button>
+            <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-faint)', flexShrink: 0 }}>×</button>
           </div>
 
           {/* Content */}
@@ -229,8 +229,8 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
 
             {activeSection === 'profile' && (
               <div>
-                <div style={{ background: '#fff', border: '1px solid #f0f0f0', borderRadius: 16, overflow: 'hidden', marginBottom: 16 }}>
-                  <div style={{ padding: '14px 20px', borderBottom: '1px solid #f3f4f6', fontSize: 13, fontWeight: 700, color: '#374151' }}>Personal Information</div>
+                <div style={{ background: 'var(--surface)', border: '1px solid #f0f0f0', borderRadius: 16, overflow: 'hidden', marginBottom: 16 }}>
+                  <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-soft)', fontSize: 13, fontWeight: 700, color: 'var(--text2)' }}>Personal Information</div>
                   <InfoRow icon="✉️" label="Email address" value={userEmail} />
                   <InfoRow icon="👤" label="Full name" value={profile?.full_name} onAction={() => setEditField({ field: 'full_name', label: 'Full Name', value: profile?.full_name })} />
                   <InfoRow icon="📱" label="Phone number" value={profile?.phone} onAction={() => setEditField({ field: 'phone', label: 'Phone Number', value: profile?.phone })} />
@@ -249,8 +249,8 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
 
             {activeSection === 'security' && (
               <div>
-                <div style={{ background: '#fff', border: '1px solid #f0f0f0', borderRadius: 16, overflow: 'hidden', marginBottom: 16 }}>
-                  <div style={{ padding: '14px 20px', borderBottom: '1px solid #f3f4f6', fontSize: 13, fontWeight: 700, color: '#374151' }}>Account Security</div>
+                <div style={{ background: 'var(--surface)', border: '1px solid #f0f0f0', borderRadius: 16, overflow: 'hidden', marginBottom: 16 }}>
+                  <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-soft)', fontSize: 13, fontWeight: 700, color: 'var(--text2)' }}>Account Security</div>
                   <InfoRow icon="🔒" label="Password" value="Last changed recently" onAction={() => setShowPassword(true)} actionLabel="Update" />
                   <InfoRow icon="🛡️" label="Two-factor authentication" value="Not enabled" onAction={() => {}} actionLabel="Enable" />
                 </div>
@@ -275,8 +275,8 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
                     </div>
                   </div>
                 )}
-                <div style={{ background: '#fff', border: '1px solid #f0f0f0', borderRadius: 16, overflow: 'hidden' }}>
-                  <div style={{ padding: '14px 20px', borderBottom: '1px solid #f3f4f6', fontSize: 13, fontWeight: 700, color: '#374151' }}>DBS Check</div>
+                <div style={{ background: 'var(--surface)', border: '1px solid #f0f0f0', borderRadius: 16, overflow: 'hidden' }}>
+                  <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-soft)', fontSize: 13, fontWeight: 700, color: 'var(--text2)' }}>DBS Check</div>
                   <InfoRow icon="🪪" label="DBS Number" value={profile?.dbs_number} onAction={() => setEditField({ field: 'dbs_number', label: 'DBS Number', value: profile?.dbs_number })} />
                   <InfoRow icon="📅" label="Expiry Date" value={profile?.dbs_expiry} onAction={() => setEditField({ field: 'dbs_expiry', label: 'DBS Expiry Date', value: profile?.dbs_expiry })} />
                 </div>
@@ -284,8 +284,8 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
             )}
 
             {activeSection === 'emergency' && (
-              <div style={{ background: '#fff', border: '1px solid #f0f0f0', borderRadius: 16, overflow: 'hidden' }}>
-                <div style={{ padding: '14px 20px', borderBottom: '1px solid #f3f4f6', fontSize: 13, fontWeight: 700, color: '#374151' }}>Emergency Contact</div>
+              <div style={{ background: 'var(--surface)', border: '1px solid #f0f0f0', borderRadius: 16, overflow: 'hidden' }}>
+                <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-soft)', fontSize: 13, fontWeight: 700, color: 'var(--text2)' }}>Emergency Contact</div>
                 <InfoRow icon="👤" label="Contact Name" value={profile?.emergency_contact_name} onAction={() => setEditField({ field: 'emergency_contact_name', label: 'Emergency Contact Name', value: profile?.emergency_contact_name })} />
                 <InfoRow icon="📱" label="Contact Phone" value={profile?.emergency_contact_phone} onAction={() => setEditField({ field: 'emergency_contact_phone', label: 'Emergency Contact Phone', value: profile?.emergency_contact_phone })} />
               </div>
@@ -293,11 +293,11 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
           </div>
 
           {/* Footer */}
-          <div style={{ padding: '12px 28px', borderTop: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <div style={{ padding: '12px 28px', borderTop: '1px solid var(--border-soft)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
             {saved
               ? <span style={{ fontSize: 13, fontWeight: 700, color: '#10B981' }}><Icon name="✓" /> Saved!</span>
               : <div style={{ fontSize: 11, color: '#d1d5db' }}>LaunchSession · {role.badge} Account · {org?.name || ''}</div>}
-            <button onClick={onClose} style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: '#374151' }}>Close</button>
+            <button onClick={onClose} style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: 'var(--text2)' }}>Close</button>
           </div>
         </div>
       </div>

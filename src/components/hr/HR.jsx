@@ -15,17 +15,17 @@ const LEAVE_TYPES = [
   { key: 'sick',      label: 'Sick Leave',      icon: '🤒', color: '#EF4444' },
   { key: 'training',  label: 'Training',        icon: '📚', color: '#8B5CF6' },
   { key: 'toil',      label: 'TOIL',            icon: '⏰', color: '#F59E0B' },
-  { key: 'unpaid',    label: 'Unpaid',          icon: '💸', color: '#6B7280' },
-  { key: 'other',     label: 'Other',           icon: '📋', color: '#6B7280' },
+  { key: 'unpaid',    label: 'Unpaid',          icon: '💸', color: 'var(--text3)' },
+  { key: 'other',     label: 'Other',           icon: '📋', color: 'var(--text3)' },
 ]
 const DBS_STATUS = {
   clear:    { label: 'Clear',    color: '#16A34A', bg: '#F0FDF4' },
   pending:  { label: 'Pending',  color: '#F59E0B', bg: '#FFFBEB' },
   expired:  { label: 'Expired',  color: '#DC2626', bg: '#FEF2F2' },
-  none:     { label: 'None',     color: '#6B7280', bg: '#F9FAFB' },
+  none:     { label: 'None',     color: 'var(--text3)', bg: '#F9FAFB' },
 }
-const inp = { width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, fontFamily: 'inherit', outline: 'none' }
-const label = { fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }
+const inp = { width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'inherit', outline: 'none' }
+const label = { fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }
 const today = new Date()
 
 function initials(name) {
@@ -38,8 +38,8 @@ function AccountBadge({ status }) {
   const cfg = {
     active:   { label: 'Active login',   color: '#16A34A', bg: '#F0FDF4' },
     pending:  { label: 'Invite pending', color: '#D97706', bg: '#FFFBEB' },
-    none:     { label: 'Not invited',    color: '#6B7280', bg: '#F9FAFB' },
-  }[status] || { label: 'Not invited', color: '#6B7280', bg: '#F9FAFB' }
+    none:     { label: 'Not invited',    color: 'var(--text3)', bg: '#F9FAFB' },
+  }[status] || { label: 'Not invited', color: 'var(--text3)', bg: '#F9FAFB' }
   return <span style={{ background: cfg.bg, color: cfg.color, borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800, whiteSpace: 'nowrap' }}>{cfg.label}</span>
 }
 
@@ -86,16 +86,16 @@ function KpiCard({ icon, label: lbl, value, color, sub, onClick, active }) {
       onClick={onClick}
       whileHover={{ y: -3, boxShadow: '0 8px 20px rgba(0,0,0,0.08)' }}
       style={{
-        background: '#fff', borderRadius: 16, padding: '16px 18px',
+        background: 'var(--surface)', borderRadius: 16, padding: '16px 18px',
         border: `1.5px solid ${active ? (color || '#8B5CF6') : '#e5e7eb'}`,
         cursor: onClick ? 'pointer' : 'default', minWidth: 0,
       }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <span style={{ fontSize: 18 }}>{icon}</span>
-        <span style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.3 }}>{lbl}</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.3 }}>{lbl}</span>
       </div>
       <div style={{ fontSize: 26, fontWeight: 900, color: color || '#111827', lineHeight: 1 }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 4 }}>{sub}</div>}
+      {sub && <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 4 }}>{sub}</div>}
     </motion.div>
   )
 }
@@ -212,10 +212,10 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
         transition={{ type: 'spring', damping: 32, stiffness: 300 }}
         style={{
           position: 'fixed', top: 0, right: 0, bottom: 0, width: isMobile ? '100%' : 480,
-          background: '#fff', zIndex: 61, overflowY: 'auto', boxShadow: '-8px 0 30px rgba(0,0,0,0.15)',
+          background: 'var(--surface)', zIndex: 61, overflowY: 'auto', boxShadow: '-8px 0 30px rgba(0,0,0,0.15)',
           padding: isMobile ? '18px 16px 40px' : '26px 28px 40px',
         }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#6B7280', fontWeight: 700, fontSize: 13, cursor: 'pointer', marginBottom: 16, padding: 0 }}><Icon name="✕" /> Close</button>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text3)', fontWeight: 700, fontSize: 13, cursor: 'pointer', marginBottom: 16, padding: 0 }}><Icon name="✕" /> Close</button>
 
         <div style={{ background: `linear-gradient(135deg, var(--org-a10), var(--org-a05))`, border: `1px solid var(--org-a20)`, borderRadius: 20, padding: '20px 22px', marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
@@ -225,7 +225,7 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
               </div>
               <div>
                 <div style={{ fontSize: 19, fontWeight: 900 }}>{staff.full_name}</div>
-                <div style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>{staff.role} · {staff.contract_type}</div>
+                <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>{staff.role} · {staff.contract_type}</div>
                 <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
                   <span style={{ background: dbs.bg, color: dbs.color, borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800 }}><Icon name="🔍" /> DBS: {dbs.label}</span>
                   {staff.is_active === false && <span style={{ background: '#FEF2F2', color: '#DC2626', borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800 }}>Inactive</span>}
@@ -233,19 +233,19 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
                 </div>
               </div>
             </div>
-            <button onClick={() => setEditing(!editing)} style={{ padding: '7px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+            <button onClick={() => setEditing(!editing)} style={{ padding: '7px 14px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
               {editing ? '✕ Cancel' : '✏️ Edit'}
             </button>
           </div>
           <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
-            <button onClick={toggleActive} style={{ padding: '7px 12px', borderRadius: 9, border: '1.5px solid #e5e7eb', background: '#fff', fontSize: 11, fontWeight: 700, color: '#374151', cursor: 'pointer' }}>
+            <button onClick={toggleActive} style={{ padding: '7px 12px', borderRadius: 9, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 11, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>
               {staff.is_active === false ? '✓ Mark Active' : '⏸ Mark Inactive'}
             </button>
           </div>
         </div>
 
         {editing && (
-          <div style={{ background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: 14, padding: 16, marginBottom: 20 }}>
+          <div style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, padding: 16, marginBottom: 20 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
               <div><label style={label}>Full Name</label><input value={editForm.full_name || ''} onChange={e => setEditForm(f => ({ ...f, full_name: e.target.value }))} style={inp} /></div>
               <div><label style={label}>Role</label><select value={editForm.role || ''} onChange={e => setEditForm(f => ({ ...f, role: e.target.value }))} style={inp}>{ROLES.map(r => <option key={r}>{r}</option>)}</select></div>
@@ -260,12 +260,12 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
             </div>
             <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
               <button onClick={saveEdit} disabled={saving} style={{ padding: '9px 22px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>{saving ? 'Saving...' : 'Save Changes'}</button>
-              <button onClick={() => setEditing(false)} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => setEditing(false)} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
             </div>
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid #e5e7eb', marginBottom: 20 }}>
+        <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--border)', marginBottom: 20 }}>
           {[['profile', '📋 Profile'], ['leave', '🏖️ Leave'], ['account', '🔐 Account'], ['access', '🔑 Access']].map(([key, lbl]) => (
             <button key={key} onClick={() => setActiveTab(key)} style={{ padding: '10px 16px', border: 'none', borderBottom: `2.5px solid ${activeTab === key ? primary : 'transparent'}`, background: 'transparent', color: activeTab === key ? primary : '#6B7280', fontWeight: activeTab === key ? 800 : 500, fontSize: 13, cursor: 'pointer' }}>
               {lbl}
@@ -275,15 +275,15 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
 
         {activeTab === 'profile' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ background: '#F9FAFB', borderRadius: 14, padding: 16 }}>
+            <div style={{ background: 'var(--surface2)', borderRadius: 14, padding: 16 }}>
               <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 10 }}>Contact Info</div>
               {[['Email', staff.email], ['Phone', staff.phone], ['Role', staff.role], ['Contract', staff.contract_type]].map(([k, v]) => (
-                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #E5E7EB', fontSize: 13 }}>
-                  <span style={{ color: '#6B7280' }}>{k}</span><span style={{ fontWeight: 600 }}>{v || '—'}</span>
+                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
+                  <span style={{ color: 'var(--text3)' }}>{k}</span><span style={{ fontWeight: 600 }}>{v || '—'}</span>
                 </div>
               ))}
             </div>
-            <div style={{ background: '#F9FAFB', borderRadius: 14, padding: 16 }}>
+            <div style={{ background: 'var(--surface2)', borderRadius: 14, padding: 16 }}>
               <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 10 }}>Compliance</div>
               {[
                 ['DBS Status', <span style={{ color: dbs.color, fontWeight: 800 }}>{dbs.label}</span>],
@@ -292,15 +292,15 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
                 ['Leave Allowance', `${staff.leave_allowance || 28} days`],
                 ['Annual Used', `${annualLeave} days`],
               ].map(([k, v]) => (
-                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #E5E7EB', fontSize: 13 }}>
-                  <span style={{ color: '#6B7280' }}>{k}</span><span style={{ fontWeight: 600 }}>{v}</span>
+                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
+                  <span style={{ color: 'var(--text3)' }}>{k}</span><span style={{ fontWeight: 600 }}>{v}</span>
                 </div>
               ))}
             </div>
             {staff.notes && (
               <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 14, padding: 16 }}>
                 <div style={{ fontSize: 12, fontWeight: 800, color: '#92400E', marginBottom: 6 }}><Icon name="📝" /> Notes</div>
-                <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.6 }}>{staff.notes}</div>
+                <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6 }}>{staff.notes}</div>
               </div>
             )}
           </div>
@@ -330,18 +330,18 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
               </div>
             )}
             {leaveLog.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 30, background: '#F9FAFB', borderRadius: 12, color: '#9CA3AF' }}>No leave records yet</div>
+              <div style={{ textAlign: 'center', padding: 30, background: 'var(--surface2)', borderRadius: 12, color: 'var(--text-faint)' }}>No leave records yet</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {leaveLog.map(leave => {
                   const typeCfg = LEAVE_TYPES.find(t => t.key === leave.type) || LEAVE_TYPES[5]
                   return (
-                    <div key={leave.id} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div key={leave.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
                       <span style={{ fontSize: 18 }}><Icon name={typeCfg.icon} /></span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 700 }}>{typeCfg.label}</div>
-                        <div style={{ fontSize: 12, color: '#6B7280' }}>{format(new Date(leave.start_date), 'd MMM')} – {format(new Date(leave.end_date), 'd MMM yyyy')} · {leave.days} day{leave.days !== 1 ? 's' : ''}</div>
-                        {leave.notes && <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{leave.notes}</div>}
+                        <div style={{ fontSize: 12, color: 'var(--text3)' }}>{format(new Date(leave.start_date), 'd MMM')} – {format(new Date(leave.end_date), 'd MMM yyyy')} · {leave.days} day{leave.days !== 1 ? 's' : ''}</div>
+                        {leave.notes && <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 2 }}>{leave.notes}</div>}
                       </div>
                       <span style={{ background: typeCfg.color + '15', color: typeCfg.color, borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800 }}>{leave.days}d</span>
                     </div>
@@ -356,7 +356,7 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
           accountStatus === 'active' && accountProfile ? (
             <MemberAccess member={{ ...accountProfile, full_name: staff.full_name }} org={org} viewerRole={viewerRole} showToast={showToast} />
           ) : (
-            <div style={{ background: '#F9FAFB', borderRadius: 14, padding: 18, fontSize: 13, color: '#6B7280', lineHeight: 1.7 }}>
+            <div style={{ background: 'var(--surface2)', borderRadius: 14, padding: 18, fontSize: 13, color: 'var(--text3)', lineHeight: 1.7 }}>
               Module access applies to a LaunchSession login. Invite {staff.full_name} from the Account tab first,
               and their access can be set here once they've signed in.
             </div>
@@ -365,12 +365,12 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
 
         {activeTab === 'account' && (
           <div>
-            <div style={{ background: '#F9FAFB', borderRadius: 14, padding: 18, marginBottom: 16 }}>
+            <div style={{ background: 'var(--surface2)', borderRadius: 14, padding: 18, marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                 <div style={{ fontSize: 13, fontWeight: 800 }}>LaunchSession Login</div>
                 <AccountBadge status={accountStatus} />
               </div>
-              <div style={{ fontSize: 13, color: '#6B7280', lineHeight: 1.6, marginBottom: 14 }}>
+              <div style={{ fontSize: 13, color: 'var(--text3)', lineHeight: 1.6, marginBottom: 14 }}>
                 {accountStatus === 'active' && 'This person already has an active LaunchSession account and can sign in.'}
                 {accountStatus === 'pending' && 'An invite has been sent — they haven\'t set their password yet.'}
                 {accountStatus === 'none' && 'This person has no LaunchSession login yet. Send them an invite so they can sign in, view their sessions and record their own DBS/training documents.'}
@@ -382,7 +382,7 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
                     <option value="staff">Staff</option>
                     <option value="admin">Admin (full access)</option>
                   </select>
-                  <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 8 }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 8 }}>
                     {accountProfile.role === 'admin'
                       ? 'This person has full admin access — Team & Staff, Settings, Branding, HR and Templates.'
                       : 'Staff can use the day-to-day tools but not manage the team, settings or HR records.'}
@@ -470,12 +470,12 @@ function AddStaffModal({ org, onClose, onAdded, showToast }) {
         initial={{ opacity: 0, y: 20, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.97 }}
         style={{
           position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 71,
-          background: '#fff', borderRadius: 20, padding: isMobile ? 20 : 26, width: isMobile ? '92%' : 560,
+          background: 'var(--surface)', borderRadius: 20, padding: isMobile ? 20 : 26, width: isMobile ? '92%' : 560,
           maxHeight: '86vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
         }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
           <div style={{ fontSize: 17, fontWeight: 900 }}><Icon name="🧑‍💼" /> Add Staff Member</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#6B7280' }}><Icon name="✕" /></button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: 'var(--text3)' }}><Icon name="✕" /></button>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 16 }}>
@@ -496,7 +496,7 @@ function AddStaffModal({ org, onClose, onAdded, showToast }) {
           </label>
           {sendInvite && (
             <div>
-              <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 10, lineHeight: 1.5 }}>They'll get a branded email to set a password and sign in. Requires an email address above.</div>
+              <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10, lineHeight: 1.5 }}>They'll get a branded email to set a password and sign in. Requires an email address above.</div>
               <label style={label}>ACCOUNT ROLE</label>
               <select value={accountRole} onChange={e => setAccountRole(e.target.value)} style={inp}>
                 {ACCOUNT_ROLES.map(r => <option key={r} value={r}>{r === 'admin' ? 'Admin (full access)' : 'Staff'}</option>)}
@@ -507,7 +507,7 @@ function AddStaffModal({ org, onClose, onAdded, showToast }) {
 
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={submit} disabled={saving || !form.full_name} style={{ padding: '11px 24px', borderRadius: 10, border: 'none', background: saving || !form.full_name ? '#9CA3AF' : primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>{saving ? 'Adding…' : '+ Add Staff'}</button>
-          <button onClick={onClose} style={{ padding: '11px 18px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+          <button onClick={onClose} style={{ padding: '11px 18px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
         </div>
       </motion.div>
     </>
@@ -682,11 +682,11 @@ export default function HR({ org, session, userProfile }) {
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14, marginBottom: 4 }}>
           <div>
             <div style={{ fontSize: 24, fontWeight: 900 }}><Icon name="🧑‍💼" /> HR Centre</div>
-            <div style={{ fontSize: 13, color: '#6B7280', marginTop: 4 }}>Manage your staff, compliance and leave — all in one place.</div>
+            <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 4 }}>Manage your staff, compliance and leave — all in one place.</div>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <motion.button whileHover={{ y: -2 }} onClick={() => setShowAdd(true)} style={{ padding: '10px 20px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>+ Add Staff Member</motion.button>
-            <motion.button whileHover={{ y: -2 }} onClick={exportCsv} style={{ padding: '10px 18px', borderRadius: 12, border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}><Icon name="⬇️" /> Export</motion.button>
+            <motion.button whileHover={{ y: -2 }} onClick={exportCsv} style={{ padding: '10px 18px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}><Icon name="⬇️" /> Export</motion.button>
           </div>
         </div>
       </div>
@@ -703,25 +703,25 @@ export default function HR({ org, session, userProfile }) {
 
       {/* Overview + Quick actions + Upcoming */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: 14, marginBottom: 20 }}>
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 18 }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 18 }}>
           <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 2 }}>Team Overview</div>
-          <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 14 }}>A snapshot of your team</div>
+          <div style={{ fontSize: 12, color: 'var(--text-faint)', marginBottom: 14 }}>A snapshot of your team</div>
           {staff.length === 0 ? (
-            <div style={{ color: '#9CA3AF', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>No staff yet</div>
+            <div style={{ color: 'var(--text-faint)', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>No staff yet</div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <div style={{ position: 'relative', flexShrink: 0 }}>
                 <Donut segments={donutSegments} size={120} thickness={16} />
                 <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', textAlign: 'center' }}>
                   <div style={{ fontSize: 22, fontWeight: 900 }}>{staff.length}</div>
-                  <div style={{ fontSize: 10, color: '#9CA3AF' }}>Total</div>
+                  <div style={{ fontSize: 10, color: 'var(--text-faint)' }}>Total</div>
                 </div>
               </div>
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {donutSegments.map(seg => (
                   <div key={seg.label} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
                     <span style={{ width: 8, height: 8, borderRadius: 4, background: seg.color, flexShrink: 0 }} />
-                    <span style={{ color: '#6B7280', flex: 1 }}>{seg.label}</span>
+                    <span style={{ color: 'var(--text3)', flex: 1 }}>{seg.label}</span>
                     <span style={{ fontWeight: 800 }}>{seg.value}</span>
                   </div>
                 ))}
@@ -730,9 +730,9 @@ export default function HR({ org, session, userProfile }) {
           )}
         </div>
 
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 18 }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 18 }}>
           <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 2 }}><Icon name="⚡" /> Quick Actions</div>
-          <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 14 }}>Common HR tasks</div>
+          <div style={{ fontSize: 12, color: 'var(--text-faint)', marginBottom: 14 }}>Common HR tasks</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {[
               { icon: '➕', label: 'Add Staff', sub: 'Invite or add', onClick: () => setShowAdd(true) },
@@ -740,28 +740,28 @@ export default function HR({ org, session, userProfile }) {
               { icon: '↻', label: 'Resend All', sub: `${pendingInvites.length} pending`, onClick: resendAllPending },
               { icon: '🔄', label: 'Refresh', sub: 'Reload data', onClick: load },
             ].map(a => (
-              <motion.button key={a.label} whileHover={{ y: -2, backgroundColor: '#F9FAFB' }} onClick={a.onClick}
-                style={{ textAlign: 'left', padding: '12px 12px', borderRadius: 12, border: '1px solid #e5e7eb', background: '#fff', cursor: 'pointer' }}>
+              <motion.button key={a.label} whileHover={{ y: -2, backgroundColor: 'var(--surface2)' }} onClick={a.onClick}
+                style={{ textAlign: 'left', padding: '12px 12px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer' }}>
                 <div style={{ fontSize: 18, marginBottom: 4 }}><Icon name={a.icon} /></div>
                 <div style={{ fontSize: 12, fontWeight: 800 }}>{a.label}</div>
-                <div style={{ fontSize: 10, color: '#9CA3AF' }}>{a.sub}</div>
+                <div style={{ fontSize: 10, color: 'var(--text-faint)' }}>{a.sub}</div>
               </motion.button>
             ))}
           </div>
         </div>
 
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 18 }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 18 }}>
           <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 2 }}><Icon name="📅" /> Upcoming</div>
-          <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 14 }}>DBS renewals &amp; leave, next 90 days</div>
+          <div style={{ fontSize: 12, color: 'var(--text-faint)', marginBottom: 14 }}>DBS renewals &amp; leave, next 90 days</div>
           {upcoming.length === 0 ? (
-            <div style={{ color: '#9CA3AF', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>Nothing coming up</div>
+            <div style={{ color: 'var(--text-faint)', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>Nothing coming up</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 180, overflowY: 'auto' }}>
               {upcoming.map(item => (
                 <div key={item.key} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
                   <span style={{ background: item.color + '18', color: item.color, borderRadius: 7, padding: '2px 8px', fontSize: 10, fontWeight: 800, flexShrink: 0 }}>{item.chip}</span>
-                  <span style={{ flex: 1, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
-                  <span style={{ color: '#9CA3AF', flexShrink: 0 }}>{item.days === 0 ? 'Today' : `${item.days}d`}</span>
+                  <span style={{ flex: 1, color: 'var(--text2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
+                  <span style={{ color: 'var(--text-faint)', flexShrink: 0 }}>{item.days === 0 ? 'Today' : `${item.days}d`}</span>
                 </div>
               ))}
             </div>
@@ -771,7 +771,7 @@ export default function HR({ org, session, userProfile }) {
 
       {/* Filters */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search staff..." style={{ flex: 1, minWidth: 180, padding: '8px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 13, fontFamily: 'inherit', outline: 'none' }} />
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search staff..." style={{ flex: 1, minWidth: 180, padding: '8px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 13, fontFamily: 'inherit', outline: 'none' }} />
         {filterChips.map(([k, l]) => (
           <button key={k} onClick={() => setFilter(k)} style={{ padding: '8px 14px', borderRadius: 99, border: `1.5px solid ${filter === k ? primary : '#e5e7eb'}`, background: filter === k ? primary + '12' : '#fff', color: filter === k ? primary : '#6B7280', fontSize: 12, fontWeight: filter === k ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{l}</button>
         ))}
@@ -779,12 +779,12 @@ export default function HR({ org, session, userProfile }) {
 
       {/* Staff table */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 40, color: '#9CA3AF' }}>Loading staff...</div>
+        <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-faint)' }}>Loading staff...</div>
       ) : filtered.length === 0 ? (
-        <div style={{ padding: 60, textAlign: 'center', background: '#F9FAFB', borderRadius: 16, border: '1.5px dashed #e5e7eb' }}>
+        <div style={{ padding: 60, textAlign: 'center', background: 'var(--surface2)', borderRadius: 16, border: '1.5px dashed var(--border)' }}>
           <div style={{ fontSize: 48, marginBottom: 12 }}><Icon name="🚀" /></div>
           <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 6 }}>{staff.length === 0 ? 'Build your dream team' : 'No matching staff'}</div>
-          <div style={{ fontSize: 14, color: '#9CA3AF', marginBottom: 20 }}>{staff.length === 0 ? 'Invite your first staff member to begin managing your workforce.' : 'Try a different filter or search term.'}</div>
+          <div style={{ fontSize: 14, color: 'var(--text-faint)', marginBottom: 20 }}>{staff.length === 0 ? 'Invite your first staff member to begin managing your workforce.' : 'Try a different filter or search term.'}</div>
           {staff.length === 0 && <button onClick={() => setShowAdd(true)} style={{ padding: '11px 24px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>+ Add First Staff Member</button>}
         </div>
       ) : isMobile ? (
@@ -793,11 +793,11 @@ export default function HR({ org, session, userProfile }) {
             const dbs = DBS_STATUS[member.dbs_status || 'none']
             const dbsExpiring = member.dbs_expiry && differenceInDays(new Date(member.dbs_expiry), today) < 90 && differenceInDays(new Date(member.dbs_expiry), today) >= 0
             return (
-              <div key={member.id} onClick={() => setSelected(member)} style={{ background: '#fff', border: `1px solid ${dbsExpiring ? '#FDE68A' : '#e5e7eb'}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div key={member.id} onClick={() => setSelected(member)} style={{ background: 'var(--surface)', border: `1px solid ${dbsExpiring ? '#FDE68A' : '#e5e7eb'}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 40, height: 40, borderRadius: 10, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: primary, flexShrink: 0 }}>{initials(member.full_name)}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 800 }}>{member.full_name}</div>
-                  <div style={{ fontSize: 11, color: '#6B7280' }}>{member.role}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text3)' }}>{member.role}</div>
                   <span style={{ background: dbs.bg, color: dbs.color, borderRadius: 7, padding: '2px 7px', fontSize: 10, fontWeight: 800, display: 'inline-block', marginTop: 4 }}><Icon name="🔍" /> {dbs.label}</span>
                 </div>
                 <AccountBadge status={getAccountStatus(member)} />
@@ -806,8 +806,8 @@ export default function HR({ org, session, userProfile }) {
           })}
         </div>
       ) : (
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr 0.9fr 0.9fr 1.2fr', gap: 8, padding: '12px 18px', background: '#F9FAFB', borderBottom: '1px solid #e5e7eb', fontSize: 11, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.3, position: 'sticky', top: 0, zIndex: 1 }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr 0.9fr 0.9fr 1.2fr', gap: 8, padding: '12px 18px', background: 'var(--surface2)', borderBottom: '1px solid var(--border)', fontSize: 11, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.3, position: 'sticky', top: 0, zIndex: 1 }}>
             <div>Staff Member</div><div>Role</div><div>Contract</div><div>DBS</div><div>Status</div><div>Login</div>
           </div>
           {filtered.map(member => {
@@ -816,16 +816,16 @@ export default function HR({ org, session, userProfile }) {
             const onLeave = onLeaveTodayIds.has(member.id)
             return (
               <motion.div key={member.id} onClick={() => setSelected(member)} whileHover={{ backgroundColor: '#FAFAFA' }}
-                style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr 0.9fr 0.9fr 1.2fr', gap: 8, alignItems: 'center', padding: '12px 18px', borderBottom: '1px solid #F3F4F6', cursor: 'pointer' }}>
+                style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr 0.9fr 0.9fr 1.2fr', gap: 8, alignItems: 'center', padding: '12px 18px', borderBottom: '1px solid var(--border-soft)', cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                   <div style={{ width: 38, height: 38, borderRadius: 10, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: primary, flexShrink: 0 }}>{initials(member.full_name)}</div>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 13.5, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.full_name}</div>
-                    <div style={{ fontSize: 11, color: '#9CA3AF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.email || 'No email'}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.email || 'No email'}</div>
                   </div>
                 </div>
-                <div style={{ fontSize: 12.5, color: '#374151' }}>{member.role}</div>
-                <div style={{ fontSize: 12.5, color: '#374151' }}>{member.contract_type}</div>
+                <div style={{ fontSize: 12.5, color: 'var(--text2)' }}>{member.role}</div>
+                <div style={{ fontSize: 12.5, color: 'var(--text2)' }}>{member.contract_type}</div>
                 <div>
                   <span style={{ background: dbs.bg, color: dbs.color, borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800, whiteSpace: 'nowrap' }}>{dbs.label}</span>
                   {dbsExpiring && <div style={{ fontSize: 10, color: '#DC2626', fontWeight: 700, marginTop: 2 }}><Icon name="⚠️" /> Expiring</div>}

@@ -25,7 +25,7 @@ function statusTone(status) {
 function StatCard({ label, value, sub, prefix = '' }) {
   return (
     <div style={{
-      background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 16,
+      background: 'var(--surface)', border: `1px solid ${LS.border}`, borderRadius: 16,
       padding: '15px 16px', minWidth: 0,
     }}>
       <div style={{ fontSize: 11.5, fontWeight: 700, color: LS.muted, letterSpacing: 0.3, marginBottom: 5 }}>
@@ -178,7 +178,7 @@ export default function DonationsLedger({ org, isAdmin, campaigns = [], onChange
             placeholder="Search supporter, campaign or reference…"
             style={{
               width: '100%', padding: '11px 13px 11px 34px', borderRadius: 11, fontSize: 14,
-              border: `1px solid ${LS.border}`, background: '#fff', color: LS.text,
+              border: `1px solid ${LS.border}`, background: 'var(--surface)', color: LS.text,
               outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
             }}
           />
@@ -221,7 +221,7 @@ export default function DonationsLedger({ org, isAdmin, campaigns = [], onChange
           onChange={e => setCampaignFilter(e.target.value)}
           style={{
             padding: '7px 11px', borderRadius: 999, fontSize: 12.5, fontWeight: 700,
-            border: `1px solid ${LS.border}`, background: '#fff',
+            border: `1px solid ${LS.border}`, background: 'var(--surface)',
             color: campaignFilter === 'all' ? LS.muted : LS.text,
             fontFamily: 'inherit', cursor: 'pointer', flexShrink: 0,
           }}
@@ -235,7 +235,7 @@ export default function DonationsLedger({ org, isAdmin, campaigns = [], onChange
           onChange={e => setMethodFilter(e.target.value)}
           style={{
             padding: '7px 11px', borderRadius: 999, fontSize: 12.5, fontWeight: 700,
-            border: `1px solid ${LS.border}`, background: '#fff',
+            border: `1px solid ${LS.border}`, background: 'var(--surface)',
             color: methodFilter === 'all' ? LS.muted : LS.text,
             fontFamily: 'inherit', cursor: 'pointer', flexShrink: 0,
           }}
@@ -254,7 +254,7 @@ export default function DonationsLedger({ org, isAdmin, campaigns = [], onChange
 
       {empty && (
         <div style={{
-          padding: '48px 24px', textAlign: 'center', background: '#fff',
+          padding: '48px 24px', textAlign: 'center', background: 'var(--surface)',
           border: `1px solid ${LS.border}`, borderRadius: 16,
         }}>
           <div style={{
@@ -280,7 +280,7 @@ export default function DonationsLedger({ org, isAdmin, campaigns = [], onChange
 
       {!loading && !empty && filtered.length === 0 && (
         <div style={{
-          padding: '34px 24px', textAlign: 'center', background: '#fff',
+          padding: '34px 24px', textAlign: 'center', background: 'var(--surface)',
           border: `1px solid ${LS.border}`, borderRadius: 16, color: LS.muted, fontSize: 14,
         }}>
           No donations match these filters.
@@ -299,7 +299,7 @@ export default function DonationsLedger({ org, isAdmin, campaigns = [], onChange
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2, delay: Math.min(i * 0.015, 0.2) }}
                   style={{
-                    background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 14,
+                    background: 'var(--surface)', border: `1px solid ${LS.border}`, borderRadius: 14,
                     padding: '13px 14px',
                   }}
                 >
@@ -335,7 +335,7 @@ export default function DonationsLedger({ org, isAdmin, campaigns = [], onChange
           </div>
         ) : (
           <div style={{
-            background: '#fff', border: `1px solid ${LS.border}`,
+            background: 'var(--surface)', border: `1px solid ${LS.border}`,
             borderRadius: 16, overflow: 'hidden',
           }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>

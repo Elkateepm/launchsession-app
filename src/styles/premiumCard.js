@@ -59,7 +59,7 @@ export function premiumSolidHeroStyle(primary, opts = {}) {
 export function premiumStatCardStyle(accent = '#111827', opts = {}) {
   const { radius = 14, padding = '12px 14px' } = opts
   return {
-    background: '#fff',
+    background: 'var(--surface)',
     borderRadius: radius,
     padding,
     border: '1px solid #EEF0F3',

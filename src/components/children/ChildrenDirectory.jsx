@@ -260,18 +260,18 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
 
   const Row = ({ label, value }) => value ? (
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '6px 0', fontSize: 12.5 }}>
-      <span style={{ color: '#64748B' }}>{label}</span><span style={{ fontWeight: 700, color: '#0F172A', textAlign: 'right' }}>{value}</span>
+      <span style={{ color: 'var(--text3)' }}>{label}</span><span style={{ fontWeight: 700, color: 'var(--text)', textAlign: 'right' }}>{value}</span>
     </div>
   ) : null
 
   return (
-    <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E3E8F0', padding: isMobile ? 16 : 22 }}>
+    <div style={{ background: 'var(--surface)', borderRadius: 16, border: '1px solid #E3E8F0', padding: isMobile ? 16 : 22 }}>
 
       <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap' }}>
         <Avatar name={`${child.first_name} ${child.last_name}`} photoUrl={child.photo_url} size={56} />
         <div style={{ flex: 1, minWidth: 200 }}>
-          <div style={{ fontSize: 19, fontWeight: 900, color: '#0F172A' }}>{child.first_name} {child.last_name}</div>
-          <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
+          <div style={{ fontSize: 19, fontWeight: 900, color: 'var(--text)' }}>{child.first_name} {child.last_name}</div>
+          <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>
             {age(child.date_of_birth) != null && `Age ${age(child.date_of_birth)} · `}
             {child.date_of_birth && `DOB ${new Date(child.date_of_birth).toLocaleDateString('en-GB')} · `}
             {groupLabel || 'Ungrouped'}
@@ -287,7 +287,7 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 10, marginBottom: 18 }}>
         <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 12, padding: 12 }}>
           <div style={{ fontSize: 11.5, fontWeight: 800, color: '#B91C1C', marginBottom: 6 }}><Icon name="❤️" /> Medical alerts</div>
-          {medicalAlerts(child).length === 0 ? <div style={{ fontSize: 11.5, color: '#94A3B8' }}>None recorded</div> : (
+          {medicalAlerts(child).length === 0 ? <div style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>None recorded</div> : (
             <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 6 }}>
               {medicalAlerts(child).map(ch => <span key={ch.label} style={{ fontSize: 10.5, fontWeight: 800, color: ch.color, background: ch.bg, borderRadius: 99, padding: '2px 8px' }}>{ch.label}</span>)}
             </div>
@@ -308,18 +308,18 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
         {/* About */}
-        <div style={{ background: '#F8FAFC', borderRadius: 14, padding: 16 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}><Icon name="👤" /> About</div>
+        <div style={{ background: 'var(--surface2)', borderRadius: 14, padding: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}><Icon name="👤" /> About</div>
           <Row label="School / Setting" value={child.school} />
           <Row label="SEN" value={child.sen} />
           <Row label="Membership" value={child.is_walk_in ? 'Walk-in' : 'Standard'} />
-          {child.notes && <div style={{ fontSize: 12, color: '#334155', marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(15,23,42,0.06)' }}>{child.notes}</div>}
+          {child.notes && <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(15,23,42,0.06)' }}>{child.notes}</div>}
         </div>
 
         {/* Contacts */}
-        <div style={{ background: '#F8FAFC', borderRadius: 14, padding: 16 }}>
+        <div style={{ background: 'var(--surface2)', borderRadius: 14, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A' }}><Icon name="📞" /> Contacts</div>
+            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)' }}><Icon name="📞" /> Contacts</div>
             {!editingContact && (
               <button onClick={() => setEditingContact(true)} style={{ background: 'none', border: 'none', color: primary, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}><Icon name="✏️" /> Edit</button>
             )}
@@ -328,14 +328,14 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
             <div>
               {[['parent_name', 'Parent / carer name', 'text'], ['parent_phone', 'Phone', 'text'], ['parent_email', 'Email', 'email']].map(([key, lbl, type]) => (
                 <div key={key} style={{ marginBottom: 8 }}>
-                  <label style={{ fontSize: 10.5, fontWeight: 700, color: '#94A3B8', display: 'block', marginBottom: 3 }}>{lbl}</label>
+                  <label style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text-faint)', display: 'block', marginBottom: 3 }}>{lbl}</label>
                   <input type={type} value={contact[key]} onChange={e => setContact(c => ({ ...c, [key]: e.target.value }))}
-                    style={{ width: '100%', boxSizing: 'border-box', padding: '7px 10px', borderRadius: 8, border: '1.5px solid #E2E8F0', fontSize: 12.5, outline: 'none' }} />
+                    style={{ width: '100%', boxSizing: 'border-box', padding: '7px 10px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 12.5, outline: 'none' }} />
                 </div>
               ))}
               <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                 <button onClick={() => { setContact({ parent_name: child.parent_name || '', parent_phone: child.parent_phone || '', parent_email: child.parent_email || '' }); setEditingContact(false) }}
-                  style={{ flex: 1, padding: '7px 0', borderRadius: 8, border: '1px solid #E2E8F0', background: '#fff', color: '#64748B', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                  style={{ flex: 1, padding: '7px 0', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
                 <button onClick={saveContact} disabled={savingContact}
                   style={{ flex: 1, padding: '7px 0', borderRadius: 8, border: 'none', background: primary, color: '#fff', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>{savingContact ? 'Saving…' : 'Save'}</button>
               </div>
@@ -356,14 +356,14 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
         </div>
 
         {/* Consents */}
-        <div style={{ background: '#F8FAFC', borderRadius: 14, padding: 16 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}><Icon name="✅" /> Permissions & Consents</div>
+        <div style={{ background: 'var(--surface2)', borderRadius: 14, padding: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)', marginBottom: 8 }}><Icon name="✅" /> Permissions & Consents</div>
           {CONSENT_TYPES.map(t => {
             const rec = consentRec[t.key]
             const granted = rec?.status === 'granted'
             return (
               <div key={t.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0' }}>
-                <span style={{ fontSize: 12.5, color: '#334155' }}>{t.label}</span>
+                <span style={{ fontSize: 12.5, color: 'var(--text2)' }}>{t.label}</span>
                 <button onClick={() => toggleConsent(t.key)} disabled={savingConsent === t.key}
                   style={{ fontSize: 11, fontWeight: 800, borderRadius: 99, padding: '3px 10px', border: 'none', cursor: 'pointer', color: granted ? '#15803D' : '#94A3B8', background: granted ? '#DCFCE7' : '#F1F5F9' }}>
                   {savingConsent === t.key ? '…' : granted ? '✓ Granted' : 'Not granted'}
@@ -374,27 +374,27 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
         </div>
 
         {/* Medical & Safety */}
-        <div style={{ background: '#F8FAFC', borderRadius: 14, padding: 16 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}><Icon name="🩹" /> Medical & Safety</div>
+        <div style={{ background: 'var(--surface2)', borderRadius: 14, padding: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}><Icon name="🩹" /> Medical & Safety</div>
           <Row label="Allergies" value={child.allergies} />
           <Row label="Medical notes" value={child.medical_notes} />
           <Row label="Medication" value={child.medication_details} />
         </div>
 
         {/* Session Notes */}
-        <div style={{ background: '#F8FAFC', borderRadius: 14, padding: 16 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}><Icon name="📝" /> Session Notes</div>
-          {notes.length === 0 ? <div style={{ fontSize: 12, color: '#94A3B8' }}>No notes recorded yet.</div> : notes.map(n => (
+        <div style={{ background: 'var(--surface2)', borderRadius: 14, padding: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)', marginBottom: 8 }}><Icon name="📝" /> Session Notes</div>
+          {notes.length === 0 ? <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>No notes recorded yet.</div> : notes.map(n => (
             <div key={n.id} style={{ padding: '7px 0', borderTop: '1px solid rgba(15,23,42,0.06)' }}>
-              <div style={{ fontSize: 11.5, color: '#334155' }}>{n.content}</div>
-              <div style={{ fontSize: 10, color: '#94A3B8', marginTop: 2 }}>{new Date(n.created_at).toLocaleDateString('en-GB')}</div>
+              <div style={{ fontSize: 11.5, color: 'var(--text2)' }}>{n.content}</div>
+              <div style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 2 }}>{new Date(n.created_at).toLocaleDateString('en-GB')}</div>
             </div>
           ))}
         </div>
 
         {/* Session Summary */}
-        <div style={{ background: '#F8FAFC', borderRadius: 14, padding: 16 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}><Icon name="📊" /> Session Summary</div>
+        <div style={{ background: 'var(--surface2)', borderRadius: 14, padding: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}><Icon name="📊" /> Session Summary</div>
           <Row label="Total attended" value={signedInCount} />
           <Row label="Absences" value={absenceCount} />
           {latestAtt && <Row label="Last activity" value={new Date(latestAtt.created_at).toLocaleDateString('en-GB')} />}
@@ -432,8 +432,8 @@ function AddChildQuickModal({ org, onClose, onAdded }) {
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: 24, width: '100%', maxWidth: 420, maxHeight: '85vh', overflowY: 'auto' }}>
-        <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A', marginBottom: 14 }}>Add young person</div>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 20, padding: 24, width: '100%', maxWidth: 420, maxHeight: '85vh', overflowY: 'auto' }}>
+        <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)', marginBottom: 14 }}>Add young person</div>
         {[
           ['first_name', 'First name *'], ['last_name', 'Last name'], ['date_of_birth', 'Date of birth', 'date'],
           ['group_name', 'Group'], ['school', 'School'], ['parent_name', 'Parent / carer name'], ['parent_phone', 'Parent / carer phone'],
@@ -465,22 +465,22 @@ function OnSiteTab({ children, latestAttByChild, groupLabel, primary, org, authU
 
   return (
     <div style={glass({ padding: 0, overflow: 'hidden' })}>
-      <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 15, color: '#0F172A' }}>
+      <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 15, color: 'var(--text)' }}>
         {onSite.length} young {onSite.length === 1 ? 'person' : 'people'} currently on site
       </div>
       {onSite.length === 0 ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>Nobody is currently signed in anywhere.</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-faint)', fontSize: 13 }}>Nobody is currently signed in anywhere.</div>
       ) : onSite.map(c => {
         const att = latestAttByChild[c.id]
         return (
           <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.05)' }}>
             <Avatar name={`${c.first_name} ${c.last_name}`} photoUrl={c.photo_url} size={36} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{c.first_name} {c.last_name}</div>
-              <div style={{ fontSize: 11, color: '#94A3B8' }}>{groupLabel(c.group_name) || 'Ungrouped'} · Signed in {att?.signed_in_at ? new Date(att.signed_in_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : ''}</div>
+              <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>{c.first_name} {c.last_name}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{groupLabel(c.group_name) || 'Ungrouped'} · Signed in {att?.signed_in_at ? new Date(att.signed_in_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : ''}</div>
             </div>
             {hasMedicalAlert(c) && <span style={{ fontSize: 9.5, fontWeight: 800, color: '#B91C1C', background: '#FEE2E2', borderRadius: 99, padding: '2px 8px' }}><Icon name="❤️" /> Alert</span>}
-            <button onClick={() => signOut(c.id)} style={{ padding: '7px 14px', borderRadius: 9, border: `1px solid var(--org-a20)`, background: '#fff', color: primary, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Sign out</button>
+            <button onClick={() => signOut(c.id)} style={{ padding: '7px 14px', borderRadius: 9, border: `1px solid var(--org-a20)`, background: 'var(--surface)', color: primary, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Sign out</button>
           </div>
         )
       })}
@@ -501,22 +501,22 @@ function GroupsTab({ children, orgGroups, latestAttByChild, primary, onSelectGro
           <div key={g.id || g.label} onClick={() => onSelectGroup(g.label)} style={{ ...glass({ padding: 18 }), cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
               <span style={{ width: 10, height: 10, borderRadius: '50%', background: g.color || primary }} />
-              <span style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>{g.label}</span>
+              <span style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>{g.label}</span>
             </div>
             <div style={{ fontSize: 22, fontWeight: 900, color: primary }}>{members.length}</div>
-            <div style={{ fontSize: 11.5, color: '#94A3B8' }}>young {members.length === 1 ? 'person' : 'people'}{onSiteCount > 0 ? ` · ${onSiteCount} on site` : ''}</div>
+            <div style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>young {members.length === 1 ? 'person' : 'people'}{onSiteCount > 0 ? ` · ${onSiteCount} on site` : ''}</div>
           </div>
         )
       })}
       {ungroupedCount > 0 && (
         <div onClick={() => onSelectGroup('')} style={{ ...glass({ padding: 18 }), cursor: 'pointer', opacity: 0.85 }}>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#64748B', marginBottom: 10 }}>Ungrouped</div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: '#94A3B8' }}>{ungroupedCount}</div>
-          <div style={{ fontSize: 11.5, color: '#94A3B8' }}>young {ungroupedCount === 1 ? 'person' : 'people'}</div>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text3)', marginBottom: 10 }}>Ungrouped</div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-faint)' }}>{ungroupedCount}</div>
+          <div style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>young {ungroupedCount === 1 ? 'person' : 'people'}</div>
         </div>
       )}
       {groups.length === 0 && ungroupedCount === 0 && (
-        <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#94A3B8', fontSize: 13 }}>No groups configured yet — set these up from Registers.</div>
+        <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: 'var(--text-faint)', fontSize: 13 }}>No groups configured yet — set these up from Registers.</div>
       )}
     </div>
   )
@@ -525,11 +525,11 @@ function GroupsTab({ children, orgGroups, latestAttByChild, primary, onSelectGro
 function ConsentsTab({ children, consentsByChild, groupLabel, primary, onOpenChild }) {
   return (
     <div style={glass({ padding: 0, overflow: 'hidden' })}>
-      <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 15, color: '#0F172A' }}>
+      <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 15, color: 'var(--text)' }}>
         {children.length} {children.length === 1 ? 'record needs' : 'records need'} consent follow-up
       </div>
       {children.length === 0 ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#94A3B8', fontSize: 13 }}><Icon name="✅" /> All consents are up to date.</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-faint)', fontSize: 13 }}><Icon name="✅" /> All consents are up to date.</div>
       ) : children.map(c => {
         const rec = consentsByChild[c.id] || {}
         const missing = CONSENT_TYPES.filter(t => rec[t.key]?.status !== 'granted')
@@ -537,8 +537,8 @@ function ConsentsTab({ children, consentsByChild, groupLabel, primary, onOpenChi
           <div key={c.id} onClick={() => onOpenChild(c.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer' }}>
             <Avatar name={`${c.first_name} ${c.last_name}`} photoUrl={c.photo_url} size={36} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{c.first_name} {c.last_name}</div>
-              <div style={{ fontSize: 11, color: '#94A3B8' }}>{groupLabel(c.group_name) || 'Ungrouped'}{c.parent_name ? ` · ${c.parent_name}` : ''}</div>
+              <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>{c.first_name} {c.last_name}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{groupLabel(c.group_name) || 'Ungrouped'}{c.parent_name ? ` · ${c.parent_name}` : ''}</div>
             </div>
             <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 220 }}>
               {missing.map(t => <span key={t.key} style={{ fontSize: 9.5, fontWeight: 800, color: '#7C3AED', background: '#EDE9FE', borderRadius: 99, padding: '2px 8px' }}>{t.label}</span>)}
@@ -554,17 +554,17 @@ function ConsentsTab({ children, consentsByChild, groupLabel, primary, onOpenChi
 function MedicalTab({ children, groupLabel, primary, onOpenChild }) {
   return (
     <div style={glass({ padding: 0, overflow: 'hidden' })}>
-      <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 15, color: '#0F172A' }}>
+      <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 15, color: 'var(--text)' }}>
         {children.length} {children.length === 1 ? 'record has' : 'records have'} a medical alert
       </div>
       {children.length === 0 ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>No medical alerts recorded.</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-faint)', fontSize: 13 }}>No medical alerts recorded.</div>
       ) : children.map(c => (
         <div key={c.id} onClick={() => onOpenChild(c.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer' }}>
           <Avatar name={`${c.first_name} ${c.last_name}`} photoUrl={c.photo_url} size={36} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{c.first_name} {c.last_name}</div>
-            <div style={{ fontSize: 11, color: '#94A3B8' }}>{groupLabel(c.group_name) || 'Ungrouped'}</div>
+            <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>{c.first_name} {c.last_name}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{groupLabel(c.group_name) || 'Ungrouped'}</div>
           </div>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 220 }}>
             {medicalAlerts(c).map(ch => <span key={ch.label} style={{ fontSize: 9.5, fontWeight: 800, color: ch.color, background: ch.bg, borderRadius: 99, padding: '2px 8px' }}>{ch.label}</span>)}
@@ -630,8 +630,8 @@ function RegistrationRequestsTab({ registrations, org, authUserId, primary, onRe
   }
 
   const Row = ({ label, value }) => value ? (
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '6px 0', fontSize: 12.5, borderBottom: '1px solid #F1F5F9' }}>
-      <span style={{ color: '#64748B' }}>{label}</span><span style={{ fontWeight: 700, color: '#0F172A', textAlign: 'right' }}>{String(value)}</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '6px 0', fontSize: 12.5, borderBottom: '1px solid var(--border-soft)' }}>
+      <span style={{ color: 'var(--text3)' }}>{label}</span><span style={{ fontWeight: 700, color: 'var(--text)', textAlign: 'right' }}>{String(value)}</span>
     </div>
   ) : null
 
@@ -643,12 +643,12 @@ function RegistrationRequestsTab({ registrations, org, authUserId, primary, onRe
           {pending.length} pending registration{pending.length === 1 ? '' : 's'}
         </div>
         {pending.length === 0 ? (
-          <div style={{ padding: 30, textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>No pending registrations.</div>
+          <div style={{ padding: 30, textAlign: 'center', color: 'var(--text-faint)', fontSize: 13 }}>No pending registrations.</div>
         ) : pending.map(r => (
           <div key={r.id} onClick={() => setOpenId(r.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: openId === r.id ? 'var(--org-a05)' : '#FFFBFA', borderLeft: '3px solid #FCA5A5' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{r.first_name} {r.last_name}</div>
-              <div style={{ fontSize: 11, color: '#94A3B8' }}>Submitted {new Date(r.submitted_at).toLocaleDateString('en-GB')} · {r.parent_name}</div>
+              <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>{r.first_name} {r.last_name}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>Submitted {new Date(r.submitted_at).toLocaleDateString('en-GB')} · {r.parent_name}</div>
             </div>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 800, color: '#B45309', background: '#FEF3C7', borderRadius: 99, padding: '2px 9px' }}>
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#D97706', animation: 'pulse-live 1.5s infinite', flexShrink: 0 }} />
@@ -658,7 +658,7 @@ function RegistrationRequestsTab({ registrations, org, authUserId, primary, onRe
         ))}
         {reviewed.length > 0 && (
           <>
-            <div style={{ padding: '10px 18px', fontSize: 11, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5, borderTop: '1px solid rgba(15,23,42,0.06)' }}>Reviewed</div>
+            <div style={{ padding: '10px 18px', fontSize: 11, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.5, borderTop: '1px solid rgba(15,23,42,0.06)' }}>Reviewed</div>
             {reviewed.slice(0, 20).map(r => (
               <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 18px', borderBottom: '1px solid rgba(15,23,42,0.05)' }}>
                 <div style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: '#475569' }}>{r.first_name} {r.last_name}</div>
@@ -671,8 +671,8 @@ function RegistrationRequestsTab({ registrations, org, authUserId, primary, onRe
 
       {open && (
         <div style={glass({ padding: 20 })}>
-          <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A', marginBottom: 4 }}>{open.first_name} {open.last_name}</div>
-          <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 16 }}>Submitted {new Date(open.submitted_at).toLocaleDateString('en-GB')}</div>
+          <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)', marginBottom: 4 }}>{open.first_name} {open.last_name}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-faint)', marginBottom: 16 }}>Submitted {new Date(open.submitted_at).toLocaleDateString('en-GB')}</div>
 
           <Row label="Date of birth" value={open.date_of_birth} />
           <Row label="School" value={open.school} />
@@ -690,7 +690,7 @@ function RegistrationRequestsTab({ registrations, org, authUserId, primary, onRe
           {open.status === 'pending' ? (
             rejectReasonFor === open.id ? (
               <div style={{ marginTop: 16 }}>
-                <textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Reason for declining (optional, shown internally only)" style={{ width: '100%', boxSizing: 'border-box', padding: 10, borderRadius: 9, border: '1px solid #E2E8F0', fontSize: 12.5, minHeight: 60, marginBottom: 10 }} />
+                <textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Reason for declining (optional, shown internally only)" style={{ width: '100%', boxSizing: 'border-box', padding: 10, borderRadius: 9, border: '1px solid var(--border)', fontSize: 12.5, minHeight: 60, marginBottom: 10 }} />
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => setRejectReasonFor(null)} style={{ flex: 1, ...btnGhost }}>Cancel</button>
                   <button onClick={() => reject(open)} disabled={busy} style={{ flex: 1, padding: '10px', borderRadius: 9, border: 'none', background: '#DC2626', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>{busy ? 'Declining…' : 'Confirm decline'}</button>
@@ -753,11 +753,11 @@ export function InviteParentModal({ org, onClose }) {
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: 24, width: '100%', maxWidth: 460 }}>
-        <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>Invite a parent to register their child</div>
-        <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 18 }}>Every submission lands in Registration Requests for you to approve first; nothing is added automatically.</div>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 20, padding: 24, width: '100%', maxWidth: 460 }}>
+        <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)', marginBottom: 6 }}>Invite a parent to register their child</div>
+        <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 18 }}>Every submission lands in Registration Requests for you to approve first; nothing is added automatically.</div>
 
-        <div style={{ fontSize: 11.5, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Send a branded email</div>
+        <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Send a branded email</div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
           <input value={parentName} onChange={e => setParentName(e.target.value)} placeholder="Parent's name (optional)" style={{ ...inputStyle, flex: 1, fontSize: 12.5 }} />
         </div>
@@ -772,12 +772,12 @@ export function InviteParentModal({ org, onClose }) {
         {sendResult?.error && <div style={{ fontSize: 12, color: '#DC2626', fontWeight: 700, marginBottom: 14 }}>{sendResult.error}</div>}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 16px' }}>
-          <div style={{ flex: 1, height: 1, background: '#E2E8F0' }} /><span style={{ fontSize: 11, color: '#94A3B8', fontWeight: 700 }}>OR</span><div style={{ flex: 1, height: 1, background: '#E2E8F0' }} />
+          <div style={{ flex: 1, height: 1, background: '#E2E8F0' }} /><span style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 700 }}>OR</span><div style={{ flex: 1, height: 1, background: '#E2E8F0' }} />
         </div>
 
         <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
           <input readOnly value={link} style={{ ...inputStyle, flex: 1, fontSize: 12.5 }} onFocus={e => e.target.select()} />
-          <button onClick={copy} style={{ padding: '0 16px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap' }}>{copied ? '✓ Copied' : 'Copy link'}</button>
+          <button onClick={copy} style={{ padding: '0 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap' }}>{copied ? '✓ Copied' : 'Copy link'}</button>
         </div>
         <button onClick={onClose} style={{ width: '100%', ...btnGhost }}>Close</button>
       </div>

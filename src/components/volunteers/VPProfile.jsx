@@ -63,19 +63,19 @@ function Overview({ profile, org, attendance, primary, onSignOut }) {
   return (
     <div>
       <div style={{ ...glassCard({ padding: 16, marginBottom: 12 }) }}>
-        <div style={{ fontSize: 12, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', marginBottom: 10 }}>My Impact</div>
+        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', marginBottom: 10 }}>My Impact</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           {[['Hours Volunteered', totalHours.toFixed(1)], ['Sessions Delivered', attendance.length], ['Emergency Contact', profile?.emergency_contact_name || 'Not set'], ['DBS Status', profile?.dbs_number ? 'Verified' : 'Pending']].map(([l, v]) => (
-            <div key={l}><div style={{ fontSize: 10.5, color: '#94A3B8', fontWeight: 700 }}>{l}</div><div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{v}</div></div>
+            <div key={l}><div style={{ fontSize: 10.5, color: 'var(--text-faint)', fontWeight: 700 }}>{l}</div><div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>{v}</div></div>
           ))}
         </div>
       </div>
       <div style={{ ...glassCard({ padding: 16, marginBottom: 12 }) }}>
-        <div style={{ fontSize: 12, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', marginBottom: 10 }}>Contact</div>
-        <div style={{ fontSize: 13, color: '#334155', marginBottom: 4 }}>{profile?.email}</div>
-        <div style={{ fontSize: 13, color: '#334155' }}>{profile?.phone || 'No phone on file'}</div>
+        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', marginBottom: 10 }}>Contact</div>
+        <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 4 }}>{profile?.email}</div>
+        <div style={{ fontSize: 13, color: 'var(--text2)' }}>{profile?.phone || 'No phone on file'}</div>
       </div>
-      <button onClick={onSignOut} style={{ width: '100%', padding: 13, borderRadius: 14, border: '1.5px solid #FCA5A5', background: '#fff', color: '#DC2626', fontWeight: 800, fontSize: 13.5, cursor: 'pointer' }}>Sign Out</button>
+      <button onClick={onSignOut} style={{ width: '100%', padding: 13, borderRadius: 14, border: '1.5px solid #FCA5A5', background: 'var(--surface)', color: '#DC2626', fontWeight: 800, fontSize: 13.5, cursor: 'pointer' }}>Sign Out</button>
     </div>
   )
 }
@@ -103,15 +103,15 @@ function Availability({ profile, org, user, primary, onProfileUpdated }) {
 
   return (
     <div>
-      <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 14 }}>Tap the slots you're generally available. This repeats weekly.</div>
+      <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 14 }}>Tap the slots you're generally available. This repeats weekly.</div>
       <div style={{ ...glassCard({ padding: 14 }) }}>
         <div style={{ display: 'grid', gridTemplateColumns: '50px repeat(3, 1fr)', gap: 6, marginBottom: 8 }}>
           <div />
-          {SLOTS.map(([key, label]) => <div key={key} style={{ fontSize: 10, fontWeight: 800, color: '#94A3B8', textAlign: 'center' }}>{label.split(' ')[1]}</div>)}
+          {SLOTS.map(([key, label]) => <div key={key} style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-faint)', textAlign: 'center' }}>{label.split(' ')[1]}</div>)}
         </div>
         {DAYS.map(day => (
           <div key={day} style={{ display: 'grid', gridTemplateColumns: '50px repeat(3, 1fr)', gap: 6, marginBottom: 6 }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: '#334155', display: 'flex', alignItems: 'center' }}>{day}</div>
+            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text2)', display: 'flex', alignItems: 'center' }}>{day}</div>
             {SLOTS.map(([slotKey]) => {
               const on = (grid[day] || []).includes(slotKey)
               return (
@@ -137,29 +137,29 @@ function Training({ org, user, primary }) {
   const mandatory = ['Safeguarding', 'First Aid', 'DBS Check']
   const completedTypes = new Set(records.filter(r => r.status === 'completed').map(r => r.training_type))
 
-  if (loading) return <div style={{ textAlign: 'center', padding: 30, color: '#94A3B8' }}>Loading…</div>
+  if (loading) return <div style={{ textAlign: 'center', padding: 30, color: 'var(--text-faint)' }}>Loading…</div>
 
   return (
     <div>
-      <div style={{ fontSize: 12, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', marginBottom: 10 }}>Mandatory Training</div>
+      <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', marginBottom: 10 }}>Mandatory Training</div>
       {mandatory.map(m => {
         const done = completedTypes.has(m)
         return (
           <div key={m} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, background: done ? '#F0FDF4' : '#FFFBEB', marginBottom: 8 }}>
             <span style={{ fontSize: 18 }}>{done ? '✅' : '⏳'}</span>
-            <div style={{ flex: 1 }}><div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{m}</div><div style={{ fontSize: 11, color: done ? '#16A34A' : '#B45309' }}>{done ? 'Completed' : 'Outstanding'}</div></div>
+            <div style={{ flex: 1 }}><div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{m}</div><div style={{ fontSize: 11, color: done ? '#16A34A' : '#B45309' }}>{done ? 'Completed' : 'Outstanding'}</div></div>
           </div>
         )
       })}
-      <div style={{ fontSize: 12, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', margin: '16px 0 10px' }}>Certificates</div>
+      <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', margin: '16px 0 10px' }}>Certificates</div>
       {records.length === 0 ? (
-        <div style={{ fontSize: 12.5, color: '#94A3B8', textAlign: 'center', padding: 20 }}>No certificates uploaded yet. Use the + menu to upload one.</div>
+        <div style={{ fontSize: 12.5, color: 'var(--text-faint)', textAlign: 'center', padding: 20 }}>No certificates uploaded yet. Use the + menu to upload one.</div>
       ) : records.map(r => (
         <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, border: '1.5px solid rgba(15,23,42,0.06)', marginBottom: 8 }}>
           <span style={{ fontSize: 18 }}><Icon name="📜" /></span>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.training_type}</div>
-            <div style={{ fontSize: 10.5, color: '#94A3B8' }}>{r.expiry_date ? `Expires ${new Date(r.expiry_date).toLocaleDateString('en-GB')}` : r.completed_at ? `Completed ${new Date(r.completed_at).toLocaleDateString('en-GB')}` : ''}</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.training_type}</div>
+            <div style={{ fontSize: 10.5, color: 'var(--text-faint)' }}>{r.expiry_date ? `Expires ${new Date(r.expiry_date).toLocaleDateString('en-GB')}` : r.completed_at ? `Completed ${new Date(r.completed_at).toLocaleDateString('en-GB')}` : ''}</div>
           </div>
           {r.certificate_url && <a href={r.certificate_url} target="_blank" rel="noreferrer" style={{ fontSize: 11, fontWeight: 700, color: primary }}>View</a>}
         </div>
@@ -177,20 +177,20 @@ function Documents({ org, profile, primary }) {
 
   const CAT_ICON = { policy: '📋', risk_assessment: '🛡️', handbook: '📘', certificate: '📜', insurance: '🧾' }
 
-  if (loading) return <div style={{ textAlign: 'center', padding: 30, color: '#94A3B8' }}>Loading…</div>
+  if (loading) return <div style={{ textAlign: 'center', padding: 30, color: 'var(--text-faint)' }}>Loading…</div>
 
   return docs.length === 0 ? (
     <div style={{ textAlign: 'center', padding: '40px 20px' }}>
       <div style={{ fontSize: 34, marginBottom: 10 }}><Icon name="📄" /></div>
-      <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>No documents yet</div>
-      <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 3 }}>Policies, the handbook, and risk assessments will appear here once your organisation adds them.</div>
+      <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>No documents yet</div>
+      <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 3 }}>Policies, the handbook, and risk assessments will appear here once your organisation adds them.</div>
     </div>
   ) : (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {docs.map(d => (
         <a key={d.id} href={d.file_url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 13, borderRadius: 14, border: '1.5px solid rgba(15,23,42,0.06)', textDecoration: 'none' }}>
           <span style={{ fontSize: 20 }}>{CAT_ICON[d.category] || '📄'}</span>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{d.title}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{d.title}</div>
         </a>
       ))}
     </div>
@@ -206,8 +206,8 @@ function Badges({ attendance, profile, primary }) {
       {achievements.map(a => (
         <motion.div key={a.key} whileTap={{ scale: 0.95 }} style={{ ...glassCard({ padding: '16px 8px' }), textAlign: 'center', opacity: a.earned ? 1 : 0.4 }}>
           <div style={{ fontSize: 28, marginBottom: 6, filter: a.earned ? 'none' : 'grayscale(1)' }}><Icon name={a.icon} /></div>
-          <div style={{ fontSize: 10.5, fontWeight: 800, color: '#334155', lineHeight: 1.2, marginBottom: 3 }}>{a.label}</div>
-          <div style={{ fontSize: 9, color: '#94A3B8', lineHeight: 1.2 }}>{a.desc}</div>
+          <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--text2)', lineHeight: 1.2, marginBottom: 3 }}>{a.label}</div>
+          <div style={{ fontSize: 9, color: 'var(--text-faint)', lineHeight: 1.2 }}>{a.desc}</div>
         </motion.div>
       ))}
     </div>
@@ -223,19 +223,19 @@ function Settings({ profile, onSignOut }) {
       ].map(([icon, label, val, toggle]) => (
         <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, border: '1.5px solid rgba(15,23,42,0.06)', marginBottom: 8 }}>
           <span style={{ fontSize: 18 }}>{icon}</span>
-          <div style={{ flex: 1, fontSize: 13.5, fontWeight: 700, color: '#0F172A' }}>{label}</div>
+          <div style={{ flex: 1, fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>{label}</div>
           <button onClick={toggle} style={{ width: 42, height: 24, borderRadius: 99, border: 'none', background: val ? '#7C5CFC' : '#E2E8F0', position: 'relative', cursor: 'pointer' }}>
-            <motion.div animate={{ x: val ? 20 : 2 }} style={{ width: 20, height: 20, borderRadius: '50%', background: '#fff', position: 'absolute', top: 2 }} />
+            <motion.div animate={{ x: val ? 20 : 2 }} style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--surface)', position: 'absolute', top: 2 }} />
           </button>
         </div>
       ))}
       {['Help & Support', 'Privacy Policy', 'Volunteer Handbook'].map(label => (
         <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, border: '1.5px solid rgba(15,23,42,0.06)', marginBottom: 8, cursor: 'pointer' }}>
-          <div style={{ flex: 1, fontSize: 13.5, fontWeight: 700, color: '#0F172A' }}>{label}</div>
+          <div style={{ flex: 1, fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>{label}</div>
           <span style={{ color: '#CBD5E1' }}>›</span>
         </div>
       ))}
-      <button onClick={onSignOut} style={{ width: '100%', marginTop: 8, padding: 13, borderRadius: 14, border: '1.5px solid #FCA5A5', background: '#fff', color: '#DC2626', fontWeight: 800, fontSize: 13.5, cursor: 'pointer' }}>Sign Out</button>
+      <button onClick={onSignOut} style={{ width: '100%', marginTop: 8, padding: 13, borderRadius: 14, border: '1.5px solid #FCA5A5', background: 'var(--surface)', color: '#DC2626', fontWeight: 800, fontSize: 13.5, cursor: 'pointer' }}>Sign Out</button>
     </div>
   )
 }

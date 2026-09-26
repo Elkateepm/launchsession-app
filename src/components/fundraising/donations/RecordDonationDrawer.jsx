@@ -23,7 +23,7 @@ const todayLondon = () => {
 
 const field = {
   width: '100%', padding: '11px 13px', borderRadius: 11, fontSize: 15,
-  border: `1px solid ${LS.border}`, background: '#fff', color: LS.text,
+  border: `1px solid ${LS.border}`, background: 'var(--surface)', color: LS.text,
   outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
 }
 const label = { display: 'block', fontSize: 12.5, fontWeight: 700, color: LS.muted, marginBottom: 6, letterSpacing: 0.2 }
@@ -127,7 +127,7 @@ export default function RecordDonationDrawer({ open, onClose, org, campaigns = [
   }
 
   const panel = {
-    background: '#fff',
+    background: 'var(--surface)',
     width: isMobile ? '100%' : 460,
     maxWidth: '100%',
     height: isMobile ? 'auto' : '100%',
@@ -343,12 +343,12 @@ export default function RecordDonationDrawer({ open, onClose, org, campaigns = [
             {/* footer */}
             <div style={{
               padding: '14px 20px', borderTop: `1px solid ${LS.border}`, flexShrink: 0,
-              display: 'flex', gap: 10, background: '#fff',
+              display: 'flex', gap: 10, background: 'var(--surface)',
               paddingBottom: isMobile ? 'calc(14px + env(safe-area-inset-bottom))' : 14,
             }}>
               <button onClick={onClose} style={{
                 padding: '13px 18px', borderRadius: 12, border: `1px solid ${LS.border}`,
-                background: '#fff', color: LS.muted, fontSize: 15, fontWeight: 700,
+                background: 'var(--surface)', color: LS.muted, fontSize: 15, fontWeight: 700,
                 cursor: 'pointer', fontFamily: 'inherit',
               }}>Cancel</button>
               <button

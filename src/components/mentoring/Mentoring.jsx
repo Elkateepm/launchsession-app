@@ -843,12 +843,12 @@ const styles = {
   },
   input: {
     width: '100%',
-    border: '1.5px solid #E5E7EB',
+    border: '1.5px solid var(--border)',
     borderRadius: 12,
     padding: '11px 13px',
     fontSize: 14,
     outline: 'none',
-    background: '#F9FAFB',
+    background: 'var(--surface2)',
     boxSizing: 'border-box',
     fontFamily: 'inherit',
   },
@@ -867,7 +867,7 @@ const styles = {
     gap: 8,
   },
   chip: {
-    border: '1.5px solid #E5E7EB',
+    border: '1.5px solid var(--border)',
     borderRadius: 999,
     background: 'var(--surface)',
     padding: '9px 13px',
@@ -900,7 +900,7 @@ const styles = {
   },
   connectionLine: {
     fontSize: 10,
-    color: '#94A3B8',
+    color: 'var(--text-faint)',
     fontWeight: 950,
     textAlign: 'center',
   },
@@ -932,7 +932,7 @@ const styles = {
     gap: 8,
   },
   moodButton: {
-    border: '1.5px solid #E5E7EB',
+    border: '1.5px solid var(--border)',
     borderRadius: 12,
     background: 'var(--surface)',
     padding: '10px 6px',

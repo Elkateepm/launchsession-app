@@ -164,7 +164,7 @@ function FormSection({ icon, title, color, children }) {
 
 function FormCheck({ label, value, onChange }) {
   return (
-    <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#374151', fontWeight: 500, marginBottom: 8, cursor: 'pointer' }}>
+    <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text2)', fontWeight: 500, marginBottom: 8, cursor: 'pointer' }}>
       <input type="checkbox" checked={value} onChange={e => onChange(e.target.checked)}
         style={{ width: 16, height: 16, borderRadius: 4, accentColor: '#1B9AAA', cursor: 'pointer' }} />
       {label}
@@ -201,8 +201,8 @@ function EditChildForm({ child, onSaved }) {
   const [saving, setSaving] = useState(false)
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
 
-  const fi = { width: '100%', padding: '9px 11px', borderRadius: 9, border: '1.5px solid #e5e7eb', fontSize: 13, outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', background: '#fff' }
-  const lb = { fontSize: 10, fontWeight: 800, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 4 }
+  const fi = { width: '100%', padding: '9px 11px', borderRadius: 9, border: '1.5px solid var(--border)', fontSize: 13, outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', background: 'var(--surface)' }
+  const lb = { fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 4 }
 
   const handleSave = async () => {
     setSaving(true)
@@ -377,25 +377,25 @@ function InlineChildImport({ org, template, onImported }) {
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${template?.name?.replace(/[^a-z0-9]+/gi,'-').toLowerCase() || 'children'}-import.csv`; a.click()
   }
 
-  const fi = { width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 11, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace', resize: 'vertical' }
+  const fi = { width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border)', fontSize: 11, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace', resize: 'vertical' }
 
   if (step === 'preview') return (
     <div>
       {errors.length > 0 && <div style={{ background: '#FFF0F0', border: '1px solid #FFB3B3', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
         {errors.map((e,i) => <div key={i} style={{ fontSize: 11, color: '#C00' }}><Icon name="⚠" /> {e}</div>)}
       </div>}
-      <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 8, fontWeight: 600 }}>{rows.length} records ready</div>
-      <div style={{ background: '#F9FAFB', borderRadius: 8, border: '1px solid #e5e7eb', maxHeight: 140, overflowY: 'auto', marginBottom: 10 }}>
+      <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 8, fontWeight: 600 }}>{rows.length} records ready</div>
+      <div style={{ background: 'var(--surface2)', borderRadius: 8, border: '1px solid var(--border)', maxHeight: 140, overflowY: 'auto', marginBottom: 10 }}>
         {rows.slice(0,8).map((r,i) => (
-          <div key={i} style={{ display: 'flex', gap: 8, padding: '5px 10px', borderBottom: '1px solid #F3F4F6', fontSize: 11 }}>
+          <div key={i} style={{ display: 'flex', gap: 8, padding: '5px 10px', borderBottom: '1px solid var(--border-soft)', fontSize: 11 }}>
             <span style={{ fontWeight: 700, color: r.first_name ? '#111' : '#C00', minWidth: 80 }}>{r.first_name || '⚠'} {r.last_name}</span>
-            <span style={{ color: '#9CA3AF' }}>{r.group_name || 'Ungrouped'}</span>
+            <span style={{ color: 'var(--text-faint)' }}>{r.group_name || 'Ungrouped'}</span>
           </div>
         ))}
-        {rows.length > 8 && <div style={{ padding: '5px 10px', fontSize: 11, color: '#9CA3AF', fontStyle: 'italic' }}>+{rows.length - 8} more</div>}
+        {rows.length > 8 && <div style={{ padding: '5px 10px', fontSize: 11, color: 'var(--text-faint)', fontStyle: 'italic' }}>+{rows.length - 8} more</div>}
       </div>
       <div style={{ display: 'flex', gap: 6 }}>
-        <button onClick={() => setStep('upload')} style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer', color: '#6B7280' }}><Icon name="←" /> Back</button>
+        <button onClick={() => setStep('upload')} style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 11, fontWeight: 600, cursor: 'pointer', color: 'var(--text3)' }}><Icon name="←" /> Back</button>
         <button onClick={handleImport} disabled={importing || errors.length > 0} style={{ flex: 2, padding: '8px', borderRadius: 8, border: 'none', background: errors.length > 0 ? '#9CA3AF' : primary, color: '#fff', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>
           {importing ? 'Importing...' : `Import ${rows.filter(r=>r.first_name&&r.last_name).length}`}
         </button>
@@ -478,7 +478,7 @@ function NotesTab({ child }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: '#64748B' }}>Private notes about {child.first_name}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)' }}>Private notes about {child.first_name}</div>
         <div aria-live="polite" style={{ fontSize: 11, fontWeight: 700, color: error ? '#DC2626' : saving ? '#B45309' : saved ? '#15803D' : 'transparent' }}>
           {error || (saving ? 'Saving…' : '✓ Saved')}
         </div>
@@ -487,9 +487,9 @@ function NotesTab({ child }) {
         value={notes}
         onChange={handleChange}
         placeholder={`Add notes about ${child.first_name} — behaviour, progress, parent conversations, anything relevant...`}
-        style={{ width: '100%', minHeight: 200, padding: '12px 14px', borderRadius: 14, border: '1.5px solid #E2E8F0', fontSize: 13, lineHeight: 1.7, color: '#0F172A', outline: 'none', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', background: '#FAFBFC' }}
+        style={{ width: '100%', minHeight: 200, padding: '12px 14px', borderRadius: 14, border: '1.5px solid var(--border)', fontSize: 13, lineHeight: 1.7, color: 'var(--text)', outline: 'none', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', background: '#FAFBFC' }}
       />
-      <div style={{ fontSize: 11, color: '#94A3B8' }}>Auto-saves as you type. Visible to admins and staff only.</div>
+      <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>Auto-saves as you type. Visible to admins and staff only.</div>
     </div>
   )
 }
@@ -565,24 +565,24 @@ function PhotosTab({ child, org }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: '#64748B' }}>Photos attached to {child.first_name}'s record</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)' }}>Photos attached to {child.first_name}'s record</div>
         <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
-          style={{ padding: '6px 12px', borderRadius: 9, border: '1.5px dashed #CBD5E1', background: '#F8FAFC', color: '#334155', fontSize: 11.5, fontWeight: 700, cursor: uploading ? 'default' : 'pointer' }}>
+          style={{ padding: '6px 12px', borderRadius: 9, border: '1.5px dashed #CBD5E1', background: 'var(--surface2)', color: 'var(--text2)', fontSize: 11.5, fontWeight: 700, cursor: uploading ? 'default' : 'pointer' }}>
           {uploading ? 'Uploading…' : '+ Add photo'}
         </button>
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} style={{ display: 'none' }} />
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 30, color: '#9CA3AF', fontSize: 12.5 }}>Loading…</div>
+        <div style={{ textAlign: 'center', padding: 30, color: 'var(--text-faint)', fontSize: 12.5 }}>Loading…</div>
       ) : attachments.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 30, color: '#9CA3AF', fontSize: 12.5, background: '#F8FAFC', borderRadius: 14, border: '1px dashed #E2E8F0' }}>
+        <div style={{ textAlign: 'center', padding: 30, color: 'var(--text-faint)', fontSize: 12.5, background: 'var(--surface2)', borderRadius: 14, border: '1px dashed var(--border)' }}>
           No photos attached yet.
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
           {attachments.map(att => (
-            <button key={att.id} onClick={() => setViewing(att)} style={{ padding: 0, border: '1px solid #E2E8F0', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', aspectRatio: '1', background: '#F1F5F9' }}>
+            <button key={att.id} onClick={() => setViewing(att)} style={{ padding: 0, border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', aspectRatio: '1', background: 'var(--surface-hover)' }}>
               <img src={att.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             </button>
           ))}
@@ -591,17 +591,17 @@ function PhotosTab({ child, org }) {
 
       {viewing && (
         <div onClick={() => setViewing(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 10700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 18, maxWidth: 420, width: '100%', overflow: 'hidden' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 18, maxWidth: 420, width: '100%', overflow: 'hidden' }}>
             <img src={viewing.url} alt="" style={{ width: '100%', maxHeight: 320, objectFit: 'cover', display: 'block' }} />
             <div style={{ padding: 16 }}>
-              <div style={{ fontSize: 12.5, color: '#334155', fontWeight: 700, marginBottom: 2 }}>
+              <div style={{ fontSize: 12.5, color: 'var(--text2)', fontWeight: 700, marginBottom: 2 }}>
                 Uploaded {format(new Date(viewing.created_at), 'd MMM yyyy \'at\' HH:mm')}
               </div>
-              <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 14 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-faint)', marginBottom: 14 }}>
                 by {viewing.uploader?.full_name || 'Unknown'}
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => setViewing(null)} style={{ flex: 1, padding: '9px', borderRadius: 9, border: '1px solid #E2E8F0', background: '#fff', color: '#334155', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>Close</button>
+                <button onClick={() => setViewing(null)} style={{ flex: 1, padding: '9px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>Close</button>
                 <button onClick={() => handleDelete(viewing)} style={{ flex: 1, padding: '9px', borderRadius: 9, border: '1px solid #FECACA', background: '#FEF2F2', color: '#DC2626', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>Remove</button>
               </div>
             </div>
@@ -689,7 +689,7 @@ function ActivityTab({ child, org }) {
     slate: '#94A3B8',
   }
 
-  if (loading) return <div style={{ padding: '28px 0', textAlign: 'center', fontSize: 13, color: '#64748B' }}>Loading activity…</div>
+  if (loading) return <div style={{ padding: '28px 0', textAlign: 'center', fontSize: 13, color: 'var(--text3)' }}>Loading activity…</div>
 
   if (error) {
     return (
@@ -705,8 +705,8 @@ function ActivityTab({ child, org }) {
   if (rows.length === 0) {
     return (
       <div style={{ padding: '28px 20px', textAlign: 'center' }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#334155', marginBottom: 4 }}>No activity yet</div>
-        <div style={{ fontSize: 12.5, color: '#94A3B8', lineHeight: 1.6 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text2)', marginBottom: 4 }}>No activity yet</div>
+        <div style={{ fontSize: 12.5, color: 'var(--text-faint)', lineHeight: 1.6 }}>
           Sign-ins and sign-outs will appear here once {child.first_name} has attended a session.
         </div>
       </div>
@@ -719,10 +719,10 @@ function ActivityTab({ child, org }) {
         <div key={r.id} style={{ display: 'flex', gap: 12, padding: '11px 0', borderBottom: i === rows.length - 1 ? 'none' : '1px solid #F1F5F9' }}>
           <div style={{ width: 8, height: 8, borderRadius: 8, background: TONES[r.tone], marginTop: 6, flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A' }}>{r.title}</div>
-            <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 1 }}>{r.detail}</div>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>{r.title}</div>
+            <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 1 }}>{r.detail}</div>
           </div>
-          <div style={{ fontSize: 12, color: '#64748B', whiteSpace: 'nowrap', textAlign: 'right' }}>
+          <div style={{ fontSize: 12, color: 'var(--text3)', whiteSpace: 'nowrap', textAlign: 'right' }}>
             {r.at ? format(new Date(r.at), 'd MMM · HH:mm') : '—'}
           </div>
         </div>
@@ -738,8 +738,8 @@ function ActivityTab({ child, org }) {
 function InfoRow({ label, children, last }) {
   return (
     <div style={{ display: 'flex', gap: 16, padding: '10px 0', borderBottom: last ? 'none' : '1px solid #F1F5F9', alignItems: 'baseline' }}>
-      <div style={{ fontSize: 12.5, color: '#64748B', width: 130, flexShrink: 0 }}>{label}</div>
-      <div style={{ fontSize: 13.5, color: '#0F172A', fontWeight: 600, flex: 1, minWidth: 0 }}>{children}</div>
+      <div style={{ fontSize: 12.5, color: 'var(--text3)', width: 130, flexShrink: 0 }}>{label}</div>
+      <div style={{ fontSize: 13.5, color: 'var(--text)', fontWeight: 600, flex: 1, minWidth: 0 }}>{children}</div>
     </div>
   )
 }
@@ -747,7 +747,7 @@ function InfoRow({ label, children, last }) {
 function SectionHeading({ children, action }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '20px 0 2px' }}>
-      <h3 style={{ fontSize: 12, fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.8, margin: 0 }}>{children}</h3>
+      <h3 style={{ fontSize: 12, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.8, margin: 0 }}>{children}</h3>
       {action}
     </div>
   )
@@ -890,7 +890,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
     signed_out: { label: 'Signed out', color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE' },
     absent:     { label: 'Absent',     color: '#B91C1C', bg: '#FEF2F2', border: '#FECACA' },
     expected:   { label: 'Expected',   color: '#B45309', bg: '#FFFBEB', border: '#FDE68A' },
-    unmarked:   { label: 'Not marked', color: '#64748B', bg: '#F8FAFC', border: '#E2E8F0' },
+    unmarked:   { label: 'Not marked', color: 'var(--text3)', bg: '#F8FAFC', border: 'var(--border)' },
   }
   const sc = statusCfg[status] || statusCfg.unmarked
 
@@ -933,8 +933,8 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
   }
 
   const ghostBtn = {
-    padding: '7px 13px', borderRadius: 9, border: '1px solid #E2E8F0', background: '#fff',
-    color: '#334155', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+    padding: '7px 13px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)',
+    color: 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
   }
 
   const TABS = [
@@ -962,7 +962,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
         dragElastic={{ top: 0.05, bottom: 0.6 }}
         onDragEnd={(e, info) => { if (info.offset.y > 100 || info.velocity.y > 500) onClose() }}
         style={{
-          background: '#fff', borderRadius: isMobile ? '24px 24px 0 0' : 23,
+          background: 'var(--surface)', borderRadius: isMobile ? '24px 24px 0 0' : 23,
           width: '100%', maxWidth: isMobile ? '100%' : 486,
           // dvh follows the visible area rather than the layout viewport, so an
           // open keyboard does not push the Notes textarea behind itself.
@@ -992,25 +992,25 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
                 title="More actions"
-                style={{ width: 32, height: 32, borderRadius: 9, background: menuOpen ? '#F1F5F9' : 'transparent', border: 'none', cursor: 'pointer', color: '#64748B', fontSize: 16, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ width: 32, height: 32, borderRadius: 9, background: menuOpen ? '#F1F5F9' : 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 16, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 onMouseEnter={e => { e.currentTarget.style.background = '#F1F5F9' }}
                 onMouseLeave={e => { if (!menuOpen) e.currentTarget.style.background = 'transparent' }}
               >⋯</button>
               {menuOpen && (
-                <div role="menu" style={{ position: 'absolute', top: 36, right: 0, background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, boxShadow: '0 12px 32px -8px rgba(15,23,42,0.22)', padding: 5, minWidth: 194, zIndex: 5 }}>
+                <div role="menu" style={{ position: 'absolute', top: 36, right: 0, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 12px 32px -8px rgba(15,23,42,0.22)', padding: 5, minWidth: 194, zIndex: 5 }}>
                   {[
                     ['Edit details', () => { setMenuOpen(false); setEditing(true) }],
                     ['View photos', () => { setMenuOpen(false); setDrawerTab('photos') }],
                     ['View activity', () => { setMenuOpen(false); setDrawerTab('activity') }],
                   ].map(([label, fn]) => (
                     <button key={label} role="menuitem" onClick={fn}
-                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 11px', borderRadius: 8, border: 'none', background: 'transparent', color: '#0F172A', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 11px', borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--text)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                       onMouseEnter={e => { e.currentTarget.style.background = '#F8FAFC' }}
                       onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
                       {label}
                     </button>
                   ))}
-                  <div style={{ height: 1, background: '#F1F5F9', margin: '5px 0' }} />
+                  <div style={{ height: 1, background: 'var(--surface-hover)', margin: '5px 0' }} />
                   <button role="menuitem" onClick={removeFromRegister}
                     style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 11px', borderRadius: 8, border: 'none', background: 'transparent', color: '#DC2626', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                     onMouseEnter={e => { e.currentTarget.style.background = '#FEF2F2' }}
@@ -1021,7 +1021,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
               )}
             </div>
             <button ref={closeBtnRef} onClick={onClose} aria-label="Close" title="Close"
-              style={{ width: 32, height: 32, borderRadius: 9, background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748B', fontSize: 19, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              style={{ width: 32, height: 32, borderRadius: 9, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 19, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               onMouseEnter={e => { e.currentTarget.style.background = '#F1F5F9' }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>×</button>
           </div>
@@ -1041,13 +1041,13 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
                 )}
               </div>
               <button onClick={() => photoInputRef.current?.click()} aria-label="Change profile photo" title="Change profile photo"
-                style={{ position: 'absolute', bottom: -4, right: -4, width: 26, height: 26, borderRadius: '50%', background: '#fff', border: '1px solid #E2E8F0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, boxShadow: '0 2px 6px rgba(15,23,42,0.12)' }}><Icon name="📷" /></button>
+                style={{ position: 'absolute', bottom: -4, right: -4, width: 26, height: 26, borderRadius: '50%', background: 'var(--surface)', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, boxShadow: '0 2px 6px rgba(15,23,42,0.12)' }}><Icon name="📷" /></button>
               <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
             </div>
 
-            <h2 style={{ fontSize: 21, fontWeight: 800, color: '#0F172A', letterSpacing: -0.4, lineHeight: 1.2, margin: '0 0 7px', textAlign: 'center' }}>{name}</h2>
+            <h2 style={{ fontSize: 21, fontWeight: 800, color: 'var(--text)', letterSpacing: -0.4, lineHeight: 1.2, margin: '0 0 7px', textAlign: 'center' }}>{name}</h2>
 
-            <div style={{ display: 'flex', gap: 7, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', fontSize: 12.5, color: '#64748B' }}>
+            <div style={{ display: 'flex', gap: 7, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', fontSize: 12.5, color: 'var(--text3)' }}>
               {age !== null && <span>Age {age}</span>}
               {(bubble || currentGroup) && <><span aria-hidden="true">·</span><span>{bubble?.label || currentGroup}</span></>}
               <span style={{ fontSize: 11.5, fontWeight: 700, color: sc.color, background: sc.bg, border: `1px solid ${sc.border}`, borderRadius: 99, padding: '2px 9px' }}>{sc.label}</span>
@@ -1073,7 +1073,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
                 </div>
               </div>
             ) : (
-              <div style={{ fontSize: 12.5, color: '#64748B', display: 'flex', alignItems: 'center', gap: 7 }}>
+              <div style={{ fontSize: 12.5, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 7 }}>
                 <span style={{ color: '#16A34A' }} aria-hidden="true"><Icon name="✓" /></span> No recorded medical alerts
               </div>
             )}
@@ -1101,7 +1101,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
               setEditing(false)
               tablistRef.current?.querySelector(`#child-tab-${next}`)?.focus()
             }}
-            style={{ display: 'flex', gap: 20, padding: '18px 24px 0', borderBottom: '1px solid #F1F5F9', margin: '4px 0 0' }}>
+            style={{ display: 'flex', gap: 20, padding: '18px 24px 0', borderBottom: '1px solid var(--border-soft)', margin: '4px 0 0' }}>
             {TABS.map(([key, label]) => (
               <button key={key} id={`child-tab-${key}`} role="tab"
                 aria-selected={drawerTab === key}
@@ -1131,7 +1131,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
             {editing ? (
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '16px 0 4px' }}>
-                  <h3 style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', margin: 0 }}>Edit details</h3>
+                  <h3 style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)', margin: 0 }}>Edit details</h3>
                   <button onClick={() => setEditing(false)} style={ghostBtn}>Cancel</button>
                 </div>
                 <EditChildForm child={child} onSaved={() => onChildUpdated ? onChildUpdated(child.id) : onClose()} />
@@ -1150,7 +1150,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
                       <InfoRow label="Travel home alone" last={!child.sen && !child.has_behaviour_plan}>
                         {child.travel_consent
                           ? <span style={{ color: '#15803D' }}><Icon name="✓" /> Consent given</span>
-                          : <span style={{ color: '#64748B', fontWeight: 500 }}>Not given</span>}
+                          : <span style={{ color: 'var(--text3)', fontWeight: 500 }}>Not given</span>}
                       </InfoRow>
                       {child.sen && <InfoRow label="SEN needs" last={!child.has_behaviour_plan}>{child.sen}</InfoRow>}
                       {child.has_behaviour_plan && <InfoRow label="Behaviour plan" last>In place</InfoRow>}
@@ -1159,14 +1159,14 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
                     <SectionHeading>Emergency contact</SectionHeading>
                     {child.emergency_contact_name ? (
                       <div style={{ paddingTop: 8 }}>
-                        <div style={{ fontSize: 14.5, fontWeight: 700, color: '#0F172A' }}>{child.emergency_contact_name}</div>
+                        <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--text)' }}>{child.emergency_contact_name}</div>
                         {/* No relationship column exists on children yet, so
                             the contact's role is labelled generically rather
                             than rendering a field that is always empty. */}
-                        <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 2 }}>Primary emergency contact</div>
+                        <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>Primary emergency contact</div>
                         {child.emergency_contact_phone && (
                           <>
-                            <div style={{ fontSize: 13.5, color: '#334155', marginTop: 4 }}>{child.emergency_contact_phone}</div>
+                            <div style={{ fontSize: 13.5, color: 'var(--text2)', marginTop: 4 }}>{child.emergency_contact_phone}</div>
                             <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                               <a href={`tel:${child.emergency_contact_phone}`}
                                 style={{ ...ghostBtn, background: PURPLE, borderColor: PURPLE, color: '#fff', textDecoration: 'none', display: 'inline-block' }}>
@@ -1180,17 +1180,17 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
                         )}
                       </div>
                     ) : (
-                      <div style={{ fontSize: 13, color: '#64748B', paddingTop: 8 }}>No emergency contact recorded</div>
+                      <div style={{ fontSize: 13, color: 'var(--text3)', paddingTop: 8 }}>No emergency contact recorded</div>
                     )}
 
                     {(child.parent_name || child.parent_phone) && (
                       <>
                         <SectionHeading>Parent / carer</SectionHeading>
                         <div style={{ paddingTop: 8 }}>
-                          {child.parent_name && <div style={{ fontSize: 14.5, fontWeight: 700, color: '#0F172A' }}>{child.parent_name}</div>}
+                          {child.parent_name && <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--text)' }}>{child.parent_name}</div>}
                           {child.parent_phone && (
                             <>
-                              <div style={{ fontSize: 13.5, color: '#334155', marginTop: 4 }}>{child.parent_phone}</div>
+                              <div style={{ fontSize: 13.5, color: 'var(--text2)', marginTop: 4 }}>{child.parent_phone}</div>
                               <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                                 <a href={`tel:${child.parent_phone}`} style={{ ...ghostBtn, textDecoration: 'none', display: 'inline-block' }}>Call</a>
                               </div>
@@ -1218,10 +1218,10 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
             LiveRegister, which owns the sign-in/out correctness rules, so this
             reports state rather than duplicating that logic. */}
         {hasSession && (signedInTime || signedOutTime) && (
-          <div style={{ borderTop: '1px solid #F1F5F9', background: '#FCFCFD', padding: '13px 24px calc(13px + env(safe-area-inset-bottom))', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700 }}>
+          <div style={{ borderTop: '1px solid var(--border-soft)', background: '#FCFCFD', padding: '13px 24px calc(13px + env(safe-area-inset-bottom))', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700 }}>
             {signedOutTime ? (
               <><span style={{ color: '#2563EB' }} aria-hidden="true"><Icon name="✓" /></span><span style={{ color: '#1D4ED8' }}>Signed out at {signedOutTime}</span>
-                <span style={{ color: '#64748B', fontWeight: 500, marginLeft: 'auto' }}>In at {signedInTime}</span></>
+                <span style={{ color: 'var(--text3)', fontWeight: 500, marginLeft: 'auto' }}>In at {signedInTime}</span></>
             ) : (
               <><span style={{ color: '#16A34A' }} aria-hidden="true"><Icon name="✓" /></span><span style={{ color: '#15803D' }}>Signed in at {signedInTime}</span></>
             )}
@@ -1246,14 +1246,14 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
     signed_in:  { label: 'In',          bg: 'rgba(34,197,94,0.16)', color: '#4ADE80', dot: '#22C55E' },
     signed_out: { label: 'Out',         bg: 'rgba(59,130,246,0.16)', color: '#60A5FA', dot: '#3B82F6' },
     absent:     { label: 'Absent',      bg: 'rgba(239,68,68,0.16)', color: '#F87171', dot: '#EF4444' },
-    expected:   { label: 'Expected',    bg: 'rgba(255,255,255,0.06)', color: '#94A3B8', dot: '#CBD5E1' },
-    unmarked:   { label: 'Not marked',  bg: 'rgba(255,255,255,0.06)', color: '#94A3B8', dot: '#CBD5E1' },
+    expected:   { label: 'Expected',    bg: 'rgba(255,255,255,0.06)', color: 'var(--text-faint)', dot: '#CBD5E1' },
+    unmarked:   { label: 'Not marked',  bg: 'rgba(255,255,255,0.06)', color: 'var(--text-faint)', dot: '#CBD5E1' },
   } : {
     signed_in:  { label: 'In',          bg: 'linear-gradient(135deg,#DCFCE7,#BBF7D0)', color: '#15803D', dot: '#16A34A' },
     signed_out: { label: 'Out',         bg: 'linear-gradient(135deg,#DBEAFE,#BFDBFE)', color: '#1D4ED8', dot: '#2563EB' },
     absent:     { label: 'Absent',      bg: 'linear-gradient(135deg,#FEE2E2,#FECACA)', color: '#B91C1C', dot: '#DC2626' },
-    expected:   { label: 'Expected',    bg: '#F1F5F9', color: '#94A3B8', dot: '#CBD5E1' },
-    unmarked:   { label: 'Not marked',  bg: '#F1F5F9', color: '#94A3B8', dot: '#CBD5E1' },
+    expected:   { label: 'Expected',    bg: '#F1F5F9', color: 'var(--text-faint)', dot: '#CBD5E1' },
+    unmarked:   { label: 'Not marked',  bg: '#F1F5F9', color: 'var(--text-faint)', dot: '#CBD5E1' },
   }
   const sc = statusConfig[status] || statusConfig.unmarked
 
@@ -1379,10 +1379,10 @@ function EncouragementPanel({ org, primary }) {
   const quote = quotes[dayIndex % quotes.length]
 
   return (
-    <div style={{ padding: '12px 14px', borderTop: '1px solid #F3F4F6', marginTop: 'auto' }}>
+    <div style={{ padding: '12px 14px', borderTop: '1px solid var(--border-soft)', marginTop: 'auto' }}>
       <div style={{ background: `linear-gradient(135deg, var(--org-a05), var(--org-a05))`, border: `1px solid var(--org-a10)`, borderRadius: 12, padding: '12px 14px' }}>
         <div style={{ fontSize: 20, marginBottom: 8 }}>{quote.emoji}</div>
-        <div style={{ fontSize: 12, fontWeight: 600, color: '#374151', lineHeight: 1.6, fontStyle: 'italic' }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text2)', lineHeight: 1.6, fontStyle: 'italic' }}>
           "{quote.text}"
         </div>
       </div>
@@ -1593,14 +1593,14 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   // time window, otherwise a manually-closed session still shows as "Live" here
   // just because a session object exists.
   const registerSessionStatus = (() => {
-    if (!session) return { key: 'none', label: 'No Session', bg: '#F3F4F6', color: '#9CA3AF' }
-    if (session.closed_at) return { key: 'closed', label: '● Closed', bg: '#F1F5F9', color: '#64748B' }
+    if (!session) return { key: 'none', label: 'No Session', bg: '#F3F4F6', color: 'var(--text-faint)' }
+    if (session.closed_at) return { key: 'closed', label: '● Closed', bg: '#F1F5F9', color: 'var(--text3)' }
     const now = new Date()
     const startDT = session.start_time ? new Date(`${session.session_date}T${session.start_time}`) : null
     const endDT = session.end_time ? new Date(`${session.session_date}T${session.end_time}`) : null
     const hasEnded = !!endDT && endDT < now
     const isLiveNow = !hasEnded && (!startDT || startDT <= now)
-    if (hasEnded) return { key: 'ended', label: '● Ended', bg: '#F1F5F9', color: '#64748B' }
+    if (hasEnded) return { key: 'ended', label: '● Ended', bg: '#F1F5F9', color: 'var(--text3)' }
     if (isLiveNow) return { key: 'live', label: '● Live', bg: '#DCFCE7', color: '#15803D' }
     return { key: 'upcoming', label: '● Upcoming', bg: '#FEF9C3', color: '#92400E' }
   })()
@@ -1720,8 +1720,8 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                       boxShadow: '0 4px 14px -3px rgba(22,163,74,0.6)',
                     }}>
                       <span style={{ position: 'relative', display: 'inline-flex', width: 7, height: 7, flexShrink: 0 }}>
-                        <span data-reg-live-anim style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: '#fff', animation: 'reg-live-ping 2s ease-out infinite' }} />
-                        <span data-reg-live-anim style={{ position: 'relative', width: 7, height: 7, borderRadius: '50%', background: '#fff', animation: 'reg-live-dot 2s ease-in-out infinite' }} />
+                        <span data-reg-live-anim style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'var(--surface)', animation: 'reg-live-ping 2s ease-out infinite' }} />
+                        <span data-reg-live-anim style={{ position: 'relative', width: 7, height: 7, borderRadius: '50%', background: 'var(--surface)', animation: 'reg-live-dot 2s ease-in-out infinite' }} />
                       </span>
                       Live now
                     </span>
@@ -2028,16 +2028,16 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
 
         {/* FOOTER */}
         {!isMobile && (
-          <div style={{ background: '#fff', borderTop: '1px solid #F3F4F6', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', flexShrink: 0 }}>
-            <div style={{ fontSize: 13, color: '#9CA3AF', fontWeight: 600 }}>{filtered.length} of {children.length} shown</div>
+          <div style={{ background: 'var(--surface)', borderTop: '1px solid var(--border-soft)', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', flexShrink: 0 }}>
+            <div style={{ fontSize: 13, color: 'var(--text-faint)', fontWeight: 600 }}>{filtered.length} of {children.length} shown</div>
           </div>
         )}
       </div>
 
       {/* SIDEBAR TOOLS — desktop only */}
       {!isMobile && (
-        <div style={{ width: 220, background: '#fff', borderLeft: '1px solid #F3F4F6', display: 'flex', flexDirection: 'column', overflowY: 'auto', flexShrink: 0 }}>
-          <div style={{ padding: '14px 14px 10px', borderBottom: '1px solid #F3F4F6' }}>
+        <div style={{ width: 220, background: 'var(--surface)', borderLeft: '1px solid var(--border-soft)', display: 'flex', flexDirection: 'column', overflowY: 'auto', flexShrink: 0 }}>
+          <div style={{ padding: '14px 14px 10px', borderBottom: '1px solid var(--border-soft)' }}>
             <div style={{ fontSize: 12, fontWeight: 800, color: '#111', marginBottom: 10 }}>Register Tools</div>
             {[
               { icon: '➕', label: 'Add Child', sub: 'Not on list', action: () => setShowAdd(true) },
@@ -2049,7 +2049,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               { icon: '📜', label: 'Past Registers', sub: 'View closed sessions', action: () => setShowPastRegisters(true) },
             ].map(t => (
               <button key={t.label} onClick={t.action}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 10px', borderRadius: 14, border: '1px solid #F3F4F6', background: '#FAFBFC', cursor: t.action ? 'pointer' : 'default', textAlign: 'left', marginBottom: 6, transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease' }}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 10px', borderRadius: 14, border: '1px solid var(--border-soft)', background: '#FAFBFC', cursor: t.action ? 'pointer' : 'default', textAlign: 'left', marginBottom: 6, transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease' }}
                 onMouseEnter={e => {
                   if (!t.action) return
                   e.currentTarget.style.transform = 'translateY(-2px)'
@@ -2067,10 +2067,10 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                   const badge = e.currentTarget.querySelector('.tool-icon')
                   if (badge) { badge.style.transform = 'none'; badge.style.background = '#F3F4F6' }
                 }}>
-                <div className="tool-icon" style={{ width: 32, height: 32, borderRadius: 10, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0, transition: 'transform 0.18s ease, background 0.18s ease' }}><Icon name={t.icon} /></div>
+                <div className="tool-icon" style={{ width: 32, height: 32, borderRadius: 10, background: 'var(--surface3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0, transition: 'transform 0.18s ease, background 0.18s ease' }}><Icon name={t.icon} /></div>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>{t.label}</div>
-                  <div style={{ fontSize: 10, color: '#9CA3AF' }}>{t.sub}</div>
+                  <div style={{ fontSize: 10, color: 'var(--text-faint)' }}>{t.sub}</div>
                 </div>
               </button>
             ))}
@@ -2083,7 +2083,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
 
           {/* Templates panel */}
           {showTemplates && (
-            <div style={{ padding: 14, borderBottom: '1px solid #F3F4F6' }}>
+            <div style={{ padding: 14, borderBottom: '1px solid var(--border-soft)' }}>
               <TemplatePicker org={org} onUseTemplate={(template) => {
                 setActiveImportTemplate(template)
                 setShowTemplates(false)
@@ -2094,7 +2094,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
 
           {/* Import panel */}
           {showImport && (
-            <div style={{ padding: 14, borderBottom: '1px solid #F3F4F6' }}>
+            <div style={{ padding: 14, borderBottom: '1px solid var(--border-soft)' }}>
               {activeImportTemplate && (
                 <div style={{ marginBottom: 10, fontSize: 11, fontWeight: 700, color: primary, background: primary + '0c', border: `1px solid var(--org-a10)`, borderRadius: 8, padding: '6px 10px' }}>
                   🧩 Using "{activeImportTemplate.name}" template
@@ -2110,10 +2110,10 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           )}
 
           {/* Register notes */}
-          <div style={{ padding: 14, borderBottom: '1px solid #F3F4F6' }}>
+          <div style={{ padding: 14, borderBottom: '1px solid var(--border-soft)' }}>
             <div style={{ fontSize: 12, fontWeight: 800, color: '#111', marginBottom: 8 }}>Session Notes</div>
             <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Add notes about this session..."
-              style={{ width: '100%', height: 72, border: '1px solid #e5e7eb', borderRadius: 8, padding: 8, fontSize: 11, resize: 'none', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', color: '#374151' }} />
+              style={{ width: '100%', height: 72, border: '1px solid var(--border)', borderRadius: 8, padding: 8, fontSize: 11, resize: 'none', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', color: 'var(--text2)' }} />
           </div>
 
           {/* Safeguarding */}
@@ -2141,20 +2141,20 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           renders above the fixed bottom nav bar (same fix as the Staff Rota rebuild). */}
       {isMobile && showMobileTools && createPortal(
         <div onClick={() => setShowMobileTools(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '80vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '8px 16px calc(24px + env(safe-area-inset-bottom))', boxShadow: '0 -20px 50px rgba(0,0,0,0.25)' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '80vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '8px 16px calc(24px + env(safe-area-inset-bottom))', boxShadow: '0 -20px 50px rgba(0,0,0,0.25)' }}>
             <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 8, paddingBottom: 10 }}><div style={{ width: 40, height: 4, borderRadius: 99, background: 'rgba(0,0,0,0.12)' }} /></div>
             <div style={{ fontSize: 13, fontWeight: 800, color: '#111', marginBottom: 10 }}>Register Options</div>
-            <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 10px', borderRadius: 14, border: '1px solid #F3F4F6', background: '#FAFBFC', marginBottom: 8 }}>
+            <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 10px', borderRadius: 14, border: '1px solid var(--border-soft)', background: '#FAFBFC', marginBottom: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>{darkMode ? '🌙' : '☀️'}</div>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--surface3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>{darkMode ? '🌙' : '☀️'}</div>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>Dark Mode</div>
-                  <div style={{ fontSize: 11, color: '#9CA3AF' }}>{darkMode ? 'On for this register' : 'Off'}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{darkMode ? 'On for this register' : 'Off'}</div>
                 </div>
               </div>
               <button onClick={() => setDarkMode(v => !v)} aria-label="Toggle dark mode"
                 style={{ width: 46, height: 26, borderRadius: 99, border: 'none', background: darkMode ? primary : '#D1D5DB', position: 'relative', cursor: 'pointer', flexShrink: 0, transition: 'background 0.15s' }}>
-                <span style={{ position: 'absolute', top: 3, left: darkMode ? 23 : 3, width: 20, height: 20, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.3)', transition: 'left 0.15s' }} />
+                <span style={{ position: 'absolute', top: 3, left: darkMode ? 23 : 3, width: 20, height: 20, borderRadius: '50%', background: 'var(--surface)', boxShadow: '0 1px 3px rgba(0,0,0,0.3)', transition: 'left 0.15s' }} />
               </button>
             </div>
             {[
@@ -2166,16 +2166,16 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               { icon: '📜', label: 'Past Registers', sub: 'View closed sessions', action: () => { setShowPastRegisters(true); setShowMobileTools(false) } },
             ].map(t => (
               <button key={t.label} onClick={t.action}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 10px', borderRadius: 14, border: '1px solid #F3F4F6', background: '#FAFBFC', cursor: 'pointer', textAlign: 'left', marginBottom: 8 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}><Icon name={t.icon} /></div>
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 10px', borderRadius: 14, border: '1px solid var(--border-soft)', background: '#FAFBFC', cursor: 'pointer', textAlign: 'left', marginBottom: 8 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--surface3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}><Icon name={t.icon} /></div>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{t.label}</div>
-                  <div style={{ fontSize: 11, color: '#9CA3AF' }}>{t.sub}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{t.sub}</div>
                 </div>
               </button>
             ))}
             {onNavigate && (
-              <button onClick={() => { setShowMobileTools(false); onNavigate('settings') }} style={{ width: '100%', textAlign: 'center', border: '1px solid #F3F4F6', background: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: primary, padding: '10px 8px', borderRadius: 12, marginTop: 2 }}>
+              <button onClick={() => { setShowMobileTools(false); onNavigate('settings') }} style={{ width: '100%', textAlign: 'center', border: '1px solid var(--border-soft)', background: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: primary, padding: '10px 8px', borderRadius: 12, marginTop: 2 }}>
                 Full Groups Settings →
               </button>
             )}
@@ -2188,10 +2188,10 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           is hidden on mobile, so this presents the same import flow as a bottom sheet on phones */}
       {isMobile && showImport && createPortal(
         <div onClick={() => { setShowImport(false); setActiveImportTemplate(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '88vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '16px 16px calc(16px + env(safe-area-inset-bottom))' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '88vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '16px 16px calc(16px + env(safe-area-inset-bottom))' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>Import Children</div>
-              <button onClick={() => { setShowImport(false); setActiveImportTemplate(null) }} style={{ width: 28, height: 28, borderRadius: '50%', background: '#F1F5F9', border: 'none', cursor: 'pointer', color: '#64748B', fontSize: 16 }}>×</button>
+              <button onClick={() => { setShowImport(false); setActiveImportTemplate(null) }} style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--surface-hover)', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 16 }}>×</button>
             </div>
             {activeImportTemplate && (
               <div style={{ marginBottom: 10, fontSize: 11, fontWeight: 700, color: primary, background: primary + '0c', border: `1px solid var(--org-a10)`, borderRadius: 8, padding: '6px 10px' }}>
@@ -2212,10 +2212,10 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
       {/* MOBILE TEMPLATES MODAL — mirrors the desktop sidebar's inline TemplatePicker panel */}
       {isMobile && showTemplates && createPortal(
         <div onClick={() => setShowTemplates(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '88vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '16px 16px calc(16px + env(safe-area-inset-bottom))' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '88vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '16px 16px calc(16px + env(safe-area-inset-bottom))' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>Import Templates</div>
-              <button onClick={() => setShowTemplates(false)} style={{ width: 28, height: 28, borderRadius: '50%', background: '#F1F5F9', border: 'none', cursor: 'pointer', color: '#64748B', fontSize: 16 }}>×</button>
+              <button onClick={() => setShowTemplates(false)} style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--surface-hover)', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 16 }}>×</button>
             </div>
             <TemplatePicker org={org} onUseTemplate={(template) => {
               setActiveImportTemplate(template)
@@ -2239,9 +2239,9 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               {bulkAssigning ? 'Assigning...' : '🏷️ Assign to Group ▾'}
             </button>
             {showBulkGroupPicker && (
-              <div style={{ position: 'absolute', bottom: '110%', left: 0, background: '#fff', borderRadius: 12, boxShadow: '0 16px 40px rgba(0,0,0,0.25)', padding: 8, minWidth: 180, maxHeight: 240, overflowY: 'auto' }}>
+              <div style={{ position: 'absolute', bottom: '110%', left: 0, background: 'var(--surface)', borderRadius: 12, boxShadow: '0 16px 40px rgba(0,0,0,0.25)', padding: 8, minWidth: 180, maxHeight: 240, overflowY: 'auto' }}>
                 {bubbles.length === 0 ? (
-                  <div style={{ fontSize: 12, color: '#9CA3AF', padding: '8px 10px' }}>No groups set up yet.</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-faint)', padding: '8px 10px' }}>No groups set up yet.</div>
                 ) : bubbles.map(b => (
                   <button key={b.key} onClick={() => handleBulkAssignGroup(b.label)}
                     style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 8, fontSize: 13, fontWeight: 700, color: '#111' }}
@@ -2396,33 +2396,33 @@ function ChildrenFieldListModal({ title, icon, color, items, getFieldText, onClo
         position: 'relative', width: '100%', maxWidth: isMobile ? 'none' : 560, maxHeight: isMobile ? 'none' : '86vh',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
         borderRadius: isMobile ? 0 : 24, flex: isMobile ? 1 : undefined,
-        background: '#F8FAFC', boxShadow: isMobile ? 'none' : '0 24px 60px -20px rgba(0,0,0,0.35)',
+        background: 'var(--surface2)', boxShadow: isMobile ? 'none' : '0 24px 60px -20px rgba(0,0,0,0.35)',
       }} onClick={e => e.stopPropagation()}>
 
         {/* Header */}
         <div style={{ background: `linear-gradient(165deg, ${color}12 0%, #fff 60%)`, borderBottom: '1px solid #EEF1F6', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
           <button onClick={onClose} aria-label="Close" style={{
             position: 'absolute', top: isMobile ? 14 : 16, right: isMobile ? 14 : 16,
-            width: 32, height: 32, borderRadius: '50%', border: '1.5px solid #E2E8F0', background: '#fff',
-            color: '#374151', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+            width: 32, height: 32, borderRadius: '50%', border: '1.5px solid var(--border)', background: 'var(--surface)',
+            color: 'var(--text2)', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
           }}><Icon name="✕" /></button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingRight: 40 }}>
             <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${color}, ${color}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{icon}</div>
             <div>
               <div style={{ fontSize: 17, fontWeight: 900, color: '#0B1220', letterSpacing: -0.3 }}>{title}</div>
-              <div style={{ fontSize: 11.5, color: '#94A3B8', fontWeight: 600 }}>{items.length} child{items.length !== 1 ? 'ren' : ''} on register</div>
+              <div style={{ fontSize: 11.5, color: 'var(--text-faint)', fontWeight: 600 }}>{items.length} child{items.length !== 1 ? 'ren' : ''} on register</div>
             </div>
           </div>
           {items.length > 5 && (
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search by name..."
-              style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 11, border: '1.5px solid #E2E8F0', background: '#fff', color: '#111', fontSize: 12.5, outline: 'none' }} />
+              style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 11, border: '1.5px solid var(--border)', background: 'var(--surface)', color: '#111', fontSize: 12.5, outline: 'none' }} />
           )}
         </div>
 
         {/* List */}
         <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '14px 16px 24px' : '16px 22px 24px', WebkitOverflowScrolling: 'touch' }}>
           {sorted.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 10px', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>
+            <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--text-faint)', fontSize: 13, fontWeight: 600 }}>
               {items.length === 0 ? `No children have a ${title.toLowerCase()} flag.` : 'Nothing matches your search.'}
             </div>
           ) : (
@@ -2430,7 +2430,7 @@ function ChildrenFieldListModal({ title, icon, color, items, getFieldText, onClo
               {sorted.map(c => (
                 <button key={c.id} onClick={() => onSelectChild(c)} style={{
                   display: 'flex', alignItems: 'flex-start', gap: 10, textAlign: 'left', width: '100%',
-                  background: '#fff', border: '1.5px solid #EEF1F6', borderRadius: 14, padding: '11px 13px',
+                  background: 'var(--surface)', border: '1.5px solid #EEF1F6', borderRadius: 14, padding: '11px 13px',
                   cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
                 }}>
                   <span style={{ width: 34, height: 34, borderRadius: '50%', background: color + '18', color, fontSize: 12, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -2439,7 +2439,7 @@ function ChildrenFieldListModal({ title, icon, color, items, getFieldText, onClo
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 13, fontWeight: 800, color: '#0B1220' }}>{c.first_name} {c.last_name}</span>
-                      {c.group_name && <span style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8' }}>· {c.group_name}</span>}
+                      {c.group_name && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-faint)' }}>· {c.group_name}</span>}
                     </div>
                     <div style={{ fontSize: 12, color, fontWeight: 600, marginTop: 3, lineHeight: 1.4 }}>{getFieldText(c)}</div>
                   </div>
@@ -2493,51 +2493,51 @@ function PastRegistersListModal({ sessions, loading, primary, onClose, onSelect 
         position: 'relative', width: '100%', maxWidth: isMobile ? 'none' : 560, maxHeight: isMobile ? 'none' : '86vh',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
         borderRadius: isMobile ? 0 : 24, flex: isMobile ? 1 : undefined,
-        background: '#F8FAFC', boxShadow: isMobile ? 'none' : '0 24px 60px -20px rgba(0,0,0,0.35)',
+        background: 'var(--surface2)', boxShadow: isMobile ? 'none' : '0 24px 60px -20px rgba(0,0,0,0.35)',
       }} onClick={e => e.stopPropagation()}>
 
         {/* Header */}
         <div style={{ background: `linear-gradient(165deg, var(--org-a05) 0%, #fff 60%)`, borderBottom: '1px solid #EEF1F6', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
           <button onClick={onClose} aria-label="Close" style={{
             position: 'absolute', top: isMobile ? 14 : 16, right: isMobile ? 14 : 16,
-            width: 32, height: 32, borderRadius: '50%', border: '1.5px solid #E2E8F0', background: '#fff',
-            color: '#374151', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+            width: 32, height: 32, borderRadius: '50%', border: '1.5px solid var(--border)', background: 'var(--surface)',
+            color: 'var(--text2)', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
           }}><Icon name="✕" /></button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingRight: 40 }}>
             <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${primary}, var(--org-a85))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}><img src="/icons/past-registers-icon.png" alt="" style={{ width: 22, height: 22, objectFit: 'contain' }} /></div>
             <div>
               <div style={{ fontSize: 17, fontWeight: 900, color: '#0B1220', letterSpacing: -0.3 }}>Past Registers</div>
-              <div style={{ fontSize: 11.5, color: '#94A3B8', fontWeight: 600 }}>{sessions.length} closed session{sessions.length !== 1 ? 's' : ''}</div>
+              <div style={{ fontSize: 11.5, color: 'var(--text-faint)', fontWeight: 600 }}>{sessions.length} closed session{sessions.length !== 1 ? 's' : ''}</div>
             </div>
           </div>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search sessions..."
-            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 11, border: '1.5px solid #E2E8F0', background: '#fff', color: '#111', fontSize: 12.5, outline: 'none' }} />
+            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 11, border: '1.5px solid var(--border)', background: 'var(--surface)', color: '#111', fontSize: 12.5, outline: 'none' }} />
         </div>
 
         {/* List */}
         <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '14px 16px 24px' : '16px 22px 24px', WebkitOverflowScrolling: 'touch' }}>
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '40px 10px', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>Loading past registers…</div>
+            <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--text-faint)', fontSize: 13, fontWeight: 600 }}>Loading past registers…</div>
           ) : filtered.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 10px', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>
+            <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--text-faint)', fontSize: 13, fontWeight: 600 }}>
               {sessions.length === 0 ? 'No sessions have been closed yet.' : 'Nothing matches your search.'}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
               {groups.map(g => (
                 <div key={g.label}>
-                  <div style={{ fontSize: 11, fontWeight: 900, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>{g.label}</div>
+                  <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>{g.label}</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                     {g.items.map(s => (
                       <button key={s.id} onClick={() => onSelect(s)} style={{
                         display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', width: '100%',
-                        background: '#fff', border: '1.5px solid #EEF1F6', borderRadius: 14, padding: '11px 13px',
+                        background: 'var(--surface)', border: '1.5px solid #EEF1F6', borderRadius: 14, padding: '11px 13px',
                         cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
                       }}>
-                        <span style={{ width: 30, height: 30, borderRadius: '50%', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}><Icon name="🔒" /></span>
+                        <span style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}><Icon name="🔒" /></span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 800, color: '#0B1220', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
-                          <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600, marginTop: 1 }}>
+                          <div style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 600, marginTop: 1 }}>
                             {fmtDayDate(s.session_date)}{s.start_time ? ` · ${s.start_time}` : ''}{s.location ? ` · ${s.location}` : ''}
                           </div>
                         </div>
@@ -2610,21 +2610,21 @@ function ArchiveListModal({ sessions, loading, primary, org, onClose, onSelect, 
         position: 'relative', width: '100%', maxWidth: isMobile ? 'none' : 560, maxHeight: isMobile ? 'none' : '86vh',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
         borderRadius: isMobile ? 0 : 24, flex: isMobile ? 1 : undefined,
-        background: '#F8FAFC', boxShadow: isMobile ? 'none' : '0 24px 60px -20px rgba(0,0,0,0.35)',
+        background: 'var(--surface2)', boxShadow: isMobile ? 'none' : '0 24px 60px -20px rgba(0,0,0,0.35)',
       }} onClick={e => e.stopPropagation()}>
 
         {/* Header */}
         <div style={{ background: `linear-gradient(165deg, var(--org-a05) 0%, #fff 60%)`, borderBottom: '1px solid #EEF1F6', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
           <button onClick={onClose} aria-label="Close" style={{
             position: 'absolute', top: isMobile ? 14 : 16, right: isMobile ? 14 : 16,
-            width: 32, height: 32, borderRadius: '50%', border: '1.5px solid #E2E8F0', background: '#fff',
-            color: '#374151', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+            width: 32, height: 32, borderRadius: '50%', border: '1.5px solid var(--border)', background: 'var(--surface)',
+            color: 'var(--text2)', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
           }}><Icon name="✕" /></button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingRight: 40 }}>
             <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${primary}, var(--org-a85))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>🗄️</div>
             <div>
               <div style={{ fontSize: 17, fontWeight: 900, color: '#0B1220', letterSpacing: -0.3 }}>Archive</div>
-              <div style={{ fontSize: 11.5, color: '#94A3B8', fontWeight: 600 }}>{sessions.length} archived session{sessions.length !== 1 ? 's' : ''}</div>
+              <div style={{ fontSize: 11.5, color: 'var(--text-faint)', fontWeight: 600 }}>{sessions.length} archived session{sessions.length !== 1 ? 's' : ''}</div>
             </div>
           </div>
           {org?.register_retention_months == null && (
@@ -2633,35 +2633,35 @@ function ArchiveListModal({ sessions, loading, primary, org, onClose, onSelect, 
             </div>
           )}
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search archived sessions..."
-            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 11, border: '1.5px solid #E2E8F0', background: '#fff', color: '#111', fontSize: 12.5, outline: 'none' }} />
+            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 11, border: '1.5px solid var(--border)', background: 'var(--surface)', color: '#111', fontSize: 12.5, outline: 'none' }} />
         </div>
 
         {/* List */}
         <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '14px 16px 24px' : '16px 22px 24px', WebkitOverflowScrolling: 'touch' }}>
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '40px 10px', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>Loading archive…</div>
+            <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--text-faint)', fontSize: 13, fontWeight: 600 }}>Loading archive…</div>
           ) : filtered.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 10px', color: '#9CA3AF', fontSize: 13, fontWeight: 600 }}>
+            <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--text-faint)', fontSize: 13, fontWeight: 600 }}>
               {sessions.length === 0 ? 'Nothing archived yet.' : 'Nothing matches your search.'}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
               {groups.map(g => (
                 <div key={g.label}>
-                  <div style={{ fontSize: 11, fontWeight: 900, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>{g.label}</div>
+                  <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>{g.label}</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                     {g.items.map(s => {
                       const delInfo = deletionInfo(s)
                       return (
                         <div key={s.id} onClick={() => onSelect(s)} style={{
                           display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', width: '100%', boxSizing: 'border-box',
-                          background: '#fff', border: '1.5px solid #EEF1F6', borderRadius: 14, padding: '11px 13px',
+                          background: 'var(--surface)', border: '1.5px solid #EEF1F6', borderRadius: 14, padding: '11px 13px',
                           cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
                         }}>
-                          <span style={{ width: 30, height: 30, borderRadius: '50%', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>🗄️</span>
+                          <span style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>🗄️</span>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 13, fontWeight: 800, color: '#0B1220', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
-                            <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600, marginTop: 1 }}>
+                            <div style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 600, marginTop: 1 }}>
                               {fmtDayDate(s.session_date)}{s.start_time ? ` · ${s.start_time}` : ''}
                             </div>
                             {delInfo && (
@@ -2691,8 +2691,8 @@ function AddChildModal({ orgId, bubbles, onClose, onAdded }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
-  const fi = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', boxSizing: 'border-box' }
-  const lb = { fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 5 }
+  const fi = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }
+  const lb = { fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 5 }
 
   const handleSave = async () => {
     if (!form.first_name.trim() || !form.last_name.trim()) { setError('First and last name required.'); return }
@@ -2705,11 +2705,11 @@ function AddChildModal({ orgId, bubbles, onClose, onAdded }) {
 
   return createPortal(
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 440, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 20, width: '100%', maxWidth: 440, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
         <div style={{ padding: '20px 22px 0' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
             <div style={{ fontSize: 17, fontWeight: 900 }}>Add Child</div>
-            <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', border: 'none', background: '#F3F4F6', cursor: 'pointer', fontSize: 16 }}>×</button>
+            <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', border: 'none', background: 'var(--surface3)', cursor: 'pointer', fontSize: 16 }}>×</button>
           </div>
           {error && <div style={{ background: '#FFF0F0', border: '1px solid #FFB3B3', borderRadius: 8, padding: '8px 12px', marginBottom: 14, fontSize: 13, color: '#C00' }}>{error}</div>}
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10, marginBottom: 12 }}>

@@ -55,11 +55,11 @@ export default function RAEmergencyPlan({ assessment, org, venues }) {
       )}
       {FIELDS.map(([key, label, hint]) => (
         <div key={key}>
-          <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>
+          <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>
             <span>{label}</span>
             {savingKey === key && <span style={{ fontSize: 10.5, color: primary, fontWeight: 700 }}>Saving…</span>}
           </label>
-          <div style={{ fontSize: 11, color: '#94A3B8', marginBottom: 6 }}>{hint}</div>
+          <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 6 }}>{hint}</div>
           <textarea
             value={form[key] || ''} onChange={e => save(key, e.target.value)}
             placeholder="—"

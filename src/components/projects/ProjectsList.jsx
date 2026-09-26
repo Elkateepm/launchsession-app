@@ -17,7 +17,7 @@ const fmtRange = (a, b) => {
 }
 
 const card = (extra = {}) => ({
-  background: '#fff', border: '1px solid #E2E8F0', borderRadius: 16,
+  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16,
   boxShadow: '0 4px 16px -12px rgba(15,23,42,0.18)', ...extra,
 })
 
@@ -92,8 +92,8 @@ export default function ProjectsList({ org, session, onNavigate }) {
   if (loading) {
     return (
       <div style={{ padding: isMobile ? 16 : 28 }}>
-        <div style={{ height: 28, width: 200, background: '#F1F5F9', borderRadius: 8, marginBottom: 20 }} />
-        {[0, 1, 2].map(i => <div key={i} style={{ height: 84, background: '#F8FAFC', border: '1px solid #F1F5F9', borderRadius: 16, marginBottom: 12 }} />)}
+        <div style={{ height: 28, width: 200, background: 'var(--surface-hover)', borderRadius: 8, marginBottom: 20 }} />
+        {[0, 1, 2].map(i => <div key={i} style={{ height: 84, background: 'var(--surface2)', border: '1px solid var(--border-soft)', borderRadius: 16, marginBottom: 12 }} />)}
       </div>
     )
   }
@@ -102,8 +102,8 @@ export default function ProjectsList({ org, session, onNavigate }) {
     <div style={{ padding: isMobile ? 16 : 28, width: '100%', maxWidth: '100%', margin: 0, boxSizing: 'border-box' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap', marginBottom: 18 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: isMobile ? 22 : 28, fontWeight: 900, color: '#0F172A', letterSpacing: -0.6 }}>Projects</h1>
-          <p style={{ margin: '4px 0 0', fontSize: 13.5, color: '#64748B', fontWeight: 500 }}>
+          <h1 style={{ margin: 0, fontSize: isMobile ? 22 : 28, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.6 }}>Projects</h1>
+          <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--text3)', fontWeight: 500 }}>
             Multi-day programmes, holiday clubs, and trips — grouped and tracked together.
           </p>
         </div>
@@ -117,7 +117,7 @@ export default function ProjectsList({ org, session, onNavigate }) {
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
         <input
           value={search} onChange={e => setSearch(e.target.value)} placeholder="Search projects…"
-          style={{ flex: 1, minWidth: 180, boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 13, outline: 'none' }}
+          style={{ flex: 1, minWidth: 180, boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 13, outline: 'none' }}
         />
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {FILTERS.map(f => (
@@ -133,10 +133,10 @@ export default function ProjectsList({ org, session, onNavigate }) {
 
       {filtered.length === 0 ? (
         <div style={card({ padding: 40, textAlign: 'center' })}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>
             {projects.length === 0 ? 'No projects yet' : 'No projects match'}
           </div>
-          <div style={{ fontSize: 13, color: '#64748B', marginBottom: projects.length === 0 ? 16 : 0 }}>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: projects.length === 0 ? 16 : 0 }}>
             {projects.length === 0
               ? 'Group a holiday club, residential, or multi-day trip into one place.'
               : 'Try a different search or filter.'}
@@ -164,8 +164,8 @@ export default function ProjectsList({ org, session, onNavigate }) {
                     <StatusChip status={p._status} />
                     <span style={{ fontSize: 10.5, fontWeight: 700, color: '#7C3AED', background: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: 99, padding: '2px 8px' }}>{typeLabel}</span>
                   </div>
-                  <div style={{ fontSize: 15.5, fontWeight: 800, color: '#0F172A' }}>{p.name}</div>
-                  <div style={{ fontSize: 12.5, color: '#64748B', fontWeight: 600, marginTop: 2 }}>
+                  <div style={{ fontSize: 15.5, fontWeight: 800, color: 'var(--text)' }}>{p.name}</div>
+                  <div style={{ fontSize: 12.5, color: 'var(--text3)', fontWeight: 600, marginTop: 2 }}>
                     {fmtRange(p.start_date, p.end_date)} · {days} {days === 1 ? 'day' : 'days'}
                   </div>
                 </div>

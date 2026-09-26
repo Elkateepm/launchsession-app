@@ -4,10 +4,10 @@ import Icon from '../../lib/icons'
 
 const ORG_SLUG = window.location.pathname.split('/register-volunteer/')[1]?.split('/').filter(Boolean)[0]
 
-const inp = { width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 14, fontFamily: 'inherit', outline: 'none', background: '#fff' }
-const label = { fontSize: 12.5, fontWeight: 700, color: '#374151', display: 'block', marginBottom: 5 }
-const section = { background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: '20px 22px', marginBottom: 16 }
-const sectionTitle = { fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 14 }
+const inp = { width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'inherit', outline: 'none', background: 'var(--surface)' }
+const label = { fontSize: 12.5, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 5 }
+const section = { background: 'var(--surface)', border: '1px solid #EEF1F6', borderRadius: 16, padding: '20px 22px', marginBottom: 16 }
+const sectionTitle = { fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 14 }
 
 const SKILL_OPTIONS = ['Coaching', 'First Aid', 'Driving', 'Mentoring', 'Admin & Office', 'Cooking / Catering', 'Music / Arts', 'Safeguarding Lead']
 const AVAILABILITY_OPTIONS = ['Weekday mornings', 'Weekday afternoons', 'Weekday evenings', 'Weekends', 'School holidays']
@@ -90,21 +90,21 @@ export default function PublicVolunteerRegistration() {
     setDone(true)
   }
 
-  if (org === undefined) return <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94A3B8', fontFamily: 'system-ui' }}>Loading…</div>
+  if (org === undefined) return <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-faint)', fontFamily: 'system-ui' }}>Loading…</div>
   if (org === null) return (
     <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui', textAlign: 'center', padding: 20 }}>
-      <div><div style={{ fontSize: 40, marginBottom: 10 }}><Icon name="🔍" /></div><div style={{ fontSize: 16, fontWeight: 700, color: '#334155' }}>We couldn't find that organisation's volunteer sign-up page.</div></div>
+      <div><div style={{ fontSize: 40, marginBottom: 10 }}><Icon name="🔍" /></div><div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text2)' }}>We couldn't find that organisation's volunteer sign-up page.</div></div>
     </div>
   )
 
   if (done) return (
     <div style={{ minHeight: '100dvh', background: '#F6F8FC', fontFamily: 'system-ui, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div style={{ background: '#fff', borderRadius: 20, padding: 40, maxWidth: 460, textAlign: 'center', boxShadow: '0 20px 60px rgba(15,23,42,0.08)' }}>
+      <div style={{ background: 'var(--surface)', borderRadius: 20, padding: 40, maxWidth: 460, textAlign: 'center', boxShadow: '0 20px 60px rgba(15,23,42,0.08)' }}>
         <div style={{ fontSize: 46, marginBottom: 14 }}><Icon name="✅" /></div>
-        <div style={{ fontSize: 19, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>Application received</div>
-        <div style={{ fontSize: 14, color: '#64748B', lineHeight: 1.5 }}>
+        <div style={{ fontSize: 19, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>Application received</div>
+        <div style={{ fontSize: 14, color: 'var(--text3)', lineHeight: 1.5 }}>
           {needsVerification
-            ? <>Thanks {form.first_name} — one last step. We've emailed <strong style={{ color: '#0F172A' }}>{form.email.trim()}</strong> with a link to confirm it's yours. Your application reaches {org.name} once you've clicked it.</>
+            ? <>Thanks {form.first_name} — one last step. We've emailed <strong style={{ color: 'var(--text)' }}>{form.email.trim()}</strong> with a link to confirm it's yours. Your application reaches {org.name} once you've clicked it.</>
             : <>Thanks {form.first_name} — your volunteer application has been sent to {org.name} for review. They'll be in touch soon.</>}
         </div>
       </div>
@@ -114,7 +114,7 @@ export default function PublicVolunteerRegistration() {
   return (
     <div style={{ minHeight: '100dvh', background: '#F6F8FC', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ background: `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`, padding: '28px 20px', color: '#fff', textAlign: 'center' }}>
-        {org.logo_url && <img src={org.logo_url} alt="" style={{ width: 52, height: 52, borderRadius: 14, objectFit: 'contain', background: '#fff', padding: 6, boxSizing: 'border-box', marginBottom: 10 }} />}
+        {org.logo_url && <img src={org.logo_url} alt="" style={{ width: 52, height: 52, borderRadius: 14, objectFit: 'contain', background: 'var(--surface)', padding: 6, boxSizing: 'border-box', marginBottom: 10 }} />}
         <div style={{ fontSize: 20, fontWeight: 900 }}>{org.name}</div>
         <div style={{ fontSize: 13.5, opacity: 0.85, marginTop: 2 }}>Become a volunteer</div>
       </div>
@@ -138,7 +138,7 @@ export default function PublicVolunteerRegistration() {
             <Field><label style={label}>Date of birth</label><input type="date" style={inp} value={form.date_of_birth} onChange={e => set('date_of_birth', e.target.value)} /></Field>
             <Field><label style={label}>Phone</label><input type="tel" style={inp} value={form.phone} onChange={e => set('phone', e.target.value)} /></Field>
             <Field><label style={label}>Email</label><input type="email" style={inp} value={form.email} onChange={e => set('email', e.target.value)} /></Field>
-            <div style={{ fontSize: 11.5, color: '#94A3B8' }}>Please provide at least a phone number or email so we can reach you.</div>
+            <div style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>Please provide at least a phone number or email so we can reach you.</div>
           </div>
         )}
 
@@ -201,8 +201,8 @@ export default function PublicVolunteerRegistration() {
               ['Availability', form.availability.join(', ') || 'None selected'],
               ['DBS number', form.dbs_number || 'Not provided'],
             ].map(([k, v]) => v ? (
-              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '7px 0', borderBottom: '1px solid #F1F5F9', fontSize: 13 }}>
-                <span style={{ color: '#64748B' }}>{k}</span><span style={{ fontWeight: 700, color: '#0F172A', textAlign: 'right' }}>{v}</span>
+              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '7px 0', borderBottom: '1px solid var(--border-soft)', fontSize: 13 }}>
+                <span style={{ color: 'var(--text3)' }}>{k}</span><span style={{ fontWeight: 700, color: 'var(--text)', textAlign: 'right' }}>{v}</span>
               </div>
             ) : null)}
             {error && <div style={{ marginTop: 14, color: '#DC2626', fontSize: 12.5, fontWeight: 600 }}>{error}</div>}
@@ -210,7 +210,7 @@ export default function PublicVolunteerRegistration() {
         )}
 
         <div style={{ display: 'flex', gap: 10 }}>
-          {step > 1 && <button onClick={() => setStep(s => s - 1)} style={{ flex: 1, padding: '13px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}><Icon name="←" /> Back</button>}
+          {step > 1 && <button onClick={() => setStep(s => s - 1)} style={{ flex: 1, padding: '13px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}><Icon name="←" /> Back</button>}
           {step < 5 ? (
             <button onClick={() => canContinue() && setStep(s => s + 1)} disabled={!canContinue()}
               style={{ flex: 2, padding: '13px', borderRadius: 10, border: 'none', background: canContinue() ? primary : '#CBD5E1', color: '#fff', fontWeight: 800, fontSize: 14, cursor: canContinue() ? 'pointer' : 'default' }}>
@@ -223,7 +223,7 @@ export default function PublicVolunteerRegistration() {
             </button>
           )}
         </div>
-        <div style={{ textAlign: 'center', fontSize: 11, color: '#94A3B8', marginTop: 16 }}><Icon name="🔒" /> Your information is sent securely and only visible to {org.name}.</div>
+        <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--text-faint)', marginTop: 16 }}><Icon name="🔒" /> Your information is sent securely and only visible to {org.name}.</div>
       </div>
     </div>
   )

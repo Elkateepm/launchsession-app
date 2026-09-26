@@ -17,7 +17,7 @@ import { ukDate } from '../../lib/hrAccess'
 // system of record for everything.
 
 const card = {
-  background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14,
+  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14,
   padding: 16, marginBottom: 12,
 }
 
@@ -77,16 +77,16 @@ export default function StaffOnboarding({ org, staff, primary, canEdit, onJumpTo
   }
 
   if (items === null) {
-    return <div style={{ ...card, color: '#64748B', fontSize: 14 }}>Loading onboarding…</div>
+    return <div style={{ ...card, color: 'var(--text3)', fontSize: 14 }}>Loading onboarding…</div>
   }
 
   if (items.length === 0) {
     return (
       <div style={{ ...card, textAlign: 'center', padding: 24 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>
           No onboarding checklist yet
         </div>
-        <div style={{ fontSize: 13.5, color: '#64748B', lineHeight: 1.55, marginBottom: 16 }}>
+        <div style={{ fontSize: 13.5, color: 'var(--text3)', lineHeight: 1.55, marginBottom: 16 }}>
           Build one from {staff.full_name}&apos;s employment type
           {staff.employment_type ? ` (${staff.employment_type})` : ''}. A volunteer gets a
           shorter list than an employee — no contract, no Right to Work check.
@@ -112,10 +112,10 @@ export default function StaffOnboarding({ org, staff, primary, canEdit, onJumpTo
     <>
       <div style={card}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 10 }}>
-          <div style={{ fontSize: 30, fontWeight: 900, color: '#0F172A', letterSpacing: -1 }}>{percent}%</div>
-          <div style={{ fontSize: 13, color: '#64748B' }}>{done} of {items.length} done</div>
+          <div style={{ fontSize: 30, fontWeight: 900, color: 'var(--text)', letterSpacing: -1 }}>{percent}%</div>
+          <div style={{ fontSize: 13, color: 'var(--text3)' }}>{done} of {items.length} done</div>
         </div>
-        <div style={{ height: 8, borderRadius: 99, background: '#F1F5F9', overflow: 'hidden' }}>
+        <div style={{ height: 8, borderRadius: 99, background: 'var(--surface-hover)', overflow: 'hidden' }}>
           <div style={{
             width: `${percent}%`, height: '100%', borderRadius: 99,
             background: complete ? '#22C55E' : primary, transition: 'width 0.3s',
@@ -140,7 +140,7 @@ export default function StaffOnboarding({ org, staff, primary, canEdit, onJumpTo
           return (
             <div key={i.id} style={{
               display: 'flex', alignItems: 'flex-start', gap: 11,
-              padding: '10px 0', borderTop: '1px solid #F1F5F9',
+              padding: '10px 0', borderTop: '1px solid var(--border-soft)',
             }}>
               <input
                 type="checkbox" checked={i.completed} disabled={!canEdit || busy}
@@ -155,18 +155,18 @@ export default function StaffOnboarding({ org, staff, primary, canEdit, onJumpTo
                 }}>
                   {i.label}
                   {!i.required && (
-                    <span style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', marginLeft: 8 }}>optional</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', marginLeft: 8 }}>optional</span>
                   )}
                 </div>
-                <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 2 }}>
                   {i.completed && i.completed_at ? `Done ${ukDate(i.completed_at)}` : owner ? owner[1] : 'Tracked here'}
                 </div>
               </div>
               {owner && onJumpToTab && (
                 <button onClick={() => onJumpToTab(owner[0])} style={{
-                  border: '1px solid #E2E8F0', background: '#fff', borderRadius: 9,
+                  border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 9,
                   padding: '6px 10px', minHeight: 40, cursor: 'pointer', fontFamily: 'inherit',
-                  fontSize: 12, fontWeight: 700, color: '#64748B', flexShrink: 0, whiteSpace: 'nowrap',
+                  fontSize: 12, fontWeight: 700, color: 'var(--text3)', flexShrink: 0, whiteSpace: 'nowrap',
                 }}>Open</button>
               )}
             </div>

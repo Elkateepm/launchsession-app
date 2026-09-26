@@ -10,7 +10,7 @@ const STAGES = [
   { key: 'interview', label: 'Interview', color: '#8B5CF6' },
   { key: 'accepted', label: 'Accepted', color: '#22C55E' },
   { key: 'rejected', label: 'Rejected', color: '#EF4444' },
-  { key: 'withdrawn', label: 'Withdrawn', color: '#94A3B8' },
+  { key: 'withdrawn', label: 'Withdrawn', color: 'var(--text-faint)' },
 ]
 
 export default function VolunteersApplications({ org, applicants, onDataChange, publicApplications = [], onApprovePublic, onRejectPublic }) {
@@ -37,8 +37,8 @@ export default function VolunteersApplications({ org, applicants, onDataChange, 
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                   <Avatar name={`${a.first_name} ${a.last_name || ''}`} size={36} color={primary} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{a.first_name} {a.last_name}</div>
-                    <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 1 }}>{[a.phone, a.email].filter(Boolean).join(' · ') || 'No contact provided'}</div>
+                    <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>{a.first_name} {a.last_name}</div>
+                    <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 1 }}>{[a.phone, a.email].filter(Boolean).join(' · ') || 'No contact provided'}</div>
                     {(a.skills || []).length > 0 && (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
                         {a.skills.map(s => (
@@ -47,9 +47,9 @@ export default function VolunteersApplications({ org, applicants, onDataChange, 
                       </div>
                     )}
                     {(a.availability || []).length > 0 && (
-                      <div style={{ fontSize: 10.5, color: '#94A3B8', marginTop: 4 }}>Available: {a.availability.join(', ')}</div>
+                      <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginTop: 4 }}>Available: {a.availability.join(', ')}</div>
                     )}
-                    {a.dbs_number && <div style={{ fontSize: 10.5, color: '#94A3B8', marginTop: 2 }}>DBS: {a.dbs_number}{a.dbs_expiry ? ` (expires ${new Date(a.dbs_expiry).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })})` : ''}</div>}
+                    {a.dbs_number && <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginTop: 2 }}>DBS: {a.dbs_number}{a.dbs_expiry ? ` (expires ${new Date(a.dbs_expiry).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })})` : ''}</div>}
                     {a.notes && <div style={{ fontSize: 11.5, color: '#475569', marginTop: 6, fontStyle: 'italic' }}>"{a.notes}"</div>}
                     <div style={{ fontSize: 10, color: '#CBD5E1', marginTop: 6 }}>Applied {new Date(a.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                   </div>
@@ -68,8 +68,8 @@ export default function VolunteersApplications({ org, applicants, onDataChange, 
       {applicants.length === 0 ? (
         <Card style={{ textAlign: 'center', padding: '48px 24px' }}>
           <div style={{ fontSize: 36, marginBottom: 10 }}>📮</div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>No applications yet</div>
-          <div style={{ fontSize: 13, color: '#64748B', marginTop: 4 }}>New volunteer sign-ups from your portal will land here.</div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>No applications yet</div>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 4 }}>New volunteer sign-ups from your portal will land here.</div>
         </Card>
       ) : (
         <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8 }}>
@@ -82,21 +82,21 @@ export default function VolunteersApplications({ org, applicants, onDataChange, 
                 style={{ minWidth: 240, flex: '0 0 240px', background: 'rgba(255,255,255,0.55)', borderRadius: 18, padding: 12, border: '1px solid rgba(15,23,42,0.05)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, padding: '0 4px' }}>
                   <div style={{ fontSize: 12.5, fontWeight: 800, color: stage.color }}>{stage.label}</div>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: '#94A3B8', background: '#F1F5F9', borderRadius: 99, padding: '1px 8px' }}>{items.length}</div>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-faint)', background: 'var(--surface-hover)', borderRadius: 99, padding: '1px 8px' }}>{items.length}</div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: 60 }}>
                   {items.map(a => (
                     <motion.div key={a.id} layout draggable onDragStart={() => setDragId(a.id)}
-                      whileHover={{ y: -2 }} style={{ background: '#fff', borderRadius: 14, padding: 12, boxShadow: '0 2px 10px rgba(15,23,42,0.06)', cursor: 'grab' }}>
+                      whileHover={{ y: -2 }} style={{ background: 'var(--surface)', borderRadius: 14, padding: 12, boxShadow: '0 2px 10px rgba(15,23,42,0.06)', cursor: 'grab' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                         <Avatar name={a.full_name} photoUrl={a.photo_url} size={30} color={primary} />
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0F172A' }}>{a.full_name || '—'}</div>
-                          <div style={{ fontSize: 10.5, color: '#94A3B8' }}>{new Date(a.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                          <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)' }}>{a.full_name || '—'}</div>
+                          <div style={{ fontSize: 10.5, color: 'var(--text-faint)' }}>{new Date(a.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                         </div>
                       </div>
                       {(a.experience || []).length > 0 && (
-                        <div style={{ fontSize: 10.5, color: '#64748B', marginBottom: 8 }}>{a.experience.slice(0, 2).join(', ')}</div>
+                        <div style={{ fontSize: 10.5, color: 'var(--text3)', marginBottom: 8 }}>{a.experience.slice(0, 2).join(', ')}</div>
                       )}
                       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                         {stage.key !== 'accepted' && stage.key !== 'rejected' && (
@@ -106,10 +106,10 @@ export default function VolunteersApplications({ org, applicants, onDataChange, 
                           <button onClick={() => moveTo(a.id, 'rejected')} style={{ fontSize: 10.5, fontWeight: 800, padding: '4px 8px', borderRadius: 7, border: 'none', background: 'rgba(239,68,68,0.1)', color: '#B91C1C', cursor: 'pointer' }}>Reject</button>
                         )}
                         {stage.key === 'new' && (
-                          <button onClick={() => moveTo(a.id, 'reviewing')} style={{ fontSize: 10.5, fontWeight: 800, padding: '4px 8px', borderRadius: 7, border: 'none', background: '#F1F5F9', color: '#475569', cursor: 'pointer' }}>Review <Icon name="→" /></button>
+                          <button onClick={() => moveTo(a.id, 'reviewing')} style={{ fontSize: 10.5, fontWeight: 800, padding: '4px 8px', borderRadius: 7, border: 'none', background: 'var(--surface-hover)', color: '#475569', cursor: 'pointer' }}>Review <Icon name="→" /></button>
                         )}
                         {stage.key === 'reviewing' && (
-                          <button onClick={() => moveTo(a.id, 'interview')} style={{ fontSize: 10.5, fontWeight: 800, padding: '4px 8px', borderRadius: 7, border: 'none', background: '#F1F5F9', color: '#475569', cursor: 'pointer' }}>Interview <Icon name="→" /></button>
+                          <button onClick={() => moveTo(a.id, 'interview')} style={{ fontSize: 10.5, fontWeight: 800, padding: '4px 8px', borderRadius: 7, border: 'none', background: 'var(--surface-hover)', color: '#475569', cursor: 'pointer' }}>Interview <Icon name="→" /></button>
                         )}
                       </div>
                     </motion.div>

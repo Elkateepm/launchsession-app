@@ -16,7 +16,7 @@ import Icon from '../../lib/icons'
 // record on user_id, and includes HR records with no login yet. Volunteers and
 // young people stay in their own modules -- HR is employees.
 
-const CARD = { background: '#fff', border: '1px solid #ECE9F5', borderRadius: 16 }
+const CARD = { background: 'var(--surface)', border: '1px solid #ECE9F5', borderRadius: 16 }
 
 const DBS_STATES = {
   clear: { label: 'Clear', tone: '#04713C', bg: '#E7F8ED' },
@@ -168,16 +168,16 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
   }
 
   return (
-    <div style={{ background: '#F8FAFC', minHeight: '100%', padding: isMobile ? 16 : 24 }}>
+    <div style={{ background: 'var(--surface2)', minHeight: '100%', padding: isMobile ? 16 : 24 }}>
       <div style={{
         display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
         gap: 16, marginBottom: 18, flexWrap: 'wrap',
       }}>
         <div>
-          <div style={{ fontSize: isMobile ? 21 : 24, fontWeight: 900, color: '#0F172A', letterSpacing: -0.5 }}>
+          <div style={{ fontSize: isMobile ? 21 : 24, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.5 }}>
             HR Centre
           </div>
-          <div style={{ fontSize: 13.5, color: '#64748B', marginTop: 4 }}>
+          <div style={{ fontSize: 13.5, color: 'var(--text3)', marginTop: 4 }}>
             Manage your staff, compliance and leave in one place.
           </div>
         </div>
@@ -185,7 +185,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
           <div style={{ display: 'flex', gap: 8, width: isMobile ? '100%' : 'auto' }}>
             <button onClick={() => setInviteOpen(true)} style={{
               flex: isMobile ? 1 : 'none', padding: '11px 18px', borderRadius: 11,
-              border: '1px solid #E2E8F0', background: '#fff', color: '#0F172A',
+              border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)',
               fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
             }}>Invite Staff</button>
           </div>
@@ -211,18 +211,18 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
         }}>{notice}</div>
       )}
 
-      {loading && <div style={{ ...CARD, padding: 30, textAlign: 'center', color: '#94A3B8' }}>Loading…</div>}
+      {loading && <div style={{ ...CARD, padding: 30, textAlign: 'center', color: 'var(--text-faint)' }}>Loading…</div>}
 
       {!loading && tab === 'overview' && (
         <>
-          <div style={{ fontSize: 13, color: '#64748B', marginBottom: 14 }}>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 14 }}>
             {stats.total} staff &nbsp;·&nbsp; {stats.active} active &nbsp;·&nbsp; {stats.onLeave} on leave
             &nbsp;·&nbsp; {stats.pending} pending invite{stats.pending === 1 ? '' : 's'}
           </div>
 
           {attention.length > 0 ? (
             <div style={{ ...CARD, marginBottom: 16, overflow: 'hidden' }}>
-              <div style={{ padding: '13px 16px', borderBottom: '1px solid #ECE9F5', fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>
+              <div style={{ padding: '13px 16px', borderBottom: '1px solid #ECE9F5', fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>
                 Needs attention
               </div>
               {attention.slice(0, 8).map((item, i) => (
@@ -236,7 +236,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
                     background: item.severity === 'action' ? '#E5484D' : item.severity === 'review' ? '#F79009' : '#7C5CFC',
                   }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>{item.title}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{item.title}</div>
                     <div style={{ fontSize: 12.5, color: '#8B87A3', marginTop: 2 }}>{item.detail}</div>
                   </div>
                   <button
@@ -254,7 +254,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
           ) : (
             <div style={{ ...CARD, padding: '26px 20px', marginBottom: 16, textAlign: 'center' }}>
               <div style={{ fontSize: 26, marginBottom: 6 }}><Icon name="✓" /></div>
-              <div style={{ fontSize: 15.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>
+              <div style={{ fontSize: 15.5, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>
                 Everything is up to date
               </div>
               <div style={{ fontSize: 13.5, color: '#8B87A3' }}>There are no outstanding HR actions.</div>
@@ -262,8 +262,8 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
           )}
 
           <div style={{ ...CARD, padding: 18, marginBottom: 16 }}>
-            <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Working today</div>
-            <div style={{ fontSize: 13.5, color: '#64748B', lineHeight: 1.7 }}>
+            <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Working today</div>
+            <div style={{ fontSize: 13.5, color: 'var(--text3)', lineHeight: 1.7 }}>
               {stats.active - stats.onLeave} staff working<br />
               {stats.onLeave} on leave
             </div>
@@ -275,16 +275,16 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
 
           {leave.length > 0 && (
             <div style={{ ...CARD, padding: 18 }}>
-              <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Coming up</div>
+              <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Coming up</div>
               <div style={{ display: 'grid', gap: 8 }}>
                 {leave.slice(0, 5).map(l => {
                   const person = directory.find(d => d.hr_id === l.staff_id)
                   return (
                     <div key={l.id} style={{ display: 'flex', gap: 12, fontSize: 13.5 }}>
-                      <span style={{ color: '#94A3B8', minWidth: 62 }}>
+                      <span style={{ color: 'var(--text-faint)', minWidth: 62 }}>
                         {new Date(l.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                       </span>
-                      <span style={{ color: '#0F172A' }}>
+                      <span style={{ color: 'var(--text)' }}>
                         {person?.full_name || 'Staff member'} — {l.type || 'Leave'}
                       </span>
                     </div>
@@ -305,13 +305,13 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
               placeholder="Search by name or email…"
               style={{
                 flex: 1, minWidth: 200, padding: '11px 14px', borderRadius: 11, fontSize: 14,
-                border: '1px solid #E2E8F0', background: '#fff', color: '#0F172A',
+                border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)',
                 outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
               }}
             />
             <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{
               padding: '11px 13px', borderRadius: 11, fontSize: 13.5, fontWeight: 700,
-              border: '1px solid #E2E8F0', background: '#fff', color: '#0F172A',
+              border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)',
               fontFamily: 'inherit', cursor: 'pointer',
             }}>
               <option value="all">All</option>
@@ -323,7 +323,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
 
           {directory.length === 0 && (
             <div style={{ ...CARD, padding: '44px 24px', textAlign: 'center' }}>
-              <div style={{ fontSize: 17, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>Build your team</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>Build your team</div>
               <div style={{ fontSize: 14, color: '#8B87A3', maxWidth: 360, margin: '0 auto 18px', lineHeight: 1.55 }}>
                 Invite staff to create their LaunchSession account, and their compliance
                 and leave will live here alongside it.
@@ -356,7 +356,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
                     }}>{(p.full_name || '?').slice(0, 1).toUpperCase()}</div>
 
                     <div style={{ flex: 1, minWidth: 140 }}>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>
                         {p.full_name || 'Unnamed'}
                       </div>
                       <div style={{ fontSize: 12.5, color: '#8B87A3', marginTop: 2 }}>
@@ -389,7 +389,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
 
           {invites.length > 0 && (
             <div style={{ marginTop: 20 }}>
-              <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>
+              <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>
                 Pending invites ({invites.length})
               </div>
               <div style={{ display: 'grid', gap: 8 }}>
@@ -397,7 +397,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
                   <div key={inv.id} style={{ ...CARD, padding: 14 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                       <div style={{ flex: 1, minWidth: 160 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>
                           {inv.full_name || inv.email}
                         </div>
                         <div style={{ fontSize: 12.5, color: '#8B87A3', marginTop: 2 }}>
@@ -413,7 +413,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
                           }}
                           style={{
                             padding: '8px 14px', borderRadius: 10, border: '1px solid #FECACA',
-                            background: '#fff', color: '#B42318', fontSize: 12.5, fontWeight: 700,
+                            background: 'var(--surface)', color: '#B42318', fontSize: 12.5, fontWeight: 700,
                             cursor: 'pointer', fontFamily: 'inherit',
                           }}
                         >Cancel</button>
@@ -462,7 +462,7 @@ function ComplianceTab({ directory, isMobile, onOpen }) {
     <div style={{ display: 'grid', gap: 14 }}>
       {needs.length > 0 && (
         <div style={{ ...CARD, overflow: 'hidden' }}>
-          <div style={{ padding: '13px 16px', borderBottom: '1px solid #ECE9F5', fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>
+          <div style={{ padding: '13px 16px', borderBottom: '1px solid #ECE9F5', fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>
             Needs attention
           </div>
           {needs.map((r, i) => (
@@ -473,7 +473,7 @@ function ComplianceTab({ directory, isMobile, onOpen }) {
               borderBottom: i < needs.length - 1 ? '1px solid #F5F3FA' : 'none',
             }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>{r.full_name}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{r.full_name}</div>
               </div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {r.dbs !== 'clear' && <Pill state={r.dbs} />}
@@ -484,15 +484,15 @@ function ComplianceTab({ directory, isMobile, onOpen }) {
       )}
 
       <div style={{ ...CARD, overflow: 'hidden' }}>
-        <div style={{ padding: '13px 16px', borderBottom: '1px solid #ECE9F5', fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>
+        <div style={{ padding: '13px 16px', borderBottom: '1px solid #ECE9F5', fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>
           All staff compliance
         </div>
 
         {isMobile ? (
           <div style={{ padding: 12, display: 'grid', gap: 10 }}>
             {rows.map(r => (
-              <div key={r.user_id || r.hr_id} style={{ border: '1px solid #F1F5F9', borderRadius: 12, padding: 12 }}>
-                <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}>{r.full_name}</div>
+              <div key={r.user_id || r.hr_id} style={{ border: '1px solid var(--border-soft)', borderRadius: 12, padding: 12 }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', marginBottom: 8 }}>{r.full_name}</div>
                 <div style={{ display: 'grid', gap: 6 }}>
                   <Row label="DBS" state={r.dbs} />
                   <Row label="Safeguarding" state={r.training} />
@@ -504,7 +504,7 @@ function ComplianceTab({ directory, isMobile, onOpen }) {
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
             <thead>
-              <tr style={{ background: '#F8FAFC' }}>
+              <tr style={{ background: 'var(--surface2)' }}>
                 {['Staff', 'DBS', 'Safeguarding', 'First aid'].map(h => (
                   <th key={h} style={{
                     textAlign: 'left', padding: '10px 16px', fontSize: 11.5, fontWeight: 700,
@@ -517,7 +517,7 @@ function ComplianceTab({ directory, isMobile, onOpen }) {
               {rows.map(r => (
                 <tr key={r.user_id || r.hr_id} onClick={() => onOpen(r)}
                   style={{ borderBottom: '1px solid #F5F3FA', cursor: 'pointer' }}>
-                  <td style={{ padding: '11px 16px', fontWeight: 700, color: '#0F172A' }}>{r.full_name}</td>
+                  <td style={{ padding: '11px 16px', fontWeight: 700, color: 'var(--text)' }}>{r.full_name}</td>
                   <td style={{ padding: '11px 16px' }}><Pill state={r.dbs} /></td>
                   <td style={{ padding: '11px 16px' }}><Pill state={r.training} /></td>
                   <td style={{ padding: '11px 16px' }}><Pill state={r.firstAid} /></td>
@@ -533,7 +533,7 @@ function ComplianceTab({ directory, isMobile, onOpen }) {
 
 const Row = ({ label, state }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-    <span style={{ fontSize: 12.5, color: '#64748B', minWidth: 92 }}>{label}</span>
+    <span style={{ fontSize: 12.5, color: 'var(--text3)', minWidth: 92 }}>{label}</span>
     <Pill state={state} />
   </div>
 )
@@ -551,13 +551,13 @@ function LeaveTab({ leave, directory }) {
   return (
     <div style={{ display: 'grid', gap: 14 }}>
       <div style={{ ...CARD, padding: 18 }}>
-        <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Today</div>
+        <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Today</div>
         {onNow.length === 0 ? (
           <div style={{ fontSize: 13.5, color: '#8B87A3' }}>Nobody is on leave today.</div>
         ) : (
           <div style={{ display: 'grid', gap: 8 }}>
             {onNow.map(l => (
-              <div key={l.id} style={{ fontSize: 13.5, color: '#0F172A' }}>
+              <div key={l.id} style={{ fontSize: 13.5, color: 'var(--text)' }}>
                 {nameFor(l.staff_id)} — {l.type || 'Leave'} ({fmt(l.start_date)}–{fmt(l.end_date)})
               </div>
             ))}
@@ -566,13 +566,13 @@ function LeaveTab({ leave, directory }) {
       </div>
 
       <div style={{ ...CARD, padding: 18 }}>
-        <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Upcoming</div>
+        <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Upcoming</div>
         {upcoming.length === 0 ? (
           <div style={{ fontSize: 13.5, color: '#8B87A3' }}>No leave booked.</div>
         ) : (
           <div style={{ display: 'grid', gap: 8 }}>
             {upcoming.map(l => (
-              <div key={l.id} style={{ fontSize: 13.5, color: '#0F172A' }}>
+              <div key={l.id} style={{ fontSize: 13.5, color: 'var(--text)' }}>
                 {nameFor(l.staff_id)} — {l.type || 'Leave'} ({fmt(l.start_date)}–{fmt(l.end_date)})
               </div>
             ))}
@@ -597,15 +597,15 @@ function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, viewe
       <div style={{ fontSize: 11.5, fontWeight: 700, color: '#8B87A3', letterSpacing: 0.3 }}>
         {label.toUpperCase()}
       </div>
-      <div style={{ fontSize: 14, color: '#0F172A', marginTop: 3 }}>{value || '—'}</div>
+      <div style={{ fontSize: 14, color: 'var(--text)', marginTop: 3 }}>{value || '—'}</div>
     </div>
   )
 
   return (
-    <div style={{ background: '#F8FAFC', minHeight: '100%', padding: isMobile ? 16 : 24 }}>
+    <div style={{ background: 'var(--surface2)', minHeight: '100%', padding: isMobile ? 16 : 24 }}>
       <button onClick={onBack} style={{
-        padding: '7px 13px', borderRadius: 9, border: '1px solid #E2E8F0',
-        background: '#fff', color: '#64748B', fontSize: 12.5, fontWeight: 700,
+        padding: '7px 13px', borderRadius: 9, border: '1px solid var(--border)',
+        background: 'var(--surface)', color: 'var(--text3)', fontSize: 12.5, fontWeight: 700,
         cursor: 'pointer', fontFamily: 'inherit', marginBottom: 14,
       }}><Icon name="←" /> Staff</button>
 
@@ -617,16 +617,16 @@ function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, viewe
             display: 'grid', placeItems: 'center', fontSize: 19, fontWeight: 800,
           }}>{(person.full_name || '?').slice(0, 1).toUpperCase()}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A' }}>{person.full_name}</div>
-            <div style={{ fontSize: 13.5, color: '#64748B', marginTop: 2 }}>
+            <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)' }}>{person.full_name}</div>
+            <div style={{ fontSize: 13.5, color: 'var(--text3)', marginTop: 2 }}>
               {person.job_title || person.role || 'Staff'} · {person.is_active ? 'Active' : 'Inactive'}
               {person.source === 'record' ? ' · No account' : ''}
             </div>
           </div>
           {isAdmin && (
             <button onClick={() => setEditing(true)} style={{
-              padding: '10px 16px', borderRadius: 11, border: '1px solid #E2E8F0',
-              background: '#fff', color: '#0F172A', fontSize: 13.5, fontWeight: 700,
+              padding: '10px 16px', borderRadius: 11, border: '1px solid var(--border)',
+              background: 'var(--surface)', color: 'var(--text)', fontSize: 13.5, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
             }}>Edit details</button>
           )}
@@ -675,7 +675,7 @@ function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, viewe
             />
           </div>
         ) : (
-          <div style={{ ...CARD, padding: 22, fontSize: 13.5, color: '#64748B', lineHeight: 1.55 }}>
+          <div style={{ ...CARD, padding: 22, fontSize: 13.5, color: 'var(--text3)', lineHeight: 1.55 }}>
             Module access applies to a LaunchSession login. {person.full_name} doesn't have one yet —
             invite them first and their access can be set here.
           </div>
@@ -683,7 +683,7 @@ function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, viewe
       )}
 
       {tab === 'compliance' && !hasHRModule && (
-        <div style={{ ...CARD, padding: 22, fontSize: 13.5, color: '#64748B', lineHeight: 1.55 }}>
+        <div style={{ ...CARD, padding: 22, fontSize: 13.5, color: 'var(--text3)', lineHeight: 1.55 }}>
           Compliance tracking is part of the HR module.
         </div>
       )}
@@ -696,7 +696,7 @@ function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, viewe
             ['First aid', person.first_aid_expiry, null],
           ].map(([label, expiry, recorded]) => (
             <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', minWidth: 150 }}>{label}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', minWidth: 150 }}>{label}</div>
               <Pill state={complianceState(expiry, recorded)} />
               <div style={{ fontSize: 12.5, color: '#8B87A3' }}>
                 {expiry ? `Expires ${new Date(expiry).toLocaleDateString('en-GB')}` : 'No expiry recorded'}
@@ -709,7 +709,7 @@ function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, viewe
       {tab === 'leave' && (
         <div style={{ ...CARD, padding: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
-            <div style={{ fontSize: 13.5, color: '#64748B', flex: 1 }}>
+            <div style={{ fontSize: 13.5, color: 'var(--text3)', flex: 1 }}>
               Allowance {person.leave_allowance ?? '—'} days
             </div>
             {isAdmin && person.hr_id && (
@@ -729,7 +729,7 @@ function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, viewe
           ) : (
             <div style={{ display: 'grid', gap: 8 }}>
               {theirLeave.map(l => (
-                <div key={l.id} style={{ fontSize: 13.5, color: '#0F172A' }}>
+                <div key={l.id} style={{ fontSize: 13.5, color: 'var(--text)' }}>
                   {new Date(l.start_date).toLocaleDateString('en-GB')} – {new Date(l.end_date).toLocaleDateString('en-GB')} · {l.type || 'Leave'}
                 </div>
               ))}
@@ -773,9 +773,9 @@ export function InviteStaffModal({ org, primary, onClose, onSent }) {
 
   const input = {
     width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
-    border: '1px solid #E2E8F0', fontSize: 14.5, fontFamily: 'inherit', outline: 'none',
+    border: '1px solid var(--border)', fontSize: 14.5, fontFamily: 'inherit', outline: 'none',
   }
-  const label = { display: 'block', fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 6 }
+  const label = { display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text3)', marginBottom: 6 }
 
   const fullName = `${firstName.trim()} ${lastName.trim()}`.trim()
 
@@ -827,14 +827,14 @@ export function InviteStaffModal({ org, primary, onClose, onSent }) {
       }}
     >
       <div onClick={e => e.stopPropagation()} style={{
-        background: '#fff', width: isMobile ? '100%' : 440, maxWidth: '100%',
+        background: 'var(--surface)', width: isMobile ? '100%' : 440, maxWidth: '100%',
         borderRadius: isMobile ? '20px 20px 0 0' : 18, padding: 22,
       }}>
         {sent ? (
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 30, marginBottom: 10 }}><Icon name="✓" /></div>
-            <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>Invite sent</div>
-            <div style={{ fontSize: 14, color: '#64748B', lineHeight: 1.55, marginBottom: 18 }}>
+            <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', marginBottom: 6 }}>Invite sent</div>
+            <div style={{ fontSize: 14, color: 'var(--text3)', lineHeight: 1.55, marginBottom: 18 }}>
               {existingUser
                 ? `${email} already had an account — they've been added to ${org?.name} and notified by email.`
                 : `${fullName || email} has been invited to join ${org?.name}. They'll get an email to set up their account.`}
@@ -847,7 +847,7 @@ export function InviteStaffModal({ org, primary, onClose, onSent }) {
           </div>
         ) : (
           <>
-            <div style={{ fontSize: 17, fontWeight: 800, color: '#0F172A', marginBottom: 16 }}>Invite staff</div>
+            <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', marginBottom: 16 }}>Invite staff</div>
             <div style={{ display: 'grid', gap: 14 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
@@ -881,8 +881,8 @@ export function InviteStaffModal({ org, primary, onClose, onSent }) {
 
               <div style={{ display: 'flex', gap: 10 }}>
                 <button onClick={onClose} style={{
-                  padding: '12px 18px', borderRadius: 12, border: '1px solid #E2E8F0',
-                  background: '#fff', color: '#64748B', fontSize: 14, fontWeight: 700,
+                  padding: '12px 18px', borderRadius: 12, border: '1px solid var(--border)',
+                  background: 'var(--surface)', color: 'var(--text3)', fontSize: 14, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}>Cancel</button>
                 <button onClick={send} disabled={busy || !email.trim()} style={{
@@ -925,9 +925,9 @@ export function EditStaffModal({ person, org, primary, onClose, onSaved }) {
 
   const input = {
     width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
-    border: '1px solid #E2E8F0', fontSize: 14.5, fontFamily: 'inherit', outline: 'none',
+    border: '1px solid var(--border)', fontSize: 14.5, fontFamily: 'inherit', outline: 'none',
   }
-  const label = { display: 'block', fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 6 }
+  const label = { display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text3)', marginBottom: 6 }
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
 
   async function save() {
@@ -967,14 +967,14 @@ export function EditStaffModal({ person, org, primary, onClose, onSaved }) {
       padding: isMobile ? 0 : 16,
     }}>
       <div onClick={e => e.stopPropagation()} style={{
-        background: '#fff', width: isMobile ? '100%' : 480, maxWidth: '100%',
+        background: 'var(--surface)', width: isMobile ? '100%' : 480, maxWidth: '100%',
         borderRadius: isMobile ? '20px 20px 0 0' : 18, padding: 22,
         maxHeight: '90vh', overflowY: 'auto',
       }}>
-        <div style={{ fontSize: 17, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>
+        <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>
           {person.full_name}
         </div>
-        <div style={{ fontSize: 13, color: '#64748B', marginBottom: 18 }}>
+        <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 18 }}>
           Employment and compliance details
         </div>
 
@@ -1031,8 +1031,8 @@ export function EditStaffModal({ person, org, primary, onClose, onSaved }) {
 
           <div style={{ display: 'flex', gap: 10 }}>
             <button onClick={onClose} style={{
-              padding: '12px 18px', borderRadius: 12, border: '1px solid #E2E8F0',
-              background: '#fff', color: '#64748B', fontSize: 14, fontWeight: 700,
+              padding: '12px 18px', borderRadius: 12, border: '1px solid var(--border)',
+              background: 'var(--surface)', color: 'var(--text3)', fontSize: 14, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
             }}>Cancel</button>
             <button onClick={save} disabled={busy} style={{
@@ -1059,9 +1059,9 @@ export function RecordLeaveModal({ person, org, primary, onClose, onSaved }) {
 
   const input = {
     width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
-    border: '1px solid #E2E8F0', fontSize: 14.5, fontFamily: 'inherit', outline: 'none',
+    border: '1px solid var(--border)', fontSize: 14.5, fontFamily: 'inherit', outline: 'none',
   }
-  const label = { display: 'block', fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 6 }
+  const label = { display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text3)', marginBottom: 6 }
 
   async function save() {
     if (!start || !end) return
@@ -1084,10 +1084,10 @@ export function RecordLeaveModal({ person, org, primary, onClose, onSaved }) {
       padding: isMobile ? 0 : 16,
     }}>
       <div onClick={e => e.stopPropagation()} style={{
-        background: '#fff', width: isMobile ? '100%' : 420, maxWidth: '100%',
+        background: 'var(--surface)', width: isMobile ? '100%' : 420, maxWidth: '100%',
         borderRadius: isMobile ? '20px 20px 0 0' : 18, padding: 22,
       }}>
-        <div style={{ fontSize: 17, fontWeight: 800, color: '#0F172A', marginBottom: 18 }}>
+        <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', marginBottom: 18 }}>
           Record leave — {person.full_name}
         </div>
         <div style={{ display: 'grid', gap: 14 }}>
@@ -1119,8 +1119,8 @@ export function RecordLeaveModal({ person, org, primary, onClose, onSaved }) {
 
           <div style={{ display: 'flex', gap: 10 }}>
             <button onClick={onClose} style={{
-              padding: '12px 18px', borderRadius: 12, border: '1px solid #E2E8F0',
-              background: '#fff', color: '#64748B', fontSize: 14, fontWeight: 700,
+              padding: '12px 18px', borderRadius: 12, border: '1px solid var(--border)',
+              background: 'var(--surface)', color: 'var(--text3)', fontSize: 14, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
             }}>Cancel</button>
             <button onClick={save} disabled={busy || !start || !end} style={{

@@ -11,20 +11,20 @@ const STATUS_COLORS = {
   open:        { bg: 'rgba(239,68,68,0.1)',   color: '#EF4444', label: 'Open' },
   in_progress: { bg: 'rgba(245,158,11,0.1)',  color: '#F59E0B', label: 'In Progress' },
   resolved:    { bg: 'rgba(34,197,94,0.1)',   color: '#22C55E', label: 'Resolved' },
-  closed:      { bg: 'rgba(100,116,139,0.1)', color: '#64748B', label: 'Closed' },
+  closed:      { bg: 'rgba(100,116,139,0.1)', color: 'var(--text3)', label: 'Closed' },
 }
 
 const PRIORITY_COLORS = {
   urgent: { bg: 'rgba(239,68,68,0.12)', color: '#DC2626', label: 'Urgent' },
   high:   { bg: 'rgba(245,158,11,0.12)', color: '#D97706', label: 'High' },
   medium: { bg: 'rgba(59,130,246,0.12)', color: '#2563EB', label: 'Medium' },
-  low:    { bg: 'rgba(100,116,139,0.12)', color: '#64748B', label: 'Low' },
+  low:    { bg: 'rgba(100,116,139,0.12)', color: 'var(--text3)', label: 'Low' },
 }
 
 const MOODS = [
   { key: 'happy',   emoji: '😊', label: 'Happy',   color: '#22C55E' },
   { key: 'settled',  emoji: '🙂', label: 'Settled',  color: '#3B82F6' },
-  { key: 'quiet',    emoji: '😐', label: 'Quiet',    color: '#64748B' },
+  { key: 'quiet',    emoji: '😐', label: 'Quiet',    color: 'var(--text3)' },
   { key: 'worried',  emoji: '😟', label: 'Worried',  color: '#F59E0B' },
   { key: 'upset',    emoji: '😢', label: 'Upset',    color: '#EF4444' },
 ]
@@ -1083,7 +1083,7 @@ export default function SafeguardingDashboard({ org, session, onReportConcern, o
           </div>
           <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
             <button onClick={() => onReportConcern && onReportConcern()} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${PRIMARY}, ${PRIMARY}CC)`, color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}><Icon name="🛡️" /> Report Concern</button>
-            <button onClick={() => setShowEmergency(true)} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid var(--border, #e5e7eb)', background: 'var(--surface, #fff)', color: 'var(--text, #111)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}><Icon name="🚨" /> Emergency</button>
+            <button onClick={() => setShowEmergency(true)} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid var(--border, var(--border))', background: 'var(--surface, #fff)', color: 'var(--text, #111)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}><Icon name="🚨" /> Emergency</button>
           </div>
         </div>
         <div style={{ marginTop: 12 }}>

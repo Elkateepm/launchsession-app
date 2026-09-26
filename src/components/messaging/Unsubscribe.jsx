@@ -20,7 +20,7 @@ const wrap = {
   display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
 }
 const card = {
-  background: '#fff', borderRadius: 20, padding: '38px 34px', maxWidth: 440, width: '100%',
+  background: 'var(--surface)', borderRadius: 20, padding: '38px 34px', maxWidth: 440, width: '100%',
   textAlign: 'center', boxShadow: '0 20px 60px rgba(15,23,42,0.08)',
 }
 
@@ -49,8 +49,8 @@ export default function Unsubscribe() {
     <div style={wrap}>
       <div style={card}>
         <div style={{ fontSize: 42, marginBottom: 14 }}><Icon name="🔗" /></div>
-        <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>We couldn't use that link</div>
-        <div style={{ fontSize: 14, color: '#64748B', lineHeight: 1.6 }}>{message}</div>
+        <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>We couldn't use that link</div>
+        <div style={{ fontSize: 14, color: 'var(--text3)', lineHeight: 1.6 }}>{message}</div>
       </div>
     </div>
   )
@@ -59,14 +59,14 @@ export default function Unsubscribe() {
     <div style={wrap}>
       <div style={card}>
         <div style={{ fontSize: 42, marginBottom: 14 }}><Icon name="✅" /></div>
-        <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>
+        <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>
           {info?.already ? "You're already unsubscribed" : "You've been unsubscribed"}
         </div>
-        <div style={{ fontSize: 14, color: '#64748B', lineHeight: 1.6 }}>
-          {info?.email ? <strong style={{ color: '#334155' }}>{info.email}</strong> : 'That address'} won't receive any more
+        <div style={{ fontSize: 14, color: 'var(--text3)', lineHeight: 1.6 }}>
+          {info?.email ? <strong style={{ color: 'var(--text2)' }}>{info.email}</strong> : 'That address'} won't receive any more
           newsletters from {info?.org_name || 'this organisation'}.
         </div>
-        <div style={{ fontSize: 12.5, color: '#94A3B8', lineHeight: 1.6, marginTop: 16 }}>
+        <div style={{ fontSize: 12.5, color: 'var(--text-faint)', lineHeight: 1.6, marginTop: 16 }}>
           You'll still get essential messages about your place on sessions — this only stops the newsletter.
           If you'd like to come back, ask {info?.org_name || 'the organisation'} to add you again.
         </div>
@@ -78,8 +78,8 @@ export default function Unsubscribe() {
     <div style={wrap}>
       <div style={card}>
         <div style={{ fontSize: 42, marginBottom: 14 }}><Icon name="✉️" /></div>
-        <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginBottom: 10 }}>Unsubscribe from this newsletter?</div>
-        <div style={{ fontSize: 14, color: '#64748B', lineHeight: 1.6, marginBottom: 22 }}>
+        <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', marginBottom: 10 }}>Unsubscribe from this newsletter?</div>
+        <div style={{ fontSize: 14, color: 'var(--text3)', lineHeight: 1.6, marginBottom: 22 }}>
           You'll stop receiving newsletters. Essential messages about your place on sessions will still reach you.
         </div>
         <button onClick={confirm} disabled={state === 'working'} style={{
@@ -90,7 +90,7 @@ export default function Unsubscribe() {
         }}>
           {state === 'working' ? 'Unsubscribing…' : 'Yes, unsubscribe me'}
         </button>
-        <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 14 }}>
+        <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 14 }}>
           Clicked by mistake? Just close this page — nothing has changed yet.
         </div>
       </div>

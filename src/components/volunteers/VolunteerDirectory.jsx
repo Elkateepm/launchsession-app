@@ -65,8 +65,8 @@ export default function VolunteerDirectory({ org, volunteers, sessionStaff, sess
       {filtered.length === 0 ? (
         <Card style={{ textAlign: 'center', padding: '48px 24px' }}>
           <div style={{ fontSize: 36, marginBottom: 10 }}>📇</div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>No volunteers match this view</div>
-          <div style={{ fontSize: 13, color: '#64748B', marginTop: 4 }}>Try a different search or filter.</div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>No volunteers match this view</div>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 4 }}>Try a different search or filter.</div>
         </Card>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
@@ -82,10 +82,10 @@ export default function VolunteerDirectory({ org, volunteers, sessionStaff, sess
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                   <Avatar name={v.full_name} photoUrl={v.photo_url} color={primary} />
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 4 }}>
                       {v.full_name || '—'} {spotlighted && <span title="Recognised"><Icon name="✨" /></span>}
                     </div>
-                    <div style={{ fontSize: 11.5, color: '#64748B' }}>{v.email}</div>
+                    <div style={{ fontSize: 11.5, color: 'var(--text3)' }}>{v.email}</div>
                   </div>
                   <Badge bg={st.bg} color={st.color}>{st.label}</Badge>
                 </div>
@@ -99,7 +99,7 @@ export default function VolunteerDirectory({ org, volunteers, sessionStaff, sess
                     {v.skills.slice(0, 3).map(s => <Badge key={s} bg="rgba(124,92,252,0.1)" color={PURPLE}>{s}</Badge>)}
                   </div>
                 )}
-                <div style={{ fontSize: 11.5, color: '#94A3B8', marginBottom: 10 }}>
+                <div style={{ fontSize: 11.5, color: 'var(--text-faint)', marginBottom: 10 }}>
                   {stats.nextSession ? `Next: ${stats.nextSession.title} · ${new Date(stats.nextSession.session_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : 'No upcoming sessions'}
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
@@ -133,9 +133,9 @@ export default function VolunteerDirectory({ org, volunteers, sessionStaff, sess
 
 function MiniStat({ label, value }) {
   return (
-    <div style={{ background: '#F8FAFC', borderRadius: 10, padding: '6px 4px', textAlign: 'center' }}>
-      <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>{value}</div>
-      <div style={{ fontSize: 9.5, color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase' }}>{label}</div>
+    <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '6px 4px', textAlign: 'center' }}>
+      <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{value}</div>
+      <div style={{ fontSize: 9.5, color: 'var(--text-faint)', fontWeight: 700, textTransform: 'uppercase' }}>{label}</div>
     </div>
   )
 }
@@ -170,14 +170,14 @@ export function ProfileDrawer({ volunteer, org, stats, training, recognition, se
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}
         style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.35)', zIndex: 1000 }} />
       <motion.div initial={{ x: 420 }} animate={{ x: 0 }} exit={{ x: 420 }} transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-        style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: 'min(420px, 100vw)', background: '#fff', zIndex: 1001, overflowY: 'auto', boxShadow: '-20px 0 60px rgba(0,0,0,0.15)' }}>
+        style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: 'min(420px, 100vw)', background: 'var(--surface)', zIndex: 1001, overflowY: 'auto', boxShadow: '-20px 0 60px rgba(0,0,0,0.15)' }}>
         <div style={{ padding: 24, position: 'relative' }}>
-          <button onClick={onClose} style={{ position: 'absolute', top: 18, right: 18, border: 'none', background: 'none', fontSize: 22, cursor: 'pointer', color: '#94A3B8' }}>×</button>
+          <button onClick={onClose} style={{ position: 'absolute', top: 18, right: 18, border: 'none', background: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--text-faint)' }}>×</button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
             <Avatar name={volunteer.full_name} photoUrl={volunteer.photo_url} size={56} color={primary} />
             <div>
-              <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A' }}>{volunteer.full_name}</div>
-              <div style={{ fontSize: 12.5, color: '#64748B' }}>{volunteer.email}</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)' }}>{volunteer.full_name}</div>
+              <div style={{ fontSize: 12.5, color: 'var(--text3)' }}>{volunteer.email}</div>
             </div>
           </div>
 
@@ -194,7 +194,7 @@ export function ProfileDrawer({ volunteer, org, stats, training, recognition, se
 
           <DrawerSection title="Skills & Groups">
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {(volunteer.skills || []).length ? volunteer.skills.map(s => <Badge key={s} bg="rgba(124,92,252,0.1)" color={PURPLE}>{s}</Badge>) : <span style={{ fontSize: 12.5, color: '#94A3B8' }}>No skills recorded</span>}
+              {(volunteer.skills || []).length ? volunteer.skills.map(s => <Badge key={s} bg="rgba(124,92,252,0.1)" color={PURPLE}>{s}</Badge>) : <span style={{ fontSize: 12.5, color: 'var(--text-faint)' }}>No skills recorded</span>}
             </div>
           </DrawerSection>
 
@@ -212,7 +212,7 @@ export function ProfileDrawer({ volunteer, org, stats, training, recognition, se
             <Row label="DBS" value={volunteer.dbs_expiry ? `Expires ${new Date(volunteer.dbs_expiry).toLocaleDateString('en-GB')}` : 'Not on file'} />
             {training.length ? training.map(t => (
               <Row key={t.id} label={t.training_type.replace('_', ' ')} value={t.status} />
-            )) : <div style={{ fontSize: 12.5, color: '#94A3B8' }}>No additional training records</div>}
+            )) : <div style={{ fontSize: 12.5, color: 'var(--text-faint)' }}>No additional training records</div>}
           </DrawerSection>
 
           {recognition.length > 0 && (
@@ -234,12 +234,12 @@ export function ProfileDrawer({ volunteer, org, stats, training, recognition, se
   )
 }
 
-const selectStyle = { width: '100%', padding: '9px 12px', borderRadius: 10, border: '1.5px solid rgba(15,23,42,0.1)', fontSize: 13, outline: 'none', boxSizing: 'border-box', background: '#fff', color: '#0F172A' }
+const selectStyle = { width: '100%', padding: '9px 12px', borderRadius: 10, border: '1.5px solid rgba(15,23,42,0.1)', fontSize: 13, outline: 'none', boxSizing: 'border-box', background: 'var(--surface)', color: 'var(--text)' }
 
 function DrawerSection({ title, children }) {
   return (
     <div style={{ marginBottom: 18 }}>
-      <div style={{ fontSize: 11.5, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>{title}</div>
+      <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>{title}</div>
       {children}
     </div>
   )
@@ -247,9 +247,9 @@ function DrawerSection({ title, children }) {
 
 function Row({ label, value }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #F1F5F9', fontSize: 13 }}>
-      <span style={{ color: '#64748B', textTransform: 'capitalize' }}>{label}</span>
-      <span style={{ color: '#0F172A', fontWeight: 600, textTransform: 'capitalize' }}>{value}</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border-soft)', fontSize: 13 }}>
+      <span style={{ color: 'var(--text3)', textTransform: 'capitalize' }}>{label}</span>
+      <span style={{ color: 'var(--text)', fontWeight: 600, textTransform: 'capitalize' }}>{value}</span>
     </div>
   )
 }

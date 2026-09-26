@@ -13,16 +13,16 @@ import { ukDate, todayLondon, daysUntil, PROBATION_STATUSES } from '../../lib/hr
 // fills in.
 
 const card = {
-  background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14,
+  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14,
   padding: 16, marginBottom: 12,
 }
 const field = {
   width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
-  border: '1px solid #E2E8F0', fontSize: 15, fontFamily: 'inherit', outline: 'none',
-  background: '#fff',
+  border: '1px solid var(--border)', fontSize: 15, fontFamily: 'inherit', outline: 'none',
+  background: 'var(--surface)',
 }
 const lbl = {
-  display: 'block', fontSize: 11.5, fontWeight: 800, color: '#64748B',
+  display: 'block', fontSize: 11.5, fontWeight: 800, color: 'var(--text3)',
   marginBottom: 6, letterSpacing: 0.4, textTransform: 'uppercase',
 }
 const btn = (primary, disabled) => ({
@@ -32,8 +32,8 @@ const btn = (primary, disabled) => ({
   opacity: disabled ? 0.55 : 1,
 })
 const ghost = {
-  minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid #E2E8F0',
-  background: '#fff', color: '#64748B', fontSize: 14, fontWeight: 700,
+  minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid var(--border)',
+  background: 'var(--surface)', color: 'var(--text3)', fontSize: 14, fontWeight: 700,
   cursor: 'pointer', fontFamily: 'inherit',
 }
 function Err({ children }) {
@@ -42,7 +42,7 @@ function Err({ children }) {
     border: '1px solid #FECACA', color: '#B42318', fontSize: 13, marginBottom: 10 }}>{children}</div>
 }
 function Empty({ children }) {
-  return <div style={{ ...card, textAlign: 'center', padding: 24, color: '#64748B',
+  return <div style={{ ...card, textAlign: 'center', padding: 24, color: 'var(--text3)',
     fontSize: 13.5, lineHeight: 1.55 }}>{children}</div>
 }
 
@@ -70,7 +70,7 @@ export function SupervisionTab({ org, staff, primary, canEdit, sensitiveView }) 
 
   useEffect(() => { load() }, [load])
 
-  if (rows === null) return <div style={{ ...card, color: '#64748B', fontSize: 14 }}>Loading supervisions…</div>
+  if (rows === null) return <div style={{ ...card, color: 'var(--text3)', fontSize: 14 }}>Loading supervisions…</div>
 
   const next = rows.find(r => r.next_supervision_date && daysUntil(r.next_supervision_date) >= 0)
   const overdue = rows.length > 0 && rows[0].next_supervision_date
@@ -114,12 +114,12 @@ export function SupervisionTab({ org, staff, primary, canEdit, sensitiveView }) 
         <div key={r.id} style={card}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>
+              <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>
                 {(MEETING_TYPES.find(m => m[0] === r.meeting_type) || [null, r.meeting_type])[1]}
                 {' · '}{ukDate(r.meeting_date)}
               </div>
               {r.next_supervision_date && (
-                <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 2 }}>
+                <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>
                   Next due {ukDate(r.next_supervision_date)}
                 </div>
               )}
@@ -135,9 +135,9 @@ export function SupervisionTab({ org, staff, primary, canEdit, sensitiveView }) 
             ['Performance', r.performance], ['Development', r.development],
             ['Staff comments', r.staff_comments], ['Manager notes', r.manager_notes],
             ['Private notes', r.private_notes]].map(([k, v]) => v ? (
-            <div key={k} style={{ padding: '8px 0', borderTop: '1px solid #F1F5F9' }}>
-              <div style={{ fontSize: 11.5, fontWeight: 800, color: '#94A3B8', letterSpacing: 0.3, textTransform: 'uppercase' }}>{k}</div>
-              <div style={{ fontSize: 13.5, color: '#0F172A', marginTop: 3, whiteSpace: 'pre-wrap' }}>{v}</div>
+            <div key={k} style={{ padding: '8px 0', borderTop: '1px solid var(--border-soft)' }}>
+              <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--text-faint)', letterSpacing: 0.3, textTransform: 'uppercase' }}>{k}</div>
+              <div style={{ fontSize: 13.5, color: 'var(--text)', marginTop: 3, whiteSpace: 'pre-wrap' }}>{v}</div>
             </div>
           ) : null)}
           {r.safeguarding_discussed && (
@@ -196,7 +196,7 @@ function SupervisionForm({ org, staff, primary, sensitiveView, onCancel, onSaved
 
   return (
     <div style={card}>
-      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>Record a supervision</div>
+      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 14 }}>Record a supervision</div>
       <div style={{ marginBottom: 12 }}>
         <label style={lbl}>Date</label>
         <input type="date" value={f.meeting_date} onChange={e => set('meeting_date', e.target.value)} style={field} />
@@ -216,7 +216,7 @@ function SupervisionForm({ org, staff, primary, sensitiveView, onCancel, onSaved
       {sensitiveView && (
         <>
           <TA k="private_notes" label="Private notes" rows={2} />
-          <div style={{ fontSize: 12, color: '#94A3B8', marginTop: -6, marginBottom: 12, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: -6, marginBottom: 12, lineHeight: 1.45 }}>
             Visible only to you and to people with disciplinary access. Other managers
             see this supervision without this field.
           </div>
@@ -226,7 +226,7 @@ function SupervisionForm({ org, staff, primary, sensitiveView, onCancel, onSaved
         <input type="checkbox" checked={f.safeguarding_discussed}
           onChange={e => set('safeguarding_discussed', e.target.checked)}
           style={{ width: 18, height: 18, accentColor: primary, flexShrink: 0 }} />
-        <span style={{ fontSize: 14, color: '#0F172A' }}>Safeguarding was discussed</span>
+        <span style={{ fontSize: 14, color: 'var(--text)' }}>Safeguarding was discussed</span>
       </label>
       {f.safeguarding_discussed && <TA k="safeguarding_notes" label="Safeguarding notes" rows={2} />}
       <div style={{ marginBottom: 12 }}>
@@ -268,7 +268,7 @@ export function ProbationTab({ org, staff, primary, canEdit }) {
 
   useEffect(() => { load() }, [load])
 
-  if (rows === null) return <div style={{ ...card, color: '#64748B', fontSize: 14 }}>Loading probation…</div>
+  if (rows === null) return <div style={{ ...card, color: 'var(--text3)', fontSize: 14 }}>Loading probation…</div>
 
   if (!staff.probation_required) {
     return <Empty>This role does not have a probation period. Turn it on under Employment if it should.</Empty>
@@ -277,7 +277,7 @@ export function ProbationTab({ org, staff, primary, canEdit }) {
   return (
     <>
       <div style={card}>
-        <div style={{ fontSize: 13, color: '#64748B' }}>
+        <div style={{ fontSize: 13, color: 'var(--text3)' }}>
           Probation {staff.probation_start ? `from ${ukDate(staff.probation_start)}` : ''}
           {staff.probation_end ? ` · review due ${ukDate(staff.probation_end)}` : ''}
           {staff.probation_status ? ` · ${(PROBATION_STATUSES.find(p => p.key === staff.probation_status) || {}).label}` : ''}
@@ -302,17 +302,17 @@ export function ProbationTab({ org, staff, primary, canEdit }) {
 
       {rows.map(r => (
         <div key={r.id} style={card}>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>
             Review {ukDate(r.review_date)}
           </div>
-          <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 2 }}>
+          <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>
             {r.outcome
               ? `Outcome: ${(PROBATION_STATUSES.find(p => p.key === r.outcome) || {}).label || r.outcome}`
               : 'No outcome recorded yet'}
             {r.extended_to ? ` · extended to ${ukDate(r.extended_to)}` : ''}
           </div>
-          {r.objectives && <div style={{ fontSize: 13.5, color: '#0F172A', marginTop: 8, whiteSpace: 'pre-wrap' }}>{r.objectives}</div>}
-          {r.review_notes && <div style={{ fontSize: 13.5, color: '#0F172A', marginTop: 8, whiteSpace: 'pre-wrap' }}>{r.review_notes}</div>}
+          {r.objectives && <div style={{ fontSize: 13.5, color: 'var(--text)', marginTop: 8, whiteSpace: 'pre-wrap' }}>{r.objectives}</div>}
+          {r.review_notes && <div style={{ fontSize: 13.5, color: 'var(--text)', marginTop: 8, whiteSpace: 'pre-wrap' }}>{r.review_notes}</div>}
         </div>
       ))}
     </>
@@ -362,7 +362,7 @@ function ProbationForm({ org, staff, primary, onCancel, onSaved }) {
 
   return (
     <div style={card}>
-      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>Probation review</div>
+      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 14 }}>Probation review</div>
       <div style={{ marginBottom: 12 }}>
         <label style={lbl}>Review date</label>
         <input type="date" value={f.review_date} onChange={e => set('review_date', e.target.value)} style={field} />
@@ -384,7 +384,7 @@ function ProbationForm({ org, staff, primary, onCancel, onSaved }) {
           {PROBATION_STATUSES.filter(p => p.key !== 'in_progress')
             .map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
         </select>
-        <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 6 }}>
+        <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 6 }}>
           Chosen by you. Nothing here works an outcome out from the notes above.
         </div>
       </div>

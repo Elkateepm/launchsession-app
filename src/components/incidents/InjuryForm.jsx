@@ -35,12 +35,12 @@ const ALERT = '#C0392B'
 const GOOD = '#1B7A34'
 const WARN = '#8A5A00'
 
-const label = { fontSize: 11, fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.4, display: 'block', marginBottom: 5 }
+const label = { fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.4, display: 'block', marginBottom: 5 }
 // 16px, not 13: anything smaller makes iOS Safari zoom the page on focus, and
 // a form filled in one-handed beside an upset child cannot afford that.
-const input = { width: '100%', boxSizing: 'border-box', padding: '11px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 16, fontFamily: 'inherit', outline: 'none', background: '#fff' }
-const section = { background: '#F8FAFC', borderRadius: 12, padding: '13px 14px', marginBottom: 12 }
-const sectionTitle = { fontSize: 11.5, fontWeight: 800, color: '#0F172A', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }
+const input = { width: '100%', boxSizing: 'border-box', padding: '11px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 16, fontFamily: 'inherit', outline: 'none', background: 'var(--surface)' }
+const section = { background: 'var(--surface2)', borderRadius: 12, padding: '13px 14px', marginBottom: 12 }
+const sectionTitle = { fontSize: 11.5, fontWeight: 800, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }
 
 // A datetime-local value for right now, in the browser's own time. An ISO
 // string here would offer the user UTC and quietly record the wrong hour.
@@ -92,18 +92,18 @@ function PersonPicker({ options, value, onChange, terms, accent }) {
 
   if (selected) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#fff', border: '1.5px solid #E2E8F0', borderRadius: 10, padding: '10px 12px', marginBottom: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 10, padding: '10px 12px', marginBottom: 10 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>
             {selected.first_name} {selected.last_name}
           </div>
           {selected.group_name && (
-            <div style={{ fontSize: 11.5, color: '#94A3B8', fontWeight: 600 }}>{selected.group_name}</div>
+            <div style={{ fontSize: 11.5, color: 'var(--text-faint)', fontWeight: 600 }}>{selected.group_name}</div>
           )}
         </div>
         <button type="button" onClick={() => { onChange(''); setQ('') }} style={{
-          minHeight: 36, padding: '7px 12px', borderRadius: 9, border: '1.5px solid #E2E8F0',
-          background: '#fff', color: '#64748B', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+          minHeight: 36, padding: '7px 12px', borderRadius: 9, border: '1.5px solid var(--border)',
+          background: 'var(--surface)', color: 'var(--text3)', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
         }}>Change</button>
       </div>
     )
@@ -117,19 +117,19 @@ function PersonPicker({ options, value, onChange, terms, accent }) {
     <div style={{ marginBottom: 10 }}>
       <input value={q} onChange={e => setQ(e.target.value)} style={{ ...input, marginBottom: 8 }}
         placeholder={`Search ${terms.people}...`} />
-      <div style={{ maxHeight: 190, overflowY: 'auto', border: '1.5px solid #E2E8F0', borderRadius: 10, background: '#fff' }}>
+      <div style={{ maxHeight: 190, overflowY: 'auto', border: '1.5px solid var(--border)', borderRadius: 10, background: 'var(--surface)' }}>
         {matches.length === 0 && (
-          <div style={{ padding: '14px 12px', fontSize: 12.5, color: '#94A3B8', fontWeight: 600 }}>Nobody matches.</div>
+          <div style={{ padding: '14px 12px', fontSize: 12.5, color: 'var(--text-faint)', fontWeight: 600 }}>Nobody matches.</div>
         )}
         {matches.slice(0, 60).map(c => (
           <button key={c.id} type="button" onClick={() => onChange(c.id)} style={{
             display: 'block', width: '100%', textAlign: 'left', minHeight: 44,
-            padding: '10px 12px', border: 'none', borderBottom: '1px solid #F1F5F9',
+            padding: '10px 12px', border: 'none', borderBottom: '1px solid var(--border-soft)',
             background: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13.5,
-            fontWeight: 700, color: '#0F172A',
+            fontWeight: 700, color: 'var(--text)',
           }}>
             {c.first_name} {c.last_name}
-            {c.group_name && <span style={{ fontSize: 11.5, color: '#94A3B8', fontWeight: 600, marginLeft: 7 }}>{c.group_name}</span>}
+            {c.group_name && <span style={{ fontSize: 11.5, color: 'var(--text-faint)', fontWeight: 600, marginLeft: 7 }}>{c.group_name}</span>}
           </button>
         ))}
       </div>
@@ -217,8 +217,8 @@ export default function InjuryForm({ org, userProfile, session, people: provided
         <div style={{ width: 58, height: 58, borderRadius: 18, background: '#E4F5E8', color: GOOD, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', fontSize: 26 }}>
           <Icon name="✓" />
         </div>
-        <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A', marginBottom: 6 }}>Recorded in the accident book</div>
-        <div style={{ fontSize: 12.5, color: '#64748B', fontWeight: 600, lineHeight: 1.55, maxWidth: 340, margin: '0 auto 18px' }}>
+        <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)', marginBottom: 6 }}>Recorded in the accident book</div>
+        <div style={{ fontSize: 12.5, color: 'var(--text3)', fontWeight: 600, lineHeight: 1.55, maxWidth: 340, margin: '0 auto 18px' }}>
           {f.parent_notified
             ? 'The record shows the parent or carer has been told.'
             : 'The record shows the parent or carer has not been told yet.'}
@@ -235,13 +235,13 @@ export default function InjuryForm({ org, userProfile, session, people: provided
     <div style={{ padding: '14px 16px calc(20px + env(safe-area-inset-bottom))' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 4 }}>
         <span style={{ fontSize: 20, color: ALERT, display: 'inline-flex' }}><Icon name="🩹" /></span>
-        <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A', flex: 1 }}>Log an injury</div>
+        <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)', flex: 1 }}>Log an injury</div>
         <button onClick={onClose} aria-label="Close" style={{
-          width: 36, height: 36, borderRadius: 10, border: 'none', background: '#F1F5F9',
-          color: '#64748B', cursor: 'pointer', fontSize: 17,
+          width: 36, height: 36, borderRadius: 10, border: 'none', background: 'var(--surface-hover)',
+          color: 'var(--text3)', cursor: 'pointer', fontSize: 17,
         }}><Icon name="✕" /></button>
       </div>
-      <div style={{ fontSize: 12.5, color: '#64748B', fontWeight: 600, lineHeight: 1.55, marginBottom: 14 }}>
+      <div style={{ fontSize: 12.5, color: 'var(--text3)', fontWeight: 600, lineHeight: 1.55, marginBottom: 14 }}>
         Record it while it is fresh. Only you and an administrator can see what you write here.
       </div>
 
@@ -264,7 +264,7 @@ export default function InjuryForm({ org, userProfile, session, people: provided
           </div>
         </div>
         {session && (
-          <div style={{ fontSize: 11.5, color: '#64748B', fontWeight: 700, marginTop: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
+          <div style={{ fontSize: 11.5, color: 'var(--text3)', fontWeight: 700, marginTop: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
             <Icon name="🔗" />Recorded against {session.title}
           </div>
         )}
@@ -285,7 +285,7 @@ export default function InjuryForm({ org, userProfile, session, people: provided
         {/* The map and the list both write body_part, so a record made either
             way is comparable. The list stays because an SVG-only picker would
             be unusable with a screen reader or a keyboard. */}
-        <div style={{ background: '#fff', border: '1.5px solid #E2E8F0', borderRadius: 10, padding: '10px 12px', marginBottom: 8 }}>
+        <div style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 10, padding: '10px 12px', marginBottom: 8 }}>
           <BodyMap value={f.body_part} onChange={v => set('body_part', v)} />
         </div>
         <div style={{ marginBottom: 12 }}><Chips options={BODY_PARTS} value={f.body_part} onChange={v => set('body_part', v)} /></div>
@@ -338,7 +338,7 @@ export default function InjuryForm({ org, userProfile, session, people: provided
       </div>
 
       <div style={{ display: 'flex', gap: 10 }}>
-        <button onClick={onClose} style={{ flex: 1, minHeight: 48, borderRadius: 12, border: '1.5px solid #E2E8F0', background: '#fff', color: '#64748B', fontWeight: 800, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+        <button onClick={onClose} style={{ flex: 1, minHeight: 48, borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 800, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
         <button onClick={submit} disabled={saving} style={{ flex: 2, minHeight: 48, borderRadius: 12, border: 'none', background: saving ? '#94A3B8' : ALERT, color: '#fff', fontWeight: 800, fontSize: 14, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit' }}>
           {saving ? 'Saving…' : 'Save to accident book'}
         </button>

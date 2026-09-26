@@ -10,7 +10,7 @@ import Icon from '../../../lib/icons'
 // stage the schema tracks — so this uses the real stages rather than inventing
 // a "Reporting" count that has no backing data.
 const STAGES = [
-  { key: 'researching', label: 'Researching', color: '#6B7280', bg: '#F3F2F7' },
+  { key: 'researching', label: 'Researching', color: 'var(--text3)', bg: '#F3F2F7' },
   { key: 'drafting',    label: 'Drafting',    color: '#7C5CFC', bg: '#F1EDFF' },
   { key: 'submitted',   label: 'Submitted',   color: '#BA7517', bg: '#FDF3E4' },
   { key: 'awarded',     label: 'Awarded',     color: '#16803C', bg: '#E7F6EC' },
@@ -46,7 +46,7 @@ export default function FundingPipelinePanel({ org, onViewPipeline }) {
   const recent = useMemo(() => apps.filter(a => a.stage !== 'declined').slice(0, 4), [apps])
 
   return (
-    <div style={{ background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 18, padding: '18px 18px' }}>
+    <div style={{ background: 'var(--surface)', border: `1px solid ${LS.border}`, borderRadius: 18, padding: '18px 18px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ fontSize: 14.5, fontWeight: 800, color: LS.text }}>Funding Pipeline</div>
         {apps.length > 0 && <button onClick={onViewPipeline} style={{ background: 'none', border: 'none', color: LS.purpleDark, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>View pipeline <Icon name="→" /></button>}

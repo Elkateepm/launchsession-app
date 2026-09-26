@@ -56,27 +56,27 @@ export default function VPMessages({ org, user, primary }) {
   return (
     <div style={{ padding: '16px 16px 100px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-        <div style={{ fontSize: 20, fontWeight: 900, color: '#0F172A' }}>Messages</div>
+        <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)' }}>Messages</div>
         <button onClick={startDM} style={{ padding: '8px 14px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 12, cursor: 'pointer' }}>+ Message Staff</button>
       </div>
-      <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 14 }}>Announcements, updates, and direct messages</div>
+      <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 14 }}>Announcements, updates, and direct messages</div>
 
       <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search conversations…"
         style={{ width: '100%', boxSizing: 'border-box', padding: '11px 14px', borderRadius: 14, border: '1.5px solid rgba(15,23,42,0.1)', fontSize: 13.5, outline: 'none', marginBottom: 16 }} />
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 40, color: '#94A3B8' }}>Loading…</div>
+        <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-faint)' }}>Loading…</div>
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '50px 20px' }}>
           <div style={{ fontSize: 40, marginBottom: 10 }}><Icon name="💬" /></div>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>No conversations yet</div>
-          <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 3 }}>Announcements and messages will show up here</div>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>No conversations yet</div>
+          <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 3 }}>Announcements and messages will show up here</div>
         </div>
       ) : (
         <>
           {pinned.length > 0 && (
             <>
-              <div style={{ fontSize: 11, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', marginBottom: 8 }}><Icon name="📌" /> Pinned</div>
+              <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', marginBottom: 8 }}><Icon name="📌" /> Pinned</div>
               {pinned.map(t => <ThreadRow key={t.id} t={t} user={user} onOpen={() => setActive(t)} onPin={e => togglePin(t.id, e)} pinned />)}
               <div style={{ height: 8 }} />
             </>
@@ -94,11 +94,11 @@ function ThreadRow({ t, user, onOpen, onPin, pinned }) {
   const count = t.message_thread_messages?.[0]?.count || 0
   return (
     <motion.div layout onClick={onOpen} whileTap={{ scale: 0.98 }}
-      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 13, borderRadius: 16, background: '#fff', border: '1.5px solid rgba(15,23,42,0.06)', marginBottom: 8, cursor: 'pointer' }}>
-      <div style={{ width: 42, height: 42, borderRadius: 13, background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, flexShrink: 0 }}>{icon}</div>
+      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 13, borderRadius: 16, background: 'var(--surface)', border: '1.5px solid rgba(15,23,42,0.06)', marginBottom: 8, cursor: 'pointer' }}>
+      <div style={{ width: 42, height: 42, borderRadius: 13, background: 'var(--surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, flexShrink: 0 }}>{icon}</div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.subject || (isDM ? 'Message to Staff' : 'Announcement')}</div>
-        <div style={{ fontSize: 11, color: '#94A3B8' }}>{count} message{count !== 1 ? 's' : ''} · {timeAgo(t.updated_at || t.created_at)}</div>
+        <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.subject || (isDM ? 'Message to Staff' : 'Announcement')}</div>
+        <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{count} message{count !== 1 ? 's' : ''} · {timeAgo(t.updated_at || t.created_at)}</div>
       </div>
       <button onClick={onPin} style={{ background: 'none', border: 'none', fontSize: 15, cursor: 'pointer', opacity: pinned ? 1 : 0.3 }}><Icon name="📌" /></button>
     </motion.div>
@@ -158,13 +158,13 @@ function VPThread({ thread, org, user, primary, onBack }) {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, background: '#fff' }}>
-        <button onClick={onBack} style={{ background: 'none', border: 'none', fontSize: 18, color: '#334155', cursor: 'pointer' }}><Icon name="←" /></button>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>{thread.subject}</div>
+      <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, background: 'var(--surface)' }}>
+        <button onClick={onBack} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text2)', cursor: 'pointer' }}><Icon name="←" /></button>
+        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>{thread.subject}</div>
       </div>
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', background: '#F8FAFC' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', background: 'var(--surface2)' }}>
         {messages.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, color: '#94A3B8', fontSize: 13 }}>No messages yet — say hello!</div>
+          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-faint)', fontSize: 13 }}>No messages yet — say hello!</div>
         ) : messages.map(m => {
           const mine = m.sender_id === user.id
           return (
@@ -177,9 +177,9 @@ function VPThread({ thread, org, user, primary, onBack }) {
                   {m.body}
                 </div>
                 <div style={{ display: 'flex', gap: 4, marginTop: 4, justifyContent: mine ? 'flex-end' : 'flex-start', alignItems: 'center' }}>
-                  <span style={{ fontSize: 10, color: '#94A3B8' }}>{timeAgo(m.created_at)}</span>
+                  <span style={{ fontSize: 10, color: 'var(--text-faint)' }}>{timeAgo(m.created_at)}</span>
                   {reactions[m.id] && Object.entries(reactions[m.id]).map(([emoji, count]) => (
-                    <span key={emoji} style={{ fontSize: 10.5, background: '#fff', borderRadius: 99, padding: '2px 6px', border: '1px solid rgba(15,23,42,0.08)' }}>{emoji} {count}</span>
+                    <span key={emoji} style={{ fontSize: 10.5, background: 'var(--surface)', borderRadius: 99, padding: '2px 6px', border: '1px solid rgba(15,23,42,0.08)' }}>{emoji} {count}</span>
                   ))}
                 </div>
                 <div style={{ display: 'flex', gap: 3, marginTop: 3, justifyContent: mine ? 'flex-end' : 'flex-start' }}>
@@ -191,7 +191,7 @@ function VPThread({ thread, org, user, primary, onBack }) {
         })}
         <div ref={bottomRef} />
       </div>
-      <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(15,23,42,0.06)', display: 'flex', gap: 8, alignItems: 'center', background: '#fff', flexShrink: 0 }}>
+      <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(15,23,42,0.06)', display: 'flex', gap: 8, alignItems: 'center', background: 'var(--surface)', flexShrink: 0 }}>
         <button onClick={() => fileRef.current?.click()} disabled={uploading} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', flexShrink: 0 }}>{uploading ? '…' : '📎'}</button>
         <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => uploadPhoto(e.target.files?.[0])} />
         <input value={body} onChange={e => setBody(e.target.value)} onKeyDown={e => e.key === 'Enter' && send()} placeholder="Type a message…"

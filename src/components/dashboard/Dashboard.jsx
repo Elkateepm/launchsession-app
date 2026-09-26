@@ -183,7 +183,7 @@ function RestrictedModule({ label, icon, onNavigate }) {
       <div style={{ textAlign: 'center', padding: 40, maxWidth: 420 }}>
         <div style={{ width: 80, height: 80, borderRadius: 24, background: '#94A3B815', border: '2px solid #94A3B830', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, margin: '0 auto 20px' }}>{icon}</div>
         <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>{label}</div>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#94A3B815', border: '1px solid #94A3B840', borderRadius: 99, padding: '4px 14px', fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 16 }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#94A3B815', border: '1px solid #94A3B840', borderRadius: 99, padding: '4px 14px', fontSize: 12, fontWeight: 700, color: 'var(--text3)', marginBottom: 16 }}>
           🔒 Admin access only
         </div>
         <div style={{ fontSize: 14, color: 'var(--text3)', lineHeight: 1.7, marginBottom: 24 }}>
@@ -206,7 +206,7 @@ function NoModuleAccess({ label, icon, onNavigate }) {
       <div style={{ textAlign: 'center', padding: 40, maxWidth: 420 }}>
         <div style={{ width: 80, height: 80, borderRadius: 24, background: '#94A3B815', border: '2px solid #94A3B830', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, margin: '0 auto 20px' }}>{icon || '🔒'}</div>
         <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>{label}</div>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#94A3B815', border: '1px solid #94A3B840', borderRadius: 99, padding: '4px 14px', fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 16 }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#94A3B815', border: '1px solid #94A3B840', borderRadius: 99, padding: '4px 14px', fontSize: 12, fontWeight: 700, color: 'var(--text3)', marginBottom: 16 }}>
           🔒 No access
         </div>
         <div style={{ fontSize: 14, color: 'var(--text3)', lineHeight: 1.7, marginBottom: 24 }}>
@@ -262,7 +262,7 @@ function LiveClock() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', borderRadius: 14, background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.6)', whiteSpace: 'nowrap' }}>
       <span style={{ fontSize: 14 }}><Icon name="📅" /></span>
-      <span style={{ fontSize: 12.5, fontWeight: 700, color: '#334155' }}>{now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+      <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text2)' }}>{now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
       <span style={{ width: 1, height: 12, background: 'rgba(51,65,85,0.2)' }} />
       <span style={{ fontSize: 12.5, fontWeight: 700, color: '#6D5DF6', fontVariantNumeric: 'tabular-nums', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
         {now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
@@ -340,10 +340,10 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
       {/* LEFT — org card */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flexShrink: 0 }}>
         <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }} style={{ flexShrink: 0 }}>
-          <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: isMobile ? 34 : 40, height: isMobile ? 34 : 40, borderRadius: 12, objectFit: 'contain', background: '#fff', padding: 3, border: `1.5px solid var(--org-a20)` }} />
+          <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: isMobile ? 34 : 40, height: isMobile ? 34 : 40, borderRadius: 12, objectFit: 'contain', background: 'var(--surface)', padding: 3, border: `1.5px solid var(--org-a20)` }} />
         </motion.div>
         <div style={{ minWidth: 0, display: isMobile ? 'none' : 'block' }} className="ls-header-org-text">
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 180 }}>{orgName}</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 180 }}>{orgName}</div>
           {isTrial ? (
             <motion.div whileHover={{ scale: 1.05 }} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 2, background: 'var(--org-a10)', borderRadius: 99, padding: '1.5px 8px', border: `1px solid var(--org-a10)` }}>
               <span style={{ fontSize: 10 }}><Icon name="🚀" /></span>
@@ -358,7 +358,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
         </div>
         <div style={{ width: 1, height: 26, background: 'rgba(15,23,42,0.08)', flexShrink: 0 }} className="ls-header-divider" />
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{moduleLabel}</div>
+          <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{moduleLabel}</div>
         </div>
       </div>
 
@@ -370,7 +370,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
           transition={{ type: 'spring', stiffness: 300, damping: 28 }}
           style={{ position: 'relative', maxWidth: '100%' }}
         >
-          <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#94A3B8' }}><Icon name="🔍" /></span>
+          <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: 'var(--text-faint)' }}><Icon name="🔍" /></span>
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -379,7 +379,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
             placeholder="Search children, sessions, volunteers..."
             style={{
               width: '100%', padding: '10px 40px', borderRadius: 18, border: '1px solid rgba(255,255,255,0.6)',
-              background: 'rgba(255,255,255,0.55)', fontSize: 13.5, color: '#0F172A', outline: 'none', boxSizing: 'border-box',
+              background: 'rgba(255,255,255,0.55)', fontSize: 13.5, color: 'var(--text)', outline: 'none', boxSizing: 'border-box',
               boxShadow: searchFocused ? `0 0 0 3px var(--org-a10)` : 'none', transition: 'box-shadow 0.2s',
             }}
           />
@@ -387,10 +387,10 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
             {search ? (
               <motion.button key="clear" initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.7 }}
                 onClick={() => setSearch('')}
-                style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', border: 'none', background: '#F1F5F9', borderRadius: '50%', width: 20, height: 20, cursor: 'pointer', fontSize: 11, color: '#64748B' }}>×</motion.button>
+                style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'var(--surface-hover)', borderRadius: '50%', width: 20, height: 20, cursor: 'pointer', fontSize: 11, color: 'var(--text3)' }}>×</motion.button>
             ) : (
               <motion.span key="kbd" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 10.5, fontWeight: 700, color: '#94A3B8', background: 'rgba(148,163,184,0.14)', borderRadius: 6, padding: '2px 6px' }}>⌘K</motion.span>
+                style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 10.5, fontWeight: 700, color: 'var(--text-faint)', background: 'rgba(148,163,184,0.14)', borderRadius: 6, padding: '2px 6px' }}>⌘K</motion.span>
             )}
           </AnimatePresence>
         </motion.div>
@@ -405,23 +405,23 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
             <AnimatePresence>
               {showNotifs && (
                 <motion.div initial={{ opacity: 0, y: -8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                  style={{ position: 'absolute', top: 52, right: 0, width: 280, maxWidth: 'calc(100vw - 24px)', boxSizing: 'border-box', background: '#fff', borderRadius: 16, boxShadow: '0 20px 50px rgba(15,23,42,0.18)', border: '1px solid rgba(0,0,0,0.06)', padding: 16, zIndex: 60, maxHeight: 360, overflowY: 'auto' }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: unreadSubs.length ? 10 : 4 }}>Notifications</div>
+                  style={{ position: 'absolute', top: 52, right: 0, width: 280, maxWidth: 'calc(100vw - 24px)', boxSizing: 'border-box', background: 'var(--surface)', borderRadius: 16, boxShadow: '0 20px 50px rgba(15,23,42,0.18)', border: '1px solid rgba(0,0,0,0.06)', padding: 16, zIndex: 60, maxHeight: 360, overflowY: 'auto' }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: unreadSubs.length ? 10 : 4 }}>Notifications</div>
                   {unreadSubs.length === 0 ? (
-                    <div style={{ fontSize: 12, color: '#94A3B8' }}>You're all caught up 🎉</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>You're all caught up 🎉</div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {unreadSubs.map(sub => (
                         <button key={sub.id} onClick={() => { setShowNotifs(false); onNavigate('forms') }}
-                          style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 10px', borderRadius: 10, border: 'none', background: '#F8FAFC', textAlign: 'left', cursor: 'pointer' }}
+                          style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 10px', borderRadius: 10, border: 'none', background: 'var(--surface2)', textAlign: 'left', cursor: 'pointer' }}
                           onMouseEnter={e => e.currentTarget.style.background = '#F1F5F9'}
                           onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}>
                           <span style={{ fontSize: 14, flexShrink: 0 }}><Icon name="📬" /></span>
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                               New submission — {sub.org_forms?.name || 'Form'}
                             </div>
-                            <div style={{ fontSize: 10.5, color: '#94A3B8', marginTop: 1 }}>{timeAgo(sub.created_at)}</div>
+                            <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginTop: 1 }}>{timeAgo(sub.created_at)}</div>
                           </div>
                         </button>
                       ))}
@@ -458,10 +458,10 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
               style={{ position: 'absolute', bottom: -1, right: -1, width: 9, height: 9, borderRadius: '50%', background: '#22C55E', border: '2px solid #fff' }} />
           </div>
           <div className="ls-header-profile-text" style={{ textAlign: 'left', minWidth: 0 }}>
-            <div style={{ fontSize: 12.5, fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 110 }}>{userName}</div>
-            <div style={{ fontSize: 10, color: '#94A3B8', fontWeight: 600, textTransform: 'capitalize' }}>{userProfile?.role || 'Member'}</div>
+            <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 110 }}>{userName}</div>
+            <div style={{ fontSize: 10, color: 'var(--text-faint)', fontWeight: 600, textTransform: 'capitalize' }}>{userProfile?.role || 'Member'}</div>
           </div>
-          {!isMobile && <span style={{ fontSize: 11, color: '#94A3B8' }}>▾</span>}
+          {!isMobile && <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>▾</span>}
         </motion.button>
       </div>
 
@@ -1203,7 +1203,7 @@ export default function Dashboard({ session, org }) {
               transition={{ type: 'spring', damping: 32, stiffness: 320 }}
               style={{
                 width: '100%',
-                background: '#fff',
+                background: 'var(--surface)',
                 borderRadius: '24px 24px 0 0',
                 padding: '18px 0 0',
                 boxShadow: '0 -20px 60px rgba(15,23,42,0.25)',

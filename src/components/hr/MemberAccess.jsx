@@ -67,8 +67,8 @@ export default function MemberAccess({ member, org, viewerRole }) {
   if (ungovernedReason) {
     const isAdminTarget = member?.role === 'admin' || member?.role === 'owner'
     return (
-      <div style={{ background: '#F9FAFB', borderRadius: 14, padding: 18, fontSize: 13, color: '#6B7280', lineHeight: 1.7 }}>
-        <div style={{ fontWeight: 800, color: '#111827', marginBottom: 6 }}>
+      <div style={{ background: 'var(--surface2)', borderRadius: 14, padding: 18, fontSize: 13, color: 'var(--text3)', lineHeight: 1.7 }}>
+        <div style={{ fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>
           {isAdminTarget ? 'Full access' : 'Not applicable'}
         </div>
         {ungovernedReason}
@@ -76,11 +76,11 @@ export default function MemberAccess({ member, org, viewerRole }) {
     )
   }
 
-  if (loading) return <div style={{ padding: 20, color: '#9CA3AF', fontSize: 13 }}>Loading access…</div>
+  if (loading) return <div style={{ padding: 20, color: 'var(--text-faint)', fontSize: 13 }}>Loading access…</div>
 
   return (
     <div>
-      <div style={{ fontSize: 12.5, color: '#6B7280', lineHeight: 1.6, marginBottom: 16 }}>
+      <div style={{ fontSize: 12.5, color: 'var(--text3)', lineHeight: 1.6, marginBottom: 16 }}>
         Controls what {member.full_name || 'this person'} can reach. Enforced in the database, not just hidden in the menu.
         {!viewerMayEdit && <div style={{ color: '#B45309', marginTop: 8, fontWeight: 700 }}>Only an admin can change this person's access.</div>}
       </div>
@@ -97,12 +97,12 @@ export default function MemberAccess({ member, org, viewerRole }) {
           const current = grants[m.key] !== undefined ? grants[m.key] : 'inherit'
           const orgHas = orgModules.includes(m.key)
           return (
-            <div key={m.key} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '11px 14px' }}>
+            <div key={m.key} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '11px 14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                 <span style={{ fontSize: 17 }}><Icon name={m.icon} /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 800 }}>{m.label}</div>
-                  {m.hint && <div style={{ fontSize: 11.5, color: '#9CA3AF' }}>{m.hint}</div>}
+                  {m.hint && <div style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>{m.hint}</div>}
                 </div>
                 {!orgHas && (
                   <span style={{ background: '#FEF3C7', color: '#92400E', borderRadius: 8, padding: '3px 8px', fontSize: 10.5, fontWeight: 800 }}>
@@ -118,7 +118,7 @@ export default function MemberAccess({ member, org, viewerRole }) {
                   width: '100%', padding: '8px 10px', borderRadius: 9,
                   border: `1px solid ${current === 'none' ? '#FCA5A5' : '#e5e7eb'}`,
                   background: viewerMayEdit ? '#fff' : '#F9FAFB',
-                  fontSize: 13, fontWeight: 600, color: '#111827',
+                  fontSize: 13, fontWeight: 600, color: 'var(--text)',
                   cursor: viewerMayEdit ? 'pointer' : 'not-allowed',
                 }}>
                 <option value="inherit">
@@ -131,16 +131,16 @@ export default function MemberAccess({ member, org, viewerRole }) {
         })}
       </div>
 
-      <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: '10px 13px', fontSize: 11.5, color: '#64748B', marginTop: 14, lineHeight: 1.6 }}>
+      <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 13px', fontSize: 11.5, color: 'var(--text3)', marginTop: 14, lineHeight: 1.6 }}>
         Removing <strong>Young People</strong> hides the directory and stops this person adding or editing a young
         person anywhere — but names still appear in the registers and sessions they can already reach, otherwise
         those screens would load empty.
       </div>
 
-      <div style={{ fontSize: 11.5, color: '#9CA3AF', marginTop: 12, lineHeight: 1.6 }}>
+      <div style={{ fontSize: 11.5, color: 'var(--text-faint)', marginTop: 12, lineHeight: 1.6 }}>
         “Inherit” follows whatever the role template says, and changes with it. Setting a level here pins this
         person to it regardless.{' '}
-        <span style={{ color: '#6B7280' }}>Set the role template in Settings <Icon name="→" /> Access.</span>
+        <span style={{ color: 'var(--text3)' }}>Set the role template in Settings <Icon name="→" /> Access.</span>
       </div>
     </div>
   )

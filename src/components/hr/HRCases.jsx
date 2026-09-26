@@ -11,16 +11,16 @@ import { signOne } from '../../lib/storageUrl'
 // leave a case whose history has a hole in it.
 
 const card = {
-  background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14,
+  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14,
   padding: 16, marginBottom: 12,
 }
 const field = {
   width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
-  border: '1px solid #E2E8F0', fontSize: 15, fontFamily: 'inherit', outline: 'none',
-  background: '#fff',
+  border: '1px solid var(--border)', fontSize: 15, fontFamily: 'inherit', outline: 'none',
+  background: 'var(--surface)',
 }
 const lbl = {
-  display: 'block', fontSize: 11.5, fontWeight: 800, color: '#64748B',
+  display: 'block', fontSize: 11.5, fontWeight: 800, color: 'var(--text3)',
   marginBottom: 6, letterSpacing: 0.4, textTransform: 'uppercase',
 }
 const primaryBtn = (c, d) => ({
@@ -29,8 +29,8 @@ const primaryBtn = (c, d) => ({
   cursor: d ? 'default' : 'pointer', fontFamily: 'inherit', opacity: d ? 0.55 : 1,
 })
 const ghostBtn = {
-  minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid #E2E8F0',
-  background: '#fff', color: '#64748B', fontSize: 14, fontWeight: 700,
+  minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid var(--border)',
+  background: 'var(--surface)', color: 'var(--text3)', fontSize: 14, fontWeight: 700,
   cursor: 'pointer', fontFamily: 'inherit',
 }
 
@@ -79,7 +79,7 @@ export default function HRCasesTab({ org, staff, primary, canEdit, sensitiveEdit
 
   useEffect(() => { load() }, [load])
 
-  if (rows === null) return <div style={{ ...card, color: '#64748B', fontSize: 14 }}>Loading HR cases…</div>
+  if (rows === null) return <div style={{ ...card, color: 'var(--text3)', fontSize: 14 }}>Loading HR cases…</div>
 
   if (openId) {
     return <CaseRecord
@@ -113,7 +113,7 @@ export default function HRCasesTab({ org, staff, primary, canEdit, sensitiveEdit
       )}
 
       {rows.length === 0 && !creating && (
-        <div style={{ ...card, textAlign: 'center', padding: 24, color: '#64748B', fontSize: 13.5, lineHeight: 1.55 }}>
+        <div style={{ ...card, textAlign: 'center', padding: 24, color: 'var(--text3)', fontSize: 13.5, lineHeight: 1.55 }}>
           No open HR cases for {staff.full_name}.
         </div>
       )}
@@ -127,11 +127,11 @@ export default function HRCasesTab({ org, staff, primary, canEdit, sensitiveEdit
           }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: 12, fontWeight: 800, color: '#94A3B8', letterSpacing: 0.4 }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-faint)', letterSpacing: 0.4 }}>
                   {c.reference}
                 </div>
-                <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginTop: 2 }}>{c.title}</div>
-                <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 2 }}>
+                <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginTop: 2 }}>{c.title}</div>
+                <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>
                   {typeLabel(c.case_type)} · opened {ukDate(c.created_at)}
                   {c.next_action ? ` · next: ${c.next_action}` : ''}
                 </div>
@@ -188,10 +188,10 @@ function CaseWizard({ org, staff, primary, onCancel, onCreated }) {
 
       {step === 1 && (
         <>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>
             What kind of case is this?
           </div>
-          <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 14 }}>
+          <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 14 }}>
             For {staff.full_name}. Not every HR case becomes a disciplinary.
           </div>
           <select value={f.case_type} onChange={e => set('case_type', e.target.value)}
@@ -203,7 +203,7 @@ function CaseWizard({ org, staff, primary, onCancel, onCreated }) {
 
       {step === 2 && (
         <>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>The issue</div>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 14 }}>The issue</div>
           <div style={{ marginBottom: 12 }}>
             <label style={lbl}>Title</label>
             <input value={f.title} onChange={e => set('title', e.target.value)}
@@ -235,10 +235,10 @@ function CaseWizard({ org, staff, primary, onCancel, onCreated }) {
 
       {step === 3 && (
         <>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>
             Has anything been done already?
           </div>
-          <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 14 }}>
+          <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 14 }}>
             Recording an immediate step is not a finding about anybody.
           </div>
           <select value={f.immediate_action} onChange={e => set('immediate_action', e.target.value)}
@@ -252,13 +252,13 @@ function CaseWizard({ org, staff, primary, onCancel, onCreated }) {
 
       {step === 4 && (
         <>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>Check and open</div>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 14 }}>Check and open</div>
           {[['Person', staff.full_name], ['Type', typeLabel(f.case_type)],
             ['Title', f.title || '—'], ['Priority', f.priority],
             ['Immediate action', f.immediate_action]].map(([k, v]) => (
-            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '8px 0', borderTop: '1px solid #F1F5F9' }}>
-              <span style={{ fontSize: 13, color: '#64748B' }}>{k}</span>
-              <span style={{ fontSize: 13.5, color: '#0F172A', fontWeight: 600, textAlign: 'right' }}>{v}</span>
+            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '8px 0', borderTop: '1px solid var(--border-soft)' }}>
+              <span style={{ fontSize: 13, color: 'var(--text3)' }}>{k}</span>
+              <span style={{ fontSize: 13.5, color: 'var(--text)', fontWeight: 600, textAlign: 'right' }}>{v}</span>
             </div>
           ))}
         </>
@@ -323,7 +323,7 @@ function CaseRecord({ org, staff, caseId, primary, canEdit, sensitiveEdit, onBac
 
   useEffect(() => { load() }, [load])
 
-  if (!c) return <div style={{ ...card, color: '#64748B', fontSize: 14 }}>Loading case…</div>
+  if (!c) return <div style={{ ...card, color: 'var(--text3)', fontSize: 14 }}>Loading case…</div>
 
   const s = st(c.status)
 
@@ -353,8 +353,8 @@ function CaseRecord({ org, staff, caseId, primary, canEdit, sensitiveEdit, onBac
       <button onClick={onBack} style={{ ...ghostBtn, marginBottom: 12 }}>← All cases</button>
 
       <div style={card}>
-        <div style={{ fontSize: 12, fontWeight: 800, color: '#94A3B8', letterSpacing: 0.4 }}>{c.reference}</div>
-        <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginTop: 2 }}>{c.title}</div>
+        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-faint)', letterSpacing: 0.4 }}>{c.reference}</div>
+        <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', marginTop: 2 }}>{c.title}</div>
         <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
           <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 99,
             background: s[3], color: s[2], fontSize: 11.5, fontWeight: 800 }}>{s[1]}</span>
@@ -369,9 +369,9 @@ function CaseRecord({ org, staff, caseId, primary, canEdit, sensitiveEdit, onBac
           )}
         </div>
         {c.description && (
-          <div style={{ fontSize: 13.5, color: '#0F172A', marginTop: 12, whiteSpace: 'pre-wrap' }}>{c.description}</div>
+          <div style={{ fontSize: 13.5, color: 'var(--text)', marginTop: 12, whiteSpace: 'pre-wrap' }}>{c.description}</div>
         )}
-        <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 10 }}>
+        <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 10 }}>
           Opened {ukDate(c.created_at)}
           {c.next_action ? ` · next: ${c.next_action}` : ''}
           {c.next_review_date ? ` · review ${ukDate(c.next_review_date)}` : ''}
@@ -400,7 +400,7 @@ function CaseRecord({ org, staff, caseId, primary, canEdit, sensitiveEdit, onBac
 
       {canEdit && c.status !== 'closed' && (
         <div style={{ ...card }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#64748B', marginBottom: 10 }}>Actions</div>
+          <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text3)', marginBottom: 10 }}>Actions</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {[['note', 'Add note'], ['meeting', 'Add meeting'], ['correspondence', 'Record letter/email']]
               .map(([k, l]) => (
@@ -442,12 +442,12 @@ function CaseRecord({ org, staff, caseId, primary, canEdit, sensitiveEdit, onBac
 
       {docs.length > 0 && (
         <div style={card}>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Documents</div>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Documents</div>
           {docs.map(d => (
-            <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderTop: '1px solid #F1F5F9' }}>
+            <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderTop: '1px solid var(--border-soft)' }}>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A' }}>{d.title}</div>
-                <div style={{ fontSize: 12.5, color: '#64748B' }}>Added {ukDate(d.uploaded_at)}</div>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>{d.title}</div>
+                <div style={{ fontSize: 12.5, color: 'var(--text3)' }}>Added {ukDate(d.uploaded_at)}</div>
               </div>
               <button onClick={async () => {
                 const url = await signOne('hr-documents', d.storage_path)
@@ -478,21 +478,21 @@ function CaseRecord({ org, staff, caseId, primary, canEdit, sensitiveEdit, onBac
       )}
 
       <div style={card}>
-        <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Timeline</div>
+        <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Timeline</div>
         {entries.length === 0 && (
-          <div style={{ fontSize: 13, color: '#94A3B8' }}>Nothing recorded yet.</div>
+          <div style={{ fontSize: 13, color: 'var(--text-faint)' }}>Nothing recorded yet.</div>
         )}
         {entries.map(e => (
-          <div key={e.id} style={{ display: 'flex', gap: 12, padding: '10px 0', borderTop: '1px solid #F1F5F9' }}>
-            <div style={{ width: 78, flexShrink: 0, fontSize: 12, color: '#94A3B8', fontWeight: 700 }}>
+          <div key={e.id} style={{ display: 'flex', gap: 12, padding: '10px 0', borderTop: '1px solid var(--border-soft)' }}>
+            <div style={{ width: 78, flexShrink: 0, fontSize: 12, color: 'var(--text-faint)', fontWeight: 700 }}>
               {ukDate(e.created_at)}
             </div>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A' }}>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>
                 {ENTRY_LABEL[e.entry_type] || e.entry_type}
               </div>
               {e.body && (
-                <div style={{ fontSize: 13, color: '#64748B', marginTop: 2, whiteSpace: 'pre-wrap' }}>{e.body}</div>
+                <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2, whiteSpace: 'pre-wrap' }}>{e.body}</div>
               )}
             </div>
           </div>
@@ -501,11 +501,11 @@ function CaseRecord({ org, staff, caseId, primary, canEdit, sensitiveEdit, onBac
 
       {actions.length > 0 && (
         <div style={card}>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Actions</div>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Actions</div>
           {actions.map(a => (
-            <div key={a.id} style={{ padding: '8px 0', borderTop: '1px solid #F1F5F9' }}>
-              <div style={{ fontSize: 13.5, color: '#0F172A' }}>{a.description}</div>
-              <div style={{ fontSize: 12.5, color: '#64748B' }}>
+            <div key={a.id} style={{ padding: '8px 0', borderTop: '1px solid var(--border-soft)' }}>
+              <div style={{ fontSize: 13.5, color: 'var(--text)' }}>{a.description}</div>
+              <div style={{ fontSize: 12.5, color: 'var(--text3)' }}>
                 {a.due_date ? `Due ${ukDate(a.due_date)}` : 'No due date'}
                 {a.completed_at ? ' · done' : ''}
               </div>
@@ -550,7 +550,7 @@ function CaseDocumentPanel({ org, staff, caseId, primary, onCancel, onSaved }) {
 
   return (
     <div style={card}>
-      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>Add a document</div>
+      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>Add a document</div>
       <label style={lbl}>File</label>
       <input type="file" style={{ ...field, padding: 10, marginBottom: 12 }}
         onChange={e => {
@@ -562,7 +562,7 @@ function CaseDocumentPanel({ org, staff, caseId, primary, onCancel, onSaved }) {
         }} />
       <label style={lbl}>Title</label>
       <input value={title} onChange={e => setTitle(e.target.value)} style={{ ...field, marginBottom: 12 }} />
-      <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 12, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 12, color: 'var(--text-faint)', marginBottom: 12, lineHeight: 1.45 }}>
         Filed against {staff.full_name} as well as this case, so it appears on their
         Documents tab too.
       </div>
@@ -585,7 +585,7 @@ function TextPanel({ title, placeholder, primary, busy, onCancel, onSave }) {
   const [v, setV] = useState('')
   return (
     <div style={card}>
-      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>{title}</div>
+      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>{title}</div>
       <textarea value={v} rows={4} onChange={e => setV(e.target.value)}
         placeholder={placeholder} style={{ ...field, resize: 'vertical', lineHeight: 1.5, marginBottom: 12 }} />
       <div style={{ display: 'flex', gap: 8 }}>
@@ -602,7 +602,7 @@ function StatusPanel({ current, primary, busy, onCancel, onSave }) {
   const [note, setNote] = useState('')
   return (
     <div style={card}>
-      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Change status</div>
+      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Change status</div>
       <select value={v} onChange={e => setV(e.target.value)} style={{ ...field, minHeight: 44, marginBottom: 12 }}>
         {STATUSES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
       </select>
@@ -651,7 +651,7 @@ function EscalatePanel({ caseId, caseRef, primary, onCancel, onDone }) {
       </div>
       {!confirmed ? (
         <>
-          <div style={{ fontSize: 13.5, color: '#64748B', lineHeight: 1.6, marginBottom: 14 }}>
+          <div style={{ fontSize: 13.5, color: 'var(--text3)', lineHeight: 1.6, marginBottom: 14 }}>
             Starting a disciplinary creates a separate formal disciplinary record linked to
             this HR case. The original HR case will remain available as part of the audit trail.
           </div>
@@ -685,7 +685,7 @@ function EscalatePanel({ caseId, caseRef, primary, onCancel, onDone }) {
             <textarea value={f.allegation} rows={3} onChange={e => set('allegation', e.target.value)}
               placeholder="Alleged breach of… — describe what is alleged, not what is concluded"
               style={{ ...field, resize: 'vertical', lineHeight: 1.5 }} />
-            <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 6, lineHeight: 1.45 }}>
+            <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 6, lineHeight: 1.45 }}>
               Nothing is decided by opening this. Wording should stay neutral until an
               outcome is recorded.
             </div>

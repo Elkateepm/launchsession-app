@@ -5,15 +5,15 @@ import Icon from '../../lib/icons'
 
 const PURPLE = '#6D5DF6'
 const card = (extra = {}) => ({
-  background: '#fff', border: '1px solid #E5E7EB', borderRadius: 16,
+  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16,
   boxShadow: '0 1px 0 rgba(255,255,255,0.6) inset, 0 4px 16px -12px rgba(15,23,42,0.18)',
   ...extra,
 })
 const fi = {
   width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10,
-  border: '1.5px solid #E2E8F0', fontSize: 13, outline: 'none', background: '#fff', color: '#0F172A',
+  border: '1.5px solid var(--border)', fontSize: 13, outline: 'none', background: 'var(--surface)', color: 'var(--text)',
 }
-const lbl = { fontSize: 11, fontWeight: 800, color: '#64748B', display: 'block', marginBottom: 6 }
+const lbl = { fontSize: 11, fontWeight: 800, color: 'var(--text3)', display: 'block', marginBottom: 6 }
 
 // ── TRIP READINESS ──────────────────────────────────────────────────────
 // Every check below maps to a real column/table. Nothing is invented: if the
@@ -84,7 +84,7 @@ export function TripReadiness({ org, day, counts, hasRiskAssessment, staffCount,
   return (
     <div style={card({ padding: 16 })}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <span style={{ fontSize: 11, fontWeight: 800, color: '#64748B', letterSpacing: 0.4 }}>TRIP READINESS</span>
+        <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', letterSpacing: 0.4 }}>TRIP READINESS</span>
         <span style={{
           fontSize: 10.5, fontWeight: 800, borderRadius: 99, padding: '3px 9px',
           color: outstanding === 0 ? '#15803D' : '#B45309',
@@ -98,11 +98,11 @@ export function TripReadiness({ org, day, counts, hasRiskAssessment, staffCount,
           <button key={i} onClick={c.go} disabled={!c.go}
             style={{
               display: 'flex', alignItems: 'center', gap: 9, padding: '8px 10px', borderRadius: 9,
-              border: '1px solid #F1F5F9', background: '#fff', width: '100%', textAlign: 'left',
+              border: '1px solid var(--border-soft)', background: 'var(--surface)', width: '100%', textAlign: 'left',
               cursor: c.go ? 'pointer' : 'default',
             }}>
             <span style={{ fontSize: 13, color: c.ok ? '#16A34A' : '#B45309' }}>{c.ok ? '✓' : '⚠'}</span>
-            <span style={{ fontSize: 12.5, fontWeight: 600, color: '#334155', flex: 1 }}>{c.text}</span>
+            <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text2)', flex: 1 }}>{c.text}</span>
             {c.go && <span style={{ color: '#CBD5E1', fontSize: 14 }}>›</span>}
           </button>
         ))}
@@ -153,21 +153,21 @@ export function ProjectReflectionModal({ org, session, project, summary, existin
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 10400 }} />
       <div onClick={e => e.stopPropagation()} style={{
         position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 10401,
-        background: '#fff', borderRadius: 20, width: 'min(560px, 94vw)', maxHeight: '88vh',
+        background: 'var(--surface)', borderRadius: 20, width: 'min(560px, 94vw)', maxHeight: '88vh',
         display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.3)',
       }}>
-        <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+        <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--border-soft)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
           <div>
-            <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>Project reflection</div>
-            <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>{project.name}</div>
+            <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)' }}>Project reflection</div>
+            <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{project.name}</div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text-faint)', cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
           {/* Computed summary — nothing here is typed by the user */}
-          <div style={{ background: '#F8FAFC', borderRadius: 12, padding: 14, marginBottom: 18 }}>
-            <div style={{ fontSize: 10.5, fontWeight: 800, color: '#64748B', letterSpacing: 0.4, marginBottom: 8 }}>WHAT LAUNCHSESSION ALREADY KNOWS</div>
+          <div style={{ background: 'var(--surface2)', borderRadius: 12, padding: 14, marginBottom: 18 }}>
+            <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--text3)', letterSpacing: 0.4, marginBottom: 8 }}>WHAT LAUNCHSESSION ALREADY KNOWS</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px' }}>
               <SumStat n={summary.completedDays} l={`session${summary.completedDays === 1 ? '' : 's'} delivered`} />
               <SumStat n={summary.participants} l="young people" />
@@ -216,8 +216,8 @@ export function ProjectReflectionModal({ org, session, project, summary, existin
           {error && <div style={{ fontSize: 12.5, color: '#DC2626', fontWeight: 600 }}>{error}</div>}
         </div>
 
-        <div style={{ padding: 16, borderTop: '1px solid #F1F5F9', display: 'flex', gap: 8, flexShrink: 0 }}>
-          <button onClick={onClose} style={{ padding: '11px 18px', borderRadius: 11, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+        <div style={{ padding: 16, borderTop: '1px solid var(--border-soft)', display: 'flex', gap: 8, flexShrink: 0 }}>
+          <button onClick={onClose} style={{ padding: '11px 18px', borderRadius: 11, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           <div style={{ flex: 1 }} />
           <button onClick={save} disabled={saving} style={{
             padding: '11px 22px', borderRadius: 11, border: 'none', color: '#fff', fontSize: 13, fontWeight: 800,
@@ -275,12 +275,12 @@ export function AddParticipantsModal({ org, projectId, existingChildIds, onClose
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 10400 }} />
       <div onClick={e => e.stopPropagation()} style={{
         position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 10401,
-        background: '#fff', borderRadius: 20, width: 'min(480px, 94vw)', maxHeight: '82vh',
+        background: 'var(--surface)', borderRadius: 20, width: 'min(480px, 94vw)', maxHeight: '82vh',
         display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.3)',
       }}>
-        <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-          <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>Add young people</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
+        <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--border-soft)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+          <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)' }}>Add young people</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text-faint)', cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
         <div style={{ padding: '12px 20px 0', flexShrink: 0 }}>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name…" autoFocus
@@ -288,9 +288,9 @@ export function AddParticipantsModal({ org, projectId, existingChildIds, onClose
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 12px' }}>
           {loading ? (
-            <div style={{ padding: 20, textAlign: 'center', fontSize: 13, color: '#94A3B8' }}>Loading…</div>
+            <div style={{ padding: 20, textAlign: 'center', fontSize: 13, color: 'var(--text-faint)' }}>Loading…</div>
           ) : filtered.length === 0 ? (
-            <div style={{ padding: 20, textAlign: 'center', fontSize: 13, color: '#94A3B8' }}>
+            <div style={{ padding: 20, textAlign: 'center', fontSize: 13, color: 'var(--text-faint)' }}>
               {children.length === 0 ? 'No children found for this org.' : 'Everyone matching is already on this project.'}
             </div>
           ) : (
@@ -306,8 +306,8 @@ export function AddParticipantsModal({ org, projectId, existingChildIds, onClose
                       {c.photo_url ? <SignedImg bucket="gallery" src={c.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : `${c.first_name?.[0] || ''}${c.last_name?.[0] || ''}`.toUpperCase()}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{c.first_name} {c.last_name}</div>
-                      {c.group_name && <div style={{ fontSize: 11, color: '#94A3B8' }}>{c.group_name}</div>}
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{c.first_name} {c.last_name}</div>
+                      {c.group_name && <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{c.group_name}</div>}
                     </div>
                     <span style={{ fontSize: 15, color: on ? PURPLE : '#CBD5E1' }}>{on ? '✓' : '+'}</span>
                   </button>
@@ -317,8 +317,8 @@ export function AddParticipantsModal({ org, projectId, existingChildIds, onClose
           )}
           {error && <div style={{ fontSize: 12.5, color: '#DC2626', fontWeight: 600, marginTop: 10 }}>{error}</div>}
         </div>
-        <div style={{ padding: 16, borderTop: '1px solid #F1F5F9', display: 'flex', gap: 8, flexShrink: 0 }}>
-          <button onClick={onClose} style={{ padding: '11px 18px', borderRadius: 11, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+        <div style={{ padding: 16, borderTop: '1px solid var(--border-soft)', display: 'flex', gap: 8, flexShrink: 0 }}>
+          <button onClick={onClose} style={{ padding: '11px 18px', borderRadius: 11, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           <div style={{ flex: 1 }} />
           <button onClick={save} disabled={saving || selected.size === 0} style={{
             padding: '11px 22px', borderRadius: 11, border: 'none', color: '#fff', fontSize: 13, fontWeight: 800,
@@ -370,12 +370,12 @@ export function AddTeamModal({ org, projectId, existingUserIds, onClose, onAdded
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 10400 }} />
       <div onClick={e => e.stopPropagation()} style={{
         position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 10401,
-        background: '#fff', borderRadius: 20, width: 'min(480px, 94vw)', maxHeight: '82vh',
+        background: 'var(--surface)', borderRadius: 20, width: 'min(480px, 94vw)', maxHeight: '82vh',
         display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.3)',
       }}>
-        <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-          <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>Add team member</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
+        <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--border-soft)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+          <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)' }}>Add team member</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text-faint)', cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
         <div style={{ padding: '12px 20px 0', flexShrink: 0 }}>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name…" autoFocus
@@ -383,21 +383,21 @@ export function AddTeamModal({ org, projectId, existingUserIds, onClose, onAdded
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 12px' }}>
           {loading ? (
-            <div style={{ padding: 20, textAlign: 'center', fontSize: 13, color: '#94A3B8' }}>Loading…</div>
+            <div style={{ padding: 20, textAlign: 'center', fontSize: 13, color: 'var(--text-faint)' }}>Loading…</div>
           ) : filtered.length === 0 ? (
-            <div style={{ padding: 20, textAlign: 'center', fontSize: 13, color: '#94A3B8' }}>
+            <div style={{ padding: 20, textAlign: 'center', fontSize: 13, color: 'var(--text-faint)' }}>
               {people.length === 0 ? 'No active staff or volunteers found.' : 'Everyone matching is already on this project.'}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {filtered.map(p => (
-                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 11, border: '1px solid #F1F5F9' }}>
+                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 11, border: '1px solid var(--border-soft)' }}>
                   <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#EDE9FE', color: '#5B21B6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0, overflow: 'hidden' }}>
                     {p.photo_url ? <SignedImg bucket="staff-photos" src={p.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (p.full_name || '?')[0]?.toUpperCase()}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{p.full_name || 'Unnamed'}</div>
-                    <div style={{ fontSize: 11, color: '#94A3B8' }}>{roleLabel(p.role)}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{p.full_name || 'Unnamed'}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{roleLabel(p.role)}</div>
                   </div>
                   <button onClick={() => add(p)} disabled={adding === p.id} style={{
                     padding: '6px 12px', borderRadius: 9, border: 'none', fontSize: 12, fontWeight: 800, color: '#fff',
@@ -409,8 +409,8 @@ export function AddTeamModal({ org, projectId, existingUserIds, onClose, onAdded
           )}
           {error && <div style={{ fontSize: 12.5, color: '#DC2626', fontWeight: 600, marginTop: 10 }}>{error}</div>}
         </div>
-        <div style={{ padding: 16, borderTop: '1px solid #F1F5F9', flexShrink: 0 }}>
-          <button onClick={onClose} style={{ width: '100%', padding: '11px 18px', borderRadius: 11, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Done</button>
+        <div style={{ padding: 16, borderTop: '1px solid var(--border-soft)', flexShrink: 0 }}>
+          <button onClick={onClose} style={{ width: '100%', padding: '11px 18px', borderRadius: 11, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Done</button>
         </div>
       </div>
     </>
@@ -453,12 +453,12 @@ export function EditProjectModal({ project, onClose, onSaved }) {
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 10400 }} />
       <div onClick={e => e.stopPropagation()} style={{
         position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 10401,
-        background: '#fff', borderRadius: 20, width: 'min(480px, 94vw)', maxHeight: '88vh',
+        background: 'var(--surface)', borderRadius: 20, width: 'min(480px, 94vw)', maxHeight: '88vh',
         display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.3)',
       }}>
-        <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-          <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>Edit project</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
+        <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--border-soft)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+          <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)' }}>Edit project</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text-faint)', cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
           <Field label="Project name">
@@ -474,13 +474,13 @@ export function EditProjectModal({ project, onClose, onSaved }) {
           <Field label="Capacity (optional)">
             <input type="number" min="0" value={form.capacity} onChange={e => set('capacity', e.target.value)} style={fi} />
           </Field>
-          <div style={{ fontSize: 11.5, color: '#94A3B8', lineHeight: 1.5 }}>
+          <div style={{ fontSize: 11.5, color: 'var(--text-faint)', lineHeight: 1.5 }}>
             Changing the date range doesn't add or remove project days — build those from the Schedule tab.
           </div>
           {error && <div style={{ fontSize: 12.5, color: '#DC2626', fontWeight: 600, marginTop: 10 }}>{error}</div>}
         </div>
-        <div style={{ padding: 16, borderTop: '1px solid #F1F5F9', display: 'flex', gap: 8, flexShrink: 0 }}>
-          <button onClick={onClose} style={{ padding: '11px 18px', borderRadius: 11, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+        <div style={{ padding: 16, borderTop: '1px solid var(--border-soft)', display: 'flex', gap: 8, flexShrink: 0 }}>
+          <button onClick={onClose} style={{ padding: '11px 18px', borderRadius: 11, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           <div style={{ flex: 1 }} />
           <button onClick={save} disabled={saving} style={{
             padding: '11px 22px', borderRadius: 11, border: 'none', color: '#fff', fontSize: 13, fontWeight: 800,
@@ -493,7 +493,7 @@ export function EditProjectModal({ project, onClose, onSaved }) {
 }
 
 function SumStat({ n, l }) {
-  return <span style={{ fontSize: 12.5, color: '#64748B' }}><strong style={{ color: '#0F172A', fontWeight: 900, fontSize: 14 }}>{n}</strong> {l}</span>
+  return <span style={{ fontSize: 12.5, color: 'var(--text3)' }}><strong style={{ color: 'var(--text)', fontWeight: 900, fontSize: 14 }}>{n}</strong> {l}</span>
 }
 function Field({ label, children }) {
   return <div style={{ marginBottom: 16 }}><label style={lbl}>{label}</label>{children}</div>
@@ -552,12 +552,12 @@ export function DuplicateProjectModal({ project, onClose, onDuplicated }) {
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 10400 }} />
       <div onClick={e => e.stopPropagation()} style={{
         position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 10401,
-        background: '#fff', borderRadius: 20, width: 'min(480px, 94vw)', maxHeight: '88vh',
+        background: 'var(--surface)', borderRadius: 20, width: 'min(480px, 94vw)', maxHeight: '88vh',
         display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.3)',
       }}>
-        <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>Duplicate project</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
+        <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--border-soft)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)' }}>Duplicate project</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text-faint)', cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
@@ -577,18 +577,18 @@ export function DuplicateProjectModal({ project, onClose, onDuplicated }) {
 
           <label style={lbl}>What to copy</label>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '10px 12px', borderRadius: 10, background: '#F8FAFC', fontSize: 13, fontWeight: 600, color: '#334155' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '10px 12px', borderRadius: 10, background: 'var(--surface2)', fontSize: 13, fontWeight: 600, color: 'var(--text2)' }}>
               <span style={{ color: '#16A34A' }}><Icon name="✓" /></span> Project structure, defaults and settings
             </div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#334155' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--text2)' }}>
               <input type="checkbox" checked={copyTeam} onChange={e => setCopyTeam(e.target.checked)} /> Project team
             </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#334155' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--text2)' }}>
               <input type="checkbox" checked={copyParticipants} onChange={e => setCopyParticipants(e.target.checked)} /> Young people
             </label>
           </div>
 
-          <div style={{ fontSize: 11.5, color: '#64748B', lineHeight: 1.5, background: '#F8FAFC', borderRadius: 10, padding: '10px 12px' }}>
+          <div style={{ fontSize: 11.5, color: 'var(--text3)', lineHeight: 1.5, background: 'var(--surface2)', borderRadius: 10, padding: '10px 12px' }}>
             Attendance, reflections and completed days are never copied. The new project starts as a draft
             so you can build its schedule from the new dates.
           </div>
@@ -596,8 +596,8 @@ export function DuplicateProjectModal({ project, onClose, onDuplicated }) {
           {error && <div style={{ marginTop: 12, fontSize: 12.5, color: '#DC2626', fontWeight: 600 }}>{error}</div>}
         </div>
 
-        <div style={{ padding: 16, borderTop: '1px solid #F1F5F9', display: 'flex', gap: 8 }}>
-          <button onClick={onClose} style={{ padding: '11px 18px', borderRadius: 11, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+        <div style={{ padding: 16, borderTop: '1px solid var(--border-soft)', display: 'flex', gap: 8 }}>
+          <button onClick={onClose} style={{ padding: '11px 18px', borderRadius: 11, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           <div style={{ flex: 1 }} />
           <button onClick={run} disabled={!valid || saving} style={{
             padding: '11px 22px', borderRadius: 11, border: 'none', color: '#fff', fontSize: 13, fontWeight: 800,

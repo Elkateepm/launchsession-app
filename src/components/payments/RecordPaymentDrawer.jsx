@@ -73,32 +73,32 @@ export default function RecordPaymentDrawer({ org, session, charge: initialCharg
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          position: 'fixed', zIndex: 10401, background: '#fff', display: 'flex', flexDirection: 'column',
+          position: 'fixed', zIndex: 10401, background: 'var(--surface)', display: 'flex', flexDirection: 'column',
           ...(isMobile
             ? { left: 0, right: 0, bottom: 0, maxHeight: '92vh', borderRadius: '20px 20px 0 0' }
             : { top: 0, right: 0, bottom: 0, width: 420, boxShadow: '-24px 0 60px rgba(0,0,0,0.2)' }),
         }}
       >
-        <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-          <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>Record payment</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer', padding: 4 }}><Icon name="✕" /></button>
+        <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--border-soft)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)' }}>Record payment</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text-faint)', cursor: 'pointer', padding: 4 }}><Icon name="✕" /></button>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
           {done ? (
             <div style={{ textAlign: 'center', padding: '40px 10px' }}>
               <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, margin: '0 auto 14px' }}><Icon name="✓" /></div>
-              <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>Payment recorded</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>Payment recorded</div>
             </div>
           ) : (
             <>
               {!initialCharge && (
                 <div style={{ marginBottom: 16 }}>
-                  <label style={{ fontSize: 11, fontWeight: 800, color: '#64748B', display: 'block', marginBottom: 6 }}>Charge</label>
+                  <label style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', display: 'block', marginBottom: 6 }}>Charge</label>
                   {loadingCharges ? (
-                    <div style={{ fontSize: 12.5, color: '#94A3B8' }}>Loading outstanding charges…</div>
+                    <div style={{ fontSize: 12.5, color: 'var(--text-faint)' }}>Loading outstanding charges…</div>
                   ) : outstandingCharges.length === 0 ? (
-                    <div style={{ fontSize: 12.5, color: '#94A3B8' }}>No outstanding charges for this child.</div>
+                    <div style={{ fontSize: 12.5, color: 'var(--text-faint)' }}>No outstanding charges for this child.</div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {outstandingCharges.map(c => (
@@ -107,8 +107,8 @@ export default function RecordPaymentDrawer({ org, session, charge: initialCharg
                           border: charge?.id === c.id ? `2px solid ${PB.blue}` : '1.5px solid #E2E8F0',
                           background: charge?.id === c.id ? '#EFF6FF' : '#fff',
                         }}>
-                          <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0F172A' }}>{c.title}</div>
-                          <div style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>{fmtMoney(c.remaining)} remaining of {fmtMoney(c.amount)}</div>
+                          <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)' }}>{c.title}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>{fmtMoney(c.remaining)} remaining of {fmtMoney(c.amount)}</div>
                         </button>
                       ))}
                     </div>
@@ -117,8 +117,8 @@ export default function RecordPaymentDrawer({ org, session, charge: initialCharg
               )}
 
               {charge && (
-                <div style={{ background: '#F8FAFC', borderRadius: 12, padding: 14, marginBottom: 16 }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}>{charge.title}</div>
+                <div style={{ background: 'var(--surface2)', borderRadius: 12, padding: 14, marginBottom: 16 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)', marginBottom: 8 }}>{charge.title}</div>
                   <Row label="Original charge" value={fmtMoney(charge.amount)} />
                   <Row label="Already paid" value={fmtMoney(charge.paid_amount)} />
                   <Row label="Outstanding" value={fmtMoney(charge.remaining)} strong />
@@ -129,7 +129,7 @@ export default function RecordPaymentDrawer({ org, session, charge: initialCharg
                 <>
                   <Field label="Amount received">
                     <div style={{ position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: 12, top: 10, fontSize: 13, color: '#64748B', fontWeight: 700 }}>£</span>
+                      <span style={{ position: 'absolute', left: 12, top: 10, fontSize: 13, color: 'var(--text3)', fontWeight: 700 }}>£</span>
                       <input type="number" step="0.01" min="0" value={amount} onChange={e => setAmount(e.target.value)}
                         style={{ ...inputStyle, paddingLeft: 24 }} placeholder="0.00" />
                     </div>
@@ -144,7 +144,7 @@ export default function RecordPaymentDrawer({ org, session, charge: initialCharg
                         <button key={m.key} onClick={() => setMethod(m.key)} style={{
                           padding: '8px 10px', borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer', textAlign: 'left',
                           border: method === m.key ? `2px solid ${PB.blue}` : '1.5px solid #E2E8F0',
-                          background: method === m.key ? '#EFF6FF' : '#fff', color: '#334155',
+                          background: method === m.key ? '#EFF6FF' : '#fff', color: 'var(--text2)',
                         }}>
                           {m.icon} {m.label}
                         </button>
@@ -172,7 +172,7 @@ export default function RecordPaymentDrawer({ org, session, charge: initialCharg
         </div>
 
         {!done && charge && (
-          <div style={{ padding: '16px 16px calc(16px + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid #F1F5F9', flexShrink: 0 }}>
+          <div style={{ padding: '16px 16px calc(16px + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid var(--border-soft)', flexShrink: 0 }}>
             <button onClick={handleSubmit} disabled={saving} style={{
               width: '100%', padding: '13px', borderRadius: 12, border: 'none', cursor: saving ? 'default' : 'pointer',
               background: saving ? '#93C5FD' : PB.gradient, color: '#fff', fontSize: 14, fontWeight: 800,
@@ -190,7 +190,7 @@ export default function RecordPaymentDrawer({ org, session, charge: initialCharg
 function Field({ label, children }) {
   return (
     <div style={{ marginBottom: 14 }}>
-      <label style={{ fontSize: 11, fontWeight: 800, color: '#64748B', display: 'block', marginBottom: 6 }}>{label}</label>
+      <label style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', display: 'block', marginBottom: 6 }}>{label}</label>
       {children}
     </div>
   )
@@ -199,7 +199,7 @@ function Field({ label, children }) {
 function Row({ label, value, strong }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', fontSize: 12.5 }}>
-      <span style={{ color: '#64748B' }}>{label}</span>
+      <span style={{ color: 'var(--text3)' }}>{label}</span>
       <span style={{ fontWeight: strong ? 900 : 700, color: strong ? '#0F172A' : '#334155' }}>{value}</span>
     </div>
   )

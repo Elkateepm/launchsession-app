@@ -24,11 +24,11 @@ const TIMES = ['Morning','Afternoon','Evening']
 
 const s = {
   wrap: { minHeight:'100dvh', background:'radial-gradient(circle at 15% 10%, #16283d 0%, #0A121D 45%, #060a11 100%)', display:'flex', alignItems:'center', justifyContent:'center', padding:20, fontFamily:'Inter,sans-serif', position:'relative', overflow:'hidden' },
-  card: { background:'#fff', borderRadius:28, width:'100%', maxWidth:480, overflow:'hidden', boxShadow:'0 40px 100px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06)', position:'relative', zIndex:1 },
+  card: { background: 'var(--surface)', borderRadius:28, width:'100%', maxWidth:480, overflow:'hidden', boxShadow:'0 40px 100px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06)', position:'relative', zIndex:1 },
   head: (color) => ({ background:`linear-gradient(135deg, ${color||'#1B9AAA'}, ${color||'#1B9AAA'}dd)`, padding:'28px 28px 20px', color:'#fff', position:'relative', overflow:'hidden' }),
   body: { padding:'28px 28px 24px' },
-  label: { fontSize:12, fontWeight:700, color:'#6B7280', textTransform:'uppercase', letterSpacing:0.6, display:'block', marginBottom:6 },
-  inp: { width:'100%', padding:'12px 14px', borderRadius:12, border:'1.5px solid #E5E7EB', fontSize:15, outline:'none', boxSizing:'border-box', marginBottom:14, fontFamily:'Inter,sans-serif', transition:'border-color 0.15s, box-shadow 0.15s' },
+  label: { fontSize:12, fontWeight:700, color: 'var(--text3)', textTransform:'uppercase', letterSpacing:0.6, display:'block', marginBottom:6 },
+  inp: { width:'100%', padding:'12px 14px', borderRadius:12, border:'1.5px solid var(--border)', fontSize:15, outline:'none', boxSizing:'border-box', marginBottom:14, fontFamily:'Inter,sans-serif', transition:'border-color 0.15s, box-shadow 0.15s' },
   btn: (color) => ({ width:'100%', padding:14, borderRadius:14, border:'none', background:`linear-gradient(135deg, ${color||'#1B9AAA'}, ${color||'#1B9AAA'}cc)`, color:'#fff', fontSize:16, fontWeight:800, cursor:'pointer', marginTop:8, boxShadow:`0 8px 24px ${color||'#1B9AAA'}55` }),
   back: { background:'none', border:'none', color:'rgba(255,255,255,0.6)', fontSize:13, cursor:'pointer', padding:0, display:'flex', alignItems:'center', gap:4, marginBottom:12 },
   chip: (active,color) => ({ padding:'8px 14px', borderRadius:99, border:`1.5px solid ${active?(color||'#1B9AAA'):'#E5E7EB'}`, background:active?(color||'#1B9AAA')+'18':'#F9FAFB', color:active?(color||'#1B9AAA'):'#6B7280', fontSize:13, fontWeight:700, cursor:'pointer', transition:'all 0.15s' }),
@@ -60,7 +60,7 @@ function ProgressBar({ step, total, color }) {
         initial={false}
         animate={{ width:`${(step/total)*100}%` }}
         transition={{ type:'spring', stiffness:120, damping:20 }}
-        style={{ height:'100%', background:'#fff', borderRadius:2 }}
+        style={{ height:'100%', background: 'var(--surface)', borderRadius:2 }}
       />
     </div>
   )
@@ -146,7 +146,7 @@ function OnboardingWizard({ user, org, onComplete }) {
       <div style={{ textAlign:'center', padding:'20px 0' }}>
         <div style={{ fontSize:56, marginBottom:16 }}><Icon name="👋" /></div>
         <div style={{ fontSize:24, fontWeight:900, color:'#111', marginBottom:10 }}>Welcome to {org?.name}!</div>
-        <div style={{ fontSize:15, color:'#6B7280', lineHeight:1.6, marginBottom:28 }}>Thanks for joining. Let's get you set up so we can match you with the right sessions.<br/><br/>This takes about 2–3 minutes.</div>
+        <div style={{ fontSize:15, color: 'var(--text3)', lineHeight:1.6, marginBottom:28 }}>Thanks for joining. Let's get you set up so we can match you with the right sessions.<br/><br/>This takes about 2–3 minutes.</div>
         <button onClick={()=>setStep(1)} style={s.btn(primary)}>Let's get started →</button>
       </div>
     </div>,
@@ -154,7 +154,7 @@ function OnboardingWizard({ user, org, onComplete }) {
     // 1: About You
     <div key={1} style={s.body}>
       <div style={{ fontSize:18, fontWeight:900, color:'#111', marginBottom:4 }}>About You</div>
-      <div style={{ fontSize:13, color:'#6B7280', marginBottom:20 }}>Tell us a bit about yourself</div>
+      <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:20 }}>Tell us a bit about yourself</div>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
         <div><label style={s.label}>First name *</label><input style={s.inp} value={f.first_name} onChange={e=>set('first_name',e.target.value)} placeholder="Sarah" /></div>
         <div><label style={s.label}>Last name *</label><input style={s.inp} value={f.last_name} onChange={e=>set('last_name',e.target.value)} placeholder="Jones" /></div>
@@ -179,7 +179,7 @@ function OnboardingWizard({ user, org, onComplete }) {
     // 2: Emergency Contact
     <div key={2} style={s.body}>
       <div style={{ fontSize:18, fontWeight:900, color:'#111', marginBottom:4 }}>Emergency Contact</div>
-      <div style={{ fontSize:13, color:'#6B7280', marginBottom:20 }}>Essential for safeguarding — who should we contact in an emergency?</div>
+      <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:20 }}>Essential for safeguarding — who should we contact in an emergency?</div>
       <label style={s.label}>Contact name *</label>
       <input style={s.inp} value={f.emergency_contact_name} onChange={e=>set('emergency_contact_name',e.target.value)} placeholder="Jane Jones" />
       <label style={s.label}>Relationship</label>
@@ -192,7 +192,7 @@ function OnboardingWizard({ user, org, onComplete }) {
     // 3: Address
     <div key={3} style={s.body}>
       <div style={{ fontSize:18, fontWeight:900, color:'#111', marginBottom:4 }}>Your Address</div>
-      <div style={{ fontSize:13, color:'#6B7280', marginBottom:20 }}>Useful for trips and emergencies</div>
+      <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:20 }}>Useful for trips and emergencies</div>
       <label style={s.label}>Postcode</label>
       <input style={s.inp} value={f.postcode} onChange={e=>set('postcode',e.target.value)} placeholder="SW1A 1AA" />
       <label style={s.label}>Address</label>
@@ -205,12 +205,12 @@ function OnboardingWizard({ user, org, onComplete }) {
     // 4: Availability
     <div key={4} style={s.body}>
       <div style={{ fontSize:18, fontWeight:900, color:'#111', marginBottom:4 }}>Your Availability</div>
-      <div style={{ fontSize:13, color:'#6B7280', marginBottom:16 }}>When are you usually free to volunteer?</div>
-      <div style={{ fontSize:12, fontWeight:700, color:'#6B7280', textTransform:'uppercase', letterSpacing:0.6, marginBottom:8 }}>Days</div>
+      <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:16 }}>When are you usually free to volunteer?</div>
+      <div style={{ fontSize:12, fontWeight:700, color: 'var(--text3)', textTransform:'uppercase', letterSpacing:0.6, marginBottom:8 }}>Days</div>
       <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:18 }}>
         {DAYS.map(d=><button key={d} onClick={()=>togAvail('days',d)} style={s.chip(f.availability.days.includes(d),primary)}>{d}</button>)}
       </div>
-      <div style={{ fontSize:12, fontWeight:700, color:'#6B7280', textTransform:'uppercase', letterSpacing:0.6, marginBottom:8 }}>Times</div>
+      <div style={{ fontSize:12, fontWeight:700, color: 'var(--text3)', textTransform:'uppercase', letterSpacing:0.6, marginBottom:8 }}>Times</div>
       <div style={{ display:'flex', gap:8, marginBottom:18 }}>
         {TIMES.map(t=><button key={t} onClick={()=>togAvail('times',t)} style={s.chip(f.availability.times.includes(t),primary)}>{t}</button>)}
       </div>
@@ -220,7 +220,7 @@ function OnboardingWizard({ user, org, onComplete }) {
     // 5: Interests
     <div key={5} style={s.body}>
       <div style={{ fontSize:18, fontWeight:900, color:'#111', marginBottom:4 }}>Your Interests</div>
-      <div style={{ fontSize:13, color:'#6B7280', marginBottom:16 }}>What would you enjoy helping with?</div>
+      <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:16 }}>What would you enjoy helping with?</div>
       <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:18 }}>
         {INTERESTS.map(i=><button key={i} onClick={()=>tog('interests',i)} style={s.chip(f.interests.includes(i),primary)}>{i}</button>)}
       </div>
@@ -230,11 +230,11 @@ function OnboardingWizard({ user, org, onComplete }) {
     // 6: Experience
     <div key={6} style={s.body}>
       <div style={{ fontSize:18, fontWeight:900, color:'#111', marginBottom:4 }}>Your Experience</div>
-      <div style={{ fontSize:13, color:'#6B7280', marginBottom:16 }}>Have you volunteered before?</div>
+      <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:16 }}>Have you volunteered before?</div>
       <div style={{ display:'flex', gap:10, marginBottom:18 }}>
         {['Yes','No'].map(v=><button key={v} onClick={()=>set('volunteered_before',v==='Yes')} style={{ ...s.chip(f.volunteered_before===(v==='Yes'),primary), flex:1, textAlign:'center' }}>{v}</button>)}
       </div>
-      <div style={{ fontSize:12, fontWeight:700, color:'#6B7280', textTransform:'uppercase', letterSpacing:0.6, marginBottom:8 }}>Relevant experience</div>
+      <div style={{ fontSize:12, fontWeight:700, color: 'var(--text3)', textTransform:'uppercase', letterSpacing:0.6, marginBottom:8 }}>Relevant experience</div>
       <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:18 }}>
         {EXPERIENCE_OPTS.map(e=><button key={e} onClick={()=>tog('experience',e)} style={s.chip(f.experience.includes(e),primary)}>{e}</button>)}
       </div>
@@ -244,7 +244,7 @@ function OnboardingWizard({ user, org, onComplete }) {
     // 7: Qualifications
     <div key={7} style={s.body}>
       <div style={{ fontSize:18, fontWeight:900, color:'#111', marginBottom:4 }}>Qualifications</div>
-      <div style={{ fontSize:13, color:'#6B7280', marginBottom:16 }}>Select any you currently hold — you can upload documents later</div>
+      <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:16 }}>Select any you currently hold — you can upload documents later</div>
       <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:18 }}>
         {QUALIFICATIONS.map(q=>(
           <label key={q} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', borderRadius:12, border:`1.5px solid ${f.qualifications.includes(q)?primary:'#E5E7EB'}`, background:f.qualifications.includes(q)?primary+'08':'#F9FAFB', cursor:'pointer' }}>
@@ -259,12 +259,12 @@ function OnboardingWizard({ user, org, onComplete }) {
     // 8: Working Preferences
     <div key={8} style={s.body}>
       <div style={{ fontSize:18, fontWeight:900, color:'#111', marginBottom:4 }}>Working Preferences</div>
-      <div style={{ fontSize:13, color:'#6B7280', marginBottom:16 }}>What would you like to help with?</div>
-      <div style={{ fontSize:12, fontWeight:700, color:'#6B7280', textTransform:'uppercase', letterSpacing:0.6, marginBottom:8 }}>Age groups</div>
+      <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:16 }}>What would you like to help with?</div>
+      <div style={{ fontSize:12, fontWeight:700, color: 'var(--text3)', textTransform:'uppercase', letterSpacing:0.6, marginBottom:8 }}>Age groups</div>
       <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:18 }}>
         {AGE_GROUPS.map(a=><button key={a} onClick={()=>tog('age_groups',a)} style={s.chip(f.age_groups.includes(a),primary)}>{a}</button>)}
       </div>
-      <div style={{ fontSize:12, fontWeight:700, color:'#6B7280', textTransform:'uppercase', letterSpacing:0.6, marginBottom:8 }}>Group size</div>
+      <div style={{ fontSize:12, fontWeight:700, color: 'var(--text3)', textTransform:'uppercase', letterSpacing:0.6, marginBottom:8 }}>Group size</div>
       <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:18 }}>
         {['One-to-one','Small groups','Large groups','Happy with anything'].map(g=>(
           <button key={g} onClick={()=>set('group_size',g)} style={{ ...s.chip(f.group_size===g,primary), textAlign:'left' }}>{g}</button>
@@ -276,7 +276,7 @@ function OnboardingWizard({ user, org, onComplete }) {
     // 9: Health & Accessibility
     <div key={9} style={s.body}>
       <div style={{ fontSize:18, fontWeight:900, color:'#111', marginBottom:4 }}>Health & Accessibility</div>
-      <div style={{ fontSize:13, color:'#6B7280', marginBottom:20 }}>All fields are optional — only share what you are comfortable with</div>
+      <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:20 }}>All fields are optional — only share what you are comfortable with</div>
       <label style={s.label}>Medical conditions</label>
       <textarea style={{ ...s.inp, height:72, resize:'none' }} value={f.medical_conditions} onChange={e=>set('medical_conditions',e.target.value)} placeholder="e.g. Asthma, diabetes..." />
       <label style={s.label}>Accessibility requirements</label>
@@ -291,15 +291,15 @@ function OnboardingWizard({ user, org, onComplete }) {
     // 10: Communication
     <div key={10} style={s.body}>
       <div style={{ fontSize:18, fontWeight:900, color:'#111', marginBottom:4 }}>Communication</div>
-      <div style={{ fontSize:13, color:'#6B7280', marginBottom:16 }}>How would you like to hear from us?</div>
-      <div style={{ fontSize:12, fontWeight:700, color:'#6B7280', textTransform:'uppercase', letterSpacing:0.6, marginBottom:8 }}>Preferred contact</div>
+      <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:16 }}>How would you like to hear from us?</div>
+      <div style={{ fontSize:12, fontWeight:700, color: 'var(--text3)', textTransform:'uppercase', letterSpacing:0.6, marginBottom:8 }}>Preferred contact</div>
       <div style={{ display:'flex', gap:8, marginBottom:18 }}>
         {['Email','SMS','WhatsApp'].map(c=><button key={c} onClick={()=>set('preferred_contact',c)} style={{ ...s.chip(f.preferred_contact===c,primary), flex:1, textAlign:'center' }}>{c}</button>)}
       </div>
-      <div style={{ fontSize:12, fontWeight:700, color:'#6B7280', textTransform:'uppercase', letterSpacing:0.6, marginBottom:8 }}>Notifications</div>
+      <div style={{ fontSize:12, fontWeight:700, color: 'var(--text3)', textTransform:'uppercase', letterSpacing:0.6, marginBottom:8 }}>Notifications</div>
       <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:18 }}>
         {[['session_reminders','Session reminders'],['new_opportunities','New opportunities'],['announcements','Announcements'],['mentoring_updates','Mentoring updates']].map(([k,label])=>(
-          <label key={k} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 14px', borderRadius:12, border:'1.5px solid #E5E7EB', background:'#F9FAFB', cursor:'pointer' }}>
+          <label key={k} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 14px', borderRadius:12, border:'1.5px solid var(--border)', background: 'var(--surface2)', cursor:'pointer' }}>
             <span style={{ fontSize:14, fontWeight:600, color:'#111' }}>{label}</span>
             <input type="checkbox" checked={f.notification_prefs[k]} onChange={()=>togNotif(k)} style={{ accentColor:primary, width:16, height:16 }} />
           </label>
@@ -311,7 +311,7 @@ function OnboardingWizard({ user, org, onComplete }) {
     // 11: Agreements
     <div key={11} style={s.body}>
       <div style={{ fontSize:18, fontWeight:900, color:'#111', marginBottom:4 }}>Agreements</div>
-      <div style={{ fontSize:13, color:'#6B7280', marginBottom:16 }}>Please read and agree to the following</div>
+      <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:16 }}>Please read and agree to the following</div>
       <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:18 }}>
         {[['volunteer_agreement','Volunteer agreement'],['safeguarding_policy','Safeguarding policy'],['privacy_policy','Privacy policy'],['photo_consent','Photo consent']].map(([k,label])=>(
           <label key={k} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', borderRadius:12, border:`1.5px solid ${f.agreements[k]?primary:'#E5E7EB'}`, background:f.agreements[k]?primary+'08':'#F9FAFB', cursor:'pointer' }}>
@@ -322,7 +322,7 @@ function OnboardingWizard({ user, org, onComplete }) {
       </div>
       <label style={s.label}>Electronic signature</label>
       <input style={s.inp} value={f.signature} onChange={e=>set('signature',e.target.value)} placeholder="Type your full name to sign" />
-      <div style={{ fontSize:12, color:'#9CA3AF', marginBottom:14 }}>Date: {new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
+      <div style={{ fontSize:12, color: 'var(--text-faint)', marginBottom:14 }}>Date: {new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
       <button onClick={finish} disabled={saving||!f.agreements.volunteer_agreement||!f.agreements.safeguarding_policy||!f.agreements.privacy_policy||!f.signature.trim()} style={s.btn(primary)}>{saving?'Saving...':'Complete setup →'}</button>
     </div>,
   ]
@@ -341,7 +341,7 @@ function OnboardingWizard({ user, org, onComplete }) {
           {/* Logo row */}
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14, position:'relative', zIndex:1 }}>
             {org?.logo_url ? (
-              <div style={{ display:'inline-flex', alignItems:'center', background:'#fff', borderRadius:9, padding:'4px 10px' }}>
+              <div style={{ display:'inline-flex', alignItems:'center', background: 'var(--surface)', borderRadius:9, padding:'4px 10px' }}>
                 <img src={org.logo_url} alt={org.name} style={{ height:20, maxWidth:110, objectFit:'contain', display:'block' }}
                   onError={e => { e.target.parentNode.style.display='none' }} />
               </div>
@@ -436,7 +436,7 @@ export default function VolunteerPortal() {
       <motion.div initial={{ opacity:0, y:16, scale:0.98 }} animate={{ opacity:1, y:0, scale:1 }} transition={{ duration:0.35 }} style={{ ...s.card, textAlign:'center' }}>
         <div style={s.head(primary)}><div style={{ fontSize:32 }}>⏳</div><div style={{ fontSize:20, fontWeight:900, marginTop:8 }}>Pending Approval</div></div>
         <div style={s.body}>
-          <p style={{ color:'#6B7280', lineHeight:1.6, marginBottom:20 }}>Your application has been received. A staff member will review and approve your account shortly.</p>
+          <p style={{ color: 'var(--text3)', lineHeight:1.6, marginBottom:20 }}>Your application has been received. A staff member will review and approve your account shortly.</p>
           <motion.button whileTap={{ scale:0.97 }} onClick={()=>supabase.auth.signOut().then(()=>setView('login'))} style={{ ...s.btn('#6B7280'), marginTop:0 }}>Sign out</motion.button>
         </div>
       </motion.div>
@@ -449,7 +449,7 @@ export default function VolunteerPortal() {
       <motion.div initial={{ opacity:0, y:16, scale:0.98 }} animate={{ opacity:1, y:0, scale:1 }} transition={{ duration:0.35 }} style={{ ...s.card, textAlign:'center' }}>
         <div style={s.head('#EF4444')}><div style={{ fontSize:32 }}><Icon name="❌" /></div><div style={{ fontSize:20, fontWeight:900, marginTop:8 }}>Application Unsuccessful</div></div>
         <div style={s.body}>
-          <p style={{ color:'#6B7280', lineHeight:1.6, marginBottom:20 }}>Unfortunately your volunteer application was not approved. Please contact {org?.name} for more information.</p>
+          <p style={{ color: 'var(--text3)', lineHeight:1.6, marginBottom:20 }}>Unfortunately your volunteer application was not approved. Please contact {org?.name} for more information.</p>
           <motion.button whileTap={{ scale:0.97 }} onClick={()=>supabase.auth.signOut().then(()=>setView('login'))} style={{ ...s.btn('#6B7280'), marginTop:0 }}>Sign out</motion.button>
         </div>
       </motion.div>
@@ -468,7 +468,7 @@ export default function VolunteerPortal() {
           <div style={{ position:'relative', zIndex:1, marginBottom:16 }}>
             {brandActivated ? (
               org?.logo_url ? (
-                <div style={{ display:'inline-flex', alignItems:'center', background:'#fff', borderRadius:12, padding:'8px 14px', boxShadow:'0 4px 14px rgba(0,0,0,0.15)' }}>
+                <div style={{ display:'inline-flex', alignItems:'center', background: 'var(--surface)', borderRadius:12, padding:'8px 14px', boxShadow:'0 4px 14px rgba(0,0,0,0.15)' }}>
                   <img src={org.logo_url} alt={org.name} style={{ height:32, maxWidth:150, objectFit:'contain', display:'block' }}
                     onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex' }} />
                   <div style={{ display:'none', alignItems:'center', gap:8 }}>
@@ -485,7 +485,7 @@ export default function VolunteerPortal() {
                 </div>
               )
             ) : (
-              <div style={{ display:'inline-flex', alignItems:'center', background:'#fff', borderRadius:12, padding:'7px 14px', boxShadow:'0 4px 14px rgba(0,0,0,0.15)' }}>
+              <div style={{ display:'inline-flex', alignItems:'center', background: 'var(--surface)', borderRadius:12, padding:'7px 14px', boxShadow:'0 4px 14px rgba(0,0,0,0.15)' }}>
                 <img src="/logo.png" alt="LaunchSession" style={{ height:26, width:26, objectFit:'contain', marginRight:8 }} />
                 <span style={{ fontSize:14, fontWeight:900, color:'#111' }}>Launch<span style={{ color:primary }}>Session</span></span>
               </div>
@@ -505,7 +505,7 @@ export default function VolunteerPortal() {
             <input style={s.inp} type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••" required />
             <motion.button whileTap={{ scale:0.97 }} type="submit" disabled={authLoading} style={s.btn(primary)}>{authLoading?'Signing in...':'Sign in →'}</motion.button>
           </form>
-          <div style={{ textAlign:'center', marginTop:16, fontSize:12, color:'#9CA3AF', lineHeight:1.5 }}>
+          <div style={{ textAlign:'center', marginTop:16, fontSize:12, color: 'var(--text-faint)', lineHeight:1.5 }}>
             New volunteer? Ask {org?.name || 'your organisation'} to send you an invite.
           </div>
         </div>

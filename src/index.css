@@ -54,6 +54,12 @@ body {
   --text2:    #374151;
   --text3:    #6B7280;
   --text4:    rgba(0,0,0,0.35);
+  /* The two tiers the app reaches for constantly and had no token for:
+     the faintest text (timestamps, counts, placeholder hints) and the
+     hairline that separates rows inside a card. Both had to exist before the
+     hardcoded colours could be migrated, or ~700 sites had nowhere to go. */
+  --text-faint:  #9CA3AF;
+  --border-soft: #F1F5F9;
   --border2:  #D1D5DB;
   --card-bg:     #ffffff;
   --card-border: #E5E7EB;
@@ -206,6 +212,9 @@ body {
   --text2:    #CBD5E1;
   --text3:    #94A3B8;
   --text4:    rgba(255,255,255,0.3);
+
+  --text-faint:  #7C7C96;
+  --border-soft: #24243A;
 
   --border:   #2D2D3F;
   --border2:  #3D3D5F;

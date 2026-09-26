@@ -55,17 +55,17 @@ export default function CaseTasks({ caseId, org, session: authSession, staff = [
   const pct = tasks.length ? Math.round((done / tasks.length) * 100) : 0
   const overdue = (t) => t.due_date && !t.completed && new Date(t.due_date) < new Date(new Date().toDateString())
 
-  if (loading) return <div style={{ padding: 16, color: '#94A3B8', fontSize: 13 }}>Loading tasks…</div>
+  if (loading) return <div style={{ padding: 16, color: 'var(--text-faint)', fontSize: 13 }}>Loading tasks…</div>
 
   return (
     <div>
       {tasks.length > 0 && (
         <div style={{ marginBottom: 14 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#64748B', marginBottom: 6, fontWeight: 700 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text3)', marginBottom: 6, fontWeight: 700 }}>
             <span>{done} of {tasks.length} complete</span>
             <span>{pct}%</span>
           </div>
-          <div style={{ height: 7, borderRadius: 99, background: '#F1F5F9', overflow: 'hidden' }}>
+          <div style={{ height: 7, borderRadius: 99, background: 'var(--surface-hover)', overflow: 'hidden' }}>
             <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.5 }} style={{ height: '100%', background: `linear-gradient(90deg, ${primary}, #6366F1)`, borderRadius: 99 }} />
           </div>
         </div>
@@ -85,7 +85,7 @@ export default function CaseTasks({ caseId, org, session: authSession, staff = [
               <div style={{ display: 'flex', gap: 8, marginTop: 3, flexWrap: 'wrap', alignItems: 'center' }}>
                 {task.due_date && <span style={{ fontSize: 11, color: overdue(task) ? '#DC2626' : '#94A3B8', fontWeight: 700 }}>{overdue(task) ? '⚠ Overdue: ' : '📅 '}{new Date(task.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
                 <span style={{ fontSize: 10.5, fontWeight: 800, color: PRIORITY_COLOR[task.priority] || '#64748B', textTransform: 'uppercase' }}>{task.priority}</span>
-                {task.owner_id && (() => { const o = staff.find(s => s.id === task.owner_id); return o ? <span style={{ fontSize: 11, color: '#64748B', display: 'flex', alignItems: 'center', gap: 4 }}><Avatar name={o.full_name} size={16} />{o.full_name}</span> : null })()}
+                {task.owner_id && (() => { const o = staff.find(s => s.id === task.owner_id); return o ? <span style={{ fontSize: 11, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 4 }}><Avatar name={o.full_name} size={16} />{o.full_name}</span> : null })()}
               </div>
             </div>
             <button onClick={() => deleteTask(task.id)} style={{ background: 'none', border: 'none', color: '#CBD5E1', cursor: 'pointer', fontSize: 15, flexShrink: 0 }}><Icon name="✕" /></button>
@@ -94,13 +94,13 @@ export default function CaseTasks({ caseId, org, session: authSession, staff = [
       </AnimatePresence>
 
       {tasks.length === 0 && !showForm && (
-        <div style={{ textAlign: 'center', padding: '20px 10px', color: '#94A3B8', fontSize: 13 }}>No tasks yet for this case.</div>
+        <div style={{ textAlign: 'center', padding: '20px 10px', color: 'var(--text-faint)', fontSize: 13 }}>No tasks yet for this case.</div>
       )}
 
       <AnimatePresence>
         {showForm && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
-            <div style={{ padding: 12, borderRadius: 12, border: '1.5px solid rgba(15,23,42,0.08)', background: '#F8FAFC', marginBottom: 10 }}>
+            <div style={{ padding: 12, borderRadius: 12, border: '1.5px solid rgba(15,23,42,0.08)', background: 'var(--surface2)', marginBottom: 10 }}>
               <input style={{ ...inputStyle, marginBottom: 8 }} placeholder="Task title, e.g. Contact parent" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} autoFocus />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
                 <select style={inputStyle} value={form.owner_id} onChange={e => setForm(f => ({ ...f, owner_id: e.target.value }))}>

@@ -79,7 +79,7 @@ export default function VolunteersTraining({ org, volunteers, training, onDataCh
       </div>
 
       <Card style={{ padding: 0, overflow: 'hidden' }}>
-        <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontSize: 12.5, fontWeight: 700, color: '#64748B' }}>
+        <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontSize: 12.5, fontWeight: 700, color: 'var(--text3)' }}>
           {volunteers.length} volunteer{volunteers.length !== 1 ? 's' : ''}
         </div>
         {volunteers.map((v, i) => {
@@ -92,8 +92,8 @@ export default function VolunteersTraining({ org, volunteers, training, onDataCh
               style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderBottom: i < volunteers.length - 1 ? '1px solid #F1F5F9' : 'none', flexWrap: 'wrap' }}>
               <Avatar name={v.full_name} photoUrl={v.photo_url} size={32} color={primary} />
               <div style={{ flex: 1, minWidth: 140 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{v.full_name}</div>
-                <div style={{ fontSize: 11, color: '#94A3B8' }}>{rec?.expiry_date ? `Expires ${new Date(rec.expiry_date).toLocaleDateString('en-GB')}` : 'No record on file'}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{v.full_name}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{rec?.expiry_date ? `Expires ${new Date(rec.expiry_date).toLocaleDateString('en-GB')}` : 'No record on file'}</div>
               </div>
               <Badge bg={st.bg} color={st.color}>{st.label}</Badge>
               {isEditing ? (
@@ -104,7 +104,7 @@ export default function VolunteersTraining({ org, volunteers, training, onDataCh
                 </div>
               ) : (
                 <button onClick={() => { setEditingFor(v.id); setExpiryInput(rec?.expiry_date || '') }}
-                  style={{ padding: '6px 12px', borderRadius: 8, border: '1.5px solid rgba(15,23,42,0.1)', background: '#fff', color: '#0F172A', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>
+                  style={{ padding: '6px 12px', borderRadius: 8, border: '1.5px solid rgba(15,23,42,0.1)', background: 'var(--surface)', color: 'var(--text)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>
                   {rec?.expiry_date ? 'Update' : 'Request Renewal'}
                 </button>
               )}

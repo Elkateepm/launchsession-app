@@ -76,7 +76,7 @@ export default function FundraisingCalendar({ org }) {
       {overdue.length > 0 && (
         <div style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: '0.05em', color: '#B91C1C', textTransform: 'uppercase', marginBottom: 10 }}>Overdue</div>
-          <div style={{ background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 16, padding: '4px 18px' }}>
+          <div style={{ background: 'var(--surface)', border: `1px solid ${LS.border}`, borderRadius: 16, padding: '4px 18px' }}>
             {overdue.map((e, i) => <EventRow key={i} e={e} last={i === overdue.length - 1} />)}
           </div>
         </div>
@@ -84,7 +84,7 @@ export default function FundraisingCalendar({ org }) {
       {Object.entries(grouped).map(([month, evts]) => (
         <div key={month} style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: '0.05em', color: LS.muted, textTransform: 'uppercase', marginBottom: 10 }}>{month}</div>
-          <div style={{ background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 16, padding: '4px 18px' }}>
+          <div style={{ background: 'var(--surface)', border: `1px solid ${LS.border}`, borderRadius: 16, padding: '4px 18px' }}>
             {evts.map((e, i) => <EventRow key={i} e={e} now={now} last={i === evts.length - 1} />)}
           </div>
         </div>

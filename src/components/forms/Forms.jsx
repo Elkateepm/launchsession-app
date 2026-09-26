@@ -367,7 +367,7 @@ function SubmissionsView({ form, org, onBack }) {
       {loading ? (
         <div style={{ textAlign: 'center', padding: 40, color: 'var(--text3)' }}>Loading...</div>
       ) : submissions.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 60, background: '#F9FAFB', borderRadius: 16, color: 'var(--text3)', border: '1.5px dashed var(--border)' }}>
+        <div style={{ textAlign: 'center', padding: 60, background: 'var(--surface2)', borderRadius: 16, color: 'var(--text3)', border: '1.5px dashed var(--border)' }}>
           <div style={{ fontSize: 36, marginBottom: 10 }}>📭</div>
           <div style={{ fontWeight: 700 }}>No submissions yet</div>
           <div style={{ fontSize: 13, marginTop: 4 }}>Share the form link to start collecting responses</div>
@@ -379,7 +379,7 @@ function SubmissionsView({ form, org, onBack }) {
             <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 14 }}>Submitted {format(new Date(selected.created_at), 'd MMM yyyy HH:mm')}</div>
             {form.fields.map((field, i) => (
               <div key={i} style={{ paddingBottom: 12, marginBottom: 12, borderBottom: i < form.fields.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#6B7280', marginBottom: 4 }}>{field.label}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>{field.label}</div>
                 <div style={{ fontSize: 14, color: '#111' }}>
                   {field.type === 'checkbox' ? (selected.data?.[field.label] ? '✅ Yes' : '☐ No') : selected.data?.[field.label] || <span style={{ color: 'var(--text3)' }}>—</span>}
                 </div>
@@ -462,7 +462,7 @@ export function EmailFormModal({ form, primary, onClose, recipients }) {
           onChange={e => setInput(e.target.value)}
           placeholder="parent1@example.com, parent2@example.com"
           rows={3}
-          style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 13, fontFamily: 'inherit', outline: 'none', resize: 'vertical' }}
+          style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 13, fontFamily: 'inherit', outline: 'none', resize: 'vertical' }}
         />
         <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 6, marginBottom: 16 }}>Separate multiple addresses with commas or new lines.</div>
 
@@ -533,7 +533,7 @@ function AccessModal({ form, staff, currentUserId, primary, onClose, onSave }) {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search your team…"
-              style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 9, border: '1.5px solid #E2E8F0', fontSize: 13, outline: 'none', marginBottom: 10 }}
+              style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 9, border: '1.5px solid var(--border)', fontSize: 13, outline: 'none', marginBottom: 10 }}
             />
             <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--text3)', letterSpacing: 0.4, marginBottom: 6 }}>ALWAYS INCLUDED</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
@@ -637,7 +637,7 @@ function ImportFormModal({ onClose, onImport }) {
         </div>
         <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 14 }}>Paste form JSON — <code style={{ fontSize: 11, background: 'var(--bg)', padding: '1px 5px', borderRadius: 4 }}>{'{ name, description, fields: [{ type, label, required }] }'}</code></div>
         <textarea value={text} onChange={e => setText(e.target.value)} rows={8} placeholder='{"name": "Trip Consent", "fields": [{"type":"text","label":"Child Name","required":true}]}'
-          style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 12.5, fontFamily: 'monospace', outline: 'none', resize: 'vertical' }} />
+          style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 12.5, fontFamily: 'monospace', outline: 'none', resize: 'vertical' }} />
         {error && <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#DC2626', fontSize: 13, fontWeight: 600 }}>{error}</div>}
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
           <button onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2, #475569)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
@@ -664,7 +664,7 @@ function DuplicatePickerModal({ forms, onClose, onDuplicate }) {
           {forms.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 24, color: 'var(--text3)', fontSize: 13 }}>No forms to duplicate yet.</div>
           ) : forms.map(f => (
-            <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, border: '1px solid #F1F5F9' }}>
+            <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, border: '1px solid var(--border-soft)' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</div>
                 <div style={{ fontSize: 11, color: 'var(--text3)' }}>{(f.fields || []).length} fields</div>
@@ -967,7 +967,7 @@ export default function Forms({ org, session, isAdmin }) {
 
       {(section === 'forms' || section === 'templates') && (
       <>
-      <div style={{ marginBottom: 16 }}><label style={{ fontSize: 13, color: '#64748B' }}>Response reporting period <select aria-label="Response reporting period" value={period} onChange={e => setPeriod(e.target.value)} style={sel}><option value="month">This month</option><option value="week">This week</option><option value="all">All time</option></select></label></div>
+      <div style={{ marginBottom: 16 }}><label style={{ fontSize: 13, color: 'var(--text3)' }}>Response reporting period <select aria-label="Response reporting period" value={period} onChange={e => setPeriod(e.target.value)} style={sel}><option value="month">This month</option><option value="week">This week</option><option value="all">All time</option></select></label></div>
       {/* STATS */}
       <div style={{ display: 'grid', gridTemplateColumns: isCompact ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 14, marginBottom: 20 }}>
         {statCards.map((s, i) => (
@@ -1238,7 +1238,7 @@ export default function Forms({ org, session, isAdmin }) {
                   ['🗂 Duplicate existing form', () => setShowDuplicatePicker(true)],
                   ['📚 View all templates', () => setTab('templates')],
                 ].map(([label, fn]) => (
-                  <button key={label} onClick={fn} style={{ display: 'flex', alignItems: 'center', width: '100%', textAlign: 'left', padding: '9px 2px', border: 'none', borderTop: '1px solid #F1F5F9', background: 'none', fontSize: 12.5, fontWeight: 700, color: 'var(--text2, #475569)', cursor: 'pointer' }}>
+                  <button key={label} onClick={fn} style={{ display: 'flex', alignItems: 'center', width: '100%', textAlign: 'left', padding: '9px 2px', border: 'none', borderTop: '1px solid var(--border-soft)', background: 'none', fontSize: 12.5, fontWeight: 700, color: 'var(--text2, #475569)', cursor: 'pointer' }}>
                     <span style={{ flex: 1 }}>{label}</span><span style={{ color: '#CBD5E1' }}>›</span>
                   </button>
                 ))}

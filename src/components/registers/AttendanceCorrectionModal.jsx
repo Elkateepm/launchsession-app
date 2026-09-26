@@ -111,11 +111,11 @@ export default function AttendanceCorrectionModal({
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 10400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 18, padding: 22, width: 420, maxWidth: '100%', boxSizing: 'border-box', maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 24px 60px -20px rgba(15,23,42,0.4)' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: 'var(--surface)', borderRadius: 18, padding: 22, width: 420, maxWidth: '100%', boxSizing: 'border-box', maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 24px 60px -20px rgba(15,23,42,0.4)' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>
           {lockedToChild && selected ? `Correct ${selected.child.first_name}'s attendance` : 'Correct attendance'}
         </div>
-        <div style={{ fontSize: 12, color: '#64748B', marginBottom: 16 }}>
+        <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 16 }}>
           This change is recorded in the register's audit history with your name and reason.
         </div>
 
@@ -132,7 +132,7 @@ export default function AttendanceCorrectionModal({
         {childId && (
           <>
             <StepLabel>{lockedToChild ? 'Current record' : '2. Current record'}</StepLabel>
-            <div style={{ background: '#F8FAFC', border: '1px solid #EDEFF3', borderRadius: 10, padding: 10, fontSize: 12.5, color: '#374151' }}>
+            <div style={{ background: 'var(--surface2)', border: '1px solid #EDEFF3', borderRadius: 10, padding: 10, fontSize: 12.5, color: 'var(--text2)' }}>
               Status: {original?.status ? original.status.replace('_', ' ') : 'unmarked'}
               {original?.signed_in_at ? ` · in ${fmtTime(original.signed_in_at)}` : ''}
               {original?.signed_out_at ? ` · out ${fmtTime(original.signed_out_at)}` : ''}
@@ -171,7 +171,7 @@ export default function AttendanceCorrectionModal({
         )}
 
         <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: 12, borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+          <button onClick={onClose} style={{ flex: 1, padding: 12, borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           <button onClick={handleConfirm} disabled={!childId || !newStatus || !reason.trim() || saving}
             style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: (!childId || !newStatus || !reason.trim() || saving) ? '#D1D5DB' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: (!childId || !newStatus || !reason.trim() || saving) ? 'not-allowed' : 'pointer' }}>
             {saving ? 'Saving...' : 'Confirm correction'}
@@ -183,8 +183,8 @@ export default function AttendanceCorrectionModal({
 }
 
 function StepLabel({ children }) {
-  return <div style={{ fontSize: 11.5, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', margin: '14px 0 6px', letterSpacing: '0.02em' }}>{children}</div>
+  return <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', margin: '14px 0 6px', letterSpacing: '0.02em' }}>{children}</div>
 }
 
-const sel = { width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 9, border: '1.5px solid #E5E7EB', fontSize: 13, background: '#fff' }
-const tsLabel = { display: 'block', fontSize: 11, color: '#64748B', fontWeight: 600, marginBottom: 4 }
+const sel = { width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 9, border: '1.5px solid var(--border)', fontSize: 13, background: 'var(--surface)' }
+const tsLabel = { display: 'block', fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 4 }

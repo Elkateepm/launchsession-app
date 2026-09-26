@@ -60,7 +60,7 @@ export default function ImpactSnapshotPanel({ org }) {
   ] : []
 
   return (
-    <div style={{ background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 18, padding: '18px 18px' }}>
+    <div style={{ background: 'var(--surface)', border: `1px solid ${LS.border}`, borderRadius: 18, padding: '18px 18px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
         <div style={{ fontSize: 14.5, fontWeight: 800, color: LS.text }}>Impact Snapshot</div>
         <div style={{ display: 'flex', gap: 4, background: LS.bg, borderRadius: 10, padding: 3 }}>

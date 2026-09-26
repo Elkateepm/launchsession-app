@@ -87,7 +87,7 @@ export default function ResourceCentre({ org, session: authSession }) {
 
   if (loading) {
     return (
-      <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF' }}>
+      <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-faint)' }}>
         <div style={{ fontSize: 13 }}>Loading Resource Centre...</div>
       </div>
     )
@@ -99,13 +99,13 @@ export default function ResourceCentre({ org, session: authSession }) {
     <div style={{ padding: isMobile ? 14 : 24 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 14, marginBottom: 20 }}>
         <div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: '#111827', display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="📅" /> Resource Centre</div>
-          <div style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>Book rooms, vehicles, equipment and manage inventory from one place.</div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="📅" /> Resource Centre</div>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>Book rooms, vehicles, equipment and manage inventory from one place.</div>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button onClick={() => { setPresetBookingResourceId(null); document.getElementById('quick-booking-panel')?.scrollIntoView({ behavior: 'smooth' }) }}
             style={{ padding: '11px 18px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}><Icon name="⚡" /> Quick Book</button>
-          <button onClick={() => setShowAddModal(true)} style={{ padding: '11px 18px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', color: '#374151', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ Add Resource</button>
+          <button onClick={() => setShowAddModal(true)} style={{ padding: '11px 18px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ Add Resource</button>
         </div>
       </div>
 
@@ -116,7 +116,7 @@ export default function ResourceCentre({ org, session: authSession }) {
         <StatCard icon="🕐" color="#2563EB" value={pendingCount} label="Pending Requests" />
       </div>
 
-      <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '1px solid #E5E7EB', overflowX: 'auto' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '1px solid var(--border)', overflowX: 'auto' }}>
         {TABS.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '10px 16px', border: 'none', borderBottom: tab === t.key ? '2.5px solid #7C3AED' : '2.5px solid transparent', background: 'none', color: tab === t.key ? '#7C3AED' : '#6B7280', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
             {t.label}
@@ -168,11 +168,11 @@ export default function ResourceCentre({ org, session: authSession }) {
 
 function StatCard({ icon, color, value, label }) {
   return (
-    <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 14, padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
       <div style={{ width: 40, height: 40, borderRadius: 10, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{icon}</div>
       <div>
-        <div style={{ fontSize: 20, fontWeight: 900, color: '#111827', lineHeight: 1 }}>{value}</div>
-        <div style={{ fontSize: 11, color: '#6B7280', fontWeight: 600, marginTop: 2 }}>{label}</div>
+        <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', lineHeight: 1 }}>{value}</div>
+        <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginTop: 2 }}>{label}</div>
       </div>
     </div>
   )

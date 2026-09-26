@@ -15,7 +15,7 @@ import { safetyStateOf, SAFETY_META, isArchived } from './ra_safety'
 // evidence of what was considered on a particular day, and editing it in place
 // destroys that.
 
-const CARD = { background: '#fff', border: '1px solid #ECE9F5', borderRadius: 14 }
+const CARD = { background: 'var(--surface)', border: '1px solid #ECE9F5', borderRadius: 14 }
 
 export default function ReuseAssessmentDrawer({
   open, onClose, org, authSession, session, onCreated,
@@ -190,14 +190,14 @@ export default function ReuseAssessmentDrawer({
             exit={isMobile ? { y: '100%' } : { scale: 0.97, opacity: 0 }}
             transition={{ type: 'spring', damping: 32, stiffness: 320 }}
             style={{
-              background: '#fff', width: isMobile ? '100%' : 540, maxWidth: '100%',
+              background: 'var(--surface)', width: isMobile ? '100%' : 540, maxWidth: '100%',
               borderRadius: isMobile ? '20px 20px 0 0' : 18,
               maxHeight: '90vh', display: 'flex', flexDirection: 'column',
             }}
           >
             <div style={{ padding: '16px 20px 14px', borderBottom: '1px solid #ECE9F5', flexShrink: 0 }}>
               {isMobile && <div style={{ width: 38, height: 4, borderRadius: 4, background: '#E4DFF5', margin: '0 auto 12px' }} />}
-              <div style={{ fontSize: 16.5, fontWeight: 800, color: '#1C1B2E' }}>Use a previous assessment</div>
+              <div style={{ fontSize: 16.5, fontWeight: 800, color: 'var(--text)' }}>Use a previous assessment</div>
               <div style={{ fontSize: 12.5, color: '#8B87A3', marginTop: 3, lineHeight: 1.5 }}>
                 Copies the hazards and controls into a new assessment. The original is left untouched.
               </div>
@@ -221,7 +221,7 @@ export default function ReuseAssessmentDrawer({
                         <span style={{ fontSize: 17 }}>{ACTIVITY_ICON[a.activity_type] || '📋'}</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{
-                            fontSize: 14, fontWeight: 800, color: '#1C1B2E',
+                            fontSize: 14, fontWeight: 800, color: 'var(--text)',
                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                           }}>{a.name}</div>
                           <div style={{ fontSize: 12, color: '#8B87A3', marginTop: 2 }}>
@@ -261,7 +261,7 @@ export default function ReuseAssessmentDrawer({
             }}>
               <button onClick={onClose} style={{
                 width: '100%', padding: '12px', borderRadius: 12, border: '1px solid #ECE9F5',
-                background: '#fff', color: '#8B87A3', fontSize: 14, fontWeight: 700,
+                background: 'var(--surface)', color: '#8B87A3', fontSize: 14, fontWeight: 700,
                 cursor: 'pointer', fontFamily: 'inherit',
               }}>Close</button>
             </div>

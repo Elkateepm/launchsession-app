@@ -32,8 +32,8 @@ export function typeLabel(key) {
 
 const inputBase = {
   width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 10,
-  border: '1.5px solid #E2E8F0', fontSize: 14.5, fontFamily: 'inherit',
-  background: '#F8FAFC', color: '#94A3B8', pointerEvents: 'none',
+  border: '1.5px solid var(--border)', fontSize: 14.5, fontFamily: 'inherit',
+  background: 'var(--surface2)', color: 'var(--text-faint)', pointerEvents: 'none',
 }
 
 /**
@@ -43,18 +43,18 @@ const inputBase = {
  */
 export default function FormQuestionRenderer({ field, value, onChange, interactive = false, accent = '#6D5DF6' }) {
   const live = interactive
-    ? { ...inputBase, background: '#fff', color: '#0F172A', pointerEvents: 'auto' }
+    ? { ...inputBase, background: 'var(--surface)', color: 'var(--text)', pointerEvents: 'auto' }
     : inputBase
 
   const label = (
-    <div style={{ fontSize: 14.5, fontWeight: 700, color: '#0F172A', marginBottom: field.description ? 3 : 8 }}>
+    <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--text)', marginBottom: field.description ? 3 : 8 }}>
       {field.label || 'Untitled question'}
       {field.required && <span style={{ color: '#DC2626' }}> *</span>}
     </div>
   )
 
   const description = field.description ? (
-    <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 9, lineHeight: 1.5 }}>
+    <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 9, lineHeight: 1.5 }}>
       {field.description}
     </div>
   ) : null
@@ -71,7 +71,7 @@ export default function FormQuestionRenderer({ field, value, onChange, interacti
       control = (
         <label style={{
           display: 'flex', alignItems: 'flex-start', gap: 10,
-          fontSize: 14, color: '#334155', cursor: interactive ? 'pointer' : 'default',
+          fontSize: 14, color: 'var(--text2)', cursor: interactive ? 'pointer' : 'default',
         }}>
           <input type="checkbox" checked={!!value} readOnly={!interactive}
             onChange={e => onChange?.(e.target.checked)}

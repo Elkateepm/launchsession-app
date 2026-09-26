@@ -11,16 +11,16 @@ import { ukDate } from '../../lib/hrAccess'
 // Needs Attention cannot disagree about whether a DBS has lapsed.
 
 const card = {
-  background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14,
+  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14,
   padding: 16, marginBottom: 12,
 }
 const field = {
   width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
-  border: '1px solid #E2E8F0', fontSize: 15, fontFamily: 'inherit', outline: 'none',
-  background: '#fff',
+  border: '1px solid var(--border)', fontSize: 15, fontFamily: 'inherit', outline: 'none',
+  background: 'var(--surface)',
 }
 const lbl = {
-  display: 'block', fontSize: 11.5, fontWeight: 800, color: '#64748B',
+  display: 'block', fontSize: 11.5, fontWeight: 800, color: 'var(--text3)',
   marginBottom: 6, letterSpacing: 0.4, textTransform: 'uppercase',
 }
 
@@ -74,7 +74,7 @@ export function ComplianceTab({ org, staff, primary, canEdit, isAdmin, onSummary
   // Distinguishes "still loading" from "genuinely nothing", so the screen never
   // flashes a confident 0% before the data arrives.
   if (rows === null) {
-    return <div style={{ ...card, color: '#64748B', fontSize: 14 }}>Loading compliance…</div>
+    return <div style={{ ...card, color: 'var(--text3)', fontSize: 14 }}>Loading compliance…</div>
   }
 
   if (error) {
@@ -83,7 +83,7 @@ export function ComplianceTab({ org, staff, primary, canEdit, isAdmin, onSummary
         <div style={{ fontSize: 13.5, color: '#B42318', marginBottom: 10 }}>{error}</div>
         <button onClick={load} style={{
           minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid #FECACA',
-          background: '#fff', color: '#B42318', fontSize: 14, fontWeight: 700,
+          background: 'var(--surface)', color: '#B42318', fontSize: 14, fontWeight: 700,
           cursor: 'pointer', fontFamily: 'inherit',
         }}>Try again</button>
       </div>
@@ -93,10 +93,10 @@ export function ComplianceTab({ org, staff, primary, canEdit, isAdmin, onSummary
   if (rows.length === 0) {
     return (
       <div style={{ ...card, textAlign: 'center', padding: 24 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>
           No compliance requirements set up yet
         </div>
-        <div style={{ fontSize: 13.5, color: '#64748B', lineHeight: 1.55, marginBottom: 16 }}>
+        <div style={{ fontSize: 13.5, color: 'var(--text3)', lineHeight: 1.55, marginBottom: 16 }}>
           {isAdmin
             ? 'Start from a standard set for a UK youth organisation — DBS, Right to Work, references, safeguarding and first aid — then edit them to match how you actually work.'
             : 'An administrator needs to set these up before compliance can be tracked.'}
@@ -117,21 +117,21 @@ export function ComplianceTab({ org, staff, primary, canEdit, isAdmin, onSummary
       {summary && (
         <div style={card}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 10 }}>
-            <div style={{ fontSize: 30, fontWeight: 900, color: '#0F172A', letterSpacing: -1 }}>
+            <div style={{ fontSize: 30, fontWeight: 900, color: 'var(--text)', letterSpacing: -1 }}>
               {summary.percent === null ? '—' : `${summary.percent}%`}
             </div>
-            <div style={{ fontSize: 13, color: '#64748B' }}>
+            <div style={{ fontSize: 13, color: 'var(--text3)' }}>
               {summary.in_place} of {summary.applicable} in place
             </div>
           </div>
-          <div style={{ height: 8, borderRadius: 99, background: '#F1F5F9', overflow: 'hidden' }}>
+          <div style={{ height: 8, borderRadius: 99, background: 'var(--surface-hover)', overflow: 'hidden' }}>
             <div style={{
               width: `${summary.percent || 0}%`, height: '100%', borderRadius: 99,
               background: summary.overdue > 0 || summary.missing > 0 ? '#F59E0B' : '#22C55E',
               transition: 'width 0.3s',
             }} />
           </div>
-          <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 10 }}>
+          <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 10 }}>
             {summary.overdue} overdue · {summary.missing} missing · {summary.due_soon} due soon
           </div>
         </div>
@@ -141,8 +141,8 @@ export function ComplianceTab({ org, staff, primary, canEdit, isAdmin, onSummary
         <div key={r.requirement_id} style={card}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>{r.label}</div>
-              <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 2 }}>
+              <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>{r.label}</div>
+              <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>
                 {r.expiry_date
                   ? `${r.status === 'overdue' ? 'Expired' : 'Expires'} ${ukDate(r.expiry_date)}`
                   : r.status === 'complete' ? 'Held — no expiry' : 'Nothing recorded'}
@@ -160,8 +160,8 @@ export function ComplianceTab({ org, staff, primary, canEdit, isAdmin, onSummary
             />
           ) : canEdit && (
             <button onClick={() => setEditing(r.requirement_id)} style={{
-              minHeight: 44, padding: '0 14px', borderRadius: 11, border: '1px solid #E2E8F0',
-              background: '#fff', color: '#0F172A', fontSize: 13.5, fontWeight: 700,
+              minHeight: 44, padding: '0 14px', borderRadius: 11, border: '1px solid var(--border)',
+              background: 'var(--surface)', color: 'var(--text)', fontSize: 13.5, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
             }}>{r.status === 'missing' ? 'Record' : 'Update'}</button>
           )}
@@ -198,7 +198,7 @@ function RecordForm({ row, staffId, primary, onCancel, onSaved }) {
   }
 
   return (
-    <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: 14, marginTop: 4 }}>
+    <div style={{ borderTop: '1px solid var(--border-soft)', paddingTop: 14, marginTop: 4 }}>
       <div style={{ marginBottom: 12 }}>
         <label style={lbl}>Status</label>
         <select value={status} onChange={e => setStatus(e.target.value)} style={{ ...field, minHeight: 44 }}>
@@ -216,7 +216,7 @@ function RecordForm({ row, staffId, primary, onCancel, onSaved }) {
           <div style={{ marginBottom: 12 }}>
             <label style={lbl}>Expires</label>
             <input type="date" value={expiry} onChange={e => setExpiry(e.target.value)} style={field} />
-            <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 6 }}>
+            <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 6 }}>
               Leave blank if it does not expire. Warns {row.warn_days} days ahead.
             </div>
           </div>
@@ -242,12 +242,12 @@ function RecordForm({ row, staffId, primary, onCancel, onSaved }) {
           fontFamily: 'inherit', opacity: saving ? 0.6 : 1,
         }}>{saving ? 'Saving…' : 'Save'}</button>
         <button onClick={onCancel} style={{
-          minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid #E2E8F0',
-          background: '#fff', color: '#64748B', fontSize: 14, fontWeight: 700,
+          minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid var(--border)',
+          background: 'var(--surface)', color: 'var(--text3)', fontSize: 14, fontWeight: 700,
           cursor: 'pointer', fontFamily: 'inherit',
         }}>Cancel</button>
       </div>
-      <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 10, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 10, lineHeight: 1.45 }}>
         Saving keeps the previous entry as history rather than overwriting it.
       </div>
     </div>
@@ -276,7 +276,7 @@ export function TrainingTab({ org, staff, primary, canEdit }) {
   useEffect(() => { load() }, [load])
 
   if (rows === null) {
-    return <div style={{ ...card, color: '#64748B', fontSize: 14 }}>Loading training…</div>
+    return <div style={{ ...card, color: 'var(--text3)', fontSize: 14 }}>Loading training…</div>
   }
 
   if (error) {
@@ -285,7 +285,7 @@ export function TrainingTab({ org, staff, primary, canEdit }) {
         <div style={{ fontSize: 13.5, color: '#B42318', marginBottom: 10 }}>{error}</div>
         <button onClick={load} style={{
           minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid #FECACA',
-          background: '#fff', color: '#B42318', fontSize: 14, fontWeight: 700,
+          background: 'var(--surface)', color: '#B42318', fontSize: 14, fontWeight: 700,
           cursor: 'pointer', fontFamily: 'inherit',
         }}>Try again</button>
       </div>
@@ -311,7 +311,7 @@ export function TrainingTab({ org, staff, primary, canEdit }) {
       )}
 
       {rows.length === 0 && !adding && (
-        <div style={{ ...card, textAlign: 'center', padding: 24, color: '#64748B', fontSize: 13.5, lineHeight: 1.55 }}>
+        <div style={{ ...card, textAlign: 'center', padding: 24, color: 'var(--text3)', fontSize: 13.5, lineHeight: 1.55 }}>
           No training recorded for {staff.full_name} yet.
         </div>
       )}
@@ -320,15 +320,15 @@ export function TrainingTab({ org, staff, primary, canEdit }) {
         <div key={t.id} style={card}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A' }}>
+              <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>
                 {t.course}{t.mandatory ? ' · Mandatory' : ''}
               </div>
-              <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 2 }}>
+              <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>
                 {t.provider ? `${t.provider} · ` : ''}
                 {t.completed_date ? `Completed ${ukDate(t.completed_date)}` : 'Not yet completed'}
                 {t.expiry_date ? ` · Expires ${ukDate(t.expiry_date)}` : ''}
               </div>
-              {t.notes && <div style={{ fontSize: 12.5, color: '#94A3B8', marginTop: 4 }}>{t.notes}</div>}
+              {t.notes && <div style={{ fontSize: 12.5, color: 'var(--text-faint)', marginTop: 4 }}>{t.notes}</div>}
             </div>
             <span style={{
               display: 'inline-block', padding: '3px 10px', borderRadius: 99,
@@ -374,7 +374,7 @@ function TrainingForm({ org, staff, reqs, primary, onCancel, onSaved }) {
 
   return (
     <div style={card}>
-      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>Add training</div>
+      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 14 }}>Add training</div>
       <div style={{ marginBottom: 12 }}>
         <label style={lbl}>Course</label>
         <input value={f.course} onChange={e => set('course', e.target.value)}
@@ -407,7 +407,7 @@ function TrainingForm({ org, staff, reqs, primary, onCancel, onSaved }) {
           <option value="">Nothing — training record only</option>
           {reqs.map(r => <option key={r.id} value={r.id}>{r.label}</option>)}
         </select>
-        <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 6, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 6, lineHeight: 1.45 }}>
           Linking it means completing this course satisfies that compliance requirement,
           so it does not have to be recorded twice.
         </div>
@@ -415,7 +415,7 @@ function TrainingForm({ org, staff, reqs, primary, onCancel, onSaved }) {
       <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, cursor: 'pointer', minHeight: 44 }}>
         <input type="checkbox" checked={f.mandatory} onChange={e => set('mandatory', e.target.checked)}
           style={{ width: 18, height: 18, accentColor: primary, flexShrink: 0 }} />
-        <span style={{ fontSize: 14, color: '#0F172A' }}>Mandatory for this role</span>
+        <span style={{ fontSize: 14, color: 'var(--text)' }}>Mandatory for this role</span>
       </label>
       {err && (
         <div style={{ padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
@@ -429,8 +429,8 @@ function TrainingForm({ org, staff, reqs, primary, onCancel, onSaved }) {
           fontFamily: 'inherit', opacity: saving || !f.course.trim() ? 0.55 : 1,
         }}>{saving ? 'Saving…' : 'Save training'}</button>
         <button onClick={onCancel} style={{
-          minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid #E2E8F0',
-          background: '#fff', color: '#64748B', fontSize: 14, fontWeight: 700,
+          minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid var(--border)',
+          background: 'var(--surface)', color: 'var(--text3)', fontSize: 14, fontWeight: 700,
           cursor: 'pointer', fontFamily: 'inherit',
         }}>Cancel</button>
       </div>

@@ -30,11 +30,11 @@ export default function ChildPaymentsCard({ org, session, child }) {
   if (loading) return null
 
   return (
-    <div style={{ background: '#F8FAFC', borderRadius: 14, padding: 16 }}>
-      <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}><Icon name="💳" /> Payments</div>
+    <div style={{ background: 'var(--surface2)', borderRadius: 14, padding: 16 }}>
+      <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)', marginBottom: 8 }}><Icon name="💳" /> Payments</div>
 
       {charges.length === 0 ? (
-        <div style={{ fontSize: 11.5, color: '#94A3B8', marginBottom: 10 }}>No charges recorded yet.</div>
+        <div style={{ fontSize: 11.5, color: 'var(--text-faint)', marginBottom: 10 }}>No charges recorded yet.</div>
       ) : (
         <>
           <div style={{ display: 'flex', gap: 14, marginBottom: 10, flexWrap: 'wrap' }}>
@@ -53,8 +53,8 @@ export default function ChildPaymentsCard({ org, session, child }) {
       {charges.slice(0, 3).map(c => (
         <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderTop: '1px solid rgba(15,23,42,0.06)' }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 11.5, fontWeight: 700, color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.title}</div>
-            <div style={{ fontSize: 10, color: '#94A3B8' }}>{fmtMoney(c.amount)}</div>
+            <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.title}</div>
+            <div style={{ fontSize: 10, color: 'var(--text-faint)' }}>{fmtMoney(c.amount)}</div>
           </div>
           <span style={chipStyle(c.computed_status, 'sm')}>
             {c.computed_status === 'part_paid' ? `${fmtMoney(c.remaining)} left` : { paid: 'Paid', unpaid: 'Unpaid', overdue: 'Overdue', waived: 'Waived', refunded: 'Refunded' }[c.computed_status]}
@@ -76,7 +76,7 @@ function MiniStat({ label, value, color }) {
   return (
     <div>
       <div style={{ fontSize: 15, fontWeight: 900, color }}>{fmtMoney(value)}</div>
-      <div style={{ fontSize: 10, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.3 }}>{label}</div>
+      <div style={{ fontSize: 10, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.3 }}>{label}</div>
     </div>
   )
 }
@@ -99,26 +99,26 @@ function ChildPaymentHistoryModal({ org, session, child, charges, onClose, onCha
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 10450 }} />
       <div onClick={e => e.stopPropagation()} style={{
-        position: 'fixed', zIndex: 10451, background: '#fff',
+        position: 'fixed', zIndex: 10451, background: 'var(--surface)',
         ...(isMobile ? { left: 0, right: 0, bottom: 0, top: 40, borderRadius: '20px 20px 0 0' } : { top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(640px, 94vw)', maxHeight: '86vh', borderRadius: 20 }),
         display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.3)',
       }}>
-        <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+        <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--border-soft)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 900, color: '#0F172A' }}>{child.first_name} {child.last_name} — Payments</div>
+            <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text)' }}>{child.first_name} {child.last_name} — Payments</div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text-faint)', cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Charges</div>
-          {charges.length === 0 ? <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 20 }}>No charges yet.</div> : (
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Charges</div>
+          {charges.length === 0 ? <div style={{ fontSize: 12, color: 'var(--text-faint)', marginBottom: 20 }}>No charges yet.</div> : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
               {charges.map(c => (
-                <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #F1F5F9', borderRadius: 12, padding: '10px 12px' }}>
+                <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid var(--border-soft)', borderRadius: 12, padding: '10px 12px' }}>
                   <div>
-                    <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0F172A' }}>{c.title}</div>
-                    <div style={{ fontSize: 10.5, color: '#94A3B8' }}>{chargeTypeLabel(c.charge_type)} · {fmtMoney(c.amount)} · Due {fmtDateShort(c.due_date)}</div>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)' }}>{c.title}</div>
+                    <div style={{ fontSize: 10.5, color: 'var(--text-faint)' }}>{chargeTypeLabel(c.charge_type)} · {fmtMoney(c.amount)} · Due {fmtDateShort(c.due_date)}</div>
                   </div>
                   <span style={chipStyle(c.computed_status, 'sm')}>{{ paid: 'Paid', part_paid: 'Part paid', unpaid: 'Unpaid', overdue: 'Overdue', waived: 'Waived', refunded: 'Refunded' }[c.computed_status]}</span>
                 </div>
@@ -126,8 +126,8 @@ function ChildPaymentHistoryModal({ org, session, child, charges, onClose, onCha
             </div>
           )}
 
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Transaction history</div>
-          {transactions.length === 0 ? <div style={{ fontSize: 12, color: '#94A3B8' }}>No payments recorded yet.</div> : (
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Transaction history</div>
+          {transactions.length === 0 ? <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>No payments recorded yet.</div> : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {transactions.map(t => (
                 <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #F8FAFC', fontSize: 12 }}>
@@ -141,7 +141,7 @@ function ChildPaymentHistoryModal({ org, session, child, charges, onClose, onCha
           )}
         </div>
 
-        <div style={{ padding: 16, borderTop: '1px solid #F1F5F9', flexShrink: 0 }}>
+        <div style={{ padding: 16, borderTop: '1px solid var(--border-soft)', flexShrink: 0 }}>
           <button onClick={() => setPayOpen(true)} style={{ ...btnPrimary(PB.blue), width: '100%', justifyContent: 'center' }}>+ Record payment</button>
         </div>
       </div>

@@ -9,7 +9,7 @@ export default function FundraisingAssistantCard({ bullets, onViewAll }) {
           <IconGlyph name="sparkle" color="#fff" size={13} />
         </div>
         <div style={{ fontSize: 14, fontWeight: 800, color: LS.text }}>AI Assistant</div>
-        <span style={{ fontSize: 9.5, fontWeight: 800, color: LS.purpleDark, background: '#fff', borderRadius: 20, padding: '2px 8px' }}>BETA</span>
+        <span style={{ fontSize: 9.5, fontWeight: 800, color: LS.purpleDark, background: 'var(--surface)', borderRadius: 20, padding: '2px 8px' }}>BETA</span>
       </div>
 
       {bullets.length === 0 ? (
@@ -22,7 +22,7 @@ export default function FundraisingAssistantCard({ bullets, onViewAll }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
             {bullets.slice(0, 3).map((b, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 9 }}>
-                <div style={{ width: 20, height: 20, borderRadius: 6, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                <div style={{ width: 20, height: 20, borderRadius: 6, background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
                   <IconGlyph name="check" color={LS.success} size={11} />
                 </div>
                 <span style={{ fontSize: 12.5, color: LS.text, lineHeight: 1.45 }}>{b.text}</span>

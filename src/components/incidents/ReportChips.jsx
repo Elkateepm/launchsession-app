@@ -49,7 +49,7 @@ export default function ReportChips({
     display: 'inline-flex', alignItems: 'center', gap: compact ? 5 : 7,
     ...(onDark
       ? { border: '1px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.10)', color: '#fff' }
-      : { border: '1px solid #E2E8F0', background: '#fff', color: '#475569' }),
+      : { border: '1px solid var(--border)', background: 'var(--surface)', color: '#475569' }),
   }
   // On a dark card the meaning-carrying reds and ambers are unreadable at chip
   // size, so the icon lifts to a tint that holds against the background.

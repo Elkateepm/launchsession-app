@@ -202,7 +202,7 @@ function InsightsPanel({ bullets: heuristicBullets, org, primary }) {
       <AnimatePresence>
         {showInfo && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.25 }} style={{ overflow: 'hidden' }}>
-            <div style={{ fontSize: 11.5, color: '#8A6A2E', lineHeight: 1.5, background: '#fff', border: '1px solid #F3E3BC', borderRadius: 10, padding: '8px 10px', marginBottom: 8, marginTop: 4 }}>
+            <div style={{ fontSize: 11.5, color: '#8A6A2E', lineHeight: 1.5, background: 'var(--surface)', border: '1px solid #F3E3BC', borderRadius: 10, padding: '8px 10px', marginBottom: 8, marginTop: 4 }}>
               Generated from campaign pace, donation activity and targets only — campaign names and numbers you've already entered. It never sees donor personal details, safeguarding records or anything from other modules.
             </div>
           </motion.div>
@@ -305,7 +305,7 @@ function CampaignDetail({ campaign, org, onBack, onUpdate, isAdmin }) {
   const target = campaign.target_amount || 0
   const pct = target > 0 ? Math.min((raised / target) * 100, 100) : null
   const giftAidTotal = donations.filter(d => d.gift_aid).reduce((s, d) => s + d.amount * 0.25, 0)
-  const inp = { width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, fontFamily: 'inherit', outline: 'none' }
+  const inp = { width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'inherit', outline: 'none' }
   const statusBg = { active: '#E7F6EC', planning: '#F3F2EE', completed: '#F3F2EE' }[status.key]
   const statusColor = { active: '#16803C', planning: '#6B7280', completed: '#6B7280' }[status.key]
 
@@ -314,28 +314,28 @@ function CampaignDetail({ campaign, org, onBack, onUpdate, isAdmin }) {
       <button onClick={onBack} style={{ background: 'none', border: 'none', color: primary, fontWeight: 700, fontSize: 13, cursor: 'pointer', marginBottom: 24, padding: 0 }}><Icon name="←" /> Back to fundraising</button>
 
       {/* Header */}
-      <div style={{ paddingBottom: 20, borderBottom: '0.5px solid #e5e7eb', marginBottom: 20 }}>
+      <div style={{ paddingBottom: 20, borderBottom: '0.5px solid var(--border)', marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 18 }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
               <div style={{ fontSize: 20, fontWeight: 600 }}>{campaign.name}</div>
               <span style={{ fontSize: 11, padding: '2px 9px', borderRadius: 20, background: statusBg, color: statusColor, fontWeight: 600 }}>{status.label}</span>
             </div>
-            <div style={{ fontSize: 13, color: '#6B7280' }}>{campaign.description || CAMPAIGN_TYPES.find(t => t.key === campaign.campaign_type)?.label}</div>
+            <div style={{ fontSize: 13, color: 'var(--text3)' }}>{campaign.description || CAMPAIGN_TYPES.find(t => t.key === campaign.campaign_type)?.label}</div>
           </div>
           {isAdmin && (
-            <button onClick={() => setEditing(!editing)} style={{ padding: '8px 16px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+            <button onClick={() => setEditing(!editing)} style={{ padding: '8px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
               {editing ? 'Cancel' : 'Edit'}
             </button>
           )}
         </div>
 
-        <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 6 }}>Total raised</div>
+        <div style={{ fontSize: 13, color: 'var(--text-faint)', marginBottom: 6 }}>Total raised</div>
         <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 40, lineHeight: 1, color: '#1C2333', marginBottom: 14 }}>£{raised.toLocaleString()}</div>
         {target > 0 && (
           <>
             <Thermometer raised={raised} target={target} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 12, color: '#9CA3AF' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 12, color: 'var(--text-faint)' }}>
               <span>{pct.toFixed(0)}% of £{target.toLocaleString()} goal</span>
               <span>{Math.max(target - raised, 0).toLocaleString('en-GB', { style: 'currency', currency: 'GBP' })} remaining</span>
             </div>
@@ -360,7 +360,7 @@ function CampaignDetail({ campaign, org, onBack, onUpdate, isAdmin }) {
               {i > 0 && <div style={{ width: '0.5px', background: '#e5e7eb' }} />}
               <div style={{ flex: 1, paddingLeft: i > 0 ? 16 : 0, paddingRight: 16 }}>
                 <div style={{ fontSize: 18, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
-                <div style={{ fontSize: 12, color: '#9CA3AF' }}>{s.label}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>{s.label}</div>
               </div>
             </React.Fragment>
           ))}
@@ -369,16 +369,16 @@ function CampaignDetail({ campaign, org, onBack, onUpdate, isAdmin }) {
 
       {/* Edit form */}
       {editing && (
-        <div style={{ background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: 14, padding: 18, marginBottom: 20 }}>
+        <div style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, padding: 18, marginBottom: 20 }}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
-            <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Campaign name</label><input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} style={inp} /></div>
-            <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Description</label><textarea value={editForm.description || ''} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} rows={2} style={{ ...inp, resize: 'none' }} /></div>
-            <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Target amount (£)</label><input type="number" value={editForm.target_amount || ''} onChange={e => setEditForm(f => ({ ...f, target_amount: e.target.value }))} style={inp} /></div>
-            <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>End date</label><input type="date" value={editForm.end_date || ''} onChange={e => setEditForm(f => ({ ...f, end_date: e.target.value }))} style={inp} /></div>
+            <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Campaign name</label><input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} style={inp} /></div>
+            <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Description</label><textarea value={editForm.description || ''} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} rows={2} style={{ ...inp, resize: 'none' }} /></div>
+            <div><label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Target amount (£)</label><input type="number" value={editForm.target_amount || ''} onChange={e => setEditForm(f => ({ ...f, target_amount: e.target.value }))} style={inp} /></div>
+            <div><label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>End date</label><input type="date" value={editForm.end_date || ''} onChange={e => setEditForm(f => ({ ...f, end_date: e.target.value }))} style={inp} /></div>
           </div>
           <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
             <button onClick={saveEdit} style={{ padding: '9px 22px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>Save changes</button>
-            <button onClick={() => setEditing(false)} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+            <button onClick={() => setEditing(false)} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           </div>
           {editError && <div style={{ marginTop: 10, fontSize: 12, color: '#B91C1C' }}>Couldn't save: {editError}</div>}
         </div>
@@ -386,29 +386,29 @@ function CampaignDetail({ campaign, org, onBack, onUpdate, isAdmin }) {
 
       {/* Add donation */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-        <div style={{ fontSize: 13, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#9CA3AF' }}>Donations ({donations.length})</div>
-        {isAdmin && <button onClick={() => setShowAdd(!showAdd)} style={{ padding: '8px 16px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>Record donation</button>}
+        <div style={{ fontSize: 13, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-faint)' }}>Donations ({donations.length})</div>
+        {isAdmin && <button onClick={() => setShowAdd(!showAdd)} style={{ padding: '8px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>Record donation</button>}
       </div>
 
       {isAdmin && showAdd && (
-        <div style={{ background: '#FAFAF8', border: '1.5px solid #e5e7eb', borderRadius: 14, padding: 18, marginBottom: 16 }}>
+        <div style={{ background: '#FAFAF8', border: '1.5px solid var(--border)', borderRadius: 14, padding: 18, marginBottom: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 12 }}>
-            <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Donor name</label><input value={newDonation.donor_name} onChange={e => setNewDonation(n => ({ ...n, donor_name: e.target.value }))} placeholder="Anonymous" style={inp} /></div>
-            <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Amount (£)</label><input type="number" step="0.01" value={newDonation.amount} onChange={e => setNewDonation(n => ({ ...n, amount: e.target.value }))} placeholder="0.00" style={inp} /></div>
-            <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Message</label><input value={newDonation.message} onChange={e => setNewDonation(n => ({ ...n, message: e.target.value }))} placeholder="Donation message or reference" style={inp} /></div>
+            <div><label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Donor name</label><input value={newDonation.donor_name} onChange={e => setNewDonation(n => ({ ...n, donor_name: e.target.value }))} placeholder="Anonymous" style={inp} /></div>
+            <div><label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Amount (£)</label><input type="number" step="0.01" value={newDonation.amount} onChange={e => setNewDonation(n => ({ ...n, amount: e.target.value }))} placeholder="0.00" style={inp} /></div>
+            <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Message</label><input value={newDonation.message} onChange={e => setNewDonation(n => ({ ...n, message: e.target.value }))} placeholder="Donation message or reference" style={inp} /></div>
           </div>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer', marginBottom: 14, fontWeight: 600 }}>
             <input type="checkbox" checked={newDonation.gift_aid} onChange={e => setNewDonation(n => ({ ...n, gift_aid: e.target.checked }))} />
             Gift Aid eligible (+25% from HMRC)
           </label>
           {newDonation.gift_aid && newDonation.amount && (
-            <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#16A34A', fontWeight: 600, marginBottom: 12 }}>
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#16A34A', fontWeight: 600, marginBottom: 12 }}>
               Gift Aid adds £{(parseFloat(newDonation.amount) * 0.25).toFixed(2)} — total value £{(parseFloat(newDonation.amount) * 1.25).toFixed(2)}
             </div>
           )}
           <div style={{ display: 'flex', gap: 10 }}>
             <button onClick={addDonation} disabled={saving || !newDonation.amount} style={{ padding: '9px 22px', borderRadius: 10, border: 'none', background: saving || !newDonation.amount ? '#9CA3AF' : primary, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{saving ? 'Saving...' : 'Record donation'}</button>
-            <button onClick={() => setShowAdd(false)} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+            <button onClick={() => setShowAdd(false)} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           </div>
           {donationError && <div style={{ marginTop: 10, fontSize: 12, color: '#B91C1C' }}>Couldn't record donation: {donationError}</div>}
         </div>
@@ -416,10 +416,10 @@ function CampaignDetail({ campaign, org, onBack, onUpdate, isAdmin }) {
 
       {/* Donations list */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 30, color: '#9CA3AF' }}>Loading donations...</div>
+        <div style={{ textAlign: 'center', padding: 30, color: 'var(--text-faint)' }}>Loading donations...</div>
       ) : donations.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 40, borderRadius: 14, color: '#9CA3AF', border: '1.5px dashed #e5e7eb' }}>
-          <div style={{ fontWeight: 600, color: '#374151' }}>No donations recorded yet</div>
+        <div style={{ textAlign: 'center', padding: 40, borderRadius: 14, color: 'var(--text-faint)', border: '1.5px dashed var(--border)' }}>
+          <div style={{ fontWeight: 600, color: 'var(--text2)' }}>No donations recorded yet</div>
           <div style={{ fontSize: 13, marginTop: 4 }}>Start recording donations as they come in.</div>
         </div>
       ) : (
@@ -431,8 +431,8 @@ function CampaignDetail({ campaign, org, onBack, onUpdate, isAdmin }) {
                   <span style={{ fontWeight: 600, fontSize: 14 }}>{d.donor_name || 'Anonymous'}</span>
                   {d.gift_aid && <span style={{ background: '#E7F6EC', color: '#16803C', borderRadius: 6, padding: '2px 7px', fontSize: 10, fontWeight: 600 }}>Gift Aid</span>}
                 </div>
-                {d.message && <div style={{ fontSize: 12, color: '#6B7280' }}>{d.message}</div>}
-                <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{format(new Date(d.created_at), 'd MMM yyyy')}</div>
+                {d.message && <div style={{ fontSize: 12, color: 'var(--text3)' }}>{d.message}</div>}
+                <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 2 }}>{format(new Date(d.created_at), 'd MMM yyyy')}</div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
                 <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 16, color: '#1C2333' }}>£{d.amount.toFixed(2)}</div>
@@ -617,7 +617,7 @@ export default function Fundraising({ org, isAdmin }) {
     return items.slice(0, 3)
   }, [deadlineEvents, insights])
 
-  const inp = { width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, fontFamily: 'inherit', outline: 'none' }
+  const inp = { width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'inherit', outline: 'none' }
   const reportsRef = React.useRef(null)
   const scrollToReports = () => reportsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   const [shareFeedback, setShareFeedback] = useState(false)
@@ -684,41 +684,41 @@ export default function Fundraising({ org, isAdmin }) {
 
           {/* Create campaign */}
           {isAdmin && showCreate && (
-            <div style={{ background: '#FAFAF8', border: '1.5px solid #e5e7eb', borderRadius: 14, padding: 20, marginBottom: 24 }}>
+            <div style={{ background: '#FAFAF8', border: '1.5px solid var(--border)', borderRadius: 14, padding: 20, marginBottom: 24 }}>
               <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>New fundraising campaign</div>
-              <div style={{ fontSize: 11, color: '#9CA3AF', marginBottom: 6 }}>Quick start</div>
+              <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 6 }}>Quick start</div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
                 {CAMPAIGN_TEMPLATES.map(t => (
                   <button key={t.label} type="button" onClick={() => setNewCampaign(n => ({ ...n, name: n.name || t.name, description: n.description || t.description, campaign_type: t.type }))}
-                    style={{ padding: '5px 12px', borderRadius: 20, border: '1px solid #e5e7eb', background: '#fff', color: '#6B7280', fontSize: 11.5, fontWeight: 600, cursor: 'pointer' }}>
+                    style={{ padding: '5px 12px', borderRadius: 20, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontSize: 11.5, fontWeight: 600, cursor: 'pointer' }}>
                     {t.label}
                   </button>
                 ))}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 12 }}>
-                <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Campaign name</label><input value={newCampaign.name} onChange={e => setNewCampaign(n => ({ ...n, name: e.target.value }))} placeholder="e.g. New minibus fund" style={inp} /></div>
-                <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Type</label>
+                <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Campaign name</label><input value={newCampaign.name} onChange={e => setNewCampaign(n => ({ ...n, name: e.target.value }))} placeholder="e.g. New minibus fund" style={inp} /></div>
+                <div><label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Type</label>
                   <select value={newCampaign.campaign_type} onChange={e => setNewCampaign(n => ({ ...n, campaign_type: e.target.value }))} style={inp}>
                     {CAMPAIGN_TYPES.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
                   </select>
                 </div>
-                <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Target (£)</label><input type="number" value={newCampaign.target_amount} onChange={e => setNewCampaign(n => ({ ...n, target_amount: e.target.value }))} placeholder="0 = no target" style={inp} /></div>
-                <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Start date</label><input type="date" value={newCampaign.start_date} onChange={e => setNewCampaign(n => ({ ...n, start_date: e.target.value }))} style={inp} /></div>
-                <div><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>End date</label><input type="date" value={newCampaign.end_date} onChange={e => setNewCampaign(n => ({ ...n, end_date: e.target.value }))} style={inp} /></div>
+                <div><label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Target (£)</label><input type="number" value={newCampaign.target_amount} onChange={e => setNewCampaign(n => ({ ...n, target_amount: e.target.value }))} placeholder="0 = no target" style={inp} /></div>
+                <div><label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Start date</label><input type="date" value={newCampaign.start_date} onChange={e => setNewCampaign(n => ({ ...n, start_date: e.target.value }))} style={inp} /></div>
+                <div><label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>End date</label><input type="date" value={newCampaign.end_date} onChange={e => setNewCampaign(n => ({ ...n, end_date: e.target.value }))} style={inp} /></div>
                 {projects.length > 0 && (
                   <div style={{ gridColumn: '1/-1' }}>
-                    <label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>What is this funding? (optional)</label>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>What is this funding? (optional)</label>
                     <select value={newCampaign.linked_project_id} onChange={e => setNewCampaign(n => ({ ...n, linked_project_id: e.target.value }))} style={inp}>
                       <option value="">General organisation fundraising</option>
                       {projects.map(pr => <option key={pr.id} value={pr.id}>{pr.name}</option>)}
                     </select>
                   </div>
                 )}
-                <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 4 }}>Description</label><textarea value={newCampaign.description} onChange={e => setNewCampaign(n => ({ ...n, description: e.target.value }))} rows={2} placeholder="What are you raising money for?" style={{ ...inp, resize: 'none' }} /></div>
+                <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Description</label><textarea value={newCampaign.description} onChange={e => setNewCampaign(n => ({ ...n, description: e.target.value }))} rows={2} placeholder="What are you raising money for?" style={{ ...inp, resize: 'none' }} /></div>
               </div>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                 <button onClick={createCampaign} disabled={creating || !newCampaign.name} style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: creating || !newCampaign.name ? '#9CA3AF' : LS.purple, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{creating ? 'Creating...' : 'Launch campaign'}</button>
-                <button onClick={() => setShowCreate(false)} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                <button onClick={() => setShowCreate(false)} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
               </div>
               {createError && <div style={{ marginTop: 10, fontSize: 12, color: '#B91C1C' }}>Couldn't create the campaign: {createError}</div>}
             </div>
@@ -741,7 +741,7 @@ export default function Fundraising({ org, isAdmin }) {
           </div>
 
           {/* Reports & Insights — existing analytics, activity feed, full insights panel and a Discover Funding preview, preserved from the previous layout */}
-          <div ref={reportsRef} style={{ fontSize: 12, letterSpacing: '0.06em', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 10, paddingTop: 4 }}>Reports &amp; Insights</div>
+          <div ref={reportsRef} style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--text-faint)', textTransform: 'uppercase', marginBottom: 10, paddingTop: 4 }}>Reports &amp; Insights</div>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
             <FundingMixChart campaigns={campaigns} />
             <CampaignComparisonChart campaigns={campaigns} />
@@ -751,13 +751,13 @@ export default function Fundraising({ org, isAdmin }) {
           {/* Recent activity */}
           {recentActivity.length > 0 && (
             <>
-              <div style={{ fontSize: 12, letterSpacing: '0.06em', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 10 }}>Recent activity</div>
-              <motion.div initial="hidden" animate="show" variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04 } } }} style={{ borderTop: '0.5px solid #e5e7eb', marginBottom: 28 }}>
+              <div style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--text-faint)', textTransform: 'uppercase', marginBottom: 10 }}>Recent activity</div>
+              <motion.div initial="hidden" animate="show" variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04 } } }} style={{ borderTop: '0.5px solid var(--border)', marginBottom: 28 }}>
                 {recentActivity.map((e, i) => (
                   <motion.div key={i} variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '0.5px solid #e5e7eb' }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '0.5px solid var(--border)' }}>
                     <span style={{ fontSize: 13, color: '#4B5563', flex: 1 }}>{e.text}</span>
-                    <span style={{ fontSize: 11, color: '#9CA3AF', flexShrink: 0 }}>{format(new Date(e.date), 'd MMM')}</span>
+                    <span style={{ fontSize: 11, color: 'var(--text-faint)', flexShrink: 0 }}>{format(new Date(e.date), 'd MMM')}</span>
                   </motion.div>
                 ))}
               </motion.div>
@@ -768,21 +768,21 @@ export default function Fundraising({ org, isAdmin }) {
           {insights.length > 0 && <InsightsPanel bullets={insights} org={org} primary={primary} />}
 
           {/* Discover Funding preview */}
-          <div style={{ fontSize: 12, letterSpacing: '0.06em', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 10 }}>Discover funding</div>
+          <div style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--text-faint)', textTransform: 'uppercase', marginBottom: 10 }}>Discover funding</div>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10, marginBottom: 10 }}>
             {previewGrants.map(g => (
-              <div key={g.id} onClick={() => setActiveTab('discover')} style={{ border: '1px solid #e5e7eb', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', background: '#fff' }}>
+              <div key={g.id} onClick={() => setActiveTab('discover')} style={{ border: '1px solid var(--border)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', background: 'var(--surface)' }}>
                 <div style={{ fontSize: 13.5, color: '#1C2333', fontWeight: 500, marginBottom: 2 }}>{g.name}</div>
-                <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 8 }}>{g.funder_name}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-faint)', marginBottom: 8 }}>{g.funder_name}</div>
                 <div style={{ fontSize: 12.5, color: GOLD, fontWeight: 600 }}>
                   {g.amount_min && g.amount_max ? `£${Number(g.amount_min).toLocaleString()} – £${Number(g.amount_max).toLocaleString()}` : g.amount_max ? `Up to £${Number(g.amount_max).toLocaleString()}` : 'Amount varies'}
                 </div>
               </div>
             ))}
           </div>
-          <button onClick={() => setActiveTab('discover')} style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', border: '1px solid #e5e7eb', borderRadius: 14, background: '#FAFAF8', cursor: 'pointer' }}>
+          <button onClick={() => setActiveTab('discover')} style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', border: '1px solid var(--border)', borderRadius: 14, background: '#FAFAF8', cursor: 'pointer' }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12.5, color: '#6B7280' }}>Real, researched UK funders for {org?.name} — search, save and track applications</div>
+              <div style={{ fontSize: 12.5, color: 'var(--text3)' }}>Real, researched UK funders for {org?.name} — search, save and track applications</div>
             </div>
             <span style={{ fontSize: 12, color: primary, flexShrink: 0, fontWeight: 600 }}>View all <Icon name="→" /></span>
           </button>

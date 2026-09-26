@@ -80,7 +80,7 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
                   fontFamily: 'var(--font-display, sans-serif)',
                   ...(isMobile ? { flex: '1 1 0', minWidth: 0 } : {}),
                   ...(a.variant === 'ghost'
-                    ? { border: `1.5px solid var(--border, #e5e7eb)`, background: 'var(--surface, #fff)', color: 'var(--text, #111)', boxShadow: '0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -2px rgba(15,23,42,0.08)' }
+                    ? { border: `1.5px solid var(--border, var(--border))`, background: 'var(--surface, #fff)', color: 'var(--text, #111)', boxShadow: '0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -2px rgba(15,23,42,0.08)' }
                     : { border: 'none', background: 'var(--org-primary)', color: 'var(--org-on-primary)', boxShadow: `0 1px 0 rgba(255,255,255,0.3) inset, 0 -1px 0 rgba(0,0,0,0.12) inset, 0 6px 16px -8px var(--org-a35)` }
                   )
                 }}>

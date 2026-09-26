@@ -23,7 +23,7 @@ import Icon from '../../lib/icons'
 
 const NOTIFY_METHODS = ['In person at collection', 'Phone call', 'Text message', 'Email']
 
-const card = { background: '#fff', border: '1px solid #E9EDF2', borderRadius: 14, padding: '13px 15px' }
+const card = { background: 'var(--surface)', border: '1px solid #E9EDF2', borderRadius: 14, padding: '13px 15px' }
 const flag = (bg, fg) => ({ fontSize: 10.5, fontWeight: 800, padding: '3px 9px', borderRadius: 99, background: bg, color: fg })
 const btn = (bg, fg, border) => ({
   minHeight: 38, padding: '0 13px', borderRadius: 9, cursor: 'pointer', fontFamily: 'inherit',
@@ -105,7 +105,7 @@ export default function InjuryLog({ org, session, isAdmin }) {
     ['all', `Everything (${rows.length})`],
   ]
 
-  if (loading) return <div style={{ textAlign: 'center', padding: 40, color: '#94A3B8', fontSize: 13, fontWeight: 600 }}>Loading…</div>
+  if (loading) return <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-faint)', fontSize: 13, fontWeight: 600 }}>Loading…</div>
 
   return (
     <div>
@@ -137,7 +137,7 @@ export default function InjuryLog({ org, session, isAdmin }) {
       )}
 
       {shown.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '34px 20px', color: '#94A3B8' }}>
+        <div style={{ textAlign: 'center', padding: '34px 20px', color: 'var(--text-faint)' }}>
           <div style={{ fontSize: 32, marginBottom: 10 }}><Icon name="🩹" /></div>
           <div style={{ fontSize: 13.5, fontWeight: 700 }}>
             {rows.length === 0 ? 'Nothing in the accident book yet.'
@@ -162,12 +162,12 @@ export default function InjuryLog({ org, session, isAdmin }) {
                 width: '100%', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
               }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 3, flexWrap: 'wrap' }}>
-                  <div style={{ fontSize: 14.5, fontWeight: 900, color: '#0F172A', flex: 1, minWidth: 120 }}>{name}</div>
-                  <div style={{ fontSize: 11.5, fontWeight: 700, color: '#94A3B8', flexShrink: 0 }}>
+                  <div style={{ fontSize: 14.5, fontWeight: 900, color: 'var(--text)', flex: 1, minWidth: 120 }}>{name}</div>
+                  <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-faint)', flexShrink: 0 }}>
                     {format(new Date(r.occurred_at), 'd MMM yyyy, HH:mm')}
                   </div>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#334155', lineHeight: 1.5, marginBottom: 7 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text2)', lineHeight: 1.5, marginBottom: 7 }}>
                   {isOpen ? r.what_happened : (r.what_happened || '').slice(0, 120) + ((r.what_happened || '').length > 120 ? '…' : '')}
                 </div>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -185,7 +185,7 @@ export default function InjuryLog({ org, session, isAdmin }) {
               {/* The two things that get left undone, actionable from the list
                   itself. Buried inside a detail view they stay undone. */}
               {editable && (!r.parent_notified || r.follow_up_needed) && (
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 11, paddingTop: 11, borderTop: '1px solid #F1F5F9' }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 11, paddingTop: 11, borderTop: '1px solid var(--border-soft)' }}>
                   {!r.parent_notified && (
                     <button disabled={busyId === r.id} onClick={() => setNotifyFor(notifyFor === r.id ? null : r.id)}
                       style={btn('#166534', '#fff')}>
@@ -202,8 +202,8 @@ export default function InjuryLog({ org, session, isAdmin }) {
               )}
 
               {notifyFor === r.id && (
-                <div style={{ marginTop: 10, padding: '11px 12px', background: '#F8FAFC', borderRadius: 10 }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 8 }}>
+                <div style={{ marginTop: 10, padding: '11px 12px', background: 'var(--surface2)', borderRadius: 10 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 8 }}>
                     How were they told?
                   </div>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -225,11 +225,11 @@ export default function InjuryLog({ org, session, isAdmin }) {
                     ['Follow-up', r.follow_up_needed ? (r.follow_up_notes || 'No detail recorded') : null],
                   ].filter(([, v]) => v).map(([k, v]) => (
                     <div key={k}>
-                      <div style={{ fontSize: 10, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>{k}</div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: '#334155', lineHeight: 1.5 }}>{v}</div>
+                      <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>{k}</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text2)', lineHeight: 1.5 }}>{v}</div>
                     </div>
                   ))}
-                  <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 600 }}>
                     Logged {format(new Date(r.created_at), 'd MMM yyyy, HH:mm')}
                     {!editable && ' · only the person who logged this or an admin can change it'}
                   </div>

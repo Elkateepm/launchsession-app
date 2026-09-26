@@ -6,10 +6,10 @@ const ORG_SLUG = window.location.pathname.split('/register-child/')[1]?.split('/
 
 const MAX_CHILDREN = 10
 
-const inp = { width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 14, fontFamily: 'inherit', outline: 'none', background: '#fff' }
-const label = { fontSize: 12.5, fontWeight: 700, color: '#374151', display: 'block', marginBottom: 5 }
-const section = { background: '#fff', border: '1px solid #EEF1F6', borderRadius: 16, padding: '20px 22px', marginBottom: 16 }
-const sectionTitle = { fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 14 }
+const inp = { width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'inherit', outline: 'none', background: 'var(--surface)' }
+const label = { fontSize: 12.5, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 5 }
+const section = { background: 'var(--surface)', border: '1px solid #EEF1F6', borderRadius: 16, padding: '20px 22px', marginBottom: 16 }
+const sectionTitle = { fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 14 }
 
 function Field({ children }) {
   return <div style={{ marginBottom: 14 }}>{children}</div>
@@ -54,7 +54,7 @@ function ChildCard({ child, index, total, primary, open, onToggle, onChange, onR
   const incomplete = !child.first_name.trim()
 
   return (
-    <div style={{ border: `1.5px solid ${open ? primary : '#E2E8F0'}`, borderRadius: 14, marginBottom: 12, background: '#fff', overflow: 'hidden' }}>
+    <div style={{ border: `1.5px solid ${open ? primary : '#E2E8F0'}`, borderRadius: 14, marginBottom: 12, background: 'var(--surface)', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px' }}>
         <button type="button" onClick={onToggle} aria-expanded={open}
           style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}>
@@ -64,19 +64,19 @@ function ChildCard({ child, index, total, primary, open, onToggle, onChange, onR
             background: incomplete ? '#F1F5F9' : 'var(--org-a10)', color: incomplete ? '#94A3B8' : primary,
           }}>{index + 1}</span>
           <span style={{ flex: 1, minWidth: 0 }}>
-            <span style={{ display: 'block', fontSize: 14.5, fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
+            <span style={{ display: 'block', fontSize: 14.5, fontWeight: 800, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
             {incomplete && <span style={{ display: 'block', fontSize: 11.5, color: '#B45309', marginTop: 1 }}>Needs a first name</span>}
           </span>
-          <span style={{ color: '#94A3B8', fontSize: 13 }}>{open ? '▲' : '▼'}</span>
+          <span style={{ color: 'var(--text-faint)', fontSize: 13 }}>{open ? '▲' : '▼'}</span>
         </button>
         {total > 1 && (
           <button type="button" onClick={onRemove} aria-label={`Remove ${name}`}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', fontSize: 15, padding: 4 }}><Icon name="✕" /></button>
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-faint)', fontSize: 15, padding: 4 }}><Icon name="✕" /></button>
         )}
       </div>
 
       {open && (
-        <div style={{ padding: '4px 16px 18px', borderTop: '1px solid #F1F5F9' }}>
+        <div style={{ padding: '4px 16px 18px', borderTop: '1px solid var(--border-soft)' }}>
           <div style={{ ...sectionTitle, marginTop: 14, fontSize: 13 }}>About them</div>
           <Field><label style={label}>First name *</label><input style={inp} value={child.first_name} onChange={e => set('first_name', e.target.value)} /></Field>
           <Field><label style={label}>Last name</label><input style={inp} value={child.last_name} onChange={e => set('last_name', e.target.value)} /></Field>
@@ -87,7 +87,7 @@ function ChildCard({ child, index, total, primary, open, onToggle, onChange, onR
           <Field><label style={label}>Allergies</label><input style={inp} value={child.allergies} onChange={e => set('allergies', e.target.value)} placeholder="e.g. Peanuts, tree nuts — leave blank if none" /></Field>
           <Field><label style={label}>Medical notes</label><textarea style={{ ...inp, minHeight: 60, resize: 'vertical' }} value={child.medical_notes} onChange={e => set('medical_notes', e.target.value)} /></Field>
           {MEDICAL_FLAGS.map(([k, l]) => (
-            <label key={k} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5, color: '#334155', marginBottom: 8, cursor: 'pointer' }}>
+            <label key={k} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5, color: 'var(--text2)', marginBottom: 8, cursor: 'pointer' }}>
               <input type="checkbox" checked={child[k]} onChange={e => set(k, e.target.checked)} /> {l}
             </label>
           ))}
@@ -95,11 +95,11 @@ function ChildCard({ child, index, total, primary, open, onToggle, onChange, onR
           {child.has_behaviour_plan && <Field><label style={label}>Support plan notes</label><textarea style={{ ...inp, minHeight: 50, resize: 'vertical' }} value={child.behaviour_plan_notes} onChange={e => set('behaviour_plan_notes', e.target.value)} /></Field>}
 
           <div style={{ ...sectionTitle, marginTop: 20, fontSize: 13 }}>Permissions &amp; consents</div>
-          <div style={{ fontSize: 12, color: '#64748B', marginBottom: 12, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 12, lineHeight: 1.5 }}>
             These are asked separately for each young person — they aren't copied between siblings.
           </div>
           {CONSENTS.map(([k, l]) => (
-            <label key={k} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13.5, color: '#334155', marginBottom: 12, cursor: 'pointer', lineHeight: 1.4 }}>
+            <label key={k} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13.5, color: 'var(--text2)', marginBottom: 12, cursor: 'pointer', lineHeight: 1.4 }}>
               <input type="checkbox" checked={child[k]} onChange={e => set(k, e.target.checked)} style={{ marginTop: 2 }} /> {l}
             </label>
           ))}
@@ -180,10 +180,10 @@ export default function PublicChildRegistration() {
     setDone(true)
   }
 
-  if (org === undefined) return <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94A3B8', fontFamily: 'system-ui' }}>Loading…</div>
+  if (org === undefined) return <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-faint)', fontFamily: 'system-ui' }}>Loading…</div>
   if (org === null) return (
     <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui', textAlign: 'center', padding: 20 }}>
-      <div><div style={{ fontSize: 40, marginBottom: 10 }}><Icon name="🔍" /></div><div style={{ fontSize: 16, fontWeight: 700, color: '#334155' }}>We couldn't find that organisation's registration page.</div></div>
+      <div><div style={{ fontSize: 40, marginBottom: 10 }}><Icon name="🔍" /></div><div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text2)' }}>We couldn't find that organisation's registration page.</div></div>
     </div>
   )
 
@@ -194,12 +194,12 @@ export default function PublicChildRegistration() {
       : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}'s details have`
     return (
       <div style={{ minHeight: '100dvh', background: '#F6F8FC', fontFamily: 'system-ui, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-        <div style={{ background: '#fff', borderRadius: 20, padding: 40, maxWidth: 460, textAlign: 'center', boxShadow: '0 20px 60px rgba(15,23,42,0.08)' }}>
+        <div style={{ background: 'var(--surface)', borderRadius: 20, padding: 40, maxWidth: 460, textAlign: 'center', boxShadow: '0 20px 60px rgba(15,23,42,0.08)' }}>
           <div style={{ fontSize: 46, marginBottom: 14 }}><Icon name="✅" /></div>
-          <div style={{ fontSize: 19, fontWeight: 900, color: '#0F172A', marginBottom: 8 }}>
+          <div style={{ fontSize: 19, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>
             {names.length > 1 ? `${names.length} registrations received` : 'Registration received'}
           </div>
-          <div style={{ fontSize: 14, color: '#64748B', lineHeight: 1.5 }}>
+          <div style={{ fontSize: 14, color: 'var(--text3)', lineHeight: 1.5 }}>
             Thanks — {list} been sent to {org.name} for review. They'll be in touch once they've been approved.
           </div>
         </div>
@@ -210,7 +210,7 @@ export default function PublicChildRegistration() {
   return (
     <div style={{ minHeight: '100dvh', background: '#F6F8FC', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ background: `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`, padding: '28px 20px', color: '#fff', textAlign: 'center' }}>
-        {org.logo_url && <img src={org.logo_url} alt="" style={{ width: 52, height: 52, borderRadius: 14, objectFit: 'contain', background: '#fff', padding: 6, boxSizing: 'border-box', marginBottom: 10 }} />}
+        {org.logo_url && <img src={org.logo_url} alt="" style={{ width: 52, height: 52, borderRadius: 14, objectFit: 'contain', background: 'var(--surface)', padding: 6, boxSizing: 'border-box', marginBottom: 10 }} />}
         <div style={{ fontSize: 20, fontWeight: 900 }}>{org.name}</div>
         <div style={{ fontSize: 13.5, opacity: 0.85, marginTop: 2 }}>Register a young person</div>
       </div>
@@ -229,7 +229,7 @@ export default function PublicChildRegistration() {
         {step === 1 && (
           <div style={section}>
             <div style={sectionTitle}>Your details</div>
-            <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 16, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 16, lineHeight: 1.5 }}>
               You only need to fill these in once, however many young people you're registering.
             </div>
             <Field><label style={label}>Parent / carer name *</label><input style={inp} value={family.parent_name} onChange={e => setF('parent_name', e.target.value)} /></Field>
@@ -245,7 +245,7 @@ export default function PublicChildRegistration() {
           <div>
             <div style={{ ...section, paddingBottom: 8 }}>
               <div style={sectionTitle}>Who are you registering?</div>
-              <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 16, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 16, lineHeight: 1.5 }}>
                 Add each young person below. Tap a name to fill in their details, medical needs and consents.
               </div>
 
@@ -270,7 +270,7 @@ export default function PublicChildRegistration() {
                   fontWeight: 800, fontSize: 13.5, cursor: 'pointer', fontFamily: 'inherit',
                 }}>+ Add another young person</button>
               ) : (
-                <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 14 }}>
+                <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 14 }}>
                   That's the maximum of {MAX_CHILDREN} on one form. Please submit any others separately.
                 </div>
               )}
@@ -283,20 +283,20 @@ export default function PublicChildRegistration() {
           <div style={section}>
             <div style={sectionTitle}>Review before submitting</div>
 
-            <div style={{ fontSize: 11.5, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Your details</div>
+            <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Your details</div>
             {[
               ['Parent / carer', family.parent_name],
               ['Contact', [family.parent_phone, family.parent_email].filter(Boolean).join(' · ')],
               ['Emergency contact', [family.emergency_contact_name, family.emergency_contact_phone].filter(Boolean).join(' · ')],
             ].map(([k, v]) => v ? (
-              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '7px 0', borderBottom: '1px solid #F1F5F9', fontSize: 13 }}>
-                <span style={{ color: '#64748B' }}>{k}</span><span style={{ fontWeight: 700, color: '#0F172A', textAlign: 'right' }}>{v}</span>
+              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '7px 0', borderBottom: '1px solid var(--border-soft)', fontSize: 13 }}>
+                <span style={{ color: 'var(--text3)' }}>{k}</span><span style={{ fontWeight: 700, color: 'var(--text)', textAlign: 'right' }}>{v}</span>
               </div>
             ) : null)}
 
             {children.map((c, i) => (
               <div key={c.key} style={{ marginTop: 20 }}>
-                <div style={{ fontSize: 11.5, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+                <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
                   Young person {i + 1}
                 </div>
                 {[
@@ -311,8 +311,8 @@ export default function PublicChildRegistration() {
                       })[k]).join(', ')
                     : 'None selected'],
                 ].map(([k, v]) => v ? (
-                  <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '7px 0', borderBottom: '1px solid #F1F5F9', fontSize: 13 }}>
-                    <span style={{ color: '#64748B' }}>{k}</span><span style={{ fontWeight: 700, color: '#0F172A', textAlign: 'right' }}>{v}</span>
+                  <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '7px 0', borderBottom: '1px solid var(--border-soft)', fontSize: 13 }}>
+                    <span style={{ color: 'var(--text3)' }}>{k}</span><span style={{ fontWeight: 700, color: 'var(--text)', textAlign: 'right' }}>{v}</span>
                   </div>
                 ) : null)}
               </div>
@@ -323,7 +323,7 @@ export default function PublicChildRegistration() {
         )}
 
         <div style={{ display: 'flex', gap: 10 }}>
-          {step > 1 && <button onClick={() => setStep(s => s - 1)} style={{ flex: 1, padding: '13px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}><Icon name="←" /> Back</button>}
+          {step > 1 && <button onClick={() => setStep(s => s - 1)} style={{ flex: 1, padding: '13px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}><Icon name="←" /> Back</button>}
           {step < 3 ? (
             <button onClick={() => canContinue() && setStep(s => s + 1)} disabled={!canContinue()}
               style={{ flex: 2, padding: '13px', borderRadius: 10, border: 'none', background: canContinue() ? primary : '#CBD5E1', color: '#fff', fontWeight: 800, fontSize: 14, cursor: canContinue() ? 'pointer' : 'default' }}>
@@ -343,7 +343,7 @@ export default function PublicChildRegistration() {
           </div>
         )}
 
-        <div style={{ textAlign: 'center', fontSize: 11, color: '#94A3B8', marginTop: 16 }}><Icon name="🔒" /> Your information is sent securely and only visible to {org.name}.</div>
+        <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--text-faint)', marginTop: 16 }}><Icon name="🔒" /> Your information is sent securely and only visible to {org.name}.</div>
       </div>
     </div>
   )

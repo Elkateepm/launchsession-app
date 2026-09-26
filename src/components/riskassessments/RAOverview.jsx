@@ -10,7 +10,7 @@ import Icon from '../../lib/icons'
 // read the organisation's safety position without scrolling or clicking.
 
 const CARD = {
-  background: '#fff',
+  background: 'var(--surface)',
   border: '1px solid #ECE9F5',
   borderRadius: 16,
 }
@@ -61,7 +61,7 @@ function SafetyStrip({ counts, activeFilter, onFilter }) {
                 width: 9, height: 9, borderRadius: 9, background: meta.dot, flexShrink: 0,
               }} />
               <span style={{ minWidth: 0 }}>
-                <span style={{ fontSize: 19, fontWeight: 800, color: '#1C1B2E', display: 'block', lineHeight: 1.1 }}>
+                <span style={{ fontSize: 19, fontWeight: 800, color: 'var(--text)', display: 'block', lineHeight: 1.1 }}>
                   {counts[key]}
                 </span>
                 <span style={{ fontSize: 11.5, color: '#8B87A3', display: 'block', marginTop: 1 }}>
@@ -83,7 +83,7 @@ function NeedsAttention({ items, onOpen, onCreateForSession, primary, truncated 
     return (
       <div style={{ ...CARD, padding: '26px 20px', marginBottom: 14, textAlign: 'center' }}>
         <div style={{ fontSize: 26, marginBottom: 6 }}><Icon name="✅" /></div>
-        <div style={{ fontSize: 15.5, fontWeight: 800, color: '#1C1B2E', marginBottom: 4 }}>
+        <div style={{ fontSize: 15.5, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>
           Everything is ready
         </div>
         <div style={{ fontSize: 13.5, color: '#8B87A3' }}>
@@ -101,7 +101,7 @@ function NeedsAttention({ items, onOpen, onCreateForSession, primary, truncated 
         padding: '13px 16px', borderBottom: '1px solid #ECE9F5',
         display: 'flex', alignItems: 'center', gap: 9,
       }}>
-        <span style={{ fontSize: 14.5, fontWeight: 800, color: '#1C1B2E' }}>Needs attention</span>
+        <span style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>Needs attention</span>
         <span style={{
           padding: '2px 9px', borderRadius: 999, fontSize: 11.5, fontWeight: 700,
           background: '#FEF2F2', color: '#B42318',
@@ -132,7 +132,7 @@ function NeedsAttention({ items, onOpen, onCreateForSession, primary, truncated 
               }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
-                  fontSize: 14, fontWeight: 700, color: '#1C1B2E',
+                  fontSize: 14, fontWeight: 700, color: 'var(--text)',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>{item.title}</div>
                 <div style={{ fontSize: 12.5, color: '#8B87A3', marginTop: 2 }}>{item.detail}</div>
@@ -163,7 +163,7 @@ function UpcomingActivities({ sessions, coverage, outstandingByAssessment = {}, 
 
   return (
     <div style={{ marginBottom: 14 }}>
-      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#1C1B2E', marginBottom: 10 }}>
+      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>
         Upcoming activities
       </div>
       <div style={{
@@ -181,7 +181,7 @@ function UpcomingActivities({ sessions, coverage, outstandingByAssessment = {}, 
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
                 <span style={{ fontSize: 15 }}>{ACTIVITY_ICON[s.session_type] || '📋'}</span>
                 <div style={{
-                  fontSize: 14, fontWeight: 800, color: '#1C1B2E', minWidth: 0,
+                  fontSize: 14, fontWeight: 800, color: 'var(--text)', minWidth: 0,
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>{s.title || 'Session'}</div>
               </div>
@@ -218,7 +218,7 @@ function UpcomingActivities({ sessions, coverage, outstandingByAssessment = {}, 
                   style={{
                     display: 'block', width: '100%', marginTop: 6,
                     padding: '8px 12px', borderRadius: 10, border: '1px solid #ECE9F5',
-                    background: '#fff', color: '#5A5772',
+                    background: 'var(--surface)', color: '#5A5772',
                     fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                   }}
                 >Reuse a previous one</button>
@@ -239,7 +239,7 @@ function RecentAssessments({ assessments, onOpen, staffById, outstandingByAssess
 
   return (
     <div>
-      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#1C1B2E', marginBottom: 10 }}>
+      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>
         Recent assessments
       </div>
 
@@ -257,7 +257,7 @@ function RecentAssessments({ assessments, onOpen, staffById, outstandingByAssess
                   <span style={{ fontSize: 16 }}>{ACTIVITY_ICON[a.activity_type] || '📋'}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
-                      fontSize: 14, fontWeight: 800, color: '#1C1B2E',
+                      fontSize: 14, fontWeight: 800, color: 'var(--text)',
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>{a.name}</div>
                     <div style={{ fontSize: 12, color: '#8B87A3', marginTop: 2 }}>
@@ -298,7 +298,7 @@ function RecentAssessments({ assessments, onOpen, staffById, outstandingByAssess
                     onClick={() => onOpen(a)}
                     style={{ borderBottom: '1px solid #F5F3FA', cursor: 'pointer' }}
                   >
-                    <td style={{ padding: '11px 14px', fontWeight: 700, color: '#1C1B2E' }}>
+                    <td style={{ padding: '11px 14px', fontWeight: 700, color: 'var(--text)' }}>
                       <span style={{ marginRight: 7 }}>{ACTIVITY_ICON[a.activity_type] || '📋'}</span>
                       {a.name}
                     </td>

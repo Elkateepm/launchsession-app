@@ -30,23 +30,23 @@ export default function InventoryAlerts({ resources, checkouts, bookings, onView
   }, [resources, checkouts, onViewStock, onViewBooking])
 
   return (
-    <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 18, padding: 20 }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#111827' }}>Inventory Alerts</div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>Inventory Alerts</div>
         {alerts.length > 0 && <button onClick={onViewAll} style={{ background: 'none', border: 'none', color: '#7C3AED', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View all alerts</button>}
       </div>
       {alerts.length === 0 ? (
-        <div style={{ fontSize: 12.5, color: '#9CA3AF', textAlign: 'center', padding: '16px 0' }}>All clear — nothing needs attention right now.</div>
+        <div style={{ fontSize: 12.5, color: 'var(--text-faint)', textAlign: 'center', padding: '16px 0' }}>All clear — nothing needs attention right now.</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {alerts.map(a => (
-            <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: '#F8FAFC', borderRadius: 10 }}>
+            <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--surface2)', borderRadius: 10 }}>
               <div style={{ fontSize: 16, flexShrink: 0 }}><Icon name={a.icon} /></div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12.5, fontWeight: 700, color: '#111827' }}>{a.text}</div>
-                <div style={{ fontSize: 11, color: '#6B7280' }}>{a.sub}</div>
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)' }}>{a.text}</div>
+                <div style={{ fontSize: 11, color: 'var(--text3)' }}>{a.sub}</div>
               </div>
-              <button onClick={a.onClick} style={{ padding: '6px 10px', borderRadius: 7, border: '1px solid #E5E7EB', background: '#fff', fontSize: 11, fontWeight: 700, color: '#374151', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}>{a.action}</button>
+              <button onClick={a.onClick} style={{ padding: '6px 10px', borderRadius: 7, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 11, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}>{a.action}</button>
             </div>
           ))}
         </div>

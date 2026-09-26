@@ -13,7 +13,7 @@ export const RA_STATUS_STYLE = {
   active: { bg: 'rgba(34,197,94,0.13)', color: '#15803D' },
   review_due: { bg: 'rgba(245,158,11,0.15)', color: '#B45309' },
   expired: { bg: 'rgba(239,68,68,0.13)', color: '#B91C1C' },
-  archived: { bg: 'rgba(148,163,184,0.16)', color: '#64748B' },
+  archived: { bg: 'rgba(148,163,184,0.16)', color: 'var(--text3)' },
 }
 
 export const ACTIVITY_TYPES = [
@@ -94,7 +94,7 @@ export function RiskMatrix({ hazards = [], selectedL, selectedS, compact = false
       {/* Likelihood axis label */}
       <div style={{ display: 'flex', flexDirection: 'column-reverse', gap: 0, alignItems: 'flex-end', paddingBottom: 22 }}>
         {LIKELIHOOD_LABELS.map((l, i) => (
-          <div key={l} style={{ height: cell, display: 'flex', alignItems: 'center', fontSize: 9.5, color: '#64748B', fontWeight: 600, paddingRight: 6, whiteSpace: 'nowrap' }}>{l}</div>
+          <div key={l} style={{ height: cell, display: 'flex', alignItems: 'center', fontSize: 9.5, color: 'var(--text3)', fontWeight: 600, paddingRight: 6, whiteSpace: 'nowrap' }}>{l}</div>
         ))}
       </div>
       <div>
@@ -118,10 +118,10 @@ export function RiskMatrix({ hazards = [], selectedL, selectedS, compact = false
         {/* Severity axis */}
         <div style={{ display: 'grid', gridTemplateColumns: `repeat(5, ${cell}px)`, marginTop: 4 }}>
           {SEVERITY_LABELS.map(sv => (
-            <div key={sv} style={{ fontSize: 9.5, color: '#64748B', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap' }}>{sv}</div>
+            <div key={sv} style={{ fontSize: 9.5, color: 'var(--text3)', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap' }}>{sv}</div>
           ))}
         </div>
-        <div style={{ textAlign: 'center', fontSize: 10, color: '#94A3B8', fontWeight: 700, marginTop: 4 }}>Impact →</div>
+        <div style={{ textAlign: 'center', fontSize: 10, color: 'var(--text-faint)', fontWeight: 700, marginTop: 4 }}>Impact →</div>
       </div>
     </div>
   )

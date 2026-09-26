@@ -11,16 +11,16 @@ import { ukDate, todayLondon } from '../../lib/hrAccess'
 // chosen by a person and attributed to them.
 
 const card = {
-  background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14,
+  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14,
   padding: 16, marginBottom: 12,
 }
 const field = {
   width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
-  border: '1px solid #E2E8F0', fontSize: 15, fontFamily: 'inherit', outline: 'none',
-  background: '#fff',
+  border: '1px solid var(--border)', fontSize: 15, fontFamily: 'inherit', outline: 'none',
+  background: 'var(--surface)',
 }
 const lbl = {
-  display: 'block', fontSize: 11.5, fontWeight: 800, color: '#64748B',
+  display: 'block', fontSize: 11.5, fontWeight: 800, color: 'var(--text3)',
   marginBottom: 6, letterSpacing: 0.4, textTransform: 'uppercase',
 }
 const pBtn = (c, d) => ({
@@ -29,8 +29,8 @@ const pBtn = (c, d) => ({
   cursor: d ? 'default' : 'pointer', fontFamily: 'inherit', opacity: d ? 0.55 : 1,
 })
 const gBtn = {
-  minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid #E2E8F0',
-  background: '#fff', color: '#64748B', fontSize: 14, fontWeight: 700,
+  minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid var(--border)',
+  background: 'var(--surface)', color: 'var(--text3)', fontSize: 14, fontWeight: 700,
   cursor: 'pointer', fontFamily: 'inherit',
 }
 
@@ -135,7 +135,7 @@ export default function DisciplinaryRecord({ org, staff, caseId, primary, canEdi
     return (
       <>
         <button onClick={onBack} style={{ ...gBtn, marginBottom: 12 }}>← Back</button>
-        <div style={{ ...card, color: '#64748B', fontSize: 14 }}>
+        <div style={{ ...card, color: 'var(--text3)', fontSize: 14 }}>
           {error || 'Loading disciplinary…'}
         </div>
       </>
@@ -164,14 +164,14 @@ export default function DisciplinaryRecord({ org, staff, caseId, primary, canEdi
       <button onClick={onBack} style={{ ...gBtn, marginBottom: 12 }}>← Back</button>
 
       <div style={card}>
-        <div style={{ fontSize: 12, fontWeight: 800, color: '#94A3B8', letterSpacing: 0.4 }}>{d.reference}</div>
-        <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A', marginTop: 2 }}>
+        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-faint)', letterSpacing: 0.4 }}>{d.reference}</div>
+        <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', marginTop: 2 }}>
           {staff.full_name}
         </div>
-        <div style={{ fontSize: 13.5, color: '#0F172A', marginTop: 10, whiteSpace: 'pre-wrap' }}>
+        <div style={{ fontSize: 13.5, color: 'var(--text)', marginTop: 10, whiteSpace: 'pre-wrap' }}>
           {d.allegation}
         </div>
-        <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 10 }}>
+        <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 10 }}>
           Opened {ukDate(d.created_at)}
           {d.risk_level ? ` · risk ${d.risk_level}` : ''}
           {d.next_action ? ` · next: ${d.next_action}` : ''}
@@ -195,13 +195,13 @@ export default function DisciplinaryRecord({ org, staff, caseId, primary, canEdi
 
       {warnings.length > 0 && (
         <div style={card}>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Warning</div>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Warning</div>
           {warnings.map(w => (
-            <div key={w.id} style={{ padding: '8px 0', borderTop: '1px solid #F1F5F9' }}>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', textTransform: 'uppercase' }}>
+            <div key={w.id} style={{ padding: '8px 0', borderTop: '1px solid var(--border-soft)' }}>
+              <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)', textTransform: 'uppercase' }}>
                 {w.warning_type.replace('_', ' ')} warning
               </div>
-              <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 2 }}>
+              <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>
                 Issued {ukDate(w.issued_date)}
                 {w.expiry_date ? ` · expires ${ukDate(w.expiry_date)}` : ' · no expiry'}
               </div>
@@ -222,8 +222,8 @@ export default function DisciplinaryRecord({ org, staff, caseId, primary, canEdi
 
       {d.stage === 'concern' && editable && (
         <div style={card}>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>Triage</div>
-          <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 12, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>Triage</div>
+          <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 12, lineHeight: 1.5 }}>
             Decide how this is handled. Not every concern needs an investigation.
           </div>
           <button onClick={() => setPanel('triage')} style={pBtn(primary, false)}>Record a triage decision</button>
@@ -249,12 +249,12 @@ export default function DisciplinaryRecord({ org, staff, caseId, primary, canEdi
 
       {d.triage_decision && (
         <div style={card}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#64748B', marginBottom: 6 }}>TRIAGE DECISION</div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text3)', marginBottom: 6 }}>TRIAGE DECISION</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>
             {(TRIAGE.find(t => t[0] === d.triage_decision) || [null, d.triage_decision])[1]}
           </div>
           {d.triage_reasoning && (
-            <div style={{ fontSize: 13, color: '#64748B', marginTop: 4, whiteSpace: 'pre-wrap' }}>{d.triage_reasoning}</div>
+            <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 4, whiteSpace: 'pre-wrap' }}>{d.triage_reasoning}</div>
           )}
         </div>
       )}
@@ -281,22 +281,22 @@ export default function DisciplinaryRecord({ org, staff, caseId, primary, canEdi
 
       {currentOutcome && (
         <div style={card}>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}>Outcome</div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 8 }}>Outcome</div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>
             {(OUTCOMES.find(o => o[0] === currentOutcome.outcome) || [null, currentOutcome.outcome])[1]}
           </div>
-          <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 4 }}>
+          <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 4 }}>
             Decided {ukDate(currentOutcome.decision_date)}
             {currentOutcome.decision_maker_name ? ` by ${currentOutcome.decision_maker_name}` : ''}
             {currentOutcome.appeal_deadline ? ` · appeal by ${ukDate(currentOutcome.appeal_deadline)}` : ''}
           </div>
           {currentOutcome.reasoning && (
-            <div style={{ fontSize: 13.5, color: '#0F172A', marginTop: 8, whiteSpace: 'pre-wrap' }}>
+            <div style={{ fontSize: 13.5, color: 'var(--text)', marginTop: 8, whiteSpace: 'pre-wrap' }}>
               {currentOutcome.reasoning}
             </div>
           )}
           {outcomes.length > 1 && (
-            <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 8 }}>
+            <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 8 }}>
               {outcomes.length - 1} earlier outcome{outcomes.length === 2 ? '' : 's'} kept as history.
             </div>
           )}
@@ -328,17 +328,17 @@ export default function DisciplinaryRecord({ org, staff, caseId, primary, canEdi
 
       {appeals.map(a => (
         <div key={a.id} style={card}>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>Appeal</div>
-          <div style={{ fontSize: 12.5, color: '#64748B' }}>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>Appeal</div>
+          <div style={{ fontSize: 12.5, color: 'var(--text3)' }}>
             Lodged {ukDate(a.lodged_date)}{a.appeal_manager_name ? ` · heard by ${a.appeal_manager_name}` : ''}
           </div>
-          {a.grounds && <div style={{ fontSize: 13.5, color: '#0F172A', marginTop: 8, whiteSpace: 'pre-wrap' }}>{a.grounds}</div>}
+          {a.grounds && <div style={{ fontSize: 13.5, color: 'var(--text)', marginTop: 8, whiteSpace: 'pre-wrap' }}>{a.grounds}</div>}
           {a.decision ? (
-            <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #F1F5F9' }}>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', textTransform: 'capitalize' }}>
+            <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border-soft)' }}>
+              <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)', textTransform: 'capitalize' }}>
                 {a.decision.replace('_', ' ')}
               </div>
-              <div style={{ fontSize: 13, color: '#64748B', marginTop: 4, whiteSpace: 'pre-wrap' }}>
+              <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 4, whiteSpace: 'pre-wrap' }}>
                 {a.decision_reasoning}
               </div>
             </div>
@@ -359,7 +359,7 @@ export default function DisciplinaryRecord({ org, staff, caseId, primary, canEdi
       {editable && currentOutcome && (
         <div style={card}>
           <button onClick={() => setPanel('close')} style={pBtn('#0F172A', false)}>Close this disciplinary</button>
-          <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 8, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 8, lineHeight: 1.45 }}>
             Closing makes the record read-only. Corrections afterwards need an administrator
             and are audited.
           </div>
@@ -374,17 +374,17 @@ export default function DisciplinaryRecord({ org, staff, caseId, primary, canEdi
       )}
 
       <div style={card}>
-        <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>History</div>
+        <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>History</div>
         {entries.map(e => (
-          <div key={e.id} style={{ display: 'flex', gap: 12, padding: '10px 0', borderTop: '1px solid #F1F5F9' }}>
-            <div style={{ width: 78, flexShrink: 0, fontSize: 12, color: '#94A3B8', fontWeight: 700 }}>
+          <div key={e.id} style={{ display: 'flex', gap: 12, padding: '10px 0', borderTop: '1px solid var(--border-soft)' }}>
+            <div style={{ width: 78, flexShrink: 0, fontSize: 12, color: 'var(--text-faint)', fontWeight: 700 }}>
               {ukDate(e.created_at)}
             </div>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A', textTransform: 'capitalize' }}>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)', textTransform: 'capitalize' }}>
                 {String(e.entry_type).replace(/_/g, ' ')}
               </div>
-              {e.body && <div style={{ fontSize: 13, color: '#64748B', marginTop: 2, whiteSpace: 'pre-wrap' }}>{e.body}</div>}
+              {e.body && <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2, whiteSpace: 'pre-wrap' }}>{e.body}</div>}
             </div>
           </div>
         ))}
@@ -437,13 +437,13 @@ function Investigation({ org, caseId, inv, primary, editable, onChanged, onAdvan
   if (!inv) {
     return (
       <div style={card}>
-        <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Investigation</div>
+        <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Investigation</div>
         {err && <div style={{ fontSize: 13, color: '#B42318', marginBottom: 10 }}>{err}</div>}
         {editable
           ? <button onClick={start} disabled={busy} style={pBtn(primary, busy)}>
               {busy ? 'Opening…' : 'Open an investigation'}
             </button>
-          : <div style={{ fontSize: 13, color: '#64748B' }}>No investigation has been opened.</div>}
+          : <div style={{ fontSize: 13, color: 'var(--text3)' }}>No investigation has been opened.</div>}
       </div>
     )
   }
@@ -460,8 +460,8 @@ function Investigation({ org, caseId, inv, primary, editable, onChanged, onAdvan
 
   return (
     <div style={card}>
-      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>Investigation</div>
-      <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 12 }}>
+      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>Investigation</div>
+      <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 12 }}>
         {inv.investigator_name ? `${inv.investigator_name} · ` : ''}
         started {ukDate(inv.started_on)}
         {inv.target_completion ? ` · due ${ukDate(inv.target_completion)}` : ''}
@@ -473,12 +473,12 @@ function Investigation({ org, caseId, inv, primary, editable, onChanged, onAdvan
       {[['evidence', 'Evidence', items.evidence, (x) => x.title],
         ['witnesses', 'Witnesses', items.witnesses, (x) => x.name],
         ['interviews', 'Interviews', items.interviews, (x) => x.interviewee]].map(([k, label, list, render]) => (
-        <div key={k} style={{ paddingTop: 10, borderTop: '1px solid #F1F5F9', marginTop: 10 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#64748B', letterSpacing: 0.4, marginBottom: 6 }}>
+        <div key={k} style={{ paddingTop: 10, borderTop: '1px solid var(--border-soft)', marginTop: 10 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text3)', letterSpacing: 0.4, marginBottom: 6 }}>
             {label.toUpperCase()} ({list.length})
           </div>
           {list.map(x => (
-            <div key={x.id} style={{ fontSize: 13.5, color: '#0F172A', padding: '4px 0' }}>{render(x)}</div>
+            <div key={x.id} style={{ fontSize: 13.5, color: 'var(--text)', padding: '4px 0' }}>{render(x)}</div>
           ))}
           {editable && inv.status === 'open' && (
             <button onClick={() => setPanel(k)} style={{ ...gBtn, marginTop: 6 }}>Add {label.toLowerCase().replace(/s$/, '')}</button>
@@ -503,7 +503,7 @@ function Investigation({ org, caseId, inv, primary, editable, onChanged, onAdvan
       )}
 
       {editable && inv.status === 'open' && (
-        <div style={{ paddingTop: 12, borderTop: '1px solid #F1F5F9', marginTop: 12 }}>
+        <div style={{ paddingTop: 12, borderTop: '1px solid var(--border-soft)', marginTop: 12 }}>
           <button onClick={() => setPanel('conclude')} style={pBtn(primary, false)}>Conclude the investigation</button>
         </div>
       )}
@@ -534,12 +534,12 @@ function Investigation({ org, caseId, inv, primary, editable, onChanged, onAdvan
       )}
 
       {inv.status === 'completed' && (
-        <div style={{ paddingTop: 12, borderTop: '1px solid #F1F5F9', marginTop: 12 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#64748B', letterSpacing: 0.4 }}>RECOMMENDATION</div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', marginTop: 4 }}>
+        <div style={{ paddingTop: 12, borderTop: '1px solid var(--border-soft)', marginTop: 12 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text3)', letterSpacing: 0.4 }}>RECOMMENDATION</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginTop: 4 }}>
             {(RECOMMENDATIONS.find(r => r[0] === inv.recommendation) || [null, inv.recommendation || '—'])[1]}
           </div>
-          {inv.summary && <div style={{ fontSize: 13, color: '#64748B', marginTop: 6, whiteSpace: 'pre-wrap' }}>{inv.summary}</div>}
+          {inv.summary && <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 6, whiteSpace: 'pre-wrap' }}>{inv.summary}</div>}
           {editable && inv.recommendation === 'proceed_to_hearing' && (
             <button onClick={() => onAdvance('hearing', 'Proceeding to hearing')}
               style={{ ...pBtn(primary, false), marginTop: 10 }}>Proceed to hearing</button>
@@ -578,26 +578,26 @@ function Hearing({ org, caseId, hearings, primary, editable, onChanged, onRecord
 
   return (
     <div style={card}>
-      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Hearing</div>
+      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Hearing</div>
       {err && <div style={{ fontSize: 13, color: '#B42318', marginBottom: 10 }}>{err}</div>}
 
       {!h && (editable
         ? <button onClick={() => setPanel('schedule')} style={pBtn(primary, false)}>Schedule the hearing</button>
-        : <div style={{ fontSize: 13, color: '#64748B' }}>Not scheduled.</div>)}
+        : <div style={{ fontSize: 13, color: 'var(--text3)' }}>Not scheduled.</div>)}
 
       {h && (
         <>
-          <div style={{ fontSize: 13.5, color: '#0F172A' }}>
+          <div style={{ fontSize: 13.5, color: 'var(--text)' }}>
             {h.hearing_date ? ukDate(h.hearing_date) : 'Date to be set'}
             {h.hearing_time ? ` at ${h.hearing_time}` : ''}
             {h.location ? ` · ${h.location}` : ''}
           </div>
-          <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 4 }}>
+          <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 4 }}>
             {h.chair_name ? `Chaired by ${h.chair_name}` : 'Chair not set'}
             {h.companion ? ` · accompanied by ${h.companion}` : ''}
             {' · '}{String(h.status).replace('_', ' ')}
           </div>
-          {h.notes && <div style={{ fontSize: 13.5, color: '#0F172A', marginTop: 8, whiteSpace: 'pre-wrap' }}>{h.notes}</div>}
+          {h.notes && <div style={{ fontSize: 13.5, color: 'var(--text)', marginTop: 8, whiteSpace: 'pre-wrap' }}>{h.notes}</div>}
 
           {editable && h.status !== 'completed' && (
             <button onClick={() => setPanel('complete')} style={{ ...pBtn(primary, false), marginTop: 12 }}>
@@ -638,8 +638,8 @@ function SimplePanel({ title, fields, primary, busy, hint, requireAll, onCancel,
   const [v, setV] = useState({})
   const ready = !requireAll || fields.every(([k]) => (v[k] || '').trim())
   return (
-    <div style={{ ...card, background: '#F8FAFC', marginTop: 10 }}>
-      <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>{title}</div>
+    <div style={{ ...card, background: 'var(--surface2)', marginTop: 10 }}>
+      <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>{title}</div>
       {fields.map(([k, label, type]) => (
         <div key={k} style={{ marginBottom: 10 }}>
           <label style={lbl}>{label}</label>
@@ -649,7 +649,7 @@ function SimplePanel({ title, fields, primary, busy, hint, requireAll, onCancel,
                 style={{ ...field, resize: 'vertical', lineHeight: 1.5 }} />}
         </div>
       ))}
-      {hint && <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 10 }}>{hint}</div>}
+      {hint && <div style={{ fontSize: 12, color: 'var(--text-faint)', marginBottom: 10 }}>{hint}</div>}
       <div style={{ display: 'flex', gap: 8 }}>
         <button onClick={() => onSave(Object.fromEntries(
           Object.entries(v).map(([k, val]) => [k, (val || '').trim() || null])
@@ -667,7 +667,7 @@ function TriagePanel({ primary, busy, onCancel, onSave }) {
   const [reasoning, setReasoning] = useState('')
   return (
     <div style={card}>
-      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Triage decision</div>
+      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Triage decision</div>
       <select value={decision} onChange={e => setDecision(e.target.value)} style={{ ...field, minHeight: 44, marginBottom: 12 }}>
         {TRIAGE.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
       </select>
@@ -687,8 +687,8 @@ function ConcludePanel({ primary, busy, onCancel, onSave }) {
   const [summary, setSummary] = useState('')
   const [rec, setRec] = useState('')
   return (
-    <div style={{ ...card, background: '#F8FAFC', marginTop: 10 }}>
-      <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Conclude the investigation</div>
+    <div style={{ ...card, background: 'var(--surface2)', marginTop: 10 }}>
+      <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Conclude the investigation</div>
       <label style={lbl}>Investigator summary</label>
       <textarea value={summary} rows={4} onChange={e => setSummary(e.target.value)}
         style={{ ...field, resize: 'vertical', lineHeight: 1.5, marginBottom: 12 }} />
@@ -697,7 +697,7 @@ function ConcludePanel({ primary, busy, onCancel, onSave }) {
         <option value="">Choose a recommendation</option>
         {RECOMMENDATIONS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
       </select>
-      <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 12, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 12, color: 'var(--text-faint)', marginBottom: 12, lineHeight: 1.45 }}>
         Chosen by the investigator. Nothing here reads the evidence and suggests one.
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
@@ -718,8 +718,8 @@ function OutcomePanel({ primary, busy, onCancel, onSave }) {
   const isWarning = ['first_written_warning', 'final_written_warning', 'informal_action'].includes(f.outcome)
   return (
     <div style={card}>
-      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>Record the outcome</div>
-      <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 12, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>Record the outcome</div>
+      <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 12, lineHeight: 1.5 }}>
         Chosen and recorded by the decision maker. Nothing is suggested here.
       </div>
       <label style={lbl}>Outcome</label>
@@ -771,7 +771,7 @@ function AppealPanel({ primary, busy, onCancel, onSave }) {
   const set = (k, v) => setF(s => ({ ...s, [k]: v }))
   return (
     <div style={card}>
-      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Appeal lodged</div>
+      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Appeal lodged</div>
       <label style={lbl}>Date lodged</label>
       <input type="date" value={f.lodged_date} onChange={e => set('lodged_date', e.target.value)} style={{ ...field, marginBottom: 12 }} />
       <label style={lbl}>Grounds</label>
@@ -792,8 +792,8 @@ function AppealDecisionPanel({ primary, busy, onCancel, onSave }) {
   const [decision, setDecision] = useState('upheld')
   const [reasoning, setReasoning] = useState('')
   return (
-    <div style={{ ...card, background: '#F8FAFC', marginTop: 10 }}>
-      <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Appeal decision</div>
+    <div style={{ ...card, background: 'var(--surface2)', marginTop: 10 }}>
+      <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Appeal decision</div>
       <select value={decision} onChange={e => setDecision(e.target.value)} style={{ ...field, minHeight: 44, marginBottom: 12 }}>
         {[['upheld', 'Original decision upheld'], ['reduced', 'Outcome reduced'],
           ['overturned', 'Outcome overturned'], ['rehearing_required', 'Re-hearing required'],
@@ -802,7 +802,7 @@ function AppealDecisionPanel({ primary, busy, onCancel, onSave }) {
       <label style={lbl}>Final reasoning</label>
       <textarea value={reasoning} rows={3} onChange={e => setReasoning(e.target.value)}
         style={{ ...field, resize: 'vertical', lineHeight: 1.5, marginBottom: 8 }} />
-      <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 12, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 12, color: 'var(--text-faint)', marginBottom: 12, lineHeight: 1.45 }}>
         Reducing or overturning marks the warning overturned and supersedes the outcome.
         Both stay on the record as history.
       </div>
@@ -820,7 +820,7 @@ function ClosePanel({ primary, busy, onCancel, onSave }) {
   const [followUp, setFollowUp] = useState('')
   return (
     <div style={card}>
-      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Close this disciplinary</div>
+      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Close this disciplinary</div>
       <label style={lbl}>Final summary</label>
       <textarea value={summary} rows={3} onChange={e => setSummary(e.target.value)}
         style={{ ...field, resize: 'vertical', lineHeight: 1.5, marginBottom: 12 }} />

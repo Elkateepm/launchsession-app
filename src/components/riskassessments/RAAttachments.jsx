@@ -59,7 +59,7 @@ export default function RAAttachments({ assessment, org, session: authSession })
     await supabase.from('risk_assessment_documents').delete().eq('id', doc.id)
   }
 
-  if (loading) return <div style={{ padding: 16, color: '#94A3B8', fontSize: 13 }}>Loading attachments…</div>
+  if (loading) return <div style={{ padding: 16, color: 'var(--text-faint)', fontSize: 13 }}>Loading attachments…</div>
 
   return (
     <div>
@@ -71,24 +71,24 @@ export default function RAAttachments({ assessment, org, session: authSession })
         style={{ border: `2px dashed ${dragOver ? primary : 'rgba(15,23,42,0.15)'}`, borderRadius: 14, padding: '22px 16px', textAlign: 'center', cursor: 'pointer', background: dragOver ? 'var(--org-a05)' : '#F8FAFC', marginBottom: 14 }}
       >
         <div style={{ fontSize: 24, marginBottom: 6 }}><Icon name="📎" /></div>
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{uploading ? 'Uploading…' : 'Drop files or click to upload'}</div>
-        <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 2 }}>Venue plans, maps, insurance, permits, method statements</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{uploading ? 'Uploading…' : 'Drop files or click to upload'}</div>
+        <div style={{ fontSize: 11.5, color: 'var(--text-faint)', marginTop: 2 }}>Venue plans, maps, insurance, permits, method statements</div>
         <input ref={fileRef} type="file" multiple style={{ display: 'none' }} onChange={e => upload(e.target.files)} />
       </div>
 
       {docs.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '12px', color: '#94A3B8', fontSize: 13 }}>No attachments yet.</div>
+        <div style={{ textAlign: 'center', padding: '12px', color: 'var(--text-faint)', fontSize: 13 }}>No attachments yet.</div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 10 }}>
           <AnimatePresence initial={false}>
             {docs.map(doc => (
               <motion.div key={doc.id} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} whileHover={{ y: -2 }}
                 onClick={() => openPreview(doc)}
-                style={{ borderRadius: 12, border: '1.5px solid rgba(15,23,42,0.08)', background: '#fff', padding: 12, cursor: 'pointer', position: 'relative' }}>
-                <button onClick={e => { e.stopPropagation(); del(doc) }} style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '50%', width: 20, height: 20, fontSize: 11, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
+                style={{ borderRadius: 12, border: '1.5px solid rgba(15,23,42,0.08)', background: 'var(--surface)', padding: 12, cursor: 'pointer', position: 'relative' }}>
+                <button onClick={e => { e.stopPropagation(); del(doc) }} style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '50%', width: 20, height: 20, fontSize: 11, color: 'var(--text-faint)', cursor: 'pointer' }}><Icon name="✕" /></button>
                 <div style={{ fontSize: 28, marginBottom: 8 }}>{FILE_ICON(doc.file_type)}</div>
-                <div style={{ fontSize: 11.5, fontWeight: 700, color: '#0F172A', wordBreak: 'break-word', lineHeight: 1.3, marginBottom: 4 }}>{doc.file_name}</div>
-                <div style={{ fontSize: 10, color: '#94A3B8' }}>{fmtSize(doc.file_size)}</div>
+                <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text)', wordBreak: 'break-word', lineHeight: 1.3, marginBottom: 4 }}>{doc.file_name}</div>
+                <div style={{ fontSize: 10, color: 'var(--text-faint)' }}>{fmtSize(doc.file_size)}</div>
               </motion.div>
             ))}
           </AnimatePresence>
@@ -99,12 +99,12 @@ export default function RAAttachments({ assessment, org, session: authSession })
         {preview && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setPreview(null)}
             style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.7)', backdropFilter: 'blur(4px)', zIndex: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 16, padding: 16, maxWidth: '90vw', maxHeight: '85vh', overflow: 'auto' }}>
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 16, padding: 16, maxWidth: '90vw', maxHeight: '85vh', overflow: 'auto' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                 <div style={{ fontSize: 13, fontWeight: 800 }}>{preview.doc.file_name}</div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <a href={preview.url} target="_blank" rel="noreferrer" style={{ ...btnGhost, textDecoration: 'none', padding: '6px 12px', fontSize: 12 }}>Open <Icon name="↗" /></a>
-                  <button onClick={() => setPreview(null)} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#64748B' }}><Icon name="✕" /></button>
+                  <button onClick={() => setPreview(null)} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: 'var(--text3)' }}><Icon name="✕" /></button>
                 </div>
               </div>
               {preview.doc.file_type?.startsWith('image/') ? (
@@ -112,7 +112,7 @@ export default function RAAttachments({ assessment, org, session: authSession })
               ) : preview.doc.file_type?.includes('pdf') ? (
                 <iframe title="preview" src={preview.url} style={{ width: '70vw', height: '70vh', border: 'none' }} />
               ) : (
-                <div style={{ padding: 30, textAlign: 'center', color: '#64748B', fontSize: 13 }}>Preview not available — use Open to view.</div>
+                <div style={{ padding: 30, textAlign: 'center', color: 'var(--text3)', fontSize: 13 }}>Preview not available — use Open to view.</div>
               )}
             </motion.div>
           </motion.div>

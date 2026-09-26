@@ -47,11 +47,11 @@ function QRCard({ icon, title, subtitle, url, primary }) {
       <div style={{ width: 40, height: 40, borderRadius: 12, background: `linear-gradient(135deg, ${primary}, var(--org-a85))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, marginBottom: 10, boxShadow: `0 3px 10px -4px var(--org-a60)` }}>
         {icon}
       </div>
-      <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', textAlign: 'center' }}>{title}</div>
-      <div style={{ fontSize: 12, color: '#94A3B8', textAlign: 'center', marginBottom: 16 }}>{subtitle}</div>
-      <div ref={qrRef} style={{ padding: 12, background: '#fff', borderRadius: 14, border: '1px solid #F1F5F9', marginBottom: 16 }} />
+      <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', textAlign: 'center' }}>{title}</div>
+      <div style={{ fontSize: 12, color: 'var(--text-faint)', textAlign: 'center', marginBottom: 16 }}>{subtitle}</div>
+      <div ref={qrRef} style={{ padding: 12, background: 'var(--surface)', borderRadius: 14, border: '1px solid var(--border-soft)', marginBottom: 16 }} />
       <div style={{ display: 'flex', gap: 8, width: '100%', maxWidth: 260 }}>
-        <button onClick={copyLink} style={{ flex: 1, padding: '10px 8px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#475569', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+        <button onClick={copyLink} style={{ flex: 1, padding: '10px 8px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: '#475569', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
           {copied ? '✓ Copied' : 'Copy link'}
         </button>
         <button onClick={share} style={{ flex: 1, padding: '10px 8px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
@@ -90,7 +90,7 @@ export default function QRShareSheet({ org, onClose, initial = 'child' }) {
         initial={isMobile ? { y: '100%' } : { opacity: 0, scale: 0.96 }}
         animate={isMobile ? { y: 0 } : { opacity: 1, scale: 1 }}
         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-        style={{ background: '#fff', borderRadius: isMobile ? '24px 24px 0 0' : 22, width: '100%', maxWidth: isMobile ? '100%' : 400, maxHeight: isMobile ? '92vh' : '90vh', overflowY: 'auto', boxSizing: 'border-box', boxShadow: '0 32px 80px rgba(0,0,0,0.35)' }}
+        style={{ background: 'var(--surface)', borderRadius: isMobile ? '24px 24px 0 0' : 22, width: '100%', maxWidth: isMobile ? '100%' : 400, maxHeight: isMobile ? '92vh' : '90vh', overflowY: 'auto', boxSizing: 'border-box', boxShadow: '0 32px 80px rgba(0,0,0,0.35)' }}
       >
         {isMobile && (
           <div onPointerDown={e => dragControls.start(e)} style={{ display: 'flex', justifyContent: 'center', paddingTop: 12, paddingBottom: 4, cursor: 'grab', touchAction: 'none' }}>
@@ -100,14 +100,14 @@ export default function QRShareSheet({ org, onClose, initial = 'child' }) {
         <div style={{ padding: '10px 20px 24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
             <div>
-              <div style={{ fontSize: 17, fontWeight: 900, color: '#0F172A' }}>Sign-Up QR Code</div>
-              <div style={{ fontSize: 12.5, color: '#94A3B8' }}>Print, share, or display this for people to scan</div>
+              <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)' }}>Sign-Up QR Code</div>
+              <div style={{ fontSize: 12.5, color: 'var(--text-faint)' }}>Print, share, or display this for people to scan</div>
             </div>
-            <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', background: '#F1F5F9', border: 'none', cursor: 'pointer', fontSize: 16, flexShrink: 0 }}>×</button>
+            <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--surface-hover)', border: 'none', cursor: 'pointer', fontSize: 16, flexShrink: 0 }}>×</button>
           </div>
 
           {/* Toggle — only one QR renders at a time so a camera never has two codes in frame */}
-          <div style={{ display: 'flex', background: '#F1F5F9', borderRadius: 11, padding: 4, marginBottom: 20 }}>
+          <div style={{ display: 'flex', background: 'var(--surface-hover)', borderRadius: 11, padding: 4, marginBottom: 20 }}>
             {[{ key: 'child', label: '🧒 Child' }, { key: 'volunteer', label: '🤝 Volunteer' }].map(t => (
               <button key={t.key} onClick={() => setWhich(t.key)}
                 style={{ flex: 1, padding: '9px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 800, transition: 'background 0.15s, color 0.15s', background: which === t.key ? '#fff' : 'transparent', color: which === t.key ? primary : '#64748B', boxShadow: which === t.key ? '0 1px 4px rgba(15,23,42,0.12)' : 'none' }}>

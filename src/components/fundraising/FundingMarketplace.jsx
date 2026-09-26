@@ -109,7 +109,7 @@ function DeadlineBadge({ grant }) {
     return <span style={{ fontSize: 13, color: '#1C2333', fontWeight: 500 }}>Rolling</span>
   }
   const daysLeft = Math.ceil((new Date(grant.deadline_date) - new Date()) / DAY_MS)
-  if (daysLeft < 0) return <span style={{ fontSize: 13, color: '#9CA3AF', fontWeight: 500 }}>Closed</span>
+  if (daysLeft < 0) return <span style={{ fontSize: 13, color: 'var(--text-faint)', fontWeight: 500 }}>Closed</span>
   const color = daysLeft <= 7 ? '#B91C1C' : daysLeft <= 30 ? '#B45309' : '#1C2333'
   return (
     <span style={{ fontSize: 13, color, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -258,10 +258,10 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
       <div style={{ position: 'relative', zIndex: 1 }}>
       {/* Header strip */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, flexWrap: 'wrap', marginBottom: 16 }}>
-        <span style={{ fontSize: 13, color: '#6B7280' }}>
+        <span style={{ fontSize: 13, color: 'var(--text3)' }}>
           <strong style={{ color: '#1C2333', fontVariantNumeric: 'tabular-nums' }}>{grants.length}</strong> funder{grants.length === 1 ? '' : 's'}
         </span>
-        {mostRecentUpdate && <span style={{ fontSize: 12, color: '#9CA3AF' }}>Last added {mostRecentUpdate}</span>}
+        {mostRecentUpdate && <span style={{ fontSize: 12, color: 'var(--text-faint)' }}>Last added {mostRecentUpdate}</span>}
       </div>
 
       {!tipDismissed && (
@@ -286,10 +286,10 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
           <AnimatePresence>
             {searchFocused && !search && recentSearches.length > 0 && (
               <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-                style={{ position: 'absolute', top: '110%', left: 0, right: 0, background: '#fff', border: '1px solid #E5E3DC', borderRadius: 12, boxShadow: '0 8px 20px rgba(28,35,51,0.08)', padding: 8, zIndex: 5 }}>
-                <div style={{ fontSize: 10.5, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.04em', padding: '4px 8px' }}>Recent searches</div>
+                style={{ position: 'absolute', top: '110%', left: 0, right: 0, background: 'var(--surface)', border: '1px solid #E5E3DC', borderRadius: 12, boxShadow: '0 8px 20px rgba(28,35,51,0.08)', padding: 8, zIndex: 5 }}>
+                <div style={{ fontSize: 10.5, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.04em', padding: '4px 8px' }}>Recent searches</div>
                 {recentSearches.map(term => (
-                  <div key={term} onMouseDown={() => setSearch(term)} style={{ padding: '7px 8px', borderRadius: 8, fontSize: 13, color: '#374151', cursor: 'pointer' }}
+                  <div key={term} onMouseDown={() => setSearch(term)} style={{ padding: '7px 8px', borderRadius: 8, fontSize: 13, color: 'var(--text2)', cursor: 'pointer' }}
                     onMouseEnter={e => e.currentTarget.style.background = '#FAFAF8'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                     {term}
                   </div>
@@ -315,10 +315,10 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 40, color: '#9CA3AF' }}>Loading…</div>
+        <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-faint)' }}>Loading…</div>
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 40, border: '1.5px dashed #E5E3DC', borderRadius: 14, color: '#9CA3AF' }}>
-          <div style={{ fontWeight: 600, color: '#374151', marginBottom: 4 }}>No funders match your filters</div>
+        <div style={{ textAlign: 'center', padding: 40, border: '1.5px dashed #E5E3DC', borderRadius: 14, color: 'var(--text-faint)' }}>
+          <div style={{ fontWeight: 600, color: 'var(--text2)', marginBottom: 4 }}>No funders match your filters</div>
           <div style={{ fontSize: 13 }}>Try a broader category or clear your search.</div>
         </div>
       ) : (
@@ -349,7 +349,7 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
                     <FunderAvatar name={g.funder_name} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 15, fontWeight: 600, color: '#1C2333', lineHeight: 1.25 }}>{g.name}</div>
-                      <div style={{ fontSize: 12.5, color: '#6B7280', marginTop: 2 }}>{g.funder_name}</div>
+                      <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>{g.funder_name}</div>
                     </div>
                     <motion.button onClick={() => toggleSave(g.id)} disabled={busyId === g.id} title={saves[g.id] ? 'Unsave' : 'Save'}
                       whileTap={{ scale: 0.8 }}
@@ -362,28 +362,28 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 20, background: meta.bg, color: meta.color, fontSize: 11, fontWeight: 600 }}>
                       <CategoryIcon category={g.category} color={meta.color} />{meta.label}
                     </span>
-                    <span style={{ padding: '3px 10px', borderRadius: 20, background: '#F3F2EE', color: '#6B7280', fontSize: 11, fontWeight: 600 }}>{g.scope === 'local' ? 'Local' : 'National'}</span>
-                    <span style={{ padding: '3px 10px', borderRadius: 20, background: '#F3F2EE', color: '#6B7280', fontSize: 11, fontWeight: 600 }}>{FUNDING_TYPE_META[g.funding_type] || g.funding_type}</span>
+                    <span style={{ padding: '3px 10px', borderRadius: 20, background: '#F3F2EE', color: 'var(--text3)', fontSize: 11, fontWeight: 600 }}>{g.scope === 'local' ? 'Local' : 'National'}</span>
+                    <span style={{ padding: '3px 10px', borderRadius: 20, background: '#F3F2EE', color: 'var(--text3)', fontSize: 11, fontWeight: 600 }}>{FUNDING_TYPE_META[g.funding_type] || g.funding_type}</span>
                   </div>
 
                   <div style={{ fontSize: 13, color: '#4B5563', lineHeight: 1.5, marginBottom: 16, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{g.description}</div>
 
                   <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginBottom: 14, paddingTop: 14, paddingBottom: 14, borderTop: '0.5px solid #ECEAE4', borderBottom: '0.5px solid #ECEAE4' }}>
                     <div>
-                      <div style={{ fontSize: 10.5, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3 }}>Funding</div>
+                      <div style={{ fontSize: 10.5, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3 }}>Funding</div>
                       <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 18, color: '#92640C', fontWeight: 600 }}>{formatAmount(g.amount_min, g.amount_max)}</div>
                     </div>
                     <div>
-                      <div style={{ fontSize: 10.5, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3 }}>Deadline</div>
+                      <div style={{ fontSize: 10.5, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3 }}>Deadline</div>
                       <DeadlineBadge grant={g} />
                     </div>
                   </div>
 
-                  {g.amount_note && <div style={{ fontSize: 11.5, color: '#9CA3AF', marginBottom: 12, marginTop: -6 }}>{g.amount_note}</div>}
+                  {g.amount_note && <div style={{ fontSize: 11.5, color: 'var(--text-faint)', marginBottom: 12, marginTop: -6 }}>{g.amount_note}</div>}
 
                   {bullets.length > 0 && (
                     <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontSize: 10.5, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Eligibility</div>
+                      <div style={{ fontSize: 10.5, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Eligibility</div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                         {bullets.map((b, i) => (
                           <div key={i} style={{ display: 'flex', gap: 7, fontSize: 12, color: '#4B5563', lineHeight: 1.4 }}>
@@ -399,9 +399,9 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
                       style={{ padding: '8px 16px', borderRadius: 9, border: 'none', background: primary, color: '#fff', fontWeight: 600, fontSize: 12.5, cursor: 'pointer' }}>
                       {trackedFeedback === g.id ? 'Added ✓' : 'Track application'}
                     </button>
-                    <a href={g.website_url} target="_blank" rel="noopener noreferrer" style={{ padding: '8px 14px', borderRadius: 9, border: '1.5px solid #E5E3DC', color: '#374151', fontWeight: 600, fontSize: 12.5, textDecoration: 'none' }}>Visit site</a>
+                    <a href={g.website_url} target="_blank" rel="noopener noreferrer" style={{ padding: '8px 14px', borderRadius: 9, border: '1.5px solid #E5E3DC', color: 'var(--text2)', fontWeight: 600, fontSize: 12.5, textDecoration: 'none' }}>Visit site</a>
                     <button onClick={() => shareGrant(g)} title="Share"
-                      style={{ marginLeft: 'auto', background: 'none', border: '1.5px solid #E5E3DC', borderRadius: 9, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#6B7280' }}>
+                      style={{ marginLeft: 'auto', background: 'none', border: '1.5px solid #E5E3DC', borderRadius: 9, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text3)' }}>
                       {shareFeedback === g.id ? <CheckIcon color="#16A34A" /> : <ShareIcon color="#6B7280" />}
                     </button>
                   </div>

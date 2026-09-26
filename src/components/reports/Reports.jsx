@@ -18,7 +18,7 @@ const VIEWS = [
 ]
 
 const card = (extra = {}) => ({
-  background: '#fff', border: '1px solid #E5E7EB', borderRadius: 14,
+  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14,
   boxShadow: '0 1px 2px rgba(15,23,42,0.04)', ...extra,
 })
 const TONES = {
@@ -36,8 +36,8 @@ const CATEGORY_TONE = {
 }
 
 const ctl = {
-  padding: '8px 12px', borderRadius: 10, border: '1px solid #E2E8F0', background: '#fff',
-  fontSize: 12.5, fontWeight: 600, color: '#334155', outline: 'none', cursor: 'pointer',
+  padding: '8px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)',
+  fontSize: 12.5, fontWeight: 600, color: 'var(--text2)', outline: 'none', cursor: 'pointer',
 }
 
 function fmtDate(iso) {
@@ -119,7 +119,7 @@ export default function Reports({ org, session, userProfile, onNavigate }) {
                 library: for most organisations here this is the report the page
                 exists for, and it was the one the library served worst. */}
             <button onClick={() => setShowFunder(true)} style={{
-              padding: '12px 20px', borderRadius: 11, border: 'none', color: '#3730A3', background: '#fff',
+              padding: '12px 20px', borderRadius: 11, border: 'none', color: '#3730A3', background: 'var(--surface)',
               fontSize: 13, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
               boxShadow: '0 8px 20px -8px rgba(0,0,0,0.4)',
             }}>Funder report</button>
@@ -132,7 +132,7 @@ export default function Reports({ org, session, userProfile, onNavigate }) {
         </div>
       </div>
 
-      <div style={{ display: 'inline-flex', gap: 3, padding: 3, borderRadius: 12, background: '#F1F5F9', border: '1px solid #E2E8F0', marginBottom: 14, maxWidth: '100%', overflowX: 'auto' }}>
+      <div style={{ display: 'inline-flex', gap: 3, padding: 3, borderRadius: 12, background: 'var(--surface-hover)', border: '1px solid var(--border)', marginBottom: 14, maxWidth: '100%', overflowX: 'auto' }}>
         {VIEWS.map(v => {
           const on = view === v.key
           return (
@@ -157,7 +157,7 @@ export default function Reports({ org, session, userProfile, onNavigate }) {
               <input type="date" value={customRange.to} onChange={e => setCustomRange(c => ({ ...c, to: e.target.value }))} style={ctl} />
             </>
           )}
-          <span style={{ fontSize: 12, color: '#94A3B8', fontWeight: 600 }}>
+          <span style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 600 }}>
             {fmtDate(range.from)} – {fmtDate(range.to)}
           </span>
         </div>
@@ -227,7 +227,7 @@ function OverviewView({ loading, metrics, learning, insights, isMobile, savedRep
     return (
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(auto-fit,minmax(150px,1fr))', gap: 12 }}>
         {[...Array(6)].map((_, i) => (
-          <div key={i} style={card({ padding: 16, height: 78, background: '#F8FAFC' })} />
+          <div key={i} style={card({ padding: 16, height: 78, background: 'var(--surface2)' })} />
         ))}
       </div>
     )
@@ -236,8 +236,8 @@ function OverviewView({ loading, metrics, learning, insights, isMobile, savedRep
   if (!metrics) {
     return (
       <div style={{ ...card({ padding: 40 }), textAlign: 'center' }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>Report data unavailable</div>
-        <div style={{ fontSize: 13, color: '#64748B' }}>We couldn't load figures for this period. Try a different date range.</div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>Report data unavailable</div>
+        <div style={{ fontSize: 13, color: 'var(--text3)' }}>We couldn't load figures for this period. Try a different date range.</div>
       </div>
     )
   }
@@ -270,7 +270,7 @@ function OverviewView({ loading, metrics, learning, insights, isMobile, savedRep
             }}>
               <div style={{ fontSize: 14, marginBottom: 7, opacity: 0.9 }}><Icon name={s.icon} /></div>
               <div style={{ fontSize: 24, fontWeight: 900, letterSpacing: -0.6, color: t.fg, lineHeight: 1 }}>{s.v}</div>
-              <div style={{ fontSize: 11.5, fontWeight: 600, color: '#64748B', marginTop: 5 }}>{s.l}</div>
+              <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text3)', marginTop: 5 }}>{s.l}</div>
             </div>
           )
         })}
@@ -278,8 +278,8 @@ function OverviewView({ loading, metrics, learning, insights, isMobile, savedRep
 
       {!hasData && (
         <div style={{ ...card({ padding: 32, marginBottom: 22 }), textAlign: 'center' }}>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>Not enough data for this period yet</div>
-          <div style={{ fontSize: 13, color: '#64748B' }}>Figures will appear as your team delivers sessions and completes registers.</div>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>Not enough data for this period yet</div>
+          <div style={{ fontSize: 13, color: 'var(--text3)' }}>Figures will appear as your team delivers sessions and completes registers.</div>
         </div>
       )}
 
@@ -301,7 +301,7 @@ function OverviewView({ loading, metrics, learning, insights, isMobile, savedRep
                 { v: learning.avg_inclusion ? `${learning.avg_inclusion}/5` : '—', l: 'inclusion' },
                 { v: learning.evidence_count || 0, l: 'with evidence' },
                 { v: learning.actions_open || 0, l: 'open actions' },
-              ].map(x => <div key={x.l} style={{ background: 'rgba(255,255,255,0.78)', border: '1px solid #E0E7FF', borderRadius: 11, padding: 11 }}><div style={{ fontSize: 19, fontWeight: 900, color: '#3730A3' }}>{x.v}</div><div style={{ fontSize: 10.5, color: '#64748B', fontWeight: 700 }}>{x.l}</div></div>)}
+              ].map(x => <div key={x.l} style={{ background: 'rgba(255,255,255,0.78)', border: '1px solid #E0E7FF', borderRadius: 11, padding: 11 }}><div style={{ fontSize: 19, fontWeight: 900, color: '#3730A3' }}>{x.v}</div><div style={{ fontSize: 10.5, color: 'var(--text3)', fontWeight: 700 }}>{x.l}</div></div>)}
             </div>
           </div>
         </>
@@ -340,11 +340,11 @@ function OverviewView({ loading, metrics, learning, insights, isMobile, savedRep
               background: (TONES[CATEGORY_TONE[r.category]] || TONES.slate).bg,
               border: `1px solid ${(TONES[CATEGORY_TONE[r.category]] || TONES.slate).bd}`,
             }}><Icon name={r.icon} /></div>
-            <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{r.name}</div>
-            <div style={{ fontSize: 12, color: '#64748B', marginTop: 4, lineHeight: 1.5 }}>{r.desc}</div>
+            <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>{r.name}</div>
+            <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 4, lineHeight: 1.5 }}>{r.desc}</div>
             <button onClick={onOpenLibrary} style={{
-              marginTop: 12, padding: '8px 14px', borderRadius: 9, border: '1px solid #E2E8F0',
-              background: '#fff', fontSize: 12, fontWeight: 800, color: '#4F46E5', cursor: 'pointer',
+              marginTop: 12, padding: '8px 14px', borderRadius: 9, border: '1px solid var(--border)',
+              background: 'var(--surface)', fontSize: 12, fontWeight: 800, color: '#4F46E5', cursor: 'pointer',
             }}>Run report</button>
           </div>
         ))}
@@ -359,8 +359,8 @@ function OverviewView({ loading, metrics, learning, insights, isMobile, savedRep
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
             {savedReports.slice(0, 4).map(r => (
               <div key={r.id} style={card({ padding: '12px 14px' })}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{r.name}</div>
-                <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 2 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{r.name}</div>
+                <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2 }}>
                   {REPORT_LIBRARY.find(x => x.key === r.report_type)?.name || r.report_type} · {fmtDate(r.created_at?.slice(0, 10))}
                 </div>
               </div>
@@ -388,12 +388,12 @@ function LibraryView({ role, isMobile, onRun }) {
   return (
     <>
       <div style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>Report Library</div>
-        <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 3 }}>Choose a report to explore your organisation's data.</div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>Report Library</div>
+        <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 3 }}>Choose a report to explore your organisation's data.</div>
       </div>
 
       <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search reports..."
-        style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px', borderRadius: 11, border: '1px solid #E2E8F0', fontSize: 13, outline: 'none', marginBottom: 10 }} />
+        style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px', borderRadius: 11, border: '1px solid var(--border)', fontSize: 13, outline: 'none', marginBottom: 10 }} />
 
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
         {REPORT_CATEGORIES.map(c => (
@@ -424,8 +424,8 @@ function LibraryView({ role, isMobile, onRun }) {
                 }}>{r.category}</span>
                 {r.restricted && <span style={{ fontSize: 10.5, fontWeight: 800, color: '#B45309', background: '#FFFBEB', borderRadius: 99, padding: '3px 9px' }}>Restricted</span>}
               </div>
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>{r.name}</div>
-              <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 5, lineHeight: 1.5 }}>{r.desc}</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{r.name}</div>
+              <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 5, lineHeight: 1.5 }}>{r.desc}</div>
               <button onClick={() => allowed && onRun(r.key)} disabled={!allowed} style={{
                 marginTop: 14, padding: '9px 16px', borderRadius: 10, border: 'none',
                 background: allowed ? 'linear-gradient(135deg,#4F46E5,#3B82F6)' : '#E2E8F0',
@@ -437,7 +437,7 @@ function LibraryView({ role, isMobile, onRun }) {
         })}
         {list.length === 0 && (
           <div style={{ ...card({ padding: 30 }), textAlign: 'center', gridColumn: '1 / -1' }}>
-            <div style={{ fontSize: 13, color: '#64748B' }}>No reports match that search.</div>
+            <div style={{ fontSize: 13, color: 'var(--text3)' }}>No reports match that search.</div>
           </div>
         )}
       </div>
@@ -459,8 +459,8 @@ function SavedView({ reports, orgId, session, onChanged, onCreate, range }) {
     return (
       <div style={{ ...card({ padding: 44 }), textAlign: 'center' }}>
         <div style={{ fontSize: 26, marginBottom: 10 }}><Icon name="📄" /></div>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>No saved reports yet</div>
-        <div style={{ fontSize: 13, color: '#64748B', marginBottom: 18, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>No saved reports yet</div>
+        <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 18, lineHeight: 1.5 }}>
           Create a report once and save it here so you can run it again later.
         </div>
         <button onClick={onCreate} style={{
@@ -479,27 +479,27 @@ function SavedView({ reports, orgId, session, onChanged, onCreate, range }) {
           <div key={r.id} style={card({ padding: 16, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' })}>
             <span style={{ fontSize: 18 }}>{meta?.icon || '📄'}</span>
             <div style={{ flex: 1, minWidth: 160 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>{r.name}</div>
-              <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 3 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>{r.name}</div>
+              <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 3 }}>
                 {meta?.name || r.report_type}
                 {r.date_from ? ` · ${fmtDate(r.date_from)} – ${fmtDate(r.date_to)}` : ''}
               </div>
-              <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>
+              <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 2 }}>
                 Created {fmtDate(r.created_at?.slice(0, 10))}
                 {r.last_run_at ? ` · Last run ${fmtDate(r.last_run_at.slice(0, 10))}` : ''}
               </div>
             </div>
             <div style={{ position: 'relative' }}>
               <button onClick={() => setMenuId(menuId === r.id ? null : r.id)} style={{
-                padding: '7px 12px', borderRadius: 9, border: '1px solid #E2E8F0', background: '#fff',
-                fontSize: 14, color: '#64748B', cursor: 'pointer', lineHeight: 1,
+                padding: '7px 12px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)',
+                fontSize: 14, color: 'var(--text3)', cursor: 'pointer', lineHeight: 1,
               }}>⋯</button>
               {menuId === r.id && (
                 <>
                   <div onClick={() => setMenuId(null)} style={{ position: 'fixed', inset: 0, zIndex: 10380 }} />
                   <div style={{
-                    position: 'absolute', right: 0, top: '110%', zIndex: 10390, background: '#fff',
-                    border: '1px solid #E2E8F0', borderRadius: 11, minWidth: 190, overflow: 'hidden',
+                    position: 'absolute', right: 0, top: '110%', zIndex: 10390, background: 'var(--surface)',
+                    border: '1px solid var(--border)', borderRadius: 11, minWidth: 190, overflow: 'hidden',
                     boxShadow: '0 12px 32px rgba(15,23,42,0.16)',
                   }}>
                     <MenuItem disabled={busy} onClick={() => act(async () => { await rerunReport(r, range) })}>
@@ -536,7 +536,7 @@ function MenuItem({ children, onClick, danger, disabled }) {
 
 function SectionLabel({ children }) {
   return (
-    <div style={{ fontSize: 11, fontWeight: 800, color: '#64748B', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 10 }}>
+    <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 10 }}>
       {children}
     </div>
   )

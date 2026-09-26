@@ -186,7 +186,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
 
   const categories = useMemo(() => [...new Set(cases.map(c => c.category || c.case_type).filter(Boolean))], [cases])
 
-  if (loading) return <div style={{ padding: 60, textAlign: 'center', color: '#94A3B8' }}>Loading case management…</div>
+  if (loading) return <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-faint)' }}>Loading case management…</div>
 
   const criticalActive = activeCases.filter(c => c.risk_level === 'critical' || c.priority === 'critical')
 
@@ -211,8 +211,8 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
       {/* HEADER */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 18 }}>
         <div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 10 }}><Icon name="🛡️" /> Case Management</div>
-          <div style={{ fontSize: 13.5, color: '#64748B', marginTop: 4 }}>Track, investigate and resolve safeguarding concerns.</div>
+          <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 10 }}><Icon name="🛡️" /> Case Management</div>
+          <div style={{ fontSize: 13.5, color: 'var(--text3)', marginTop: 4 }}>Track, investigate and resolve safeguarding concerns.</div>
         </div>
         <div style={{ display: 'flex', gap: 8, position: 'relative' }}>
           <div style={{ position: 'relative' }}>
@@ -220,14 +220,14 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
             <AnimatePresence>
               {showQuickMenu && (
                 <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-                  style={{ position: 'absolute', top: '110%', right: 0, background: '#fff', borderRadius: 14, boxShadow: '0 20px 50px rgba(0,0,0,0.15)', border: '1px solid rgba(15,23,42,0.06)', padding: 6, width: 200, zIndex: 50 }}>
+                  style={{ position: 'absolute', top: '110%', right: 0, background: 'var(--surface)', borderRadius: 14, boxShadow: '0 20px 50px rgba(0,0,0,0.15)', border: '1px solid rgba(15,23,42,0.06)', padding: 6, width: 200, zIndex: 50 }}>
                   {[
                     ['📋 Record Concern', () => setShowWizard(true)],
                     ['📎 Upload Evidence', () => { if (selectedCase) setTab('documents'); else alert('Select a case first') }],
                     ['📄 Generate Report', () => { if (selectedCase) setReportFor(selectedCase); else alert('Select a case first') }],
                     ['⬇ Export Cases (CSV)', () => exportCasesToCSV(filteredCases)],
                   ].map(([label, fn]) => (
-                    <button key={label} onClick={() => { fn(); setShowQuickMenu(false) }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: 8, border: 'none', background: 'none', fontSize: 13, fontWeight: 600, color: '#334155', cursor: 'pointer' }}
+                    <button key={label} onClick={() => { fn(); setShowQuickMenu(false) }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: 8, border: 'none', background: 'none', fontSize: 13, fontWeight: 600, color: 'var(--text2)', cursor: 'pointer' }}
                       onMouseEnter={e => e.currentTarget.style.background = '#F1F5F9'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>{label}</button>
                   ))}
                 </motion.div>
@@ -245,13 +245,13 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
           { label: 'In Progress', value: kpis.inProgress, icon: '⏳', color: '#F59E0B' },
           { label: 'Monitoring', value: kpis.monitoring, icon: '👁️', color: '#3B82F6' },
           { label: 'Resolved This Month', value: kpis.resolvedThisMonth, icon: '✅', color: '#22C55E' },
-          { label: 'Closed', value: kpis.closed, icon: '📥', color: '#64748B' },
+          { label: 'Closed', value: kpis.closed, icon: '📥', color: 'var(--text3)' },
         ].map((k, i) => (
           <motion.div key={k.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
             whileHover={{ y: -2 }} style={{ ...glass({ padding: '16px 16px' }) }}>
             <div style={{ width: 34, height: 34, borderRadius: 10, background: `${k.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}><Icon name={k.icon} /></div>
             <div style={{ fontSize: 24, fontWeight: 900, color: k.color, lineHeight: 1 }}><CountUp value={k.value} /></div>
-            <div style={{ fontSize: 12, color: '#64748B', fontWeight: 700, marginTop: 4 }}>{k.label}</div>
+            <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 700, marginTop: 4 }}>{k.label}</div>
             {typeof k.trend === 'number' && (
               <div style={{ fontSize: 10.5, color: k.trend >= 0 ? '#DC2626' : '#15803D', fontWeight: 700, marginTop: 4 }}>{k.trend >= 0 ? '↑' : '↓'} {Math.abs(k.trend)} from last month</div>
             )}
@@ -262,7 +262,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
       {/* SEARCH + FILTERS */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flex: '1 1 260px' }}>
-          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', fontSize: 13 }}><Icon name="🔍" /></span>
+          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-faint)', fontSize: 13 }}><Icon name="🔍" /></span>
           <input style={{ ...inputStyle, paddingLeft: 32 }} placeholder="Search cases by child, case ID, keyword…" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <select style={{ ...inputStyle, width: 150 }} value={filters.status} onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}>
@@ -294,10 +294,10 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
         {showFilters && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
             <div style={{ display: 'flex', gap: 16, marginBottom: 12, padding: '10px 4px', flexWrap: 'wrap' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: '#334155', cursor: 'pointer' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--text2)', cursor: 'pointer' }}>
                 <input type="checkbox" checked={filters.requiresDsl} onChange={e => setFilters(f => ({ ...f, requiresDsl: e.target.checked }))} /> Requires DSL
               </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: '#334155', cursor: 'pointer' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--text2)', cursor: 'pointer' }}>
                 <input type="checkbox" checked={filters.archived} onChange={e => setFilters(f => ({ ...f, archived: e.target.checked }))} /> Show archived only
               </label>
               <button onClick={() => setFilters({ status: 'all', risk: 'all', assignee: 'all', category: 'all', requiresDsl: false, archived: false })} style={{ ...btnGhost, padding: '6px 12px', fontSize: 12 }}>Clear filters</button>
@@ -328,7 +328,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
           <div style={glass({ padding: 0, overflow: 'hidden' })}>
             {ATTENTION.length > 0 && (
               <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                <span style={{ fontSize: 11, fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.5 }}>Needs attention</span>
+                <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Needs attention</span>
                 {ATTENTION.map(a => {
                   const on = attention === a.key
                   return (
@@ -344,19 +344,19 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                 {attention && (
                   <button onClick={() => setAttention(null)} style={{
                     minHeight: 34, padding: '5px 11px', borderRadius: 99, cursor: 'pointer', fontFamily: 'inherit',
-                    fontSize: 11.5, fontWeight: 800, border: '1.5px solid #E2E8F0', background: '#fff', color: '#64748B',
+                    fontSize: 11.5, fontWeight: 800, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)',
                   }}>Show all</button>
                 )}
               </div>
             )}
-            <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 13.5, color: '#0F172A' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 13.5, color: 'var(--text)' }}>
               {attention ? ATTENTION.find(a => a.key === attention)?.label : 'Cases'} ({filteredCases.length})
             </div>
             {filteredCases.length === 0 ? (
               <div style={{ padding: '40px 20px', textAlign: 'center' }}>
                 <div style={{ fontSize: 36, marginBottom: 10 }}><Icon name="✅" /></div>
-                <div style={{ fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>{cases.length === 0 ? 'No cases yet' : 'No matching cases'}</div>
-                <div style={{ fontSize: 12.5, color: '#94A3B8' }}>{cases.length === 0 ? 'Cases are opened when concerns are raised about a young person' : 'Try adjusting your search or filters'}</div>
+                <div style={{ fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>{cases.length === 0 ? 'No cases yet' : 'No matching cases'}</div>
+                <div style={{ fontSize: 12.5, color: 'var(--text-faint)' }}>{cases.length === 0 ? 'Cases are opened when concerns are raised about a young person' : 'Try adjusting your search or filters'}</div>
               </div>
             ) : (
               <div style={{ maxHeight: isMobile ? 'none' : 620, overflowY: 'auto' }}>
@@ -377,9 +377,9 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           {cas.pinned && <span style={{ fontSize: 10 }}><Icon name="📌" /></span>}
-                          <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cas.child_name}</div>
+                          <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cas.child_name}</div>
                         </div>
-                        <div style={{ fontSize: 11, color: '#94A3B8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontSize: 11, color: 'var(--text-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {cas.category || cas.case_type} · {assignedStaff?.full_name || 'Unassigned'}
                           {/* Where a case came from is part of reading it: one
                               raised from a concern has a reporter's account
@@ -392,18 +392,18 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                         <StatusChip status={cas.status} />
                       </div>
                       <div style={{ position: 'relative', flexShrink: 0 }}>
-                        <button onClick={e => { e.stopPropagation(); setRowMenuFor(rowMenuFor === cas.id ? null : cas.id) }} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: 15, padding: 4 }}>⋯</button>
+                        <button onClick={e => { e.stopPropagation(); setRowMenuFor(rowMenuFor === cas.id ? null : cas.id) }} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', cursor: 'pointer', fontSize: 15, padding: 4 }}>⋯</button>
                         <AnimatePresence>
                           {rowMenuFor === cas.id && (
                             <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} onClick={e => e.stopPropagation()}
-                              style={{ position: 'absolute', top: '110%', right: 0, background: '#fff', borderRadius: 10, boxShadow: '0 16px 40px rgba(0,0,0,0.15)', border: '1px solid rgba(15,23,42,0.06)', padding: 4, width: 150, zIndex: 60 }}>
+                              style={{ position: 'absolute', top: '110%', right: 0, background: 'var(--surface)', borderRadius: 10, boxShadow: '0 16px 40px rgba(0,0,0,0.15)', border: '1px solid rgba(15,23,42,0.06)', padding: 4, width: 150, zIndex: 60 }}>
                               {[
                                 [cas.pinned ? '📌 Unpin' : '📌 Pin', () => updateCase(cas.id, { pinned: !cas.pinned })],
                                 ['📄 Report', () => setReportFor(cas)],
                                 [cas.archived ? '📥 Unarchive' : '🗄 Archive', () => updateCase(cas.id, { archived: !cas.archived }, 'edited', cas.archived ? 'Unarchived' : 'Archived')],
                                 ['✅ Close', () => changeStatus(cas, 'closed')],
                               ].map(([label, fn]) => (
-                                <button key={label} onClick={() => { fn(); setRowMenuFor(null) }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 10px', borderRadius: 6, border: 'none', background: 'none', fontSize: 12, fontWeight: 600, color: '#334155', cursor: 'pointer' }}>{label}</button>
+                                <button key={label} onClick={() => { fn(); setRowMenuFor(null) }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 10px', borderRadius: 6, border: 'none', background: 'none', fontSize: 12, fontWeight: 600, color: 'var(--text2)', cursor: 'pointer' }}>{label}</button>
                               ))}
                             </motion.div>
                           )}
@@ -457,8 +457,8 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
             <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap' }}>
               <Avatar name={selectedCase.child_name} photoUrl={linkedChild?.photo_url} size={56} />
               <div style={{ flex: 1, minWidth: 200 }}>
-                <div style={{ fontSize: 19, fontWeight: 900, color: '#0F172A' }}>{selectedCase.child_name}</div>
-                <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
+                <div style={{ fontSize: 19, fontWeight: 900, color: 'var(--text)' }}>{selectedCase.child_name}</div>
+                <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>
                   {linkedChild?.date_of_birth && `Age ${Math.floor((Date.now() - new Date(linkedChild.date_of_birth)) / 3.15576e10)} · `}
                   {linkedChild?.group_name || 'No group linked'}
                 </div>
@@ -467,7 +467,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                     {linkedChild.has_epipen && <span style={{ fontSize: 10.5, fontWeight: 800, background: '#FEF2F2', color: '#B91C1C', borderRadius: 99, padding: '2px 8px' }}><Icon name="⚠" /> EpiPen</span>}
                     {linkedChild.has_asthma && <span style={{ fontSize: 10.5, fontWeight: 800, background: '#FEF9C3', color: '#92400E', borderRadius: 99, padding: '2px 8px' }}>Asthma</span>}
                     {linkedChild.has_diabetes && <span style={{ fontSize: 10.5, fontWeight: 800, background: '#FEF9C3', color: '#92400E', borderRadius: 99, padding: '2px 8px' }}>Diabetes</span>}
-                    {linkedChild.takes_medication && <span style={{ fontSize: 10.5, fontWeight: 800, background: '#F1F5F9', color: '#475569', borderRadius: 99, padding: '2px 8px' }}>Medication</span>}
+                    {linkedChild.takes_medication && <span style={{ fontSize: 10.5, fontWeight: 800, background: 'var(--surface-hover)', color: '#475569', borderRadius: 99, padding: '2px 8px' }}>Medication</span>}
                   </div>
                 )}
               </div>
@@ -478,20 +478,20 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
             </div>
 
             {/* Overview card */}
-            <div style={{ background: '#F8FAFC', borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6 }}>Case Overview</div>
-              <div style={{ fontSize: 13.5, color: '#334155', lineHeight: 1.5, marginBottom: 10 }}>{selectedCase.summary || 'No summary provided.'}</div>
+            <div style={{ background: 'var(--surface2)', borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6 }}>Case Overview</div>
+              <div style={{ fontSize: 13.5, color: 'var(--text2)', lineHeight: 1.5, marginBottom: 10 }}>{selectedCase.summary || 'No summary provided.'}</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <select value={selectedCase.status} onChange={e => changeStatus(selectedCase, e.target.value)} style={{ ...inputStyle, width: 'auto', fontSize: 12, padding: '6px 10px' }}>
                   {STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
                 </select>
                 {selectedCase.requires_dsl && <span style={{ fontSize: 11, fontWeight: 800, background: '#EEF2FF', color: '#4338CA', borderRadius: 99, padding: '5px 10px' }}>Requires DSL</span>}
-                {selectedCase.next_review_date && <span style={{ fontSize: 11, fontWeight: 700, background: '#fff', border: '1px solid rgba(15,23,42,0.08)', borderRadius: 99, padding: '5px 10px', color: '#475569' }}>📅 Review {new Date(selectedCase.next_review_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
+                {selectedCase.next_review_date && <span style={{ fontSize: 11, fontWeight: 700, background: 'var(--surface)', border: '1px solid rgba(15,23,42,0.08)', borderRadius: 99, padding: '5px 10px', color: '#475569' }}>📅 Review {new Date(selectedCase.next_review_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
               </div>
             </div>
 
             {/* Tabs */}
-            <div style={{ display: 'flex', gap: 4, marginBottom: 14, background: '#F1F5F9', borderRadius: 12, padding: 4 }}>
+            <div style={{ display: 'flex', gap: 4, marginBottom: 14, background: 'var(--surface-hover)', borderRadius: 12, padding: 4 }}>
               {[['timeline', '🕐 Timeline'], ['tasks', '☑️ Tasks'], ['documents', '📎 Documents'], ['actions', '⚡ Safeguarding Actions']].map(([key, label]) => (
                 <button key={key} onClick={() => setTab(key)} style={{ flex: 1, padding: '8px 10px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 700, background: tab === key ? '#fff' : 'transparent', color: tab === key ? '#0F172A' : '#64748B' }}>{label}</button>
               ))}
@@ -525,7 +525,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
             {!selectedCase ? (
               <>
                 <div style={glass({ padding: 18 })}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>Case Overview</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>Case Overview</div>
                   <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
                     <DonutChart segments={riskDonut.length ? riskDonut : [{ label: 'No active cases', value: 1, color: '#E2E8F0' }]} />
                   </div>
@@ -537,24 +537,24 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                   ))}
                 </div>
                 <div style={glass({ padding: 18 })}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Quick Actions</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Quick Actions</div>
                   {[
                     ['📋 Record New Concern', () => setShowWizard(true)],
                     ['⬇ Export All Cases', () => exportCasesToCSV(filteredCases)],
                   ].map(([label, fn]) => (
-                    <button key={label} onClick={fn} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 4px', border: 'none', borderTop: '1px solid rgba(15,23,42,0.05)', background: 'none', fontSize: 12.5, fontWeight: 700, color: '#334155', cursor: 'pointer' }}>{label}</button>
+                    <button key={label} onClick={fn} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 4px', border: 'none', borderTop: '1px solid rgba(15,23,42,0.05)', background: 'none', fontSize: 12.5, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>{label}</button>
                   ))}
                 </div>
                 <div style={glass({ padding: 18 })}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Recent Activity</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Recent Activity</div>
                   {recentActivity.length === 0 ? (
-                    <div style={{ fontSize: 12, color: '#94A3B8' }}>No recent activity.</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>No recent activity.</div>
                   ) : recentActivity.map(a => {
                     const cas = cases.find(c => c.id === a.case_id)
                     return (
                       <div key={a.id} style={{ padding: '7px 0', borderTop: '1px solid rgba(15,23,42,0.05)' }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#0F172A' }}>{a.detail || a.action}</div>
-                        <div style={{ fontSize: 10.5, color: '#94A3B8' }}>{cas?.child_name || ''} · {timeAgo(a.created_at)}</div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{a.detail || a.action}</div>
+                        <div style={{ fontSize: 10.5, color: 'var(--text-faint)' }}>{cas?.child_name || ''} · {timeAgo(a.created_at)}</div>
                       </div>
                     )
                   })}
@@ -563,13 +563,13 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
             ) : (
               <>
                 <div style={glass({ padding: 18 })}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Case Health</div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12.5 }}><span style={{ color: '#64748B' }}>Risk</span><RiskBadge level={selectedCase.risk_level || selectedCase.priority} /></div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12.5 }}><span style={{ color: '#64748B' }}>Days open</span><span style={{ fontWeight: 700 }}>{Math.floor((Date.now() - new Date(selectedCase.created_at)) / 86400000)}</span></div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12.5 }}><span style={{ color: '#64748B' }}>Next review</span><span style={{ fontWeight: 700 }}>{selectedCase.next_review_date ? new Date(selectedCase.next_review_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}</span></div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Case Health</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12.5 }}><span style={{ color: 'var(--text3)' }}>Risk</span><RiskBadge level={selectedCase.risk_level || selectedCase.priority} /></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12.5 }}><span style={{ color: 'var(--text3)' }}>Days open</span><span style={{ fontWeight: 700 }}>{Math.floor((Date.now() - new Date(selectedCase.created_at)) / 86400000)}</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12.5 }}><span style={{ color: 'var(--text3)' }}>Next review</span><span style={{ fontWeight: 700 }}>{selectedCase.next_review_date ? new Date(selectedCase.next_review_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}</span></div>
                 </div>
                 <div style={glass({ padding: 18 })}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Assigned Staff</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Assigned Staff</div>
                   {staff.find(s => s.id === selectedCase.assigned_to_user_id) ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <Avatar name={staff.find(s => s.id === selectedCase.assigned_to_user_id).full_name} photoUrl={staff.find(s => s.id === selectedCase.assigned_to_user_id).photo_url} size={30} />
@@ -584,13 +584,13 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                 </div>
                 {linkedChild && (
                   <div style={glass({ padding: 18 })}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Linked Child Record</div>
-                    <div style={{ fontSize: 12.5, color: '#334155' }}>{linkedChild.first_name} {linkedChild.last_name}</div>
-                    {linkedChild.emergency_contact_name && <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 4 }}>Emergency: {linkedChild.emergency_contact_name} · {linkedChild.emergency_contact_phone}</div>}
+                    <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Linked Child Record</div>
+                    <div style={{ fontSize: 12.5, color: 'var(--text2)' }}>{linkedChild.first_name} {linkedChild.last_name}</div>
+                    {linkedChild.emergency_contact_name && <div style={{ fontSize: 11.5, color: 'var(--text-faint)', marginTop: 4 }}>Emergency: {linkedChild.emergency_contact_name} · {linkedChild.emergency_contact_phone}</div>}
                   </div>
                 )}
                 <div style={glass({ padding: 18 })}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 10 }}>Quick Links</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Quick Links</div>
                   <button onClick={() => setReportFor(selectedCase)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 0', border: 'none', background: 'none', fontSize: 12.5, fontWeight: 700, color: primary, cursor: 'pointer' }}><Icon name="📄" /> Generate Report</button>
                   <button onClick={() => setTab('documents')} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 0', border: 'none', background: 'none', fontSize: 12.5, fontWeight: 700, color: primary, cursor: 'pointer' }}><Icon name="📎" /> View Documents</button>
                 </div>

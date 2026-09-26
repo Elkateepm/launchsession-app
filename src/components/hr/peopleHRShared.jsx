@@ -3,9 +3,9 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 
 export const HR = {
   ink: '#182238', muted: '#66758B', line: '#E6EAF0', canvas: '#F6F8FB',
-  card: { background: '#fff', border: '1px solid #E6EAF0', borderRadius: 18, padding: 22, minWidth: 0 },
-  button: { minHeight: 44, padding: '10px 15px', borderRadius: 11, border: '1px solid #E6EAF0', background: '#fff', color: '#35445B', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  input: { minHeight: 44, padding: '11px 13px', borderRadius: 11, border: '1px solid #DDE3EC', background: '#fff', color: '#182238', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', width: '100%' },
+  card: { background: 'var(--surface)', border: '1px solid #E6EAF0', borderRadius: 18, padding: 22, minWidth: 0 },
+  button: { minHeight: 44, padding: '10px 15px', borderRadius: 11, border: '1px solid #E6EAF0', background: 'var(--surface)', color: '#35445B', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  input: { minHeight: 44, padding: '11px 13px', borderRadius: 11, border: '1px solid #DDE3EC', background: 'var(--surface)', color: '#182238', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', width: '100%' },
 }
 
 export function Avatar({ name, primary, size = 42 }) {

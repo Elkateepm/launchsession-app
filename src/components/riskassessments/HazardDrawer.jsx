@@ -34,7 +34,7 @@ const STEPS = ['What', 'Who', 'Risk', 'Controls', 'After controls']
 
 const field = {
   width: '100%', padding: '11px 13px', borderRadius: 11, fontSize: 15,
-  border: '1px solid #ECE9F5', background: '#fff', color: '#1C1B2E',
+  border: '1px solid #ECE9F5', background: 'var(--surface)', color: 'var(--text)',
   outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
 }
 const labelStyle = { display: 'block', fontSize: 12.5, fontWeight: 700, color: '#8B87A3', marginBottom: 7, letterSpacing: 0.2 }
@@ -237,7 +237,7 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
   }
 
   const panel = {
-    background: '#fff',
+    background: 'var(--surface)',
     width: isMobile ? '100%' : 500,
     maxWidth: '100%',
     height: isMobile ? 'auto' : '100%',
@@ -272,7 +272,7 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
                 <div style={{ width: 38, height: 4, borderRadius: 4, background: '#E4DFF5', margin: '0 auto 12px' }} />
               )}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                <div style={{ fontSize: 16.5, fontWeight: 800, color: '#1C1B2E', flex: 1 }}>
+                <div style={{ fontSize: 16.5, fontWeight: 800, color: 'var(--text)', flex: 1 }}>
                   {editing ? 'Edit hazard' : 'Add a hazard'}
                 </div>
                 <button onClick={onClose} style={{
@@ -320,7 +320,7 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
                         onClick={() => setName(h.label)}
                         style={{
                           padding: '7px 12px', borderRadius: 999, fontSize: 12.5, fontWeight: 600,
-                          border: '1px solid #ECE9F5', background: '#fff', color: '#5A5772',
+                          border: '1px solid #ECE9F5', background: 'var(--surface)', color: '#5A5772',
                           cursor: 'pointer', fontFamily: 'inherit',
                         }}
                       >{h.icon} {h.label}</button>
@@ -352,7 +352,7 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
                             border: `1.6px solid ${active ? primary : '#E4DFF5'}`,
                             background: active ? primary : '#fff',
                           }}>{active ? '✓' : ''}</span>
-                          <span style={{ fontSize: 14, color: '#1C1B2E', fontWeight: 600 }}>{w}</span>
+                          <span style={{ fontSize: 14, color: 'var(--text)', fontWeight: 600 }}>{w}</span>
                         </button>
                       )
                     })}
@@ -426,7 +426,7 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
                     onClick={() => setControls(list => [...list, { description: '', due_date: '', completed: false }])}
                     style={{
                       marginTop: 9, padding: '9px 14px', borderRadius: 10,
-                      border: '1px dashed #E4DFF5', background: '#fff', color: primary,
+                      border: '1px dashed #E4DFF5', background: 'var(--surface)', color: primary,
                       fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                     }}
                   >+ Add another control</button>
@@ -468,13 +468,13 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
 
             <div style={{
               padding: '14px 20px', borderTop: '1px solid #ECE9F5', flexShrink: 0,
-              display: 'flex', gap: 10, background: '#fff',
+              display: 'flex', gap: 10, background: 'var(--surface)',
               paddingBottom: isMobile ? 'calc(14px + env(safe-area-inset-bottom))' : 14,
             }}>
               {step > 0 && (
                 <button onClick={() => setStep(s => s - 1)} style={{
                   padding: '13px 18px', borderRadius: 12, border: '1px solid #ECE9F5',
-                  background: '#fff', color: '#8B87A3', fontSize: 15, fontWeight: 700,
+                  background: 'var(--surface)', color: '#8B87A3', fontSize: 15, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}>Back</button>
               )}

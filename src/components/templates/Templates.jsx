@@ -368,7 +368,7 @@ function ChildImportTool({ org, showToast, onNavigate }) {
                       <td style={{ padding: '10px 14px' }}>
                         {col.required
                           ? <span style={{ background: '#FEE2E2', color: '#C00', borderRadius: 99, padding: '2px 9px', fontSize: 11, fontWeight: 800 }}>Required</span>
-                          : <span style={{ background: '#F3F4F6', color: 'var(--text3)', borderRadius: 99, padding: '2px 9px', fontSize: 11, fontWeight: 600 }}>Optional</span>
+                          : <span style={{ background: 'var(--surface3)', color: 'var(--text3)', borderRadius: 99, padding: '2px 9px', fontSize: 11, fontWeight: 600 }}>Optional</span>
                         }
                       </td>
                       <td style={{ padding: '10px 14px', fontFamily: 'monospace', fontSize: 12, color: 'var(--text3)' }}>{col.example}</td>

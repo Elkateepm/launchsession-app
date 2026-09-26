@@ -93,16 +93,16 @@ function ImportPane({ org, children, primary, onClose, onImported }) {
     if (inserted) onImported()
   }
 
-  const inp = { width: '100%', boxSizing: 'border-box', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 13, fontFamily: 'inherit' }
+  const inp = { width: '100%', boxSizing: 'border-box', padding: '10px 14px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 13, fontFamily: 'inherit' }
 
   return (
     <div>
-      <div style={{ fontSize: 12.5, color: '#6B7280', marginBottom: 14, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 14, lineHeight: 1.5 }}>
         Upload an .xlsx or .csv file with columns: <strong>First Name, Last Name, Area, Score, Notes</strong> (Notes optional). Rows are matched to young people by name.
       </div>
       <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFile} style={inp} />
       {rows && (
-        <div style={{ marginTop: 14, fontSize: 12.5, color: '#374151' }}>
+        <div style={{ marginTop: 14, fontSize: 12.5, color: 'var(--text2)' }}>
           Found <strong>{rows.length}</strong> row{rows.length !== 1 ? 's' : ''} in the file.
         </div>
       )}
@@ -115,7 +115,7 @@ function ImportPane({ org, children, primary, onClose, onImported }) {
         <button disabled={!rows?.length || importing} onClick={doImport} style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer', fontSize: 13, opacity: rows?.length ? 1 : 0.5 }}>
           {importing ? 'Importing...' : 'Import Rows'}
         </button>
-        <button onClick={onClose} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6B7280', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>Close</button>
+        <button onClick={onClose} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>Close</button>
       </div>
     </div>
   )
@@ -130,14 +130,14 @@ function ReportPane({ org, children, scores }) {
 
   return (
     <div>
-      <div id="impact-report-printable" style={{ border: '1px solid #E5E7EB', borderRadius: 12, padding: 20 }}>
+      <div id="impact-report-printable" style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 20 }}>
         <div style={{ fontSize: 16, fontWeight: 900 }}>{org.name || 'Organisation'} — Impact Report</div>
-        <div style={{ fontSize: 11, color: '#9CA3AF', marginBottom: 16 }}>Generated {format(new Date(), 'd MMMM yyyy')}</div>
+        <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 16 }}>Generated {format(new Date(), 'd MMMM yyyy')}</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
           {[{ l: 'Young People', v: children.length }, { l: 'Being Tracked', v: trackedCount }, { l: 'Average Score', v: `${avgOverall}/10` }].map(s => (
-            <div key={s.l} style={{ border: '1px solid #F3F4F6', borderRadius: 10, padding: 10, textAlign: 'center' }}>
+            <div key={s.l} style={{ border: '1px solid var(--border-soft)', borderRadius: 10, padding: 10, textAlign: 'center' }}>
               <div style={{ fontSize: 18, fontWeight: 900 }}>{s.v}</div>
-              <div style={{ fontSize: 10, color: '#9CA3AF' }}>{s.l}</div>
+              <div style={{ fontSize: 10, color: 'var(--text-faint)' }}>{s.l}</div>
             </div>
           ))}
         </div>
@@ -175,14 +175,14 @@ export default function DataToolsModal({ mode, org, children, scores, goals, onC
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,39,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} onClick={e => e.stopPropagation()}
-        style={{ background: '#fff', borderRadius: 22, width: 480, maxWidth: '100%', maxHeight: '85vh', overflowY: 'auto', padding: 24, boxShadow: '0 30px 80px rgba(0,0,0,0.25)' }}>
+        style={{ background: 'var(--surface)', borderRadius: 22, width: 480, maxWidth: '100%', maxHeight: '85vh', overflowY: 'auto', padding: 24, boxShadow: '0 30px 80px rgba(0,0,0,0.25)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div style={{ fontSize: 15, fontWeight: 900 }}>{TITLES[mode]}</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#9CA3AF' }}><Icon name="✕" /></button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: 'var(--text-faint)' }}><Icon name="✕" /></button>
         </div>
 
         {mode === 'export' && (
-          <div style={{ fontSize: 13, color: '#6B7280' }}>Your download has started — an .xlsx workbook with Young People, Outcome Scores and Goals sheets.</div>
+          <div style={{ fontSize: 13, color: 'var(--text3)' }}>Your download has started — an .xlsx workbook with Young People, Outcome Scores and Goals sheets.</div>
         )}
         {mode === 'import' && <ImportPane org={org} children={children} primary={primary} onClose={onClose} onImported={onImported} />}
         {mode === 'report' && <ReportPane org={org} children={children} scores={scores} />}

@@ -90,7 +90,7 @@ export function chipStyle(status, size = 'md') {
 // Small card shell matching the rest of the app (white, rounded, soft border/shadow).
 export function card(extra = {}) {
   return {
-    background: '#fff', border: '1px solid #E5E7EB', borderRadius: 18,
+    background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18,
     boxShadow: '0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 24px -16px rgba(15,23,42,0.15)',
     ...extra,
   }
@@ -98,7 +98,7 @@ export function card(extra = {}) {
 
 export const inputStyle = {
   width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10,
-  border: '1.5px solid #E2E8F0', fontSize: 13, outline: 'none', background: '#fff', color: '#0F172A',
+  border: '1.5px solid var(--border)', fontSize: 13, outline: 'none', background: 'var(--surface)', color: 'var(--text)',
 }
 
 export function btnPrimary(color = PB.blue) {
@@ -109,7 +109,7 @@ export function btnPrimary(color = PB.blue) {
 }
 
 export const btnGhost = {
-  padding: '10px 18px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155',
+  padding: '10px 18px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)',
   fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
 }
 

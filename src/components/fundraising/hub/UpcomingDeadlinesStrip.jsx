@@ -15,7 +15,7 @@ export default function UpcomingDeadlinesStrip({ events, loading, onViewCalendar
   const items = useMemo(() => events.slice(0, 4), [events])
 
   return (
-    <div style={{ background: '#fff', border: `1px solid ${LS.border}`, borderRadius: 18, padding: '18px 18px' }}>
+    <div style={{ background: 'var(--surface)', border: `1px solid ${LS.border}`, borderRadius: 18, padding: '18px 18px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ fontSize: 14.5, fontWeight: 800, color: LS.text }}>Upcoming Deadlines</div>
         {items.length > 0 && <button onClick={onViewCalendar} style={{ background: 'none', border: 'none', color: LS.purpleDark, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>View calendar <Icon name="→" /></button>}
