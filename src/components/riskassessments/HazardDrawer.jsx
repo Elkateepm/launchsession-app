@@ -68,11 +68,11 @@ function ScoreReadout({ likelihood, severity, caption }) {
   const score = riskScore(likelihood, severity)
   const rating = riskRating(score)
   const tone = {
-    low: { bg: '#E7F8ED', text: '#04713C' },
-    medium: { bg: '#FEF6E7', text: '#93500A' },
+    low: { bg: 'var(--ok-bg)', text: 'var(--ok-text)' },
+    medium: { bg: 'var(--warn-bg)', text: 'var(--warn-text)' },
     high: { bg: '#FEF0E7', text: '#B54708' },
-    critical: { bg: '#FEF2F2', text: '#B42318' },
-  }[rating] || { bg: '#F3F2F7', text: '#5A5772' }
+    critical: { bg: 'var(--danger-bg)', text: 'var(--danger-text)' },
+  }[rating] || { bg: 'var(--surface2)', text: '#5A5772' }
 
   return (
     <div style={{
@@ -413,7 +413,7 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
                               onClick={() => setControls(list => list.filter((_, idx) => idx !== i))}
                               style={{
                                 marginLeft: 'auto', border: 'none', background: 'transparent',
-                                color: '#B42318', fontSize: 12.5, fontWeight: 700,
+                                color: 'var(--danger-text)', fontSize: 12.5, fontWeight: 700,
                                 cursor: 'pointer', fontFamily: 'inherit', padding: '6px 2px',
                               }}
                             >Remove</button>
@@ -448,8 +448,8 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
                   {riskScore(resLikelihood, resSeverity) > riskScore(likelihood, severity) && (
                     <div style={{
                       marginTop: 10, padding: '11px 13px', borderRadius: 11,
-                      background: '#FEF6E7', border: '1px solid #FDE2B5',
-                      fontSize: 12.5, color: '#93500A', lineHeight: 1.5,
+                      background: 'var(--warn-bg)', border: '1px solid var(--warn-border)',
+                      fontSize: 12.5, color: 'var(--warn-text)', lineHeight: 1.5,
                     }}>
                       The risk after controls is higher than before them. That's usually a
                       mistake — check the scores above.
@@ -460,8 +460,8 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
 
               {error && (
                 <div style={{
-                  marginTop: 14, padding: '11px 13px', borderRadius: 10, background: '#FEF2F2',
-                  border: '1px solid #FECACA', color: '#B42318', fontSize: 13,
+                  marginTop: 14, padding: '11px 13px', borderRadius: 10, background: 'var(--danger-bg)',
+                  border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13,
                 }}>{error}</div>
               )}
             </div>

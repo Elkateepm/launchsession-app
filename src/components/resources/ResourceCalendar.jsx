@@ -139,7 +139,7 @@ export default function ResourceCalendar({ resources, bookings, onSlotClick, onB
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', marginBottom: 3 }}>{d.getDate()}</div>
                 {dayBookings.slice(0, 2).map(b => {
                   const r = resources.find(x => x.id === b.resource_id)
-                  return <div key={b.id} onClick={e => { e.stopPropagation(); onBookingClick(b) }} style={{ fontSize: 9, background: '#EEF2FF', color: '#4338CA', borderRadius: 3, padding: '1px 4px', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r?.name}</div>
+                  return <div key={b.id} onClick={e => { e.stopPropagation(); onBookingClick(b) }} style={{ fontSize: 9, background: 'var(--info-bg)', color: 'var(--info-text)', borderRadius: 3, padding: '1px 4px', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r?.name}</div>
                 })}
                 {dayBookings.length > 2 && <div style={{ fontSize: 9, color: 'var(--text-faint)' }}>+{dayBookings.length - 2} more</div>}
               </div>

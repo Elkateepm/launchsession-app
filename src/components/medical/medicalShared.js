@@ -11,9 +11,9 @@
 // protocol behind it, and those are the entries that must not be four screens
 // down an alphabetical list.
 export const TIERS = {
-  1: { key: 'immediate', label: 'Immediate response', colour: '#B91C1C', bg: '#FEE2E2' },
-  2: { key: 'ongoing', label: 'Ongoing need', colour: '#B45309', bg: '#FEF3C7' },
-  3: { key: 'context', label: 'Worth knowing', colour: '#334155', bg: '#F1F5F9' },
+  1: { key: 'immediate', label: 'Immediate response', colour: 'var(--danger-text)', bg: 'var(--danger-bg)' },
+  2: { key: 'ongoing', label: 'Ongoing need', colour: 'var(--warn-text)', bg: 'var(--warn-bg)' },
+  3: { key: 'context', label: 'Worth knowing', colour: '#334155', bg: 'var(--surface-hover)' },
 }
 
 // Text that means "nothing recorded". Staff type these into a required-looking

@@ -13,9 +13,9 @@ import Icon from '../../lib/icons'
 const CARD = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16 }
 
 const FLAG_LABELS = {
-  medical: { label: 'Medical information', tone: '#B42318', bg: '#FEF2F2' },
-  medication: { label: 'Medication', tone: '#B42318', bg: '#FEF2F2' },
-  consent_withdrawn: { label: 'Consent withdrawn', tone: '#93500A', bg: '#FEF6E7' },
+  medical: { label: 'Medical information', tone: 'var(--danger-text)', bg: 'var(--danger-bg)' },
+  medication: { label: 'Medication', tone: 'var(--danger-text)', bg: 'var(--danger-bg)' },
+  consent_withdrawn: { label: 'Consent withdrawn', tone: 'var(--warn-text)', bg: 'var(--warn-bg)' },
 }
 
 const timeAgo = iso => {
@@ -106,7 +106,7 @@ export function FormsOverview({ forms = [], submissions = [], primary, onOpenFor
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}><h3 style={{ ...heading, fontSize: 15, overflowWrap: 'anywhere' }}>{f.name}</h3><span style={{ color: tone, fontWeight: 700, fontSize: 11, background: 'var(--surface2, #F8FAFC)', borderRadius: 6, padding: '4px 7px' }}>{state === 'active' ? '● Live' : state === 'draft' ? 'Draft' : 'Archived'}</span></div>
                   <p style={{ fontSize: 13, color: 'var(--text3, #64748B)', margin: '7px 0 12px', lineHeight: 1.5 }}>{f.description || `${f.tag || 'General'} form · ${(f.fields || []).length} fields`}</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, fontSize: 12, color: 'var(--text3, #64748B)' }}><span><strong style={{ color: 'var(--text, #172033)' }}>{count}</strong> loaded responses</span>{review > 0 && <span style={{ color: '#B45309', fontWeight: 700 }}>{review} need review</span>}{f.closing_date && <span>Closes {new Date(f.closing_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'Europe/London' })}</span>}</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, fontSize: 12, color: 'var(--text3, #64748B)' }}><span><strong style={{ color: 'var(--text, #172033)' }}>{count}</strong> loaded responses</span>{review > 0 && <span style={{ color: 'var(--warn-text)', fontWeight: 700 }}>{review} need review</span>}{f.closing_date && <span>Closes {new Date(f.closing_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'Europe/London' })}</span>}</div>
                 </div>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16, paddingLeft: isMobile ? 0 : 58 }}>
@@ -125,7 +125,7 @@ export function FormsOverview({ forms = [], submissions = [], primary, onOpenFor
             {flagged > 0 && <AttentionRow tone="#B45309" title={`${flagged} need review`} detail="Check flagged information" cta="Review" onAction={() => onGoResponses('needs_review')} primary={primary} isMobile />}
             {fresh > 0 && <AttentionRow tone={primary} title={`${fresh} new responses`} detail="Ready for your team" cta="Open inbox" onAction={() => onGoResponses('new')} primary={primary} isMobile />}
             {closing.filter(f => isAdmin || canViewSubmissions(f)).map(f => <AttentionRow key={f.id} tone="#B45309" title={f.name} detail="Closing within 3 days" cta={isAdmin ? 'Manage form' : 'View responses'} onAction={() => isAdmin ? onEdit(f) : onOpenForm(f)} primary={primary} isMobile />)}
-            {!flagged && !fresh && !closing.length && <div style={{ margin: '0 18px 18px', borderRadius: 10, padding: 14, background: '#F0FDF7', color: '#166534', fontSize: 13, lineHeight: 1.6 }}><strong>✓ Nothing waiting for review</strong><br />New responses and upcoming deadlines will appear here.</div>}
+            {!flagged && !fresh && !closing.length && <div style={{ margin: '0 18px 18px', borderRadius: 10, padding: 14, background: 'var(--ok-bg)', color: 'var(--ok-text)', fontSize: 13, lineHeight: 1.6 }}><strong>✓ Nothing waiting for review</strong><br />New responses and upcoming deadlines will appear here.</div>}
           </section>
           {isAdmin && <section style={{ ...CARD, padding: 20, background: '#172033', color: '#fff' }}><div style={{ fontSize: 11, letterSpacing: 1.4, color: '#CBD5E1', fontWeight: 700 }}>LESS ADMIN, MORE IMPACT</div><h2 style={{ fontSize: 21, margin: '12px 0 8px', letterSpacing: -0.5 }}>Start with a head start.</h2><p style={{ fontSize: 13, color: '#CBD5E1', lineHeight: 1.7 }}>Ready-made forms for consent, registrations, feedback and everyday admin.</p><button onClick={onTemplates} style={{ ...button, width: '100%', marginTop: 8 }}>Explore templates →</button></section>}
           <section style={{ ...CARD, padding: 18 }}><h2 style={heading}>Latest responses</h2>{submissions.length ? submissions.slice(0, 4).map(s => <button key={s.id} onClick={() => onGoResponses('all')} style={{ display: 'block', width: '100%', padding: '14px 0', border: 0, borderBottom: '1px solid #EDF0F5', background: 'transparent', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}><div style={{ color: 'var(--text, #172033)', fontWeight: 700, fontSize: 13 }}>{s.submitted_name || 'Anonymous'}</div><div style={{ color: 'var(--text3, #64748B)', fontSize: 12, marginTop: 5 }}>{forms.find(f => f.id === s.form_id)?.name || 'Form'} · {timeAgo(s.created_at)}</div></button>) : <p style={{ fontSize: 13, color: 'var(--text3, #64748B)', lineHeight: 1.7, marginBottom: 0 }}>No responses yet. Share a live form to start collecting answers.</p>}</section>
@@ -207,7 +207,7 @@ export function ResponseInbox({ org, forms = [], primary, initialFilter = 'all',
           {open.flags?.length > 0 && (
             <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginTop: 14 }}>
               {open.flags.map(fl => {
-                const meta = FLAG_LABELS[fl] || { label: fl, tone: '#93500A', bg: '#FEF6E7' }
+                const meta = FLAG_LABELS[fl] || { label: fl, tone: 'var(--warn-text)', bg: 'var(--warn-bg)' }
                 return (
                   <span key={fl} style={{
                     padding: '5px 12px', borderRadius: 99, fontSize: 12.5, fontWeight: 700,
@@ -313,13 +313,13 @@ export function ResponseInbox({ org, forms = [], primary, initialFilter = 'all',
                 {flagged && (
                   <span style={{
                     padding: '4px 10px', borderRadius: 99, fontSize: 11.5, fontWeight: 700,
-                    background: '#FEF2F2', color: '#B42318', flexShrink: 0,
+                    background: 'var(--danger-bg)', color: 'var(--danger-text)', flexShrink: 0,
                   }}>Needs review</span>
                 )}
                 {fresh && (
                   <span style={{
                     padding: '4px 10px', borderRadius: 99, fontSize: 11.5, fontWeight: 700,
-                    background: '#F1EDFF', color: '#5B21B6', flexShrink: 0,
+                    background: 'var(--violet-bg)', color: 'var(--violet-text)', flexShrink: 0,
                   }}>New</span>
                 )}
               </div>

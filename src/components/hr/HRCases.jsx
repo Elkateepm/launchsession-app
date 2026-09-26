@@ -107,7 +107,7 @@ export default function HRCasesTab({ org, staff, primary, canEdit, sensitiveEdit
       )}
 
       {error && (
-        <div style={{ ...card, background: '#FEF2F2', border: '1px solid #FECACA', color: '#B42318', fontSize: 13 }}>
+        <div style={{ ...card, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13 }}>
           {error}
         </div>
       )}
@@ -265,8 +265,8 @@ function CaseWizard({ org, staff, primary, onCancel, onCreated }) {
       )}
 
       {err && (
-        <div style={{ padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
-          border: '1px solid #FECACA', color: '#B42318', fontSize: 13, margin: '10px 0' }}>{err}</div>
+        <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--danger-bg)',
+          border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13, margin: '10px 0' }}>{err}</div>
       )}
 
       <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
@@ -359,12 +359,12 @@ function CaseRecord({ org, staff, caseId, primary, canEdit, sensitiveEdit, onBac
           <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 99,
             background: s[3], color: s[2], fontSize: 11.5, fontWeight: 800 }}>{s[1]}</span>
           <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 99,
-            background: '#EEF2FF', color: '#3730A3', fontSize: 11.5, fontWeight: 800 }}>
+            background: 'var(--info-bg)', color: 'var(--info-text)', fontSize: 11.5, fontWeight: 800 }}>
             {typeLabel(c.case_type)}
           </span>
           {c.priority !== 'normal' && (
             <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 99,
-              background: '#FEF2F2', color: '#B42318', fontSize: 11.5, fontWeight: 800,
+              background: 'var(--danger-bg)', color: 'var(--danger-text)', fontSize: 11.5, fontWeight: 800,
               textTransform: 'capitalize' }}>{c.priority}</span>
           )}
         </div>
@@ -381,19 +381,19 @@ function CaseRecord({ org, staff, caseId, primary, canEdit, sensitiveEdit, onBac
       {linkedDisc && (
         <button onClick={() => onOpenDisciplinary(linkedDisc.id)} style={{
           ...card, width: '100%', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit',
-          background: '#FEF2F2', border: '1px solid #FECACA',
+          background: 'var(--danger-bg)', border: '1px solid var(--danger-border)',
         }}>
-          <div style={{ fontSize: 13.5, fontWeight: 800, color: '#B42318' }}>
+          <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--danger-text)' }}>
             Linked disciplinary {linkedDisc.reference}
           </div>
-          <div style={{ fontSize: 12.5, color: '#B42318', opacity: 0.85, marginTop: 2 }}>
+          <div style={{ fontSize: 12.5, color: 'var(--danger-text)', opacity: 0.85, marginTop: 2 }}>
             Currently at {linkedDisc.stage} · open it
           </div>
         </button>
       )}
 
       {error && (
-        <div style={{ ...card, background: '#FEF2F2', border: '1px solid #FECACA', color: '#B42318', fontSize: 13 }}>
+        <div style={{ ...card, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13 }}>
           {error}
         </div>
       )}
@@ -411,7 +411,7 @@ function CaseRecord({ org, staff, caseId, primary, canEdit, sensitiveEdit, onBac
             <button onClick={() => setPanel('resolve')} style={ghostBtn}>Resolve</button>
             {sensitiveEdit && !linkedDisc && (
               <button onClick={() => setPanel('escalate')} style={{
-                ...ghostBtn, border: '1px solid #FECACA', color: '#B42318',
+                ...ghostBtn, border: '1px solid var(--danger-border)', color: 'var(--danger-text)',
               }}>Escalate to disciplinary</button>
             )}
           </div>
@@ -567,8 +567,8 @@ function CaseDocumentPanel({ org, staff, caseId, primary, onCancel, onSaved }) {
         Documents tab too.
       </div>
       {err && (
-        <div style={{ padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
-          border: '1px solid #FECACA', color: '#B42318', fontSize: 13, marginBottom: 10 }}>{err}</div>
+        <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--danger-bg)',
+          border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13, marginBottom: 10 }}>{err}</div>
       )}
       <div style={{ display: 'flex', gap: 8 }}>
         <button onClick={save} disabled={busy || !file || !title.trim()}
@@ -645,8 +645,8 @@ function EscalatePanel({ caseId, caseRef, primary, onCancel, onDone }) {
   }
 
   return (
-    <div style={{ ...card, border: '1px solid #FECACA' }}>
-      <div style={{ fontSize: 14.5, fontWeight: 800, color: '#B42318', marginBottom: 8 }}>
+    <div style={{ ...card, border: '1px solid var(--danger-border)' }}>
+      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--danger-text)', marginBottom: 8 }}>
         Escalate to disciplinary
       </div>
       {!confirmed ? (
@@ -697,8 +697,8 @@ function EscalatePanel({ caseId, caseRef, primary, onCancel, onDone }) {
             </select>
           </div>
           {err && (
-            <div style={{ padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
-              border: '1px solid #FECACA', color: '#B42318', fontSize: 13, marginBottom: 10 }}>{err}</div>
+            <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--danger-bg)',
+              border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13, marginBottom: 10 }}>{err}</div>
           )}
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={go} disabled={busy || !f.reason.trim() || !f.allegation.trim()}

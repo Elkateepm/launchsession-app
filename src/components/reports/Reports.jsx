@@ -22,12 +22,12 @@ const card = (extra = {}) => ({
   boxShadow: '0 1px 2px rgba(15,23,42,0.04)', ...extra,
 })
 const TONES = {
-  indigo: { bg: '#EEF2FF', bd: '#C7D2FE', fg: '#4338CA' },
-  blue:   { bg: '#EFF6FF', bd: '#BFDBFE', fg: '#1D4ED8' },
-  green:  { bg: '#F0FDF4', bd: '#BBF7D0', fg: '#15803D' },
-  amber:  { bg: '#FFFBEB', bd: '#FDE68A', fg: '#B45309' },
-  red:    { bg: '#FEF2F2', bd: '#FECACA', fg: '#B91C1C' },
-  slate:  { bg: '#F8FAFC', bd: '#E2E8F0', fg: '#334155' },
+  indigo: { bg: 'var(--info-bg)', bd: 'var(--info-border)', fg: 'var(--info-text)' },
+  blue:   { bg: 'var(--info-bg)', bd: 'var(--info-border)', fg: 'var(--info-text)' },
+  green:  { bg: 'var(--ok-bg)', bd: 'var(--ok-border)', fg: 'var(--ok-text)' },
+  amber:  { bg: 'var(--warn-bg)', bd: 'var(--warn-border)', fg: 'var(--warn-text)' },
+  red:    { bg: 'var(--danger-bg)', bd: 'var(--danger-border)', fg: 'var(--danger-text)' },
+  slate:  { bg: 'var(--surface2)', bd: '#E2E8F0', fg: '#334155' },
 }
 
 const CATEGORY_TONE = {
@@ -119,7 +119,7 @@ export default function Reports({ org, session, userProfile, onNavigate }) {
                 library: for most organisations here this is the report the page
                 exists for, and it was the one the library served worst. */}
             <button onClick={() => setShowFunder(true)} style={{
-              padding: '12px 20px', borderRadius: 11, border: 'none', color: '#3730A3', background: 'var(--surface)',
+              padding: '12px 20px', borderRadius: 11, border: 'none', color: 'var(--info-text)', background: 'var(--surface)',
               fontSize: 13, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
               boxShadow: '0 8px 20px -8px rgba(0,0,0,0.4)',
             }}>Funder report</button>
@@ -164,9 +164,9 @@ export default function Reports({ org, session, userProfile, onNavigate }) {
       )}
 
       {error && (
-        <div style={{ ...card({ padding: 16, marginBottom: 14 }), borderColor: '#FECACA', background: '#FEF2F2' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#B91C1C' }}>Couldn't load report data</div>
-          <div style={{ fontSize: 12.5, color: '#991B1B', marginTop: 3 }}>{error}</div>
+        <div style={{ ...card({ padding: 16, marginBottom: 14 }), borderColor: 'var(--danger-border)', background: 'var(--danger-bg)' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--danger-text)' }}>Couldn't load report data</div>
+          <div style={{ fontSize: 12.5, color: 'var(--danger-text)', marginTop: 3 }}>{error}</div>
         </div>
       )}
 
@@ -286,7 +286,7 @@ function OverviewView({ loading, metrics, learning, insights, isMobile, savedRep
       {learning && Number(learning.delivered || 0) > 0 && (
         <>
           <SectionLabel>Learning loop</SectionLabel>
-          <div style={{ ...card({ padding: isMobile ? 16 : 20, marginBottom: 22 }), background: 'linear-gradient(135deg,#F5F3FF,#EFF6FF)', borderColor: '#C7D2FE' }}>
+          <div style={{ ...card({ padding: isMobile ? 16 : 20, marginBottom: 22 }), background: 'linear-gradient(135deg,#F5F3FF,#EFF6FF)', borderColor: 'var(--info-border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
               <div style={{ maxWidth: 520 }}>
                 <div style={{ fontSize: 15, fontWeight: 900, color: '#312E81' }}>From delivery to evidence</div>
@@ -301,7 +301,7 @@ function OverviewView({ loading, metrics, learning, insights, isMobile, savedRep
                 { v: learning.avg_inclusion ? `${learning.avg_inclusion}/5` : '—', l: 'inclusion' },
                 { v: learning.evidence_count || 0, l: 'with evidence' },
                 { v: learning.actions_open || 0, l: 'open actions' },
-              ].map(x => <div key={x.l} style={{ background: 'rgba(255,255,255,0.78)', border: '1px solid #E0E7FF', borderRadius: 11, padding: 11 }}><div style={{ fontSize: 19, fontWeight: 900, color: '#3730A3' }}>{x.v}</div><div style={{ fontSize: 10.5, color: 'var(--text3)', fontWeight: 700 }}>{x.l}</div></div>)}
+              ].map(x => <div key={x.l} style={{ background: 'rgba(255,255,255,0.78)', border: '1px solid #E0E7FF', borderRadius: 11, padding: 11 }}><div style={{ fontSize: 19, fontWeight: 900, color: 'var(--info-text)' }}>{x.v}</div><div style={{ fontSize: 10.5, color: 'var(--text3)', fontWeight: 700 }}>{x.l}</div></div>)}
             </div>
           </div>
         </>
@@ -312,9 +312,9 @@ function OverviewView({ loading, metrics, learning, insights, isMobile, savedRep
           <SectionLabel>Needs your attention</SectionLabel>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit,minmax(280px,1fr))', gap: 12, marginBottom: 22 }}>
             {insights.map(i => {
-              const tone = i.tone === 'urgent' ? { bd: '#FECACA', bg: '#FEF2F2', fg: '#B91C1C' }
-                : i.tone === 'warn' ? { bd: '#FDE68A', bg: '#FFFBEB', fg: '#B45309' }
-                : { bd: '#BBF7D0', bg: '#F0FDF4', fg: '#15803D' }
+              const tone = i.tone === 'urgent' ? { bd: 'var(--danger-border)', bg: 'var(--danger-bg)', fg: 'var(--danger-text)' }
+                : i.tone === 'warn' ? { bd: 'var(--warn-border)', bg: 'var(--warn-bg)', fg: 'var(--warn-text)' }
+                : { bd: 'var(--ok-border)', bg: 'var(--ok-bg)', fg: 'var(--ok-text)' }
               return (
                 <div key={i.key} style={card({ padding: 16, borderColor: tone.bd, background: tone.bg })}>
                   <div style={{ fontSize: 13.5, fontWeight: 800, color: tone.fg }}>{i.title}</div>
@@ -422,7 +422,7 @@ function LibraryView({ role, isMobile, onRun }) {
                   color: (TONES[CATEGORY_TONE[r.category]] || TONES.slate).fg,
                   background: (TONES[CATEGORY_TONE[r.category]] || TONES.slate).bg,
                 }}>{r.category}</span>
-                {r.restricted && <span style={{ fontSize: 10.5, fontWeight: 800, color: '#B45309', background: '#FFFBEB', borderRadius: 99, padding: '3px 9px' }}>Restricted</span>}
+                {r.restricted && <span style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--warn-text)', background: 'var(--warn-bg)', borderRadius: 99, padding: '3px 9px' }}>Restricted</span>}
               </div>
               <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{r.name}</div>
               <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 5, lineHeight: 1.5 }}>{r.desc}</div>

@@ -98,7 +98,7 @@ export default function PublicVolunteerRegistration() {
   )
 
   if (done) return (
-    <div style={{ minHeight: '100dvh', background: '#F6F8FC', fontFamily: 'system-ui, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+    <div style={{ minHeight: '100dvh', background: 'var(--surface2)', fontFamily: 'system-ui, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ background: 'var(--surface)', borderRadius: 20, padding: 40, maxWidth: 460, textAlign: 'center', boxShadow: '0 20px 60px rgba(15,23,42,0.08)' }}>
         <div style={{ fontSize: 46, marginBottom: 14 }}><Icon name="✅" /></div>
         <div style={{ fontSize: 19, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>Application received</div>
@@ -112,7 +112,7 @@ export default function PublicVolunteerRegistration() {
   )
 
   return (
-    <div style={{ minHeight: '100dvh', background: '#F6F8FC', fontFamily: 'system-ui, sans-serif' }}>
+    <div style={{ minHeight: '100dvh', background: 'var(--surface2)', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ background: `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`, padding: '28px 20px', color: '#fff', textAlign: 'center' }}>
         {org.logo_url && <img src={org.logo_url} alt="" style={{ width: 52, height: 52, borderRadius: 14, objectFit: 'contain', background: 'var(--logo-backdrop)', padding: 6, boxSizing: 'border-box', marginBottom: 10 }} />}
         <div style={{ fontSize: 20, fontWeight: 900 }}>{org.name}</div>
@@ -205,7 +205,7 @@ export default function PublicVolunteerRegistration() {
                 <span style={{ color: 'var(--text3)' }}>{k}</span><span style={{ fontWeight: 700, color: 'var(--text)', textAlign: 'right' }}>{v}</span>
               </div>
             ) : null)}
-            {error && <div style={{ marginTop: 14, color: '#DC2626', fontSize: 12.5, fontWeight: 600 }}>{error}</div>}
+            {error && <div style={{ marginTop: 14, color: 'var(--danger-text)', fontSize: 12.5, fontWeight: 600 }}>{error}</div>}
           </div>
         )}
 

@@ -120,7 +120,7 @@ export default function FundraisingGate({ org, session, children }) {
               }}
             />
             {error && (
-              <div style={{ color: '#DC2626', fontSize: 13, fontWeight: 600, marginBottom: 14 }}>{error}</div>
+              <div style={{ color: 'var(--danger-text)', fontSize: 13, fontWeight: 600, marginBottom: 14 }}>{error}</div>
             )}
             <button
               type="submit"

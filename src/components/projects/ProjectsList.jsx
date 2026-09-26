@@ -37,12 +37,12 @@ function deriveStatus(project) {
 
 function StatusChip({ status }) {
   const map = {
-    draft: { t: 'Draft', c: '#64748B', b: '#F1F5F9' },
-    upcoming: { t: 'Upcoming', c: '#1D4ED8', b: '#EFF6FF' },
-    active: { t: 'Active', c: '#15803D', b: '#DCFCE7' },
-    completed: { t: 'Completed', c: '#64748B', b: '#F1F5F9' },
-    cancelled: { t: 'Cancelled', c: '#B91C1C', b: '#FEE2E2' },
-    archived: { t: 'Archived', c: '#64748B', b: '#F1F5F9' },
+    draft: { t: 'Draft', c: '#64748B', b: 'var(--surface-hover)' },
+    upcoming: { t: 'Upcoming', c: 'var(--info-text)', b: 'var(--info-bg)' },
+    active: { t: 'Active', c: 'var(--ok-text)', b: 'var(--ok-bg)' },
+    completed: { t: 'Completed', c: '#64748B', b: 'var(--surface-hover)' },
+    cancelled: { t: 'Cancelled', c: 'var(--danger-text)', b: 'var(--danger-bg)' },
+    archived: { t: 'Archived', c: '#64748B', b: 'var(--surface-hover)' },
   }
   const m = map[status] || map.draft
   return <span style={{ fontSize: 10.5, fontWeight: 800, color: m.c, background: m.b, borderRadius: 99, padding: '3px 9px', flexShrink: 0 }}>{m.t}</span>
@@ -162,7 +162,7 @@ export default function ProjectsList({ org, session, onNavigate }) {
                 <div style={{ flex: 1, minWidth: 200 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 5 }}>
                     <StatusChip status={p._status} />
-                    <span style={{ fontSize: 10.5, fontWeight: 700, color: '#7C3AED', background: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: 99, padding: '2px 8px' }}>{typeLabel}</span>
+                    <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--violet-text)', background: 'var(--violet-bg)', border: '1px solid var(--violet-border)', borderRadius: 99, padding: '2px 8px' }}>{typeLabel}</span>
                   </div>
                   <div style={{ fontSize: 15.5, fontWeight: 800, color: 'var(--text)' }}>{p.name}</div>
                   <div style={{ fontSize: 12.5, color: 'var(--text3)', fontWeight: 600, marginTop: 2 }}>

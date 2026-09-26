@@ -476,7 +476,7 @@ function RegisterGroupsManager({ org }) {
   return (
     <SettingCard title="Groups" description="Organise your register into groups like Red, Blue, Juniors or Teens">
       {error && (
-        <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', marginBottom: 12, fontSize: 12, fontWeight: 600 }}><Icon name="⚠️" /> {error}</div>
+        <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)', borderRadius: 8, padding: '8px 12px', marginBottom: 12, fontSize: 12, fontWeight: 600 }}><Icon name="⚠️" /> {error}</div>
       )}
 
       {loading ? (
@@ -535,7 +535,7 @@ function GroupCard({ group, count, onRename, onColorChange, onDelete }) {
         ) : (
           <div onClick={() => setEditing(true)} style={{ flex: 1, fontSize: 14, fontWeight: 800, color: 'var(--text)', cursor: 'text' }}>{group.label}</div>
         )}
-        <button onClick={() => onDelete(group.id)} title="Delete group" style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: '#DC2626', opacity: 0.7, padding: 2 }}><Icon name="🗑️" /></button>
+        <button onClick={() => onDelete(group.id)} title="Delete group" style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--danger-text)', opacity: 0.7, padding: 2 }}><Icon name="🗑️" /></button>
       </div>
       <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600 }}>{count} {count === 1 ? 'child' : 'children'}</div>
 
@@ -613,7 +613,7 @@ function ModulePasswordCard({ moduleKey, label, icon, accentColor }) {
               <input type="password" style={inp} value={confirmPw} onChange={e => setConfirmPw(e.target.value)} placeholder="Repeat password" />
             </Field>
           </div>
-          {pwError && <div style={{ fontSize: 12.5, color: '#DC2626', fontWeight: 600, marginBottom: 12 }}>{pwError}</div>}
+          {pwError && <div style={{ fontSize: 12.5, color: 'var(--danger-text)', fontWeight: 600, marginBottom: 12 }}>{pwError}</div>}
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <button onClick={handleSetPassword} disabled={pwSaving} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: pwSaving ? '#9ca3af' : accentColor, color: '#fff', fontSize: 14, fontWeight: 700, cursor: pwSaving ? 'default' : 'pointer' }}>
               {pwSaving ? 'Saving...' : pwSaved ? '✓ Saved!' : pwStatus === 'set' ? 'Update Password' : 'Set Password'}
@@ -688,7 +688,7 @@ function BiometricUnlockCard() {
         </div>
         {enrolled && (
           <>
-            <div style={{ fontSize: 12.5, color: '#92400E', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 10, padding: '10px 13px', marginBottom: 14, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 12.5, color: 'var(--warn-text)', background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 10, padding: '10px 13px', marginBottom: 14, lineHeight: 1.5 }}>
               This computer was set up for app lock previously. It no longer locks.
             </div>
             <button onClick={handleDisable}
@@ -704,14 +704,14 @@ function BiometricUnlockCard() {
 
   return (
     <SettingCard title="Biometric unlock" description="Use Face ID, Touch ID or your fingerprint to unlock the app on this device.">
-      <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 10, padding: '10px 13px', fontSize: 12.5, color: '#92400E', marginBottom: 14, lineHeight: 1.5 }}>
+      <div style={{ background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 10, padding: '10px 13px', fontSize: 12.5, color: 'var(--warn-text)', marginBottom: 14, lineHeight: 1.5 }}>
         This locks the app on this device. It doesn't replace your password, and
         anyone who already knows your password can still sign in normally.
       </div>
 
       {enrolled ? (
         <>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5, fontWeight: 700, color: '#15803D', marginBottom: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5, fontWeight: 700, color: 'var(--ok-text)', marginBottom: 14 }}>
             <span><Icon name="✅" /></span> Enabled on this device
           </div>
           <div style={{ marginBottom: 14 }}>
@@ -727,7 +727,7 @@ function BiometricUnlockCard() {
             <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 5 }}>How long the app can be in the background before it locks. It always locks when reopened from closed.</div>
           </div>
           <button onClick={handleDisable}
-            style={{ padding: '10px 20px', borderRadius: 8, border: '1.5px solid #FECACA', background: '#FEF2F2', color: '#B91C1C', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+            style={{ padding: '10px 20px', borderRadius: 8, border: '1.5px solid var(--danger-border)', background: 'var(--danger-bg)', color: 'var(--danger-text)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
             Turn off on this device
           </button>
         </>
@@ -769,12 +769,12 @@ function SecuritySection() {
       </SettingCard>
       <BiometricUnlockCard />
       <SettingCard title="Active Sessions" description="Devices currently logged in to your account">
-        <div style={{ background: '#F0FFF4', border: '1px solid #BBF7D0', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ background: 'var(--ok-bg)', border: '1px solid var(--ok-border)', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700 }}>Current Session</div>
             <div style={{ fontSize: 11, color: 'var(--text3)' }}>Browser · Now</div>
           </div>
-          <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>Active</span>
+          <span style={{ background: 'var(--ok-bg)', color: 'var(--ok-text)', borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>Active</span>
         </div>
       </SettingCard>
       <ModulePasswordCard moduleKey="children" label="Children" icon="🧒" accentColor="#2563EB" />
@@ -870,10 +870,10 @@ function NotificationsSection({ org, session: authSession }) {
 
   const status = !supported ? 'unsupported' : permission === 'denied' ? 'blocked' : isSubscribedHere ? 'enabled' : 'not_enabled'
   const statusMeta = {
-    unsupported: { label: 'Unsupported', color: 'var(--text-faint)', bg: '#F1F5F9' },
-    blocked:     { label: 'Blocked', color: '#DC2626', bg: '#FEF2F2' },
-    enabled:     { label: 'Enabled', color: '#16A34A', bg: '#F0FDF4' },
-    not_enabled: { label: 'Not enabled', color: '#D97706', bg: '#FFFBEB' },
+    unsupported: { label: 'Unsupported', color: 'var(--text-faint)', bg: 'var(--surface-hover)' },
+    blocked:     { label: 'Blocked', color: 'var(--danger-text)', bg: 'var(--danger-bg)' },
+    enabled:     { label: 'Enabled', color: 'var(--ok-text)', bg: 'var(--ok-bg)' },
+    not_enabled: { label: 'Not enabled', color: 'var(--warn-text)', bg: 'var(--warn-bg)' },
   }[status]
 
   const handleEnable = async () => {
@@ -950,7 +950,7 @@ function NotificationsSection({ org, session: authSession }) {
           ) : null}
         </div>
 
-        {error && <div style={{ padding: '10px 14px', borderRadius: 10, background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#DC2626', fontSize: 12.5, fontWeight: 600, marginBottom: 14 }}>{error}</div>}
+        {error && <div style={{ padding: '10px 14px', borderRadius: 10, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 12.5, fontWeight: 600, marginBottom: 14 }}>{error}</div>}
 
         {status === 'unsupported' && (
           <div style={{ fontSize: 12.5, color: 'var(--text3)' }}>Push notifications aren't supported on this browser. You'll still see everything in-app, and can turn on email notifications below.</div>
@@ -971,7 +971,7 @@ function NotificationsSection({ org, session: authSession }) {
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{d.device_name || 'Unknown device'}</div>
                 <div style={{ fontSize: 11.5, color: 'var(--text3)' }}>Last active: {d.last_used_at ? new Date(d.last_used_at).toLocaleDateString('en-GB') : '—'}</div>
               </div>
-              <button onClick={() => handleRemoveDevice(d.id)} style={{ padding: '6px 12px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Remove</button>
+              <button onClick={() => handleRemoveDevice(d.id)} style={{ padding: '6px 12px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: 'var(--danger-text)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Remove</button>
             </div>
           ))}
         </SettingCard>
@@ -1072,7 +1072,7 @@ function IntegrationsSection() {
               </div>
             </div>
             <div>
-              {i.status === 'connected' && <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>● Connected</span>}
+              {i.status === 'connected' && <span style={{ background: 'var(--ok-bg)', color: 'var(--ok-text)', borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>● Connected</span>}
               {i.status === 'available' && <button style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid #1B9AAA', background: 'var(--surface)', color: '#1B9AAA', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Connect</button>}
               {i.status === 'coming_soon' && <span style={{ background: 'var(--surface3)', color: 'var(--text-faint)', borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>Coming Soon</span>}
             </div>
@@ -1084,12 +1084,12 @@ function IntegrationsSection() {
 }
 
 const STATUS_STYLE = {
-  active:    { bg: '#DCFCE7', color: '#15803D', label: '● Active' },
-  trialing:  { bg: '#DBEAFE', color: '#1D4ED8', label: '● Trial' },
-  past_due:  { bg: '#FEF3C7', color: '#B45309', label: '● Payment overdue' },
-  unpaid:    { bg: '#FEE2E2', color: '#B91C1C', label: '● Unpaid' },
-  canceled:  { bg: '#FEE2E2', color: '#B91C1C', label: '● Canceled' },
-  incomplete:{ bg: '#FEE2E2', color: '#B91C1C', label: '● Incomplete' },
+  active:    { bg: 'var(--ok-bg)', color: 'var(--ok-text)', label: '● Active' },
+  trialing:  { bg: 'var(--info-bg)', color: 'var(--info-text)', label: '● Trial' },
+  past_due:  { bg: 'var(--warn-bg)', color: 'var(--warn-text)', label: '● Payment overdue' },
+  unpaid:    { bg: 'var(--danger-bg)', color: 'var(--danger-text)', label: '● Unpaid' },
+  canceled:  { bg: 'var(--danger-bg)', color: 'var(--danger-text)', label: '● Canceled' },
+  incomplete:{ bg: 'var(--danger-bg)', color: 'var(--danger-text)', label: '● Incomplete' },
 }
 
 const CYCLES = [
@@ -1116,7 +1116,7 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
 
   const currentPlan = org?.plan || 'trial'
   const status = org?.subscription_status
-  const statusStyle = STATUS_STYLE[status] || { bg: '#F1F5F9', color: '#475569', label: status ? `● ${status}` : '● No active subscription' }
+  const statusStyle = STATUS_STYLE[status] || { bg: 'var(--surface-hover)', color: '#475569', label: status ? `● ${status}` : '● No active subscription' }
   const daysLeft = trialDaysRemaining(org)
   const planEnded = isPlanEnded(org)
 
@@ -1218,10 +1218,10 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
   return (
     <div>
       {error && (
-        <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, fontWeight: 600 }}><Icon name="⚠️" /> {error}</div>
+        <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, fontWeight: 600 }}><Icon name="⚠️" /> {error}</div>
       )}
       {notice && (
-        <div style={{ background: '#DCFCE7', border: '1px solid #86EFAC', color: '#15803D', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, fontWeight: 600 }}>{notice}</div>
+        <div style={{ background: 'var(--ok-bg)', border: '1px solid var(--ok-border)', color: 'var(--ok-text)', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, fontWeight: 600 }}>{notice}</div>
       )}
 
       <SettingCard title="Current Plan">
@@ -1256,7 +1256,7 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
       {isAdmin && (
         <SettingCard title="Plans" description="Every plan starts with the 14-day trial. Change or cancel at any time.">
           {plansError && (
-            <div style={{ fontSize: 13, color: '#B91C1C', marginBottom: 12 }}>{plansError}</div>
+            <div style={{ fontSize: 13, color: 'var(--danger-text)', marginBottom: 12 }}>{plansError}</div>
           )}
           {plans === null ? (
             <div style={{ fontSize: 13, color: 'var(--text3)', padding: '8px 0' }}>Loading plans…</div>
@@ -1293,7 +1293,7 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 14, minHeight: 48, lineHeight: 1.5 }}>{p.blurb}</div>
                       {isCurrent ? (
-                        <div style={{ textAlign: 'center', padding: '12px 0', borderRadius: 8, background: '#DCFCE7', color: '#15803D', fontWeight: 700, fontSize: 13 }}>Current Plan</div>
+                        <div style={{ textAlign: 'center', padding: '12px 0', borderRadius: 8, background: 'var(--ok-bg)', color: 'var(--ok-text)', fontWeight: 700, fontSize: 13 }}>Current Plan</div>
                       ) : (
                         <button onClick={() => handleChoose(p.plan)} disabled={loadingPlan === p.plan}
                           style={{ width: '100%', minHeight: 44, borderRadius: 8, border: 'none', background: loadingPlan === p.plan ? '#9ca3af' : '#1B9AAA', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -1534,7 +1534,7 @@ function SafeguardingSection({ org }) {
             <span style={{ fontSize: 22 }}><Icon name="📄" /></span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Policy document uploaded</div>
-              <button type="button" onClick={async () => { const u = await signOne('safeguarding-docs', policyUrl, 300); if (u) window.open(u, '_blank', 'noopener,noreferrer') }} style={{ fontSize: 12, color: '#DC2626', fontWeight: 600, textDecoration: 'none', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>View / Download <Icon name="↗" /></button>
+              <button type="button" onClick={async () => { const u = await signOne('safeguarding-docs', policyUrl, 300); if (u) window.open(u, '_blank', 'noopener,noreferrer') }} style={{ fontSize: 12, color: 'var(--danger-text)', fontWeight: 600, textDecoration: 'none', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>View / Download <Icon name="↗" /></button>
             </div>
             <button onClick={() => setPolicyUrl('')} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 18, cursor: 'pointer', padding: 4 }}>×</button>
           </div>
@@ -1547,7 +1547,7 @@ function SafeguardingSection({ org }) {
               {uploading ? 'Uploading...' : 'Upload Policy'}
               <input type="file" hidden accept=".pdf,.doc,.docx" onChange={e => handlePolicyUpload(e.target.files[0])} disabled={uploading} />
             </label>
-            {uploadErr && <div style={{ marginTop: 8, fontSize: 12, color: '#DC2626', fontWeight: 600 }}>{uploadErr}</div>}
+            {uploadErr && <div style={{ marginTop: 8, fontSize: 12, color: 'var(--danger-text)', fontWeight: 600 }}>{uploadErr}</div>}
           </div>
         )}
         {policyUrl && (
@@ -1706,7 +1706,7 @@ function GroupsSection({ org, refreshOrg }) {
         </Field>
 
         {deletionGraceMonths !== '' && (
-          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: 12, marginBottom: 16, fontSize: 12, color: '#B91C1C', fontWeight: 600 }}>
+          <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 10, padding: 12, marginBottom: 16, fontSize: 12, color: 'var(--danger-text)', fontWeight: 600 }}>
             ⚠ With this set, registers will be permanently and automatically deleted once they've reached the end of both periods — this cannot be undone. Any linked safeguarding concerns are preserved regardless.
           </div>
         )}
@@ -1797,7 +1797,7 @@ function VenuesSection({ org, isAdmin }) {
         </div>
       </div>
 
-      {error && <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginBottom: 14, fontWeight: 600 }}>{error}</div>}
+      {error && <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginBottom: 14, fontWeight: 600 }}>{error}</div>}
 
       <SettingCard title="Your venues" description="Add every regular site your sessions take place at">
         {loading ? (
@@ -1822,7 +1822,7 @@ function VenuesSection({ org, isAdmin }) {
                 <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
                   <button onClick={() => startEdit(v)} style={{ padding: '5px 10px', borderRadius: 7, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Edit</button>
                   <button onClick={() => toggleActive(v)} style={{ padding: '5px 10px', borderRadius: 7, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>{v.is_active ? 'Deactivate' : 'Reactivate'}</button>
-                  <button onClick={() => handleDelete(v)} style={{ padding: '5px 10px', borderRadius: 7, border: '1.5px solid #FECACA', background: '#FEF2F2', color: '#B91C1C', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+                  <button onClick={() => handleDelete(v)} style={{ padding: '5px 10px', borderRadius: 7, border: '1.5px solid var(--danger-border)', background: 'var(--danger-bg)', color: 'var(--danger-text)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
                 </div>
               )}
             </div>
@@ -1880,7 +1880,7 @@ function VenueDefaultHazardsEditor({ hazards, onChange }) {
             <div key={i} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 9, padding: 10 }}>
               <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
                 <input style={{ ...smallInp, flex: 1 }} value={h.hazard} onChange={e => update(i, { hazard: e.target.value })} placeholder="e.g. Slips on wet flooring" />
-                <button onClick={() => remove(i)} style={{ padding: '0 10px', borderRadius: 7, border: '1px solid #FECACA', background: '#FEF2F2', color: '#B91C1C', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Remove</button>
+                <button onClick={() => remove(i)} style={{ padding: '0 10px', borderRadius: 7, border: '1px solid var(--danger-border)', background: 'var(--danger-bg)', color: 'var(--danger-text)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Remove</button>
               </div>
               <input style={{ ...smallInp, width: '100%', boxSizing: 'border-box', marginBottom: 6 }} value={h.control_measures || ''} onChange={e => update(i, { control_measures: e.target.value })} placeholder="Control measures" />
               <div style={{ display: 'flex', gap: 12 }}>
@@ -1905,15 +1905,15 @@ function VenueDefaultHazardsEditor({ hazards, onChange }) {
 }
 
 const ROLE_CONFIG = {
-  owner:     { label: 'Owner',     color: '#B45309', bg: '#FEF3C7' },
-  admin:     { label: 'Admin',     color: '#7C3AED', bg: '#F3E8FF' },
+  owner:     { label: 'Owner',     color: 'var(--warn-text)', bg: 'var(--warn-bg)' },
+  admin:     { label: 'Admin',     color: 'var(--violet-text)', bg: 'var(--violet-bg)' },
   manager:   { label: 'Manager',   color: '#0891B2', bg: '#CFFAFE' },
-  staff:     { label: 'Staff',     color: '#2563EB', bg: '#DBEAFE' },
-  volunteer: { label: 'Volunteer', color: '#059669', bg: '#D1FAE5' },
+  staff:     { label: 'Staff',     color: 'var(--info-text)', bg: 'var(--info-bg)' },
+  volunteer: { label: 'Volunteer', color: 'var(--ok-text)', bg: 'var(--ok-bg)' },
 }
 // A role we do not recognise reads as exactly that. Falling back to Volunteer
 // understated someone's access on the one screen that exists to show it.
-const ROLE_UNKNOWN = { label: 'Unknown role', color: 'var(--text3)', bg: '#F1F5F9' }
+const ROLE_UNKNOWN = { label: 'Unknown role', color: 'var(--text3)', bg: 'var(--surface-hover)' }
 
 // Access tiers, most privileged first. `always` keeps a card on screen when it
 // is empty, because "no admins" is information; an empty Managers card is not.
@@ -2001,7 +2001,7 @@ function UsersSection({ org, session, isAdmin, currentUserId }) {
       </div>
 
       {error && (
-        <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', marginBottom: 14, fontSize: 12, fontWeight: 600 }}><Icon name="⚠️" /> {error}</div>
+        <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)', borderRadius: 8, padding: '8px 12px', marginBottom: 14, fontSize: 12, fontWeight: 600 }}><Icon name="⚠️" /> {error}</div>
       )}
 
       {[...tiers, ...(unplaced.length > 0
@@ -2045,7 +2045,7 @@ function UserRow({ user, isAdmin, isSelf, busy, onRoleChange, onRemove }) {
         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6 }}>
           {user.full_name || user.email}
           {isSelf && <span style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 600 }}>(you)</span>}
-          {user.status === 'pending_invite' && <span style={{ fontSize: 9, fontWeight: 800, color: '#D97706', background: '#FEF3C7', borderRadius: 99, padding: '1px 7px' }}>PENDING</span>}
+          {user.status === 'pending_invite' && <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--warn-text)', background: 'var(--warn-bg)', borderRadius: 99, padding: '1px 7px' }}>PENDING</span>}
         </div>
         <div style={{ fontSize: 11, color: 'var(--text3)' }}>{user.email}</div>
       </div>
@@ -2108,7 +2108,7 @@ function InviteUserModal({ org, session, onClose, onInvited }) {
         <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)', marginBottom: 4 }}>Invite to {org?.name}</div>
         <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 18 }}>They'll get a branded email with a link to set up their account.</div>
 
-        {error && <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', marginBottom: 14, fontSize: 12, fontWeight: 600 }}><Icon name="⚠️" /> {error}</div>}
+        {error && <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)', borderRadius: 8, padding: '8px 12px', marginBottom: 14, fontSize: 12, fontWeight: 600 }}><Icon name="⚠️" /> {error}</div>}
 
         <Field label="Full Name"><input style={inp} value={name} onChange={e => setName(e.target.value)} placeholder="Jane Smith" /></Field>
         <Field label="Email"><input style={inp} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="jane@example.com" /></Field>
@@ -2244,7 +2244,7 @@ export default function Settings({ org, session, userProfile, initialSection }) 
                   <span style={{ fontSize: 15 }}><Icon name={n.icon} /></span>
                   <span style={{ flex: 1, minWidth: 0 }}>{n.label}</span>
                   {n.requiresBranding && !brandingEnabled && (
-                    <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: .7, color: '#8A5C00', background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 999, padding: '3px 6px', textTransform: 'uppercase' }}>Premium</span>
+                    <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: .7, color: 'var(--warn-text)', background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 999, padding: '3px 6px', textTransform: 'uppercase' }}>Premium</span>
                   )}
                 </button>
               ))}

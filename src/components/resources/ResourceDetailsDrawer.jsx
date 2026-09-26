@@ -69,8 +69,8 @@ export default function ResourceDetailsDrawer({ resource, staff, org, onClose, o
         </div>
 
         {resource.notes && (
-          <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 10, padding: 12, marginBottom: 16 }}>
-            <div style={{ fontSize: 10.5, fontWeight: 800, color: '#92400E', textTransform: 'uppercase', marginBottom: 4 }}>Maintenance / notes</div>
+          <div style={{ background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 10, padding: 12, marginBottom: 16 }}>
+            <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--warn-text)', textTransform: 'uppercase', marginBottom: 4 }}>Maintenance / notes</div>
             <div style={{ fontSize: 12.5, color: '#78350F' }}>{resource.notes}</div>
           </div>
         )}
@@ -127,7 +127,7 @@ export default function ResourceDetailsDrawer({ resource, staff, org, onClose, o
             <button onClick={() => setConfirmDelete(false)} style={{ flex: 1, padding: '10px', borderRadius: 9, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           </div>
         ) : (
-          <button onClick={() => setConfirmDelete(true)} style={{ width: '100%', padding: '10px', borderRadius: 9, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.05)', color: '#DC2626', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Delete Resource</button>
+          <button onClick={() => setConfirmDelete(true)} style={{ width: '100%', padding: '10px', borderRadius: 9, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.05)', color: 'var(--danger-text)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Delete Resource</button>
         )}
       </div>
     </div>

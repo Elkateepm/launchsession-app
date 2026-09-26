@@ -367,7 +367,7 @@ function ChildImportTool({ org, showToast, onNavigate }) {
                       <td style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text)' }}>{col.label}</td>
                       <td style={{ padding: '10px 14px' }}>
                         {col.required
-                          ? <span style={{ background: '#FEE2E2', color: '#C00', borderRadius: 99, padding: '2px 9px', fontSize: 11, fontWeight: 800 }}>Required</span>
+                          ? <span style={{ background: 'var(--danger-bg)', color: '#C00', borderRadius: 99, padding: '2px 9px', fontSize: 11, fontWeight: 800 }}>Required</span>
                           : <span style={{ background: 'var(--surface3)', color: 'var(--text3)', borderRadius: 99, padding: '2px 9px', fontSize: 11, fontWeight: 600 }}>Optional</span>
                         }
                       </td>
@@ -407,7 +407,7 @@ function ChildImportTool({ org, showToast, onNavigate }) {
               <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>
                 {importResult.success} young {importResult.success === 1 ? 'person' : 'people'} imported!
               </div>
-              {importResult.failed > 0 && <div style={{ fontSize: 13, color: '#92400E', marginBottom: 8 }}>{importResult.failed} rows skipped — check for missing names.</div>}
+              {importResult.failed > 0 && <div style={{ fontSize: 13, color: 'var(--warn-text)', marginBottom: 8 }}>{importResult.failed} rows skipped — check for missing names.</div>}
               {importResult.error && <div style={{ fontSize: 12, color: '#C00', marginBottom: 12 }}>{importResult.error}</div>}
               <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
                 <button onClick={() => setImportResult(null)} style={{ padding: '10px 20px', borderRadius: 10, border: `1.5px solid ${primary}`, background: 'transparent', color: primary, fontWeight: 700, cursor: 'pointer' }}>Import more</button>
@@ -436,7 +436,7 @@ function ChildImportTool({ org, showToast, onNavigate }) {
                   style={{ ...fi, resize: 'vertical', fontFamily: 'monospace', fontSize: 12, lineHeight: 1.6 }}
                 />
                 {errors.length > 0 && (
-                  <div style={{ background: '#FFF0F0', border: '1px solid #FFB3B3', borderRadius: 10, padding: '10px 14px', marginTop: 10 }}>
+                  <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 10, padding: '10px 14px', marginTop: 10 }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: '#C00', marginBottom: 4 }}>⚠️ {errors.length} issue{errors.length > 1 ? 's' : ''} found:</div>
                     {errors.map((e, i) => <div key={i} style={{ fontSize: 12, color: '#C00' }}>• {e}</div>)}
                   </div>

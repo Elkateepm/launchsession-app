@@ -79,9 +79,9 @@ function GroupHeading({ tag, count }) {
   )
 }
 const STATUS_STYLE = {
-  active:   { label: 'Active',   bg: '#F0FDF4', color: '#16A34A', dot: '#16A34A' },
-  draft:    { label: 'Draft',    bg: '#FFF7ED', color: '#D97706', dot: '#D97706' },
-  archived: { label: 'Archived', bg: '#F1F5F9', color: 'var(--text3)', dot: '#94A3B8' },
+  active:   { label: 'Active',   bg: 'var(--ok-bg)', color: 'var(--ok-text)', dot: '#16A34A' },
+  draft:    { label: 'Draft',    bg: 'var(--warn-bg)', color: 'var(--warn-text)', dot: '#D97706' },
+  archived: { label: 'Archived', bg: 'var(--surface-hover)', color: 'var(--text3)', dot: '#94A3B8' },
 }
 
 const BASE_TEMPLATES = [
@@ -444,7 +444,7 @@ export function EmailFormModal({ form, primary, onClose, recipients }) {
         <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>{form.name}</div>
 
         {recipients && recipients.length > 0 && (
-          <div style={{ padding: '10px 14px', borderRadius: 10, background: '#F0F9FF', border: '1px solid #BAE6FD', marginBottom: 14 }}>
+          <div style={{ padding: '10px 14px', borderRadius: 10, background: 'var(--info-bg)', border: '1px solid var(--info-border)', marginBottom: 14 }}>
             <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0369A1' }}>
               Pre-filled with {withEmail.length} of {recipients.length} invited {recipients.length === 1 ? "child's" : "children's"} parent email{withEmail.length === 1 ? '' : 's'}
             </div>
@@ -466,9 +466,9 @@ export function EmailFormModal({ form, primary, onClose, recipients }) {
         />
         <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 6, marginBottom: 16 }}>Separate multiple addresses with commas or new lines.</div>
 
-        {result?.error && <div style={{ padding: '10px 14px', borderRadius: 10, background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#DC2626', fontSize: 13, fontWeight: 600, marginBottom: 14 }}>{result.error}</div>}
+        {result?.error && <div style={{ padding: '10px 14px', borderRadius: 10, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13, fontWeight: 600, marginBottom: 14 }}>{result.error}</div>}
         {result && !result.error && (
-          <div style={{ padding: '10px 14px', borderRadius: 10, background: '#F0FDF4', border: '1px solid #86EFAC', color: '#16A34A', fontSize: 13, fontWeight: 600, marginBottom: 14 }}>
+          <div style={{ padding: '10px 14px', borderRadius: 10, background: 'var(--ok-bg)', border: '1px solid var(--ok-border)', color: 'var(--ok-text)', fontSize: 13, fontWeight: 600, marginBottom: 14 }}>
             Sent to {result.sent} recipient{result.sent !== 1 ? 's' : ''}{result.failed?.length ? ` — failed for: ${result.failed.join(', ')}` : ''}
           </div>
         )}
@@ -638,7 +638,7 @@ function ImportFormModal({ onClose, onImport }) {
         <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 14 }}>Paste form JSON — <code style={{ fontSize: 11, background: 'var(--bg)', padding: '1px 5px', borderRadius: 4 }}>{'{ name, description, fields: [{ type, label, required }] }'}</code></div>
         <textarea value={text} onChange={e => setText(e.target.value)} rows={8} placeholder='{"name": "Trip Consent", "fields": [{"type":"text","label":"Child Name","required":true}]}'
           style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 12.5, fontFamily: 'monospace', outline: 'none', resize: 'vertical' }} />
-        {error && <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#DC2626', fontSize: 13, fontWeight: 600 }}>{error}</div>}
+        {error && <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13, fontWeight: 600 }}>{error}</div>}
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
           <button onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2, #475569)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
           <button onClick={handleImport} disabled={saving || !text.trim()}
@@ -820,10 +820,10 @@ export default function Forms({ org, session, isAdmin }) {
 
   const statCards = [
     { key: 'total', label: 'Total Forms', value: totalForms, icon: '📝', color: 'var(--org-primary)', sub: 'All time' },
-    { key: 'live', label: 'Live Forms', value: liveCount, icon: '✅', color: '#16A34A', sub: `${livePct}% of total` },
-    { key: 'responses', label: `Responses ${period === 'all' ? '(All Time)' : period === 'week' ? 'This Week' : 'This Month'}`, value: responsesThisPeriod, icon: '📈', color: '#2563EB',
+    { key: 'live', label: 'Live Forms', value: liveCount, icon: '✅', color: 'var(--ok-text)', sub: `${livePct}% of total` },
+    { key: 'responses', label: `Responses ${period === 'all' ? '(All Time)' : period === 'week' ? 'This Week' : 'This Month'}`, value: responsesThisPeriod, icon: '📈', color: 'var(--info-text)',
       sub: periodChangePct === null ? 'All-time total' : `${periodChangePct >= 0 ? '↑' : '↓'} ${Math.abs(periodChangePct)}% vs last ${period}`, subColor: periodChangePct === null ? undefined : (periodChangePct >= 0 ? '#16A34A' : '#DC2626') },
-    { key: 'drafts', label: 'Drafts', value: draftCount, icon: '📄', color: '#D97706', sub: `${draftPct}% of total` },
+    { key: 'drafts', label: 'Drafts', value: draftCount, icon: '📄', color: 'var(--warn-text)', sub: `${draftPct}% of total` },
   ]
 
   // per-form submission lookups
@@ -1186,7 +1186,7 @@ export default function Forms({ org, session, isAdmin }) {
                                 {form.status !== 'active' && <button onClick={() => setFormStatus(form, 'active')} style={menuItemStyle}>● Set Active</button>}
                                 {form.status !== 'draft' && <button onClick={() => setFormStatus(form, 'draft')} style={menuItemStyle}><Icon name="📄" /> Move to Draft</button>}
                                 {form.status !== 'archived' && <button onClick={() => setFormStatus(form, 'archived')} style={menuItemStyle}>🗄 Archive</button>}
-                                <button onClick={() => { setRowMenuFor(null); deleteForm(form) }} style={{ ...menuItemStyle, color: '#DC2626' }}><Icon name="🗑️" /> Delete</button>
+                                <button onClick={() => { setRowMenuFor(null); deleteForm(form) }} style={{ ...menuItemStyle, color: 'var(--danger-text)' }}><Icon name="🗑️" /> Delete</button>
                               </motion.div>
                             )}
                           </AnimatePresence>

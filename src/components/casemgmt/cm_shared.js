@@ -14,12 +14,12 @@ export const STATUS_LABELS = {
 
 export const STATUS_STYLE = {
   open: { bg: 'rgba(124,92,252,0.12)', color: '#6D3FD6' },
-  in_progress: { bg: 'rgba(245,158,11,0.14)', color: '#B45309' },
-  monitoring: { bg: 'rgba(59,130,246,0.12)', color: '#1D4ED8' },
+  in_progress: { bg: 'rgba(245,158,11,0.14)', color: 'var(--warn-text)' },
+  monitoring: { bg: 'rgba(59,130,246,0.12)', color: 'var(--info-text)' },
   awaiting_agency: { bg: 'rgba(236,72,153,0.12)', color: '#BE185D' },
-  strategy_discussion: { bg: 'rgba(139,92,246,0.14)', color: '#6D28D9' },
-  child_protection: { bg: 'rgba(239,68,68,0.14)', color: '#B91C1C' },
-  resolved: { bg: 'rgba(34,197,94,0.12)', color: '#15803D' },
+  strategy_discussion: { bg: 'rgba(139,92,246,0.14)', color: 'var(--violet-text)' },
+  child_protection: { bg: 'rgba(239,68,68,0.14)', color: 'var(--danger-text)' },
+  resolved: { bg: 'rgba(34,197,94,0.12)', color: 'var(--ok-text)' },
   closed: { bg: 'rgba(100,116,139,0.14)', color: '#475569' },
   archived: { bg: 'rgba(148,163,184,0.16)', color: 'var(--text3)' },
 }
@@ -27,10 +27,10 @@ export const STATUS_STYLE = {
 export const RISK_LEVELS = ['low', 'medium', 'high', 'critical']
 
 export const RISK_STYLE = {
-  low: { bg: 'rgba(34,197,94,0.12)', color: '#15803D', dot: '#22C55E' },
-  medium: { bg: 'rgba(245,158,11,0.14)', color: '#B45309', dot: '#F59E0B' },
-  high: { bg: 'rgba(239,68,68,0.13)', color: '#B91C1C', dot: '#EF4444' },
-  critical: { bg: 'rgba(124,58,237,0.16)', color: '#6D28D9', dot: '#7C3AED' },
+  low: { bg: 'rgba(34,197,94,0.12)', color: 'var(--ok-text)', dot: '#22C55E' },
+  medium: { bg: 'rgba(245,158,11,0.14)', color: 'var(--warn-text)', dot: '#F59E0B' },
+  high: { bg: 'rgba(239,68,68,0.13)', color: 'var(--danger-text)', dot: '#EF4444' },
+  critical: { bg: 'rgba(124,58,237,0.16)', color: 'var(--violet-text)', dot: '#7C3AED' },
 }
 
 export const CATEGORIES = [
@@ -69,7 +69,7 @@ export function RiskBadge({ level }) {
 }
 
 export function StatusChip({ status }) {
-  const s = STATUS_STYLE[status] || { bg: '#F1F5F9', color: '#475569' }
+  const s = STATUS_STYLE[status] || { bg: 'var(--surface-hover)', color: '#475569' }
   return (
     <motion.span layout style={{ background: s.bg, color: s.color, borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 800, whiteSpace: 'nowrap' }}>
       {STATUS_LABELS[status] || status}

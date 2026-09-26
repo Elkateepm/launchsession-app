@@ -140,7 +140,7 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
   if (error || !staff) {
     return shell(
       <div style={{ ...card, marginBottom: 0 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#B42318', marginBottom: 6 }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--danger-text)', marginBottom: 6 }}>
           Could not open this HR record
         </div>
         <div style={{ fontSize: 13.5, color: 'var(--text3)', lineHeight: 1.55, marginBottom: 14 }}>
@@ -465,7 +465,7 @@ function Offboarding({ org, staff, primary, canEdit, onChanged }) {
       )}
 
       {err && (
-        <div style={{ ...card, background: '#FEF2F2', border: '1px solid #FECACA', color: '#B42318', fontSize: 13 }}>
+        <div style={{ ...card, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13 }}>
           {err}
         </div>
       )}
@@ -485,7 +485,7 @@ function Offboarding({ org, staff, primary, canEdit, onChanged }) {
       )}
 
       {staff.employment_status === 'left' && (
-        <div style={{ ...card, background: '#F3F2F7', color: '#5A5772', fontSize: 13, lineHeight: 1.5 }}>
+        <div style={{ ...card, background: 'var(--surface2)', color: '#5A5772', fontSize: 13, lineHeight: 1.5 }}>
           {staff.full_name} has left. The record is archived and remains readable.
         </div>
       )}
@@ -699,7 +699,7 @@ function EmploymentForm({ staff, managers, primary, canEdit, onSaved }) {
       </div>
 
       {err && (
-        <div style={{ ...card, background: '#FEF2F2', border: '1px solid #FECACA', color: '#B42318', fontSize: 13 }}>
+        <div style={{ ...card, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13 }}>
           {err}
         </div>
       )}

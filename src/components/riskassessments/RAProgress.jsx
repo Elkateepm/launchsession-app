@@ -85,10 +85,10 @@ export function ProgressStrip({ steps, onJump }) {
     }}>
       {steps.map(step => {
         const tone = step.done
-          ? { bg: '#E7F8ED', text: '#04713C', mark: '✓' }
+          ? { bg: 'var(--ok-bg)', text: 'var(--ok-text)', mark: '✓' }
           : step.optional
-            ? { bg: '#F3F2F7', text: '#5A5772', mark: '○' }
-            : { bg: '#FEF6E7', text: '#93500A', mark: '!' }
+            ? { bg: 'var(--surface2)', text: '#5A5772', mark: '○' }
+            : { bg: 'var(--warn-bg)', text: 'var(--warn-text)', mark: '!' }
 
         return (
           <button
@@ -231,8 +231,8 @@ export function ApprovalPanel({ assessment, org, authSession, staff = [], isMana
 
       {error && (
         <div style={{
-          padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
-          border: '1px solid #FECACA', color: '#B42318', fontSize: 13, marginBottom: 12,
+          padding: '10px 12px', borderRadius: 10, background: 'var(--danger-bg)',
+          border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13, marginBottom: 12,
         }}>{error}</div>
       )}
 
@@ -270,7 +270,7 @@ export function ApprovalPanel({ assessment, org, authSession, staff = [], isMana
 
       {reviewing && (
         <div style={{
-          padding: 14, borderRadius: 12, background: '#FAF9FE', border: '1px solid #ECE9F5',
+          padding: 14, borderRadius: 12, background: 'var(--surface2)', border: '1px solid #ECE9F5',
         }}>
           <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', marginBottom: 5 }}>
             Has anything changed?
@@ -286,8 +286,8 @@ export function ApprovalPanel({ assessment, org, authSession, staff = [], isMana
               cursor: busy ? 'wait' : 'pointer', fontFamily: 'inherit',
             }}>No changes — renew</button>
             <button onClick={() => renew(true)} disabled={busy} style={{
-              padding: '10px 16px', borderRadius: 11, border: '1px solid #FDE2B5',
-              background: '#FEF6E7', color: '#93500A', fontSize: 13.5, fontWeight: 700,
+              padding: '10px 16px', borderRadius: 11, border: '1px solid var(--warn-border)',
+              background: 'var(--warn-bg)', color: 'var(--warn-text)', fontSize: 13.5, fontWeight: 700,
               cursor: busy ? 'wait' : 'pointer', fontFamily: 'inherit',
             }}>Changes required</button>
             <button onClick={() => setReviewing(false)} style={{

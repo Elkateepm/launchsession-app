@@ -390,7 +390,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
           <MiniStat icon="✓" label="Signed out" value={grouped.signed_out.length} color="#2563EB" />
         </div>
         {ratioBreached && (
-          <div style={{ marginTop: 12, background: 'linear-gradient(135deg,#FEF2F2,#FEF7F7)', border: '1px solid #FECACA', borderRadius: 12, padding: '10px 13px', fontSize: 12, fontWeight: 700, color: '#B91C1C', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ marginTop: 12, background: 'linear-gradient(135deg,#FEF2F2,#FEF7F7)', border: '1px solid var(--danger-border)', borderRadius: 12, padding: '10px 13px', fontSize: 12, fontWeight: 700, color: 'var(--danger-text)', display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 14 }}><Icon name="⚠" /></span> {signedInStaffCount ? `Current staffing ratio 1:${currentRatio.toFixed(1)}. Required ratio: 1:${requiredRatio}.` : 'No team members are signed in. Check the team attendance below.'}
           </div>
         )}
@@ -412,7 +412,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
         )}
       </div>
 
-      {loadError && <div role="alert" style={{ padding: 12, background: '#FEF2F2', color: '#B91C1C' }}>{loadError} <button onClick={load} style={{ minHeight: 44 }}>Retry</button></div>}
+      {loadError && <div role="alert" style={{ padding: 12, background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>{loadError} <button onClick={load} style={{ minHeight: 44 }}>Retry</button></div>}
       <div style={{ padding: '12px 16px', background: 'var(--surface, #fff)', borderBottom: '1px solid var(--border, var(--border))', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
         <div style={{ fontSize: 13, lineHeight: 1.5 }}>
           <strong>{!session.opened_at ? 'Ready for arrivals' : grouped.expected.length ? `${grouped.expected.length} arrivals to resolve` : signedInCount ? 'Delivery in progress' : 'Ready to finish'}</strong>
@@ -447,14 +447,14 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
       <div style={{ padding: '0 14px 12px', background: 'var(--surface)', borderBottom: '1px solid var(--border-soft)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flex: '1 1 160px' }}>
           <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--text-faint)', pointerEvents: 'none' }}><Icon name="🔍" /></span>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${terms.people}...`} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px 10px 32px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 13, background: '#FAFBFC', outline: 'none', transition: 'border-color 0.15s ease' }} onFocus={e => e.target.style.borderColor = '#A78BFA'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${terms.people}...`} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px 10px 32px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 13, background: 'var(--surface2)', outline: 'none', transition: 'border-color 0.15s ease' }} onFocus={e => e.target.style.borderColor = '#A78BFA'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
         </div>
         {registerGroups.length > 1 && <select aria-label="Filter register by group" value={groupFilter} onChange={e => setGroupFilter(e.target.value)} style={{ ...ghostBtn, maxWidth: '100%' }}>
           <option value="all">All groups</option>{registerGroups.map(name => <option key={name} value={name}>{name}</option>)}
         </select>}
         {(search || groupFilter !== 'all') && <button style={ghostBtn} onClick={() => { setSearch(''); setGroupFilter('all') }}>Clear filters</button>}
         <button onClick={() => setShowWalkIn(true)} style={ghostBtn}>+ Walk-in</button>
-        <button onClick={() => setShowNotes(true)} style={ghostBtn}>📝 Notes {notes.length > 0 && <span style={{ color: '#7C3AED' }}>({notes.length})</span>}</button>
+        <button onClick={() => setShowNotes(true)} style={ghostBtn}>📝 Notes {notes.length > 0 && <span style={{ color: 'var(--violet-text)' }}>({notes.length})</span>}</button>
         {/* Not gated to staff: volunteers can sign children in and out here, so
             they are the most likely to mis-tap. Locking corrections to staff
             would leave the register knowingly wrong until someone else is free.
@@ -491,7 +491,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
         {/* STAFF PANEL */}
         <div style={{ marginTop: 20, background: 'var(--surface)', border: '1px solid #EDEFF3', borderRadius: 16, padding: 16, boxShadow: '0 1px 3px rgba(15,23,42,0.04)' }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 22, height: 22, borderRadius: 7, background: '#F5F3FF', color: '#7C3AED', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}><Icon name="👤" /></span>
+            <span style={{ width: 22, height: 22, borderRadius: 7, background: 'var(--violet-bg)', color: 'var(--violet-text)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}><Icon name="👤" /></span>
             Session team
           </div>
           {staffRows.length === 0 ? (
@@ -510,7 +510,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
                       </span>
                     ) : s.signed_in_at ? (
                       <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ color: '#16A34A', fontWeight: 700 }}>Signed in {fmtTime(s.signed_in_at)}</span>
+                        <span style={{ color: 'var(--ok-text)', fontWeight: 700 }}>Signed in {fmtTime(s.signed_in_at)}</span>
                         <button onClick={() => handleStaffSignOut(s)} style={{ ...ghostBtn, padding: '5px 10px', fontSize: 11 }}>Sign out</button>
                       </span>
                     ) : (
@@ -670,7 +670,7 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
       <div onClick={onOpen} style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
         <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
           {child.first_name} {child.last_name}
-          {child.is_walk_in && child.profile_incomplete && <span style={{ fontSize: 9.5, fontWeight: 800, color: '#D97706', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 6, padding: '1px 6px' }}>WALK-IN · PROFILE INCOMPLETE</span>}
+          {child.is_walk_in && child.profile_incomplete && <span style={{ fontSize: 9.5, fontWeight: 800, color: 'var(--warn-text)', background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 6, padding: '1px 6px' }}>WALK-IN · PROFILE INCOMPLETE</span>}
           <RegisterPaymentBadge org={org} session={{ user: { id: authUserId } }} childId={child.id} balance={paymentBalance} onChanged={onPaymentChanged} />
         </div>
         <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2, fontWeight: 500 }}>

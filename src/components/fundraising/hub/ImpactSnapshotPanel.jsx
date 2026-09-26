@@ -52,9 +52,9 @@ export default function ImpactSnapshotPanel({ org }) {
   useEffect(() => { load() }, [load])
 
   const metrics = stats ? [
-    { icon: 'rocket', color: '#7C5CFC', bg: '#F1EDFF', label: 'Sessions Delivered', value: stats.sessionsDelivered },
+    { icon: 'rocket', color: 'var(--violet-text)', bg: 'var(--violet-bg)', label: 'Sessions Delivered', value: stats.sessionsDelivered },
     { icon: 'people', color: '#2F6F63', bg: '#EAF5F2', label: 'Young People Reached', value: stats.youngPeopleReached },
-    { icon: 'people', color: '#BA7517', bg: '#FDF3E4', label: 'Active Volunteers', value: stats.activeVolunteers },
+    { icon: 'people', color: 'var(--warn-text)', bg: 'var(--warn-bg)', label: 'Active Volunteers', value: stats.activeVolunteers },
     { icon: 'heart', color: '#375A82', bg: '#E9F0F7', label: 'Mentoring Sessions', value: stats.mentoringSessions },
     { icon: 'trophy', color: '#8C5A3C', bg: '#F6EFEA', label: 'Outcomes Recorded', value: stats.outcomesRecorded },
   ] : []

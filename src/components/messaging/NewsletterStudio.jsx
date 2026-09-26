@@ -214,7 +214,7 @@ function BlockEditor({ block, orgId, primary, open, onOpen, onChange, onRemove, 
                     })}
                   </div>
                   {block.w > 0 && block.h > block.w * 1.1 && (block.size || 'full') === 'full' && (
-                    <div style={{ fontSize: 11.5, color: '#B45309', marginBottom: 10, lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 11.5, color: 'var(--warn-text)', marginBottom: 10, lineHeight: 1.5 }}>
                       Tall photo — at full width it'll be about {Math.round(496 * block.h / block.w)}px high in the email.
                     </div>
                   )}
@@ -222,7 +222,7 @@ function BlockEditor({ block, orgId, primary, open, onOpen, onChange, onRemove, 
               )}
               <input type="file" accept="image/*" onChange={upload} disabled={busy} style={{ fontSize: 12.5, marginBottom: 9 }} />
               {busy && <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 6 }}>Uploading…</div>}
-              {err && <div style={{ fontSize: 12, color: '#DC2626', marginBottom: 6 }}>{err}</div>}
+              {err && <div style={{ fontSize: 12, color: 'var(--danger-text)', marginBottom: 6 }}>{err}</div>}
               <label style={miniLabel}>Caption (optional)</label>
               <input style={inp} value={block.caption} onChange={e => set('caption', e.target.value)} placeholder="Caption" />
               <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 10, lineHeight: 1.5, paddingLeft: 9, borderLeft: '2px solid var(--border)' }}>
@@ -247,7 +247,7 @@ function BlockEditor({ block, orgId, primary, open, onOpen, onChange, onRemove, 
               <input style={inp} value={block.url} placeholder="https://…"
                 onChange={e => set('url', e.target.value)} />
               {block.url && !/^https?:\/\//i.test(block.url) && (
-                <div style={{ fontSize: 11.5, color: '#B45309', marginTop: 7 }}>
+                <div style={{ fontSize: 11.5, color: 'var(--warn-text)', marginTop: 7 }}>
                   Needs to start with https:// or it won't be linked in the email.
                 </div>
               )}
@@ -517,7 +517,7 @@ export default function NewsletterStudio({ org, session }) {
               color: active ? '#fff' : 'var(--text3)',
             }}>{st.n}</span>
             <span style={{ fontSize: 13, fontWeight: 800, color: active ? primary : 'var(--text3)' }}>{st.label}</span>
-            {issue && <span title={issue} aria-label={issue} style={{ fontSize: 11, color: '#B45309' }}>•</span>}
+            {issue && <span title={issue} aria-label={issue} style={{ fontSize: 11, color: 'var(--warn-text)' }}>•</span>}
           </button>
         )
       })}

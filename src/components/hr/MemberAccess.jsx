@@ -82,11 +82,11 @@ export default function MemberAccess({ member, org, viewerRole }) {
     <div>
       <div style={{ fontSize: 12.5, color: 'var(--text3)', lineHeight: 1.6, marginBottom: 16 }}>
         Controls what {member.full_name || 'this person'} can reach. Enforced in the database, not just hidden in the menu.
-        {!viewerMayEdit && <div style={{ color: '#B45309', marginTop: 8, fontWeight: 700 }}>Only an admin can change this person's access.</div>}
+        {!viewerMayEdit && <div style={{ color: 'var(--warn-text)', marginTop: 8, fontWeight: 700 }}>Only an admin can change this person's access.</div>}
       </div>
 
       {error && (
-        <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', borderRadius: 10, padding: '10px 14px', fontSize: 12.5, marginBottom: 12, lineHeight: 1.5 }}>
+        <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)', borderRadius: 10, padding: '10px 14px', fontSize: 12.5, marginBottom: 12, lineHeight: 1.5 }}>
           {error}
         </div>
       )}
@@ -105,7 +105,7 @@ export default function MemberAccess({ member, org, viewerRole }) {
                   {m.hint && <div style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>{m.hint}</div>}
                 </div>
                 {!orgHas && (
-                  <span style={{ background: '#FEF3C7', color: '#92400E', borderRadius: 8, padding: '3px 8px', fontSize: 10.5, fontWeight: 800 }}>
+                  <span style={{ background: 'var(--warn-bg)', color: 'var(--warn-text)', borderRadius: 8, padding: '3px 8px', fontSize: 10.5, fontWeight: 800 }}>
                     Not on your plan
                   </span>
                 )}

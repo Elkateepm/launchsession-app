@@ -87,7 +87,7 @@ export default function RecordPaymentDrawer({ org, session, charge: initialCharg
         <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
           {done ? (
             <div style={{ textAlign: 'center', padding: '40px 10px' }}>
-              <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, margin: '0 auto 14px' }}><Icon name="✓" /></div>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--ok-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, margin: '0 auto 14px' }}><Icon name="✓" /></div>
               <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>Payment recorded</div>
             </div>
           ) : (

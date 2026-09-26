@@ -249,7 +249,7 @@ function OrgCompliance({ org, primary, isAdmin, onOpen }) {
       </div>
 
       {error && (
-        <div style={{ ...card, background: '#FEF2F2', border: '1px solid #FECACA', color: '#B42318', fontSize: 13 }}>{error}</div>
+        <div style={{ ...card, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13 }}>{error}</div>
       )}
 
       {!error && view === 'outstanding' && Object.values(byStaff).length === 0 && (
@@ -306,7 +306,7 @@ function OrgCompliance({ org, primary, isAdmin, onOpen }) {
                       </div>
                     </div>
                     {!r.active && (
-                      <span style={{ padding: '3px 10px', borderRadius: 99, background: '#F3F2F7', color: '#5A5772', fontSize: 11.5, fontWeight: 800 }}>Off</span>
+                      <span style={{ padding: '3px 10px', borderRadius: 99, background: 'var(--surface2)', color: '#5A5772', fontSize: 11.5, fontWeight: 800 }}>Off</span>
                     )}
                   </div>
                   <button onClick={() => setEditing(r.id)} style={{ ...gBtn, marginTop: 10 }}>Edit</button>
@@ -389,8 +389,8 @@ function RequirementForm({ org, primary, existing, onCancel, onSaved }) {
         <span style={{ fontSize: 14, color: 'var(--text)' }}>In use</span>
       </label>
       {err && (
-        <div style={{ padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
-          border: '1px solid #FECACA', color: '#B42318', fontSize: 13, marginBottom: 10 }}>{err}</div>
+        <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--danger-bg)',
+          border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13, marginBottom: 10 }}>{err}</div>
       )}
       <div style={{ display: 'flex', gap: 8 }}>
         <button onClick={save} disabled={busy || !f.label.trim()} style={{
@@ -518,15 +518,15 @@ function Approvals({ org, primary, canDecide, onOpen, onChanged }) {
   return (
     <>
       {error && (
-        <div style={{ ...card, background: '#FEF2F2', border: '1px solid #FECACA', color: '#B42318', fontSize: 13 }}>{error}</div>
+        <div style={{ ...card, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13 }}>{error}</div>
       )}
 
       {justApproved && (
-        <div style={{ ...card, background: '#E7F8ED', border: '1px solid #A7E7C1' }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#04713C', marginBottom: 4 }}>
+        <div style={{ ...card, background: 'var(--ok-bg)', border: '1px solid var(--ok-border)' }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--ok-text)', marginBottom: 4 }}>
             {justApproved.full_name || justApproved.email} approved
           </div>
-          <div style={{ fontSize: 13, color: '#04713C', opacity: 0.9, lineHeight: 1.5, marginBottom: 12 }}>
+          <div style={{ fontSize: 13, color: 'var(--ok-text)', opacity: 0.9, lineHeight: 1.5, marginBottom: 12 }}>
             They can sign in now. Open their HR record to set employment details and start
             an onboarding checklist.
           </div>
@@ -559,7 +559,7 @@ function Approvals({ org, primary, canDecide, onOpen, onChanged }) {
               <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>{p.full_name || p.email}</div>
               <div style={{ fontSize: 12.5, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.email}</div>
             </div>
-            <span style={{ padding: '3px 10px', borderRadius: 99, background: '#FEF6E7', color: '#93500A', fontSize: 11.5, fontWeight: 800, whiteSpace: 'nowrap' }}>
+            <span style={{ padding: '3px 10px', borderRadius: 99, background: 'var(--warn-bg)', color: 'var(--warn-text)', fontSize: 11.5, fontWeight: 800, whiteSpace: 'nowrap' }}>
               Awaiting approval
             </span>
           </div>
@@ -581,8 +581,8 @@ function Approvals({ org, primary, canDecide, onOpen, onChanged }) {
                   color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
                 }}>Approve</button>
                 <button onClick={() => decide(p, 'declined')} disabled={busy === p.id} style={{
-                  flex: 1, minHeight: 44, borderRadius: 11, border: '1px solid #FECACA',
-                  background: 'var(--surface)', color: '#B42318', fontSize: 14, fontWeight: 800,
+                  flex: 1, minHeight: 44, borderRadius: 11, border: '1px solid var(--danger-border)',
+                  background: 'var(--surface)', color: 'var(--danger-text)', fontSize: 14, fontWeight: 800,
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}>Decline</button>
               </div>

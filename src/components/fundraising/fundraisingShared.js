@@ -15,7 +15,7 @@ export const LS = {
   lavender: '#F1EDFF',
   lavenderBorder: '#E4DCFB',
   border: '#ECE9F5',
-  bg: '#FAF9FE',
+  bg: 'var(--surface2)',
   text: '#1C1B2E',
   muted: '#8B87A3',
   success: '#16A34A',
@@ -93,9 +93,9 @@ export function PurpleProgress({ raised, target, height = 8 }) {
 }
 
 export function matchScoreBand(score) {
-  if (score >= 90) return { label: 'High match', color: LS.success, bg: '#E7F8ED' }
+  if (score >= 90) return { label: 'High match', color: LS.success, bg: 'var(--ok-bg)' }
   if (score >= 75) return { label: 'Good match', color: LS.purpleDark, bg: LS.lavender }
-  return { label: 'Possible match', color: LS.muted, bg: '#F3F2F7' }
+  return { label: 'Possible match', color: LS.muted, bg: 'var(--surface2)' }
 }
 
 // Heuristic match score — no per-org matching data exists yet (grants has no

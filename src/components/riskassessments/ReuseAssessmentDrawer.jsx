@@ -249,8 +249,8 @@ export default function ReuseAssessmentDrawer({
 
               {error && (
                 <div style={{
-                  marginTop: 14, padding: '11px 13px', borderRadius: 10, background: '#FEF2F2',
-                  border: '1px solid #FECACA', color: '#B42318', fontSize: 13,
+                  marginTop: 14, padding: '11px 13px', borderRadius: 10, background: 'var(--danger-bg)',
+                  border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13,
                 }}>{error}</div>
               )}
             </div>

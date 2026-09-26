@@ -127,7 +127,7 @@ export default function QuickBookingPanel({ org, resources, bookings, sessions, 
         ))}
       </div>
 
-      {error && <div style={{ background: '#FEF2F2', color: '#B91C1C', border: '1px solid #FECACA', borderRadius: 8, padding: '9px 12px', fontSize: 12, marginBottom: 12, fontWeight: 600 }}>{error}</div>}
+      {error && <div style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)', border: '1px solid var(--danger-border)', borderRadius: 8, padding: '9px 12px', fontSize: 12, marginBottom: 12, fontWeight: 600 }}>{error}</div>}
 
       <FieldLabel>Resource *</FieldLabel>
       <select style={inp} value={form.resource_id} onChange={e => handleFieldChange({ resource_id: e.target.value })}>
@@ -139,7 +139,7 @@ export default function QuickBookingPanel({ org, resources, bookings, sessions, 
         ))}
       </select>
       {sessionVenue && (
-        <div style={{ fontSize: 11, color: '#7C3AED', marginTop: 4, fontWeight: 600 }}>📍 Resources at {sessionVenue.name} are shown first, to match this session's venue.</div>
+        <div style={{ fontSize: 11, color: 'var(--violet-text)', marginTop: 4, fontWeight: 600 }}>📍 Resources at {sessionVenue.name} are shown first, to match this session's venue.</div>
       )}
 
       <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
@@ -194,28 +194,28 @@ export default function QuickBookingPanel({ org, resources, bookings, sessions, 
 
       {resource && (
         <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 8 }}>
-          📍 {resourceVenue ? resourceVenue.name : (resource.location || 'No location set')} {resource.requires_approval && <span style={{ color: '#D97706', fontWeight: 700 }}> · Requires approval</span>}
+          📍 {resourceVenue ? resourceVenue.name : (resource.location || 'No location set')} {resource.requires_approval && <span style={{ color: 'var(--warn-text)', fontWeight: 700 }}> · Requires approval</span>}
         </div>
       )}
 
       {checked && conflict && !conflict.quantityIssue && (
-        <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: 12, marginTop: 12, fontSize: 12 }}>
-          <div style={{ fontWeight: 700, color: '#B91C1C', marginBottom: 4 }}><Icon name="⚠" /> This time conflicts with an existing booking</div>
-          {suggestion && <div style={{ color: '#7F1D1D' }}>Nearest available: {fmtDate(suggestion)} at {fmtTime(suggestion)}</div>}
+        <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 10, padding: 12, marginTop: 12, fontSize: 12 }}>
+          <div style={{ fontWeight: 700, color: 'var(--danger-text)', marginBottom: 4 }}><Icon name="⚠" /> This time conflicts with an existing booking</div>
+          {suggestion && <div style={{ color: 'var(--danger-text)' }}>Nearest available: {fmtDate(suggestion)} at {fmtTime(suggestion)}</div>}
         </div>
       )}
       {checked && conflict && conflict.quantityIssue && (
-        <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: 12, marginTop: 12, fontSize: 12, fontWeight: 700, color: '#B91C1C' }}>
+        <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 10, padding: 12, marginTop: 12, fontSize: 12, fontWeight: 700, color: 'var(--danger-text)' }}>
           ⚠ Only {resource.quantity_available} available — reduce the quantity requested.
         </div>
       )}
       {checked && !conflict && (
-        <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10, padding: 10, marginTop: 12, fontSize: 12, fontWeight: 700, color: '#166534' }}>
+        <div style={{ background: 'var(--ok-bg)', border: '1px solid var(--ok-border)', borderRadius: 10, padding: 10, marginTop: 12, fontSize: 12, fontWeight: 700, color: 'var(--ok-text)' }}>
           ✓ Available for this time
         </div>
       )}
 
-      <button onClick={handleCheckAvailability} disabled={!resource || !startISO || !endISO} style={{ width: '100%', marginTop: 16, padding: 12, borderRadius: 10, border: '1.5px solid #7C3AED', background: 'var(--surface)', color: '#7C3AED', fontSize: 13.5, fontWeight: 700, cursor: !resource ? 'not-allowed' : 'pointer', opacity: !resource ? 0.5 : 1 }}>
+      <button onClick={handleCheckAvailability} disabled={!resource || !startISO || !endISO} style={{ width: '100%', marginTop: 16, padding: 12, borderRadius: 10, border: '1.5px solid #7C3AED', background: 'var(--surface)', color: 'var(--violet-text)', fontSize: 13.5, fontWeight: 700, cursor: !resource ? 'not-allowed' : 'pointer', opacity: !resource ? 0.5 : 1 }}>
         📅 Check Availability
       </button>
       <button onClick={handleConfirm} disabled={!checked || (conflict && true) || saving} style={{ width: '100%', marginTop: 10, padding: 13, borderRadius: 10, border: 'none', background: (!checked || conflict) ? '#D1D5DB' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: (!checked || conflict) ? 'not-allowed' : 'pointer' }}>

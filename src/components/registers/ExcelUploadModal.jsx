@@ -84,7 +84,7 @@ export default function ExcelUploadModal({ orgId, bubbles, onClose, onImported }
   if (done) return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 20, width: '100%', maxWidth: 440, padding: 32, textAlign: 'center' }}>
-        <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 28 }}><Icon name="✅" /></div>
+        <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--ok-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 28 }}><Icon name="✅" /></div>
         <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>Import Complete</div>
         <div style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 24 }}>{importCount} children added to your register successfully.</div>
         <button onClick={onClose} style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: '#1B9AAA', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Done</button>
@@ -112,7 +112,7 @@ export default function ExcelUploadModal({ orgId, bubbles, onClose, onImported }
 
           <div style={{ marginBottom: 18 }}>
             <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Step 2: Upload your file</div>
-            <div onClick={() => fileRef.current?.click()} style={{ border: '2px dashed var(--border)', borderRadius: 12, padding: '28px 20px', textAlign: 'center', cursor: 'pointer', background: '#FAFAFA' }}
+            <div onClick={() => fileRef.current?.click()} style={{ border: '2px dashed var(--border)', borderRadius: 12, padding: '28px 20px', textAlign: 'center', cursor: 'pointer', background: 'var(--surface2)' }}
               onMouseEnter={e => e.currentTarget.style.borderColor = '#1B9AAA'}
               onMouseLeave={e => e.currentTarget.style.borderColor = '#e5e7eb'}>
               <div style={{ fontSize: 28, marginBottom: 8 }}><Icon name="📂" /></div>
@@ -123,10 +123,10 @@ export default function ExcelUploadModal({ orgId, bubbles, onClose, onImported }
           </div>
 
           {errors.length > 0 && (
-            <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: '#DC2626', marginBottom: 6 }}>Please fix these issues:</div>
-              {errors.slice(0, 5).map((e, i) => <div key={i} style={{ fontSize: 12, color: '#B91C1C', marginBottom: 2 }}>- {e}</div>)}
-              {errors.length > 5 && <div style={{ fontSize: 11, color: '#B91C1C', marginTop: 4 }}>...and {errors.length - 5} more</div>}
+            <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--danger-text)', marginBottom: 6 }}>Please fix these issues:</div>
+              {errors.slice(0, 5).map((e, i) => <div key={i} style={{ fontSize: 12, color: 'var(--danger-text)', marginBottom: 2 }}>- {e}</div>)}
+              {errors.length > 5 && <div style={{ fontSize: 11, color: 'var(--danger-text)', marginTop: 4 }}>...and {errors.length - 5} more</div>}
             </div>
           )}
 

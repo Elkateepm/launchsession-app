@@ -179,7 +179,7 @@ export default function DisciplinaryRecord({ org, staff, caseId, primary, canEdi
         </div>
         {locked && (
           <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 10,
-            background: '#F3F2F7', color: '#5A5772', fontSize: 12.5, lineHeight: 1.5 }}>
+            background: 'var(--surface2)', color: '#5A5772', fontSize: 12.5, lineHeight: 1.5 }}>
             This disciplinary is closed and is now read-only. Closed {ukDate(d.closed_at)}.
           </div>
         )}
@@ -188,7 +188,7 @@ export default function DisciplinaryRecord({ org, staff, caseId, primary, canEdi
       <Stepper stage={d.stage} />
 
       {error && (
-        <div style={{ ...card, background: '#FEF2F2', border: '1px solid #FECACA', color: '#B42318', fontSize: 13 }}>
+        <div style={{ ...card, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13 }}>
           {error}
         </div>
       )}
@@ -438,7 +438,7 @@ function Investigation({ org, caseId, inv, primary, editable, onChanged, onAdvan
     return (
       <div style={card}>
         <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Investigation</div>
-        {err && <div style={{ fontSize: 13, color: '#B42318', marginBottom: 10 }}>{err}</div>}
+        {err && <div style={{ fontSize: 13, color: 'var(--danger-text)', marginBottom: 10 }}>{err}</div>}
         {editable
           ? <button onClick={start} disabled={busy} style={pBtn(primary, busy)}>
               {busy ? 'Opening…' : 'Open an investigation'}
@@ -468,7 +468,7 @@ function Investigation({ org, caseId, inv, primary, editable, onChanged, onAdvan
         {' · '}{inv.status}
       </div>
 
-      {err && <div style={{ fontSize: 13, color: '#B42318', marginBottom: 10 }}>{err}</div>}
+      {err && <div style={{ fontSize: 13, color: 'var(--danger-text)', marginBottom: 10 }}>{err}</div>}
 
       {[['evidence', 'Evidence', items.evidence, (x) => x.title],
         ['witnesses', 'Witnesses', items.witnesses, (x) => x.name],
@@ -579,7 +579,7 @@ function Hearing({ org, caseId, hearings, primary, editable, onChanged, onRecord
   return (
     <div style={card}>
       <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Hearing</div>
-      {err && <div style={{ fontSize: 13, color: '#B42318', marginBottom: 10 }}>{err}</div>}
+      {err && <div style={{ fontSize: 13, color: 'var(--danger-text)', marginBottom: 10 }}>{err}</div>}
 
       {!h && (editable
         ? <button onClick={() => setPanel('schedule')} style={pBtn(primary, false)}>Schedule the hearing</button>

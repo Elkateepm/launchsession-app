@@ -10,11 +10,11 @@ import Icon from '../../../lib/icons'
 // stage the schema tracks — so this uses the real stages rather than inventing
 // a "Reporting" count that has no backing data.
 const STAGES = [
-  { key: 'researching', label: 'Researching', color: 'var(--text3)', bg: '#F3F2F7' },
-  { key: 'drafting',    label: 'Drafting',    color: '#7C5CFC', bg: '#F1EDFF' },
-  { key: 'submitted',   label: 'Submitted',   color: '#BA7517', bg: '#FDF3E4' },
-  { key: 'awarded',     label: 'Awarded',     color: '#16803C', bg: '#E7F6EC' },
-  { key: 'declined',    label: 'Declined',    color: '#B91C1C', bg: '#FCEAEA' },
+  { key: 'researching', label: 'Researching', color: 'var(--text3)', bg: 'var(--surface2)' },
+  { key: 'drafting',    label: 'Drafting',    color: 'var(--violet-text)', bg: 'var(--violet-bg)' },
+  { key: 'submitted',   label: 'Submitted',   color: 'var(--warn-text)', bg: 'var(--warn-bg)' },
+  { key: 'awarded',     label: 'Awarded',     color: 'var(--ok-text)', bg: 'var(--ok-bg)' },
+  { key: 'declined',    label: 'Declined',    color: 'var(--danger-text)', bg: 'var(--danger-bg)' },
 ]
 
 function waitingLabel(a) {

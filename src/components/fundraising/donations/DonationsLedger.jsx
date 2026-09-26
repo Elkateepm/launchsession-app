@@ -15,11 +15,11 @@ const money = n => `£${Number(n || 0).toLocaleString(undefined, { maximumFracti
 const fmtDate = d => d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'
 
 function statusTone(status) {
-  if (status === 'paid') return { color: LS.success, bg: '#E7F8ED' }
+  if (status === 'paid') return { color: LS.success, bg: 'var(--ok-bg)' }
   if (status === 'recorded') return { color: LS.purpleDark, bg: LS.lavender }
-  if (status === 'pending' || status === 'processing') return { color: LS.warning, bg: '#FEF6E7' }
-  if (status === 'refunded' || status === 'partially_refunded') return { color: LS.muted, bg: '#F3F2F7' }
-  return { color: LS.danger, bg: '#FEF2F2' }
+  if (status === 'pending' || status === 'processing') return { color: LS.warning, bg: 'var(--warn-bg)' }
+  if (status === 'refunded' || status === 'partially_refunded') return { color: LS.muted, bg: 'var(--surface2)' }
+  return { color: LS.danger, bg: 'var(--danger-bg)' }
 }
 
 function StatCard({ label, value, sub, prefix = '' }) {
@@ -325,7 +325,7 @@ export default function DonationsLedger({ org, isAdmin, campaigns = [], onChange
                     {d.gift_aid && (
                       <span style={{
                         padding: '3px 9px', borderRadius: 999, fontSize: 11, fontWeight: 700,
-                        background: '#E7F8ED', color: LS.success,
+                        background: 'var(--ok-bg)', color: LS.success,
                       }}>Gift Aid</span>
                     )}
                   </div>
@@ -360,7 +360,7 @@ export default function DonationsLedger({ org, isAdmin, campaigns = [], onChange
                         {d.gift_aid && (
                           <span style={{
                             marginLeft: 7, padding: '2px 7px', borderRadius: 999, fontSize: 10.5,
-                            fontWeight: 700, background: '#E7F8ED', color: LS.success,
+                            fontWeight: 700, background: 'var(--ok-bg)', color: LS.success,
                           }}>Gift Aid</span>
                         )}
                       </td>

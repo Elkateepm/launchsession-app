@@ -7,15 +7,15 @@ export const PB = {
   blueDark: '#1D4ED8',
   gradient: 'linear-gradient(135deg, #4F7DFF 0%, #2563EB 100%)',
   green: '#16A34A',
-  greenBg: '#DCFCE7',
+  greenBg: 'var(--ok-bg)',
   amber: '#B45309',
-  amberBg: '#FEF3C7',
+  amberBg: 'var(--warn-bg)',
   red: '#DC2626',
-  redBg: '#FEE2E2',
+  redBg: 'var(--danger-bg)',
   grey: '#64748B',
-  greyBg: '#F1F5F9',
+  greyBg: 'var(--surface-hover)',
   purple: '#7C3AED',
-  purpleBg: '#EDE9FE',
+  purpleBg: 'var(--violet-bg)',
 }
 
 export const CHARGE_TYPES = [
@@ -46,7 +46,7 @@ export const STATUS_META = {
   unpaid:     { label: 'Unpaid',     color: PB.grey,   bg: PB.greyBg },
   overdue:    { label: 'Overdue',    color: PB.red,    bg: PB.redBg },
   waived:     { label: 'Waived',     color: PB.purple, bg: PB.purpleBg },
-  refunded:   { label: 'Refunded',   color: PB.blue,   bg: '#DBEAFE' },
+  refunded:   { label: 'Refunded',   color: PB.blue,   bg: 'var(--info-bg)' },
 }
 
 export function statusMeta(key) {

@@ -49,7 +49,7 @@ export default function FormQuestionRenderer({ field, value, onChange, interacti
   const label = (
     <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--text)', marginBottom: field.description ? 3 : 8 }}>
       {field.label || 'Untitled question'}
-      {field.required && <span style={{ color: '#DC2626' }}> *</span>}
+      {field.required && <span style={{ color: 'var(--danger-text)' }}> *</span>}
     </div>
   )
 

@@ -381,7 +381,7 @@ function InlineChildImport({ org, template, onImported }) {
 
   if (step === 'preview') return (
     <div>
-      {errors.length > 0 && <div style={{ background: '#FFF0F0', border: '1px solid #FFB3B3', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
+      {errors.length > 0 && <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
         {errors.map((e,i) => <div key={i} style={{ fontSize: 11, color: '#C00' }}><Icon name="⚠" /> {e}</div>)}
       </div>}
       <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 8, fontWeight: 600 }}>{rows.length} records ready</div>
@@ -602,7 +602,7 @@ function PhotosTab({ child, org }) {
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={() => setViewing(null)} style={{ flex: 1, padding: '9px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>Close</button>
-                <button onClick={() => handleDelete(viewing)} style={{ flex: 1, padding: '9px', borderRadius: 9, border: '1px solid #FECACA', background: '#FEF2F2', color: '#DC2626', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>Remove</button>
+                <button onClick={() => handleDelete(viewing)} style={{ flex: 1, padding: '9px', borderRadius: 9, border: '1px solid var(--danger-border)', background: 'var(--danger-bg)', color: 'var(--danger-text)', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>Remove</button>
               </div>
             </div>
           </div>
@@ -693,9 +693,9 @@ function ActivityTab({ child, org }) {
 
   if (error) {
     return (
-      <div style={{ padding: '22px 18px', textAlign: 'center', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 12 }}>
-        <div style={{ fontSize: 13.5, fontWeight: 700, color: '#B91C1C', marginBottom: 3 }}>{error}</div>
-        <div style={{ fontSize: 12.5, color: '#B91C1C', lineHeight: 1.55 }}>
+      <div style={{ padding: '22px 18px', textAlign: 'center', background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 12 }}>
+        <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--danger-text)', marginBottom: 3 }}>{error}</div>
+        <div style={{ fontSize: 12.5, color: 'var(--danger-text)', lineHeight: 1.55 }}>
           This does not mean {child.first_name} has no attendance history — the record could not be read.
         </div>
       </div>
@@ -886,11 +886,11 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
   const hasMedical = medicalTags.length > 0 || !!child.medical_notes
 
   const statusCfg = {
-    signed_in:  { label: 'Signed in',  color: '#15803D', bg: '#F0FDF4', border: '#BBF7D0' },
-    signed_out: { label: 'Signed out', color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE' },
-    absent:     { label: 'Absent',     color: '#B91C1C', bg: '#FEF2F2', border: '#FECACA' },
-    expected:   { label: 'Expected',   color: '#B45309', bg: '#FFFBEB', border: '#FDE68A' },
-    unmarked:   { label: 'Not marked', color: 'var(--text3)', bg: '#F8FAFC', border: 'var(--border)' },
+    signed_in:  { label: 'Signed in',  color: 'var(--ok-text)', bg: 'var(--ok-bg)', border: 'var(--ok-border)' },
+    signed_out: { label: 'Signed out', color: 'var(--info-text)', bg: 'var(--info-bg)', border: 'var(--info-border)' },
+    absent:     { label: 'Absent',     color: 'var(--danger-text)', bg: 'var(--danger-bg)', border: 'var(--danger-border)' },
+    expected:   { label: 'Expected',   color: 'var(--warn-text)', bg: 'var(--warn-bg)', border: 'var(--warn-border)' },
+    unmarked:   { label: 'Not marked', color: 'var(--text3)', bg: 'var(--surface2)', border: 'var(--border)' },
   }
   const sc = statusCfg[status] || statusCfg.unmarked
 
@@ -976,7 +976,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
         {/* Mobile drag handle */}
         {isMobile && (
           <div onPointerDown={e => dragControls.start(e)} style={{ display: 'flex', justifyContent: 'center', paddingTop: 10, paddingBottom: 2, cursor: 'grab', touchAction: 'none', flexShrink: 0 }}>
-            <div style={{ width: 40, height: 4, borderRadius: 99, background: '#E2E8F0' }} />
+            <div style={{ width: 40, height: 4, borderRadius: 99, background: 'var(--surface3)' }} />
           </div>
         )}
 
@@ -1012,7 +1012,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
                   ))}
                   <div style={{ height: 1, background: 'var(--surface-hover)', margin: '5px 0' }} />
                   <button role="menuitem" onClick={removeFromRegister}
-                    style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 11px', borderRadius: 8, border: 'none', background: 'transparent', color: '#DC2626', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                    style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 11px', borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--danger-text)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                     onMouseEnter={e => { e.currentTarget.style.background = '#FEF2F2' }}
                     onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
                     Remove from register
@@ -1057,14 +1057,14 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
           {/* ── MEDICAL — the one thing allowed to shout ── */}
           <div style={{ padding: '0 24px' }}>
             {hasMedical ? (
-              <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 14, padding: '13px 15px' }}>
-                <div style={{ fontSize: 12.5, fontWeight: 800, color: '#92400E', display: 'flex', alignItems: 'center', gap: 6, marginBottom: medicalTags.length ? 9 : 4 }}>
+              <div style={{ background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 14, padding: '13px 15px' }}>
+                <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--warn-text)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: medicalTags.length ? 9 : 4 }}>
                   <span aria-hidden="true"><Icon name="⚠" /></span> Medical information
                 </div>
                 {medicalTags.length > 0 && (
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: child.medical_notes ? 9 : 0 }}>
                     {medicalTags.map(t => (
-                      <span key={t} style={{ fontSize: 12, fontWeight: 700, color: '#92400E', background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 8, padding: '3px 9px' }}>{t}</span>
+                      <span key={t} style={{ fontSize: 12, fontWeight: 700, color: 'var(--warn-text)', background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 8, padding: '3px 9px' }}>{t}</span>
                     ))}
                   </div>
                 )}
@@ -1074,7 +1074,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
               </div>
             ) : (
               <div style={{ fontSize: 12.5, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 7 }}>
-                <span style={{ color: '#16A34A' }} aria-hidden="true"><Icon name="✓" /></span> No recorded medical alerts
+                <span style={{ color: 'var(--ok-text)' }} aria-hidden="true"><Icon name="✓" /></span> No recorded medical alerts
               </div>
             )}
           </div>
@@ -1149,7 +1149,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
                       {child.school && <InfoRow label="School">{child.school}</InfoRow>}
                       <InfoRow label="Travel home alone" last={!child.sen && !child.has_behaviour_plan}>
                         {child.travel_consent
-                          ? <span style={{ color: '#15803D' }}><Icon name="✓" /> Consent given</span>
+                          ? <span style={{ color: 'var(--ok-text)' }}><Icon name="✓" /> Consent given</span>
                           : <span style={{ color: 'var(--text3)', fontWeight: 500 }}>Not given</span>}
                       </InfoRow>
                       {child.sen && <InfoRow label="SEN needs" last={!child.has_behaviour_plan}>{child.sen}</InfoRow>}
@@ -1220,10 +1220,10 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
         {hasSession && (signedInTime || signedOutTime) && (
           <div style={{ borderTop: '1px solid var(--border-soft)', background: '#FCFCFD', padding: '13px 24px calc(13px + env(safe-area-inset-bottom))', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700 }}>
             {signedOutTime ? (
-              <><span style={{ color: '#2563EB' }} aria-hidden="true"><Icon name="✓" /></span><span style={{ color: '#1D4ED8' }}>Signed out at {signedOutTime}</span>
+              <><span style={{ color: 'var(--info-text)' }} aria-hidden="true"><Icon name="✓" /></span><span style={{ color: 'var(--info-text)' }}>Signed out at {signedOutTime}</span>
                 <span style={{ color: 'var(--text3)', fontWeight: 500, marginLeft: 'auto' }}>In at {signedInTime}</span></>
             ) : (
-              <><span style={{ color: '#16A34A' }} aria-hidden="true"><Icon name="✓" /></span><span style={{ color: '#15803D' }}>Signed in at {signedInTime}</span></>
+              <><span style={{ color: 'var(--ok-text)' }} aria-hidden="true"><Icon name="✓" /></span><span style={{ color: 'var(--ok-text)' }}>Signed in at {signedInTime}</span></>
             )}
           </div>
         )}
@@ -1249,11 +1249,11 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
     expected:   { label: 'Expected',    bg: 'rgba(255,255,255,0.06)', color: 'var(--text-faint)', dot: '#CBD5E1' },
     unmarked:   { label: 'Not marked',  bg: 'rgba(255,255,255,0.06)', color: 'var(--text-faint)', dot: '#CBD5E1' },
   } : {
-    signed_in:  { label: 'In',          bg: 'linear-gradient(135deg,#DCFCE7,#BBF7D0)', color: '#15803D', dot: '#16A34A' },
-    signed_out: { label: 'Out',         bg: 'linear-gradient(135deg,#DBEAFE,#BFDBFE)', color: '#1D4ED8', dot: '#2563EB' },
-    absent:     { label: 'Absent',      bg: 'linear-gradient(135deg,#FEE2E2,#FECACA)', color: '#B91C1C', dot: '#DC2626' },
-    expected:   { label: 'Expected',    bg: '#F1F5F9', color: 'var(--text-faint)', dot: '#CBD5E1' },
-    unmarked:   { label: 'Not marked',  bg: '#F1F5F9', color: 'var(--text-faint)', dot: '#CBD5E1' },
+    signed_in:  { label: 'In',          bg: 'linear-gradient(135deg,#DCFCE7,#BBF7D0)', color: 'var(--ok-text)', dot: '#16A34A' },
+    signed_out: { label: 'Out',         bg: 'linear-gradient(135deg,#DBEAFE,#BFDBFE)', color: 'var(--info-text)', dot: '#2563EB' },
+    absent:     { label: 'Absent',      bg: 'linear-gradient(135deg,#FEE2E2,#FECACA)', color: 'var(--danger-text)', dot: '#DC2626' },
+    expected:   { label: 'Expected',    bg: 'var(--surface-hover)', color: 'var(--text-faint)', dot: '#CBD5E1' },
+    unmarked:   { label: 'Not marked',  bg: 'var(--surface-hover)', color: 'var(--text-faint)', dot: '#CBD5E1' },
   }
   const sc = statusConfig[status] || statusConfig.unmarked
 
@@ -1593,16 +1593,16 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   // time window, otherwise a manually-closed session still shows as "Live" here
   // just because a session object exists.
   const registerSessionStatus = (() => {
-    if (!session) return { key: 'none', label: 'No Session', bg: '#F3F4F6', color: 'var(--text-faint)' }
-    if (session.closed_at) return { key: 'closed', label: '● Closed', bg: '#F1F5F9', color: 'var(--text3)' }
+    if (!session) return { key: 'none', label: 'No Session', bg: 'var(--surface2)', color: 'var(--text-faint)' }
+    if (session.closed_at) return { key: 'closed', label: '● Closed', bg: 'var(--surface-hover)', color: 'var(--text3)' }
     const now = new Date()
     const startDT = session.start_time ? new Date(`${session.session_date}T${session.start_time}`) : null
     const endDT = session.end_time ? new Date(`${session.session_date}T${session.end_time}`) : null
     const hasEnded = !!endDT && endDT < now
     const isLiveNow = !hasEnded && (!startDT || startDT <= now)
-    if (hasEnded) return { key: 'ended', label: '● Ended', bg: '#F1F5F9', color: 'var(--text3)' }
-    if (isLiveNow) return { key: 'live', label: '● Live', bg: '#DCFCE7', color: '#15803D' }
-    return { key: 'upcoming', label: '● Upcoming', bg: '#FEF9C3', color: '#92400E' }
+    if (hasEnded) return { key: 'ended', label: '● Ended', bg: 'var(--surface-hover)', color: 'var(--text3)' }
+    if (isLiveNow) return { key: 'live', label: '● Live', bg: 'var(--ok-bg)', color: 'var(--ok-text)' }
+    return { key: 'upcoming', label: '● Upcoming', bg: 'var(--warn-bg)', color: 'var(--warn-text)' }
   })()
 
   const isLiveSession = registerSessionStatus.key === 'live'
@@ -1800,12 +1800,12 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: isMobile ? 8 : 10, marginBottom: isMobile ? 10 : 14 }}>
               {(session ? [
                 { icon: '📋', value: counts.total, label: 'On Register', color: primary },
-                { icon: '✅', value: counts.signed_in, label: 'Signed In', color: '#16A34A', live: isLiveSession },
-                { icon: '⏳', value: counts.expected, label: 'Yet to Arrive', color: '#D97706' },
+                { icon: '✅', value: counts.signed_in, label: 'Signed In', color: 'var(--ok-text)', live: isLiveSession },
+                { icon: '⏳', value: counts.expected, label: 'Yet to Arrive', color: 'var(--warn-text)' },
               ] : [
                 { icon: '📋', value: counts.total, label: 'On Register', color: primary },
-                { icon: '⚠️', value: children.filter(c => c.allergies).length, label: 'Allergies', color: '#D97706', onClick: () => setStatListModal('allergies') },
-                { icon: '✚', value: children.filter(c => c.medical_notes).length, label: 'Medical Alerts', color: '#DC2626', onClick: () => setStatListModal('medical') },
+                { icon: '⚠️', value: children.filter(c => c.allergies).length, label: 'Allergies', color: 'var(--warn-text)', onClick: () => setStatListModal('allergies') },
+                { icon: '✚', value: children.filter(c => c.medical_notes).length, label: 'Medical Alerts', color: 'var(--danger-text)', onClick: () => setStatListModal('medical') },
               ]).map(s => (
                 <motion.button key={s.label} onClick={s.onClick} disabled={!s.onClick}
                   whileHover={s.onClick ? { y: -2, boxShadow: `0 10px 22px -8px ${s.color}45` } : {}}
@@ -2119,15 +2119,15 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           {/* Safeguarding */}
           <div style={{ padding: 14 }}>
             <div style={{ fontSize: 12, fontWeight: 800, color: '#111', marginBottom: 8 }}><Icon name="🛡" /> Safeguarding</div>
-            <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 8, padding: '10px 12px' }}>
+            <div style={{ background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 8, padding: '10px 12px' }}>
               {/* Counts children, not alerts, and says which -- this panel and
                   the Medical Alerts stat chip both read "medical alerts" while
                   one counted medical_notes and the other counted allergies OR
                   medical_notes, so the same screen showed two numbers. */}
-              <div style={{ fontSize: 11, fontWeight: 800, color: '#92400E', marginBottom: 3 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--warn-text)', marginBottom: 3 }}>
                 {children.filter(c => c.allergies || c.medical_notes).length} child{children.filter(c => c.allergies || c.medical_notes).length !== 1 ? 'ren' : ''} with a medical or allergy alert
               </div>
-              <div style={{ fontSize: 11, color: '#92400E', lineHeight: 1.4, opacity: 0.8 }}>Log all concerns immediately.</div>
+              <div style={{ fontSize: 11, color: 'var(--warn-text)', lineHeight: 1.4, opacity: 0.8 }}>Log all concerns immediately.</div>
             </div>
           </div>
 
@@ -2628,7 +2628,7 @@ function ArchiveListModal({ sessions, loading, primary, org, onClose, onSelect, 
             </div>
           </div>
           {org?.register_retention_months == null && (
-            <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 10, padding: '8px 12px', fontSize: 11.5, color: '#1E40AF', fontWeight: 600, marginBottom: 12 }}>
+            <div style={{ background: 'var(--info-bg)', border: '1px solid var(--info-border)', borderRadius: 10, padding: '8px 12px', fontSize: 11.5, color: 'var(--info-text)', fontWeight: 600, marginBottom: 12 }}>
               Automatic archiving is off. Turn it on in Settings → Registers → Data Retention to move old registers here automatically.
             </div>
           )}
@@ -2665,7 +2665,7 @@ function ArchiveListModal({ sessions, loading, primary, org, onClose, onSelect, 
                               {fmtDayDate(s.session_date)}{s.start_time ? ` · ${s.start_time}` : ''}
                             </div>
                             {delInfo && (
-                              <div style={{ fontSize: 10.5, color: '#B91C1C', fontWeight: 700, marginTop: 3 }}><Icon name="⚠" /> {delInfo}</div>
+                              <div style={{ fontSize: 10.5, color: 'var(--danger-text)', fontWeight: 700, marginTop: 3 }}><Icon name="⚠" /> {delInfo}</div>
                             )}
                           </div>
                           <button onClick={(e) => { e.stopPropagation(); onRestore(s) }} style={{
@@ -2711,7 +2711,7 @@ function AddChildModal({ orgId, bubbles, onClose, onAdded }) {
             <div style={{ fontSize: 17, fontWeight: 900 }}>Add Child</div>
             <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', border: 'none', background: 'var(--surface3)', cursor: 'pointer', fontSize: 16 }}>×</button>
           </div>
-          {error && <div style={{ background: '#FFF0F0', border: '1px solid #FFB3B3', borderRadius: 8, padding: '8px 12px', marginBottom: 14, fontSize: 13, color: '#C00' }}>{error}</div>}
+          {error && <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 8, padding: '8px 12px', marginBottom: 14, fontSize: 13, color: '#C00' }}>{error}</div>}
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10, marginBottom: 12 }}>
             <div><label style={lb}>First Name *</label><input style={fi} value={form.first_name} onChange={e => set('first_name', e.target.value)} /></div>
             <div><label style={lb}>Last Name *</label><input style={fi} value={form.last_name} onChange={e => set('last_name', e.target.value)} /></div>

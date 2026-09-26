@@ -167,7 +167,7 @@ export default function AttendanceCorrectionModal({
         )}
 
         {error && (
-          <div style={{ marginTop: 12, background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: '9px 12px', fontSize: 12, fontWeight: 600, color: '#B91C1C' }}>{error}</div>
+          <div style={{ marginTop: 12, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 10, padding: '9px 12px', fontSize: 12, fontWeight: 600, color: 'var(--danger-text)' }}>{error}</div>
         )}
 
         <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>

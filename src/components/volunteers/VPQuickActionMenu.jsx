@@ -5,11 +5,11 @@ import Icon from '../../lib/icons'
 
 const ACTIONS = [
   { key: 'concern', icon: '🛡️', label: 'Raise Concern', color: '#EF4444' },
-  { key: 'hours', icon: '⏱️', label: 'Log Hours', color: '#7C5CFC' },
+  { key: 'hours', icon: '⏱️', label: 'Log Hours', color: 'var(--violet-text)' },
   { key: 'incident', icon: '📋', label: 'Incident Report', color: '#F59E0B' },
-  { key: 'emergency', icon: '📞', label: 'Emergency Contact', color: '#DC2626' },
+  { key: 'emergency', icon: '📞', label: 'Emergency Contact', color: 'var(--danger-text)' },
   { key: 'register', icon: '📖', label: 'View Register', color: '#0EA5E9' },
-  { key: 'message', icon: '💬', label: 'Message Staff', color: '#16A34A' },
+  { key: 'message', icon: '💬', label: 'Message Staff', color: 'var(--ok-text)' },
   { key: 'document', icon: '📎', label: 'Upload Document', color: '#8B5CF6' },
 ]
 
@@ -112,7 +112,7 @@ function ConcernModal({ org, user, onClose }) {
         </div>
       ) : (
         <>
-          <div style={{ background: '#FEF2F2', border: '1.5px solid #FCA5A5', borderRadius: 12, padding: 12, marginBottom: 14, fontSize: 12.5, color: '#7F1D1D', lineHeight: 1.5 }}>
+          <div style={{ background: 'var(--danger-bg)', border: '1.5px solid var(--danger-border)', borderRadius: 12, padding: 12, marginBottom: 14, fontSize: 12.5, color: 'var(--danger-text)', lineHeight: 1.5 }}>
             If a child is in immediate danger, call 999 first. This form goes straight to your DSL.
           </div>
           <textarea autoFocus value={body} onChange={e => setBody(e.target.value)} placeholder="What did you see or hear? Include names, times, and anything said…" rows={6} style={{ ...inp, resize: 'vertical' }} />
@@ -193,9 +193,9 @@ function EmergencyModal({ org, onClose }) {
   return (
     <ModalShell title="Emergency Contacts" icon="📞" color="#DC2626" onClose={onClose}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <a href="tel:999" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, background: '#FEF2F2', textDecoration: 'none' }}>
+        <a href="tel:999" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, background: 'var(--danger-bg)', textDecoration: 'none' }}>
           <span style={{ fontSize: 22 }}><Icon name="🚨" /></span>
-          <div><div style={{ fontSize: 14, fontWeight: 800, color: '#7F1D1D' }}>999 — Emergency Services</div><div style={{ fontSize: 11.5, color: '#B91C1C' }}>Life-threatening emergency</div></div>
+          <div><div style={{ fontSize: 14, fontWeight: 800, color: 'var(--danger-text)' }}>999 — Emergency Services</div><div style={{ fontSize: 11.5, color: 'var(--danger-text)' }}>Life-threatening emergency</div></div>
         </a>
         {org?.emergency_phone && (
           <a href={`tel:${org.emergency_phone}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, background: 'var(--surface2)', textDecoration: 'none' }}>

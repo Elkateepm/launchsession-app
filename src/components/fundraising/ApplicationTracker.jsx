@@ -6,11 +6,11 @@ import FundraisingEmptyState from './hub/FundraisingEmptyState'
 import Icon from '../../lib/icons'
 
 const STAGES = [
-  { key: 'researching', label: 'Researching', color: 'var(--text3)', bg: '#F3F2F7' },
+  { key: 'researching', label: 'Researching', color: 'var(--text3)', bg: 'var(--surface2)' },
   { key: 'drafting', label: 'Drafting', color: LS.purpleDark, bg: LS.lavender },
   { key: 'submitted', label: 'Submitted', color: '#92640C', bg: '#FDF6E8' },
-  { key: 'awarded', label: 'Awarded', color: '#16803C', bg: '#E7F6EC' },
-  { key: 'declined', label: 'Declined', color: '#B91C1C', bg: '#FCEAEA' },
+  { key: 'awarded', label: 'Awarded', color: 'var(--ok-text)', bg: 'var(--ok-bg)' },
+  { key: 'declined', label: 'Declined', color: 'var(--danger-text)', bg: 'var(--danger-bg)' },
 ]
 
 export default function ApplicationTracker({ org, refreshKey }) {

@@ -15,9 +15,9 @@ const DEFAULT_DOCS = [
 ]
 
 const STATUS_META = {
-  have: { label: 'Have it', color: '#16803C', bg: '#E7F6EC' },
-  expiring_soon: { label: 'Expiring soon', color: '#B45309', bg: '#FEF3C7' },
-  missing: { label: 'Missing', color: LS.muted, bg: '#F3F2F7' },
+  have: { label: 'Have it', color: 'var(--ok-text)', bg: 'var(--ok-bg)' },
+  expiring_soon: { label: 'Expiring soon', color: 'var(--warn-text)', bg: 'var(--warn-bg)' },
+  missing: { label: 'Missing', color: LS.muted, bg: 'var(--surface2)' },
 }
 
 export default function DocumentVault({ org, isAdmin }) {

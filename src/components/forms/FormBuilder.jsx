@@ -301,7 +301,7 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
     const map = {
       saving: { text: 'Saving…', color: 'var(--text-faint)' },
       saved: { text: 'Saved ✓', color: '#12B76A' },
-      error: { text: "Couldn't save", color: '#DC2626' },
+      error: { text: "Couldn't save", color: 'var(--danger-text)' },
       idle: { text: '', color: 'var(--text-faint)' },
     }
     const s = map[saveState]
@@ -311,7 +311,7 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
         {s.text}
         {saveState === 'error' && (
           <button onClick={() => persist(form)} style={{
-            border: 'none', background: 'transparent', color: '#DC2626',
+            border: 'none', background: 'transparent', color: 'var(--danger-text)',
             fontWeight: 800, fontSize: 12.5, cursor: 'pointer', textDecoration: 'underline',
           }}>Try again</button>
         )}
@@ -875,15 +875,15 @@ function EditorBody({ field, primary, onChange, onDuplicate, onDelete, hasRespon
 
       {!confirmDelete ? (
         <button onClick={() => setConfirmDelete(true)} style={{
-          border: 'none', background: 'transparent', color: '#DC2626',
+          border: 'none', background: 'transparent', color: 'var(--danger-text)',
           fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
           textAlign: 'left', padding: 0,
         }}>Delete question</button>
       ) : (
         <div style={{
-          padding: 12, borderRadius: 11, background: '#FEF2F2', border: '1px solid #FECACA',
+          padding: 12, borderRadius: 11, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)',
         }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#B42318', marginBottom: 5 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--danger-text)', marginBottom: 5 }}>
             Remove this question?
           </div>
           {hasResponses && (
@@ -896,7 +896,7 @@ function EditorBody({ field, primary, onChange, onDuplicate, onDelete, hasRespon
           )}
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => setConfirmDelete(false)} style={{
-              padding: '8px 13px', borderRadius: 9, border: '1px solid #FECACA',
+              padding: '8px 13px', borderRadius: 9, border: '1px solid var(--danger-border)',
               background: 'var(--surface)', color: '#7A271A', fontSize: 12.5, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
             }}>Cancel</button>
@@ -1290,8 +1290,8 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
 
         {error && (
           <div style={{
-            marginTop: 12, padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
-            border: '1px solid #FECACA', color: '#B42318', fontSize: 13,
+            marginTop: 12, padding: '10px 12px', borderRadius: 10, background: 'var(--danger-bg)',
+            border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13,
           }}>{error}</div>
         )}
       </div>

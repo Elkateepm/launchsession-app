@@ -74,11 +74,11 @@ export default function MobileBottomNav({
   const dockTabs = ['home', ...destinations.map(d => d.tab)]
 
   const actions = [
-    { key: 'newSession', label: 'New Session', icon: DEFAULT_ACTION_ICONS.newSession, color: '#7C3AED', onSelect: onNewSession },
-    { key: 'payments', label: 'Payments', icon: DEFAULT_ACTION_ICONS.payments, color: '#16A34A', onSelect: onPayments },
-    { key: 'scanQR', label: 'Sign-Up QR', icon: DEFAULT_ACTION_ICONS.scanQR, color: '#2563EB', onSelect: handleScanQR },
-    { key: 'createForm', label: 'Create Form', icon: DEFAULT_ACTION_ICONS.createForm, color: '#D97706', onSelect: onCreateForm },
-    { key: 'reportIncident', label: 'Report Incident', icon: DEFAULT_ACTION_ICONS.reportIncident, color: '#DC2626', onSelect: onReportIncident },
+    { key: 'newSession', label: 'New Session', icon: DEFAULT_ACTION_ICONS.newSession, color: 'var(--violet-text)', onSelect: onNewSession },
+    { key: 'payments', label: 'Payments', icon: DEFAULT_ACTION_ICONS.payments, color: 'var(--ok-text)', onSelect: onPayments },
+    { key: 'scanQR', label: 'Sign-Up QR', icon: DEFAULT_ACTION_ICONS.scanQR, color: 'var(--info-text)', onSelect: handleScanQR },
+    { key: 'createForm', label: 'Create Form', icon: DEFAULT_ACTION_ICONS.createForm, color: 'var(--warn-text)', onSelect: onCreateForm },
+    { key: 'reportIncident', label: 'Report Incident', icon: DEFAULT_ACTION_ICONS.reportIncident, color: 'var(--danger-text)', onSelect: onReportIncident },
     { key: 'addVolunteer', label: 'Add Volunteer', icon: DEFAULT_ACTION_ICONS.addVolunteer, color: '#EA580C', onSelect: onAddVolunteer },
   ]
 

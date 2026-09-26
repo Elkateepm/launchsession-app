@@ -8,10 +8,10 @@ export default function InventoryAlerts({ resources, checkouts, bookings, onView
     resources.forEach(r => {
       if (r.archived_at) return
       if (r.low_stock_threshold && r.quantity_available <= r.low_stock_threshold) {
-        list.push({ id: `low-${r.id}`, icon: '⚠️', color: '#D97706', text: `${r.name} running low`, sub: `Only ${r.quantity_available} left`, action: 'View Stock', onClick: () => onViewStock(r) })
+        list.push({ id: `low-${r.id}`, icon: '⚠️', color: 'var(--warn-text)', text: `${r.name} running low`, sub: `Only ${r.quantity_available} left`, action: 'View Stock', onClick: () => onViewStock(r) })
       }
       if (r.status === 'maintenance') {
-        list.push({ id: `maint-${r.id}`, icon: '🔧', color: '#DC2626', text: `${r.name} needs attention`, sub: 'Marked for maintenance', action: 'View Details', onClick: () => onViewStock(r) })
+        list.push({ id: `maint-${r.id}`, icon: '🔧', color: 'var(--danger-text)', text: `${r.name} needs attention`, sub: 'Marked for maintenance', action: 'View Details', onClick: () => onViewStock(r) })
       }
     })
     checkouts.filter(c => c.status === 'checked_out' && c.expected_return_at).forEach(c => {
@@ -21,9 +21,9 @@ export default function InventoryAlerts({ resources, checkouts, bookings, onView
       const now = new Date()
       const hoursUntil = (due - now) / 3600000
       if (hoursUntil < 0) {
-        list.push({ id: `overdue-${c.id}`, icon: '⏰', color: '#DC2626', text: `${r.name} overdue`, sub: `Was due ${fmtDate(due)} ${fmtTime(due)}`, action: 'View Booking', onClick: () => onViewBooking(c) })
+        list.push({ id: `overdue-${c.id}`, icon: '⏰', color: 'var(--danger-text)', text: `${r.name} overdue`, sub: `Was due ${fmtDate(due)} ${fmtTime(due)}`, action: 'View Booking', onClick: () => onViewBooking(c) })
       } else if (hoursUntil < 6) {
-        list.push({ id: `duesoon-${c.id}`, icon: '⏳', color: '#2563EB', text: `${r.name} due back soon`, sub: `Due at ${fmtTime(due)}`, action: 'View Booking', onClick: () => onViewBooking(c) })
+        list.push({ id: `duesoon-${c.id}`, icon: '⏳', color: 'var(--info-text)', text: `${r.name} due back soon`, sub: `Due at ${fmtTime(due)}`, action: 'View Booking', onClick: () => onViewBooking(c) })
       }
     })
     return list.slice(0, 6)
@@ -33,7 +33,7 @@ export default function InventoryAlerts({ resources, checkouts, bookings, onView
     <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
         <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>Inventory Alerts</div>
-        {alerts.length > 0 && <button onClick={onViewAll} style={{ background: 'none', border: 'none', color: '#7C3AED', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View all alerts</button>}
+        {alerts.length > 0 && <button onClick={onViewAll} style={{ background: 'none', border: 'none', color: 'var(--violet-text)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View all alerts</button>}
       </div>
       {alerts.length === 0 ? (
         <div style={{ fontSize: 12.5, color: 'var(--text-faint)', textAlign: 'center', padding: '16px 0' }}>All clear — nothing needs attention right now.</div>

@@ -69,7 +69,7 @@ export default function VPSessionDetail({ session, org, onClose, onNavigateTab, 
             <a href={`https://maps.google.com/?q=${encodeURIComponent(session.location)}`} target="_blank" rel="noreferrer"
               style={{ padding: '13px', borderRadius: 14, border: '1.5px solid rgba(15,23,42,0.1)', textAlign: 'center', color: 'var(--text2)', fontWeight: 800, fontSize: 13, textDecoration: 'none' }}><Icon name="🧭" /> Navigate</a>
           )}
-          <a href="tel:999" style={{ padding: '13px', borderRadius: 14, border: '1.5px solid #FCA5A5', textAlign: 'center', color: '#DC2626', fontWeight: 800, fontSize: 13, textDecoration: 'none' }}><Icon name="📞" /> Emergency</a>
+          <a href="tel:999" style={{ padding: '13px', borderRadius: 14, border: '1.5px solid var(--danger-border)', textAlign: 'center', color: 'var(--danger-text)', fontWeight: 800, fontSize: 13, textDecoration: 'none' }}><Icon name="📞" /> Emergency</a>
         </div>
       </div>
 
@@ -132,7 +132,7 @@ function VPRegister({ session, org, primary, theme, onClose }) {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>{c.first_name} {c.last_name}</div>
-                    {alert && <div style={{ fontSize: 10.5, color: '#DC2626', fontWeight: 700 }}><Icon name="⚠" /> Medical alert</div>}
+                    {alert && <div style={{ fontSize: 10.5, color: 'var(--danger-text)', fontWeight: 700 }}><Icon name="⚠" /> Medical alert</div>}
                   </div>
                   <button onClick={() => toggle(r)} disabled={busy === r.id}
                     style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: r.status === 'signed_in' ? '#FEF2F2' : theme.gradient, color: r.status === 'signed_in' ? '#DC2626' : '#fff', fontWeight: 800, fontSize: 11.5, cursor: 'pointer', flexShrink: 0 }}>

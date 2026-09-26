@@ -6,7 +6,7 @@ import FundraisingEmptyState from './hub/FundraisingEmptyState'
 
 const TYPE_STYLE = {
   grant: { label: 'Grant deadline', color: '#92640C', bg: '#FDF6E8', icon: 'doc' },
-  campaign: { label: 'Campaign ends', color: '#16803C', bg: '#E7F6EC', icon: 'rocket' },
+  campaign: { label: 'Campaign ends', color: 'var(--ok-text)', bg: 'var(--ok-bg)', icon: 'rocket' },
   application: { label: 'Application target', color: LS.purpleDark, bg: LS.lavender, icon: 'target' },
 }
 
@@ -75,7 +75,7 @@ export default function FundraisingCalendar({ org }) {
     <div>
       {overdue.length > 0 && (
         <div style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: '0.05em', color: '#B91C1C', textTransform: 'uppercase', marginBottom: 10 }}>Overdue</div>
+          <div style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: '0.05em', color: 'var(--danger-text)', textTransform: 'uppercase', marginBottom: 10 }}>Overdue</div>
           <div style={{ background: 'var(--surface)', border: `1px solid ${LS.border}`, borderRadius: 16, padding: '4px 18px' }}>
             {overdue.map((e, i) => <EventRow key={i} e={e} last={i === overdue.length - 1} />)}
           </div>
@@ -114,8 +114,8 @@ function EventRow({ e, now, last }) {
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         <span style={{ fontSize: 10.5, fontWeight: 700, color: style.color, background: style.bg, borderRadius: 20, padding: '3px 10px' }}>{style.label}</span>
-        {daysLeft !== null && daysLeft >= 0 && daysLeft <= 14 && <div style={{ fontSize: 11, fontWeight: 700, color: '#B45309', marginTop: 4 }}>{daysLeft === 0 ? 'Today' : `${daysLeft}d left`}</div>}
-        {daysLeft !== null && daysLeft < 0 && <div style={{ fontSize: 11, fontWeight: 700, color: '#B91C1C', marginTop: 4 }}>{Math.abs(daysLeft)}d overdue</div>}
+        {daysLeft !== null && daysLeft >= 0 && daysLeft <= 14 && <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--warn-text)', marginTop: 4 }}>{daysLeft === 0 ? 'Today' : `${daysLeft}d left`}</div>}
+        {daysLeft !== null && daysLeft < 0 && <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--danger-text)', marginTop: 4 }}>{Math.abs(daysLeft)}d overdue</div>}
       </div>
     </div>
   )

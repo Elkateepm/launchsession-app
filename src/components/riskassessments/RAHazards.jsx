@@ -150,7 +150,7 @@ export default function RAHazards({ assessment, org, session: authSession, venue
                           <RatingBadge rating={riskRating(rScore)} size="sm" />
                           <input style={{ ...inp, width: 140 }} value={h.owner || ''} onChange={e => saveField(h.id, { owner: e.target.value })} placeholder="Owner" />
                           <div style={{ flex: 1 }} />
-                          <button onClick={() => deleteHazard(h.id)} style={{ ...btnGhost, padding: '6px 12px', fontSize: 12, color: '#DC2626', borderColor: 'rgba(220,38,38,0.3)' }}>Delete</button>
+                          <button onClick={() => deleteHazard(h.id)} style={{ ...btnGhost, padding: '6px 12px', fontSize: 12, color: 'var(--danger-text)', borderColor: 'rgba(220,38,38,0.3)' }}>Delete</button>
                         </div>
                       </div>
                     </motion.div>
@@ -162,8 +162,8 @@ export default function RAHazards({ assessment, org, session: authSession, venue
         </AnimatePresence>
       )}
       {availableDefaults.length > 0 && (
-        <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 12, padding: 12, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 12, color: '#166534', fontWeight: 700, flex: 1 }}><Icon name="📍" /> {venue.name} has {availableDefaults.length} default hazard(s) not yet on this assessment</span>
+        <div style={{ background: 'var(--ok-bg)', border: '1px solid var(--ok-border)', borderRadius: 12, padding: 12, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 12, color: 'var(--ok-text)', fontWeight: 700, flex: 1 }}><Icon name="📍" /> {venue.name} has {availableDefaults.length} default hazard(s) not yet on this assessment</span>
           <button onClick={addVenueDefaults} disabled={addingDefaults} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: '#16A34A', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
             {addingDefaults ? 'Adding…' : `+ Add ${availableDefaults.length} from venue`}
           </button>

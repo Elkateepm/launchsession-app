@@ -74,7 +74,7 @@ function RotationPlanner({ slots, onChange, selectedBubbles, bubbleDefs }) {
   const updateActivity = (si, bk, activity) => { const u = [...slots]; u[si] = { ...u[si], bubbles: { ...u[si].bubbles, [bk]: activity } }; onChange(u) }
 
   if (activeBubbles.length === 0) return (
-    <div style={{ background: '#FFFBEB', borderRadius: 10, padding: '12px 14px', fontSize: 12, color: '#856404', fontWeight: 600, border: '1.5px solid #F5D000' }}>
+    <div style={{ background: 'var(--warn-bg)', borderRadius: 10, padding: '12px 14px', fontSize: 12, color: 'var(--warn-text)', fontWeight: 600, border: '1.5px solid #F5D000' }}>
       ℹ Select bubbles above first.
     </div>
   )
@@ -86,7 +86,7 @@ function RotationPlanner({ slots, onChange, selectedBubbles, bubbleDefs }) {
             <input type="time" value={slot.time} onChange={e => updateTime(i, e.target.value)}
               style={{ padding: '6px 10px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 14, fontWeight: 700, width: 120 }} />
             <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', flex: 1 }}>SLOT {i + 1}</span>
-            <button onClick={() => removeSlot(i)} style={{ background: '#FEE2E2', border: 'none', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', color: '#C00', fontSize: 16 }}>×</button>
+            <button onClick={() => removeSlot(i)} style={{ background: 'var(--danger-bg)', border: 'none', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', color: '#C00', fontSize: 16 }}>×</button>
           </div>
           {activeBubbles.map(b => (
             <div key={b.key} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
@@ -456,7 +456,7 @@ function VolunteerPanel({ session, org, onClose }) {
   const removeVolunteer = row => saveAssignment(row.user_id, () => supabase.from('session_staff').delete().eq('session_id', session.id).eq('user_id', row.user_id).eq('org_id', org.id), prev => prev.filter(a => a.user_id !== row.user_id))
   const updateStatus = (row, status) => saveAssignment(row.user_id, () => supabase.from('session_staff').update({ status }).eq('session_id', session.id).eq('user_id', row.user_id).eq('org_id', org.id), prev => prev.map(a => a.user_id === row.user_id ? { ...a, status } : a))
   return <SessionSheet title="Volunteer cover" subtitle={session.title} onClose={onClose} busy={!!saving} width={560} footer={<button onClick={onClose} disabled={!!saving} style={{ ...flowButton, width: '100%', background: primary, borderColor: primary, color: '#fff' }}>Done</button>}>
-    {error && <p role="alert" style={{ padding: 14, background: '#FEF2F2', color: '#991B1B', borderRadius: 10 }}>{error}</p>}
+    {error && <p role="alert" style={{ padding: 14, background: 'var(--danger-bg)', color: 'var(--danger-text)', borderRadius: 10 }}>{error}</p>}
     <div style={{ padding: 16, background: covered ? '#F0FDF4' : '#FFFBEB', borderRadius: 12, marginBottom: 20 }}><strong>{assigned.length}{needed ? ` / ${needed}` : ''} volunteers assigned</strong><div style={{ marginTop: 6, fontSize: 13 }}>{covered ? 'Volunteer cover in place' : `${needed - assigned.length} more needed`}</div></div>
     <input type="search" aria-label="Search volunteers" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search available volunteers…" style={{ ...flowInput, marginBottom: 20 }} />
           {loading ? (
@@ -466,9 +466,9 @@ function VolunteerPanel({ session, org, onClose }) {
               <div style={{ marginBottom: 24 }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)', marginBottom: 12 }}>Assigned ({assigned.length})</div>
                 {assigned.length === 0 ? (
-                  <div style={{ background: '#FFFBEB', borderRadius: 12, padding: 16, textAlign: 'center', border: '1.5px dashed #F5D000' }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#92400E' }}>No volunteers assigned yet</div>
-                    <div style={{ fontSize: 12, color: '#92400E', opacity: 0.7, marginTop: 4 }}>Add from the list below</div>
+                  <div style={{ background: 'var(--warn-bg)', borderRadius: 12, padding: 16, textAlign: 'center', border: '1.5px dashed #F5D000' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--warn-text)' }}>No volunteers assigned yet</div>
+                    <div style={{ fontSize: 12, color: 'var(--warn-text)', opacity: 0.7, marginTop: 4 }}>Add from the list below</div>
                   </div>
                 ) : assigned.map(a => (
                   <div key={a.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '10px 12px', background: a.status === 'confirmed' ? '#F0FDF4' : '#FFFBEB', borderRadius: 12, border: `1.5px solid ${a.status === 'confirmed' ? '#86EFAC' : '#FDE68A'}`, marginBottom: 8 }}>
@@ -484,7 +484,7 @@ function VolunteerPanel({ session, org, onClose }) {
                       <option value="pending">Pending</option>
                       <option value="confirmed">Confirmed</option>
                     </select>
-                    <button aria-label={`Remove ${a.volunteer?.full_name || 'volunteer'}`} onClick={() => removeVolunteer(a)} disabled={!!saving} style={{ width: 44, height: 44, borderRadius: 8, border: '1px solid #FFE5E5', background: '#FFF0F0', cursor: 'pointer', fontSize: 14, color: '#C00', flexShrink: 0 }}>×</button>
+                    <button aria-label={`Remove ${a.volunteer?.full_name || 'volunteer'}`} onClick={() => removeVolunteer(a)} disabled={!!saving} style={{ width: 44, height: 44, borderRadius: 8, border: '1px solid #FFE5E5', background: 'var(--danger-bg)', cursor: 'pointer', fontSize: 14, color: '#C00', flexShrink: 0 }}>×</button>
                   </div>
                 ))}
               </div>
@@ -507,7 +507,7 @@ function VolunteerPanel({ session, org, onClose }) {
               )}
 
               {allVolunteers.length === 0 && (
-                <div style={{ background: '#F0F9FF', borderRadius: 12, padding: 16, textAlign: 'center', border: '1.5px solid #BAE6FD' }}>
+                <div style={{ background: 'var(--info-bg)', borderRadius: 12, padding: 16, textAlign: 'center', border: '1.5px solid var(--info-border)' }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#0369A1' }}>No volunteers in your workspace yet</div>
                   <div style={{ fontSize: 12, color: '#0369A1', opacity: 0.7, marginTop: 4 }}>Manage your team in People & HR</div>
                 </div>
@@ -681,7 +681,7 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
 
             {/* Scrollable step content */}
             <div style={{ overflowY: 'auto', flex: 1, minHeight: 0, padding: isMobile ? 16 : 24, WebkitOverflowScrolling: 'touch', position: 'relative' }}>
-              {error && <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 8, padding: '8px 12px', marginBottom: 16, fontSize: 12, fontWeight: 600 }}><Icon name="⚠️" /> {error}</div>}
+              {error && <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)', borderRadius: 8, padding: '8px 12px', marginBottom: 16, fontSize: 12, fontWeight: 600 }}><Icon name="⚠️" /> {error}</div>}
 
               <AnimatePresence mode="wait" custom={direction}>
                 <motion.div key={step} custom={direction} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.22, ease: 'easeOut' }}>
@@ -724,7 +724,7 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
                           const active = form.outcomes_observed.includes(outcome)
                           return <button key={outcome} onClick={() => toggleArray('outcomes_observed', outcome)} style={{ minHeight: 44, padding: '8px 13px', borderRadius: 99, border: active ? `2px solid ${primary}` : '1px solid var(--border)', background: active ? 'var(--org-a10)' : 'var(--surface)', color: active ? primary : 'var(--text2)', fontWeight: 800, cursor: 'pointer' }}>{active ? '✓ ' : ''}{outcome}</button>
                         })}
-                      </div> : <div style={{ padding: 12, borderRadius: 11, background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E', fontSize: 12, marginBottom: 16 }}>No outcomes were selected when this session was planned. You can still capture evidence below.</div>}
+                      </div> : <div style={{ padding: 12, borderRadius: 11, background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', color: 'var(--warn-text)', fontSize: 12, marginBottom: 16 }}>No outcomes were selected when this session was planned. You can still capture evidence below.</div>}
                       <label style={label}>What tells you change happened?</label>
                       <div style={hint}>Record an observable moment, behaviour or piece of work—avoid names unless necessary.</div>
                       <textarea style={{ ...ta('evidence'), minHeight: 120 }} onFocus={() => setFocused('evidence')} onBlur={() => setFocused(null)} value={form.evidence_notes} onChange={e => set('evidence_notes', e.target.value)} placeholder="e.g. Three quieter participants volunteered to lead the final activity..." />
@@ -781,8 +781,8 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
                             <input type="date" value={action.due_date || ''} onChange={e => updateAction(i, { due_date: e.target.value })} style={{ ...ta('due'), minHeight: 42, height: 42, padding: '6px 9px' }} />
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-                            {action.id && <label style={{ fontSize: 11.5, fontWeight: 700, color: '#15803D' }}><input type="checkbox" checked={action.status === 'completed'} onChange={e => updateAction(i, { status: e.target.checked ? 'completed' : 'open' })} /> Complete</label>}
-                            <button onClick={() => setActions(a => a.filter((_, n) => n !== i))} style={{ marginLeft: 'auto', border: 'none', background: 'none', color: '#B91C1C', fontWeight: 800, cursor: 'pointer' }}>Remove</button>
+                            {action.id && <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--ok-text)' }}><input type="checkbox" checked={action.status === 'completed'} onChange={e => updateAction(i, { status: e.target.checked ? 'completed' : 'open' })} /> Complete</label>}
+                            <button onClick={() => setActions(a => a.filter((_, n) => n !== i))} style={{ marginLeft: 'auto', border: 'none', background: 'none', color: 'var(--danger-text)', fontWeight: 800, cursor: 'pointer' }}>Remove</button>
                           </div>
                         </div>)}
                         <button onClick={addAction} style={{ minHeight: 44, width: '100%', border: `1.5px dashed ${primary}`, borderRadius: 11, background: 'var(--org-a05)', color: primary, fontWeight: 800, cursor: 'pointer' }}>+ Add follow-up action</button>
@@ -791,8 +791,8 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
                         <label style={label}>Would you run this session again as-is?</label>
                         <div style={{ display: 'flex', gap: 8, background: 'var(--surface2, #F3F4F6)', borderRadius: 12, padding: 4 }}>
                           {[
-                            { key: true, label: '👍 Yes', color: '#16A34A', bg: '#F0FDF4' },
-                            { key: false, label: '👎 Needs changes', color: '#DC2626', bg: '#FEF2F2' },
+                            { key: true, label: '👍 Yes', color: 'var(--ok-text)', bg: 'var(--ok-bg)' },
+                            { key: false, label: '👎 Needs changes', color: 'var(--danger-text)', bg: 'var(--danger-bg)' },
                           ].map(opt => {
                             const active = form.would_repeat === opt.key
                             return (
@@ -821,7 +821,7 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
                           whileTap={{ scale: 0.99 }}
                           style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${form.safeguarding_flag ? '#DC2626' : 'var(--border, #E5E7EB)'}`, background: form.safeguarding_flag ? '#FEF2F2' : 'var(--surface2, #F9FAFB)', cursor: 'pointer', transition: 'background 0.15s, border-color 0.15s' }}
                         >
-                          <input type="checkbox" checked={form.safeguarding_flag} onChange={e => set('safeguarding_flag', e.target.checked)} style={{ width: 16, height: 16, accentColor: '#DC2626' }} />
+                          <input type="checkbox" checked={form.safeguarding_flag} onChange={e => set('safeguarding_flag', e.target.checked)} style={{ width: 16, height: 16, accentColor: 'var(--danger-text)' }} />
                           <div>
                             <div style={{ fontSize: 13, fontWeight: 700, color: form.safeguarding_flag ? '#DC2626' : 'var(--text, #111)' }}><Icon name="🛡️" /> Flag for safeguarding follow-up</div>
                             <div style={{ fontSize: 11, color: 'var(--text3, #9CA3AF)' }}>Tick if anything here needs a safeguarding lead's attention — log the actual concern separately.</div>
@@ -983,15 +983,15 @@ function SessionDetailDrawer({ session, org, onClose, onEdit, onVolunteers, volC
 
           {isPast && absentees && absentees.length > 0 && (
             <div style={{ padding: '14px 0 4px' }}>
-              <div style={{ fontSize: 10.5, fontWeight: 800, color: '#DC2626', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 8 }}>⚠️ Didn't Attend ({absentees.length})</div>
+              <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--danger-text)', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 8 }}>⚠️ Didn't Attend ({absentees.length})</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {absentees.map((a, i) => a.children && (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#FEF2F2', borderRadius: 10, padding: '7px 10px' }}>
-                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: '#DC2626', flexShrink: 0, overflow: 'hidden' }}>
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--danger-bg)', borderRadius: 10, padding: '7px 10px' }}>
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: 'var(--danger-text)', flexShrink: 0, overflow: 'hidden' }}>
                       {a.children.photo_url ? <SignedImg bucket="gallery" src={a.children.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : `${a.children.first_name?.[0] || ''}${a.children.last_name?.[0] || ''}`}
                     </div>
-                    <span style={{ fontSize: 12.5, fontWeight: 700, color: '#7F1D1D', flex: 1 }}>{a.children.first_name} {a.children.last_name}</span>
-                    {a.absence_reason && <span style={{ fontSize: 10.5, color: '#B91C1C', fontStyle: 'italic' }}>{a.absence_reason}</span>}
+                    <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--danger-text)', flex: 1 }}>{a.children.first_name} {a.children.last_name}</span>
+                    {a.absence_reason && <span style={{ fontSize: 10.5, color: 'var(--danger-text)', fontStyle: 'italic' }}>{a.absence_reason}</span>}
                   </div>
                 ))}
               </div>
@@ -1013,7 +1013,7 @@ function TemplateCard({ t, primary, onUse, onEdit, onDelete }) {
         <div style={{ width: 44, height: 44, borderRadius: 13, background: type.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>{t.icon || '📋'}</div>
         <div style={{ display: 'flex', gap: 4 }}>
           <button onClick={() => onEdit(t)} title="Edit template" style={{ width: 44, height: 44, borderRadius: 8, border: 'none', background: 'var(--surface-hover)', cursor: 'pointer', fontSize: 12 }}><Icon name="✏️" /></button>
-          <button onClick={() => onDelete(t.id)} title="Delete template" style={{ width: 44, height: 44, borderRadius: 8, border: 'none', background: '#FFF0F0', cursor: 'pointer', fontSize: 12 }}><Icon name="🗑" /></button>
+          <button onClick={() => onDelete(t.id)} title="Delete template" style={{ width: 44, height: 44, borderRadius: 8, border: 'none', background: 'var(--danger-bg)', cursor: 'pointer', fontSize: 12 }}><Icon name="🗑" /></button>
         </div>
       </div>
       <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>{t.name}</div>
@@ -1273,10 +1273,10 @@ function reviewPriority(issues) {
 }
 
 const REVIEW_TONES = {
-  safeguarding: { color: '#B91C1C', bg: '#FEE2E2', icon: '\u{1F6E1}' },
-  compliance:   { color: '#B45309', bg: '#FEF3C7', icon: '\u26A0' },
-  attendance:   { color: '#B45309', bg: '#FEF3C7', icon: '\u26A0' },
-  admin:        { color: 'var(--text3)', bg: '#F1F5F9', icon: '\u26A0' },
+  safeguarding: { color: 'var(--danger-text)', bg: 'var(--danger-bg)', icon: '\u{1F6E1}' },
+  compliance:   { color: 'var(--warn-text)', bg: 'var(--warn-bg)', icon: '\u26A0' },
+  attendance:   { color: 'var(--warn-text)', bg: 'var(--warn-bg)', icon: '\u26A0' },
+  admin:        { color: 'var(--text3)', bg: 'var(--surface-hover)', icon: '\u26A0' },
 }
 
 function fmtDayLabel(dateStr) {
@@ -1319,12 +1319,12 @@ function pushTo(map, key, item) {
 // Small pill used across the new cards for readiness / issues.
 function StatusPill({ ok, children, tone }) {
   const c = tone === 'amber'
-    ? { bg: '#FEF3C7', fg: '#92400E', bd: '#FDE68A' }
+    ? { bg: 'var(--warn-bg)', fg: 'var(--warn-text)', bd: 'var(--warn-border)' }
     : tone === 'red'
-      ? { bg: '#FEE2E2', fg: '#B91C1C', bd: '#FECACA' }
+      ? { bg: 'var(--danger-bg)', fg: 'var(--danger-text)', bd: 'var(--danger-border)' }
       : ok
-        ? { bg: '#DCFCE7', fg: '#15803D', bd: '#BBF7D0' }
-        : { bg: '#F1F5F9', fg: '#64748B', bd: '#E2E8F0' }
+        ? { bg: 'var(--ok-bg)', fg: 'var(--ok-text)', bd: 'var(--ok-border)' }
+        : { bg: 'var(--surface-hover)', fg: '#64748B', bd: '#E2E8F0' }
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700,
@@ -2014,7 +2014,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
               display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left',
               padding: '12px 16px', marginBottom: 14, borderRadius: 14, cursor: 'pointer',
               background: 'linear-gradient(135deg, #F5F3FF, #EEF2FF)',
-              border: '1px solid #DDD6FE', boxSizing: 'border-box',
+              border: '1px solid var(--violet-border)', boxSizing: 'border-box',
             }}>
             <span style={{ fontSize: 18, flexShrink: 0 }}><Icon name="🚀" /></span>
             <span style={{ flex: 1, minWidth: 0 }}>
@@ -2207,7 +2207,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
 
         {/* ═══ DISMISSIBLE TIP ═══ */}
         {!loading && !tipDismissed && completedSessions.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: 14, padding: '12px 16px', marginTop: 16, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--violet-bg)', border: '1px solid var(--violet-border)', borderRadius: 14, padding: '12px 16px', marginTop: 16, flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 200, fontSize: 12.5, color: '#4C1D95', fontWeight: 600 }}>
               💡 Running the same activity again? Duplicate a previous session instead of creating one from scratch.
             </div>

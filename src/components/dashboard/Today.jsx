@@ -50,10 +50,10 @@ function sessionPhase(session) {
 }
 
 const PHASE = {
-  running: { label: 'Running now', dot: '#12B76A', bg: '#E7F8ED', text: '#04713C' },
-  upcoming: { label: 'Later today', dot: '#7C5CFC', bg: '#F1EDFF', text: '#5B21B6' },
-  finished: { label: 'Finished', dot: '#94A3B8', bg: '#F3F2F7', text: '#5A5772' },
-  scheduled: { label: 'No time set', dot: '#94A3B8', bg: '#F3F2F7', text: '#5A5772' },
+  running: { label: 'Running now', dot: '#12B76A', bg: 'var(--ok-bg)', text: 'var(--ok-text)' },
+  upcoming: { label: 'Later today', dot: '#7C5CFC', bg: 'var(--violet-bg)', text: 'var(--violet-text)' },
+  finished: { label: 'Finished', dot: '#94A3B8', bg: 'var(--surface2)', text: '#5A5772' },
+  scheduled: { label: 'No time set', dot: '#94A3B8', bg: 'var(--surface2)', text: '#5A5772' },
 }
 
 export default function Today({ org, session: authSession, userProfile, onNavigate }) {
@@ -246,16 +246,16 @@ export default function Today({ org, session: authSession, userProfile, onNaviga
         {!s.registerStarted && s.phase === 'running' && (
           <div style={{
             padding: '9px 12px', borderRadius: 10, marginBottom: 12,
-            background: '#FEF2F2', border: '1px solid #FECACA',
-            fontSize: 12.5, color: '#B42318',
+            background: 'var(--danger-bg)', border: '1px solid var(--danger-border)',
+            fontSize: 12.5, color: 'var(--danger-text)',
           }}>Register not started</div>
         )}
 
         {s.phase === 'finished' && s.present > 0 && (
           <div style={{
             padding: '9px 12px', borderRadius: 10, marginBottom: 12,
-            background: '#FEF6E7', border: '1px solid #FDE2B5',
-            fontSize: 12.5, color: '#93500A',
+            background: 'var(--warn-bg)', border: '1px solid var(--warn-border)',
+            fontSize: 12.5, color: 'var(--warn-text)',
           }}>{s.present} still signed in after the session ended</div>
         )}
 

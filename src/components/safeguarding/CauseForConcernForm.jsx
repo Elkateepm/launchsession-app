@@ -165,7 +165,7 @@ export default function CauseForConcernForm({ org, session: authSession, initial
         <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)' }}>Cause for Concern</div>
       </div>
       <div style={{ background: 'rgba(220,38,38,0.06)', borderRadius: 12, padding: 16, border: '1.5px solid rgba(220,38,38,0.2)', marginBottom: 24 }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: '#DC2626', marginBottom: 10 }}>Please read before continuing:</div>
+        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--danger-text)', marginBottom: 10 }}>Please read before continuing:</div>
         <div style={{ fontSize: 13, color: 'var(--text2)', fontWeight: 500, lineHeight: 1.8 }}>
           Causes for concern must be recorded no matter how small or great they may seem.<br /><br />
           They may range from poor personal hygiene to a disclosure of abuse.<br /><br />
@@ -210,7 +210,7 @@ export default function CauseForConcernForm({ org, session: authSession, initial
                       {c.group_name && <div style={{ fontSize: 11, color: 'var(--text3)' }}>{c.group_name}</div>}
                     </div>
                     {(c.allergies || c.has_epipen || c.has_asthma || c.has_diabetes || c.has_behaviour_plan) && (
-                      <span title="Has medical or behaviour flags" style={{ fontSize: 11, fontWeight: 700, color: '#DC2626', background: 'rgba(220,38,38,0.1)', padding: '2px 8px', borderRadius: 999, flexShrink: 0 }}><Icon name="⚠️" /> Flags</span>
+                      <span title="Has medical or behaviour flags" style={{ fontSize: 11, fontWeight: 700, color: 'var(--danger-text)', background: 'rgba(220,38,38,0.1)', padding: '2px 8px', borderRadius: 999, flexShrink: 0 }}><Icon name="⚠️" /> Flags</span>
                     )}
                   </button>
                 ))}
@@ -287,7 +287,7 @@ export default function CauseForConcernForm({ org, session: authSession, initial
 
       <SectionDivider label="Action Plan" />
       <div style={{ background: 'rgba(245,208,0,0.06)', borderRadius: 12, padding: '14px 14px 4px', border: '1.5px solid rgba(245,208,0,0.25)', marginBottom: 16 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: '#856404', marginBottom: 14 }}>Record all notifications and follow-up actions taken after this concern.</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--warn-text)', marginBottom: 14 }}>Record all notifications and follow-up actions taken after this concern.</div>
         <Toggle checked={form.dsl_notified} onChange={v => set('dsl_notified', v)} label="DSL has been notified" sublabel="Designated Safeguarding Lead informed" />
         {form.dsl_notified && (
           <div style={{ marginLeft: 56, marginTop: -8, marginBottom: 14, display: 'flex', gap: 10 }}>
@@ -328,7 +328,7 @@ export default function CauseForConcernForm({ org, session: authSession, initial
         </div>
       </div>
 
-      {error && <div style={{ background: 'rgba(220,38,38,0.08)', borderRadius: 10, padding: '10px 13px', marginBottom: 14, fontSize: 12, color: '#DC2626', fontWeight: 700 }}>{error}</div>}
+      {error && <div style={{ background: 'rgba(220,38,38,0.08)', borderRadius: 10, padding: '10px 13px', marginBottom: 14, fontSize: 12, color: 'var(--danger-text)', fontWeight: 700 }}>{error}</div>}
 
       <div style={{ display: 'flex', gap: 10, paddingBottom: 20 }}>
         <button onClick={() => setStep('warning')} style={{ flex: 1, padding: '13px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'transparent', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text3)' }}>Back</button>

@@ -96,8 +96,8 @@ export default function ResourceInventory({ resources, bookings, venues, onBook,
             <ResourceCard key={r.id} resource={r} nextBooking={nextBookingFor(r.id)} onBook={onBook} onOpen={onOpen} onQuickAction={onQuickAction} view="grid" />
           ))}
           <button onClick={onAddResource} style={{ border: '2px dashed var(--border)', borderRadius: 16, background: 'var(--surface2)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 180, cursor: 'pointer' }}>
-            <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: '#7C3AED' }}>+</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#7C3AED' }}>Add New Resource</div>
+            <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--info-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: 'var(--violet-text)' }}>+</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--violet-text)' }}>Add New Resource</div>
             <div style={{ fontSize: 11, color: 'var(--text-faint)', textAlign: 'center', padding: '0 20px' }}>Add rooms, vehicles or equipment to your inventory</div>
           </button>
         </div>

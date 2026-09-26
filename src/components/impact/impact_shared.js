@@ -9,7 +9,7 @@ export const OUTCOME_AREAS = [
   { key: 'attendance',    label: 'Attendance',      icon: '📅', color: '#3B82F6' },
   { key: 'education',     label: 'Education',       icon: '📚', color: '#8B5CF6' },
   { key: 'wellbeing',     label: 'Wellbeing',       icon: '🌱', color: '#EC4899' },
-  { key: 'resilience',    label: 'Resilience',      icon: '🛡️', color: '#DC2626' },
+  { key: 'resilience',    label: 'Resilience',      icon: '🛡️', color: 'var(--danger-text)' },
   { key: 'employability', label: 'Employability',   icon: '💼', color: '#10B981' },
   { key: 'social',        label: 'Social Skills',   icon: '🤝', color: '#06B6D4' },
   { key: 'leadership',    label: 'Leadership',      icon: '🧭', color: '#6366F1' },
@@ -204,10 +204,10 @@ export function DismissibleTip({ id, children }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-      style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 12, padding: '10px 14px', fontSize: 12.5, color: '#92400E', marginBottom: 14 }}
+      style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 12, padding: '10px 14px', fontSize: 12.5, color: 'var(--warn-text)', marginBottom: 14 }}
     >
       <span style={{ flex: 1 }}>💡 {children}</span>
-      <button onClick={() => { dismissedTips.add(id); setHidden(true) }} style={{ background: 'none', border: 'none', color: '#92400E', cursor: 'pointer', fontWeight: 900, fontSize: 13, opacity: 0.6 }}>✕</button>
+      <button onClick={() => { dismissedTips.add(id); setHidden(true) }} style={{ background: 'none', border: 'none', color: 'var(--warn-text)', cursor: 'pointer', fontWeight: 900, fontSize: 13, opacity: 0.6 }}>✕</button>
     </motion.div>
   )
 }

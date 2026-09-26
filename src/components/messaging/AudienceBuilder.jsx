@@ -197,7 +197,7 @@ export default function AudienceBuilder({
             ))}
           </div>
           {filteredOutRoles && (
-            <div style={{ fontSize: 12, color: '#B45309', marginBottom: 12, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 12, color: 'var(--warn-text)', marginBottom: 12, lineHeight: 1.5 }}>
               Groups and projects only describe young people, so while a filter is on this goes to parents only.
             </div>
           )}
@@ -234,10 +234,10 @@ export default function AudienceBuilder({
       <div style={{
         borderTop: '1px solid var(--border)', paddingTop: 12, marginTop: 4,
       }}>
-        {error && <div style={{ fontSize: 12.5, color: '#B91C1C', marginBottom: 8 }}>{error}</div>}
+        {error && <div style={{ fontSize: 12.5, color: 'var(--danger-text)', marginBottom: 8 }}>{error}</div>}
 
         {roles.length === 0 ? (
-          <div style={{ fontSize: 12.5, color: '#B45309' }}>Nobody selected yet — choose at least one group above.</div>
+          <div style={{ fontSize: 12.5, color: 'var(--warn-text)' }}>Nobody selected yet — choose at least one group above.</div>
         ) : people === null ? (
           <div style={{ fontSize: 12.5, color: 'var(--text3)' }}>Working out who that is…</div>
         ) : (

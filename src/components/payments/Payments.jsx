@@ -192,7 +192,7 @@ function PickChildThenPay({ children, onClose, onPick, isMobile }) {
       }}>
         {isMobile && (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 4px' }}>
-            <div style={{ width: 36, height: 4, borderRadius: 99, background: '#E2E8F0' }} />
+            <div style={{ width: 36, height: 4, borderRadius: 99, background: 'var(--surface3)' }} />
           </div>
         )}
         <div style={{ padding: isMobile ? '4px 20px 14px' : '18px 20px', borderBottom: '1px solid var(--border-soft)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -400,7 +400,7 @@ function ChargeCardMobile({ charge, child, onRecordPayment, extraAction }) {
 }
 
 function ChildAvatar({ child, size = 32 }) {
-  if (!child) return <div style={{ width: size, height: size, borderRadius: '50%', background: '#E2E8F0', flexShrink: 0 }} />
+  if (!child) return <div style={{ width: size, height: size, borderRadius: '50%', background: 'var(--surface3)', flexShrink: 0 }} />
   return child.photo_url ? (
     <SignedImg bucket="gallery" src={child.photo_url} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
   ) : (

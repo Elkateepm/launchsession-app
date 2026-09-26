@@ -112,7 +112,7 @@ export default function MedicalAlerts({ org, session, onNavigate }) {
     { key: 'today', label: 'Today', count: onToday.length },
     // Only offered once there is something in it. A permanent "Immediate
     // response 0" tab is a worry with nothing behind it.
-    ...(immediate.length ? [{ key: 'immediate', label: 'Immediate response', count: immediate.length, tone: '#B91C1C' }] : []),
+    ...(immediate.length ? [{ key: 'immediate', label: 'Immediate response', count: immediate.length, tone: 'var(--danger-text)' }] : []),
     { key: 'all', label: `All ${terms.people}`, count: rows.length },
     { key: 'review', label: 'Needs review', count: needsReviewRows.length },
   ]
@@ -201,8 +201,8 @@ export default function MedicalAlerts({ org, session, onNavigate }) {
         <button onClick={() => setTab('immediate')} style={{
           display: 'block', width: 'calc(100% - 32px)', textAlign: 'left', fontFamily: 'inherit',
           margin: '12px 16px 0', padding: '10px 14px', borderRadius: 10, minHeight: 44,
-          background: '#FEE2E2', border: '1.5px solid #FECACA', cursor: 'pointer',
-          fontSize: 12.5, fontWeight: 800, color: '#991B1B',
+          background: 'var(--danger-bg)', border: '1.5px solid var(--danger-border)', cursor: 'pointer',
+          fontSize: 12.5, fontWeight: 800, color: 'var(--danger-text)',
         }}>
           {onToday.filter(r => r.tier === 1).length} of the {onToday.length} on today’s register
           {onToday.filter(r => r.tier === 1).length === 1 ? ' needs' : ' need'} an immediate response plan
@@ -318,7 +318,7 @@ function AlertCard({ row, primary, showToday, onOpen, onSignOff }) {
             {child.first_name} {child.last_name}
           </span>
           {showToday && todayStatus && todayStatus !== 'absent' && (
-            <span style={{ fontSize: 10, fontWeight: 800, color: '#166534', background: '#DCFCE7', borderRadius: 99, padding: '2px 8px' }}>
+            <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--ok-text)', background: 'var(--ok-bg)', borderRadius: 99, padding: '2px 8px' }}>
               {todayStatus === 'signed_in' ? 'Here now' : 'On today’s register'}
             </span>
           )}
@@ -435,12 +435,12 @@ function MedicalDetailDrawer({ row, reviews, primary, isMobile, onClose, onSignO
           {/* Emergency contact first. Everything below it is what you say to
               them; this is who you call. */}
           {(child.emergency_contact_name || child.emergency_contact_phone) && (
-            <div style={{ background: '#FEF2F2', border: '1.5px solid #FECACA', borderRadius: 12, padding: '11px 13px', marginBottom: 14 }}>
-              <div style={{ fontSize: 10, fontWeight: 800, color: '#B91C1C', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 }}>Emergency contact</div>
+            <div style={{ background: 'var(--danger-bg)', border: '1.5px solid var(--danger-border)', borderRadius: 12, padding: '11px 13px', marginBottom: 14 }}>
+              <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--danger-text)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 }}>Emergency contact</div>
               <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{child.emergency_contact_name || 'Not named'}</div>
               {child.emergency_contact_phone && (
                 <a href={`tel:${child.emergency_contact_phone}`} onClick={e => e.stopPropagation()}
-                  style={{ fontSize: 14, fontWeight: 800, color: '#B91C1C', textDecoration: 'none' }}>
+                  style={{ fontSize: 14, fontWeight: 800, color: 'var(--danger-text)', textDecoration: 'none' }}>
                   {child.emergency_contact_phone}
                 </a>
               )}
@@ -451,7 +451,7 @@ function MedicalDetailDrawer({ row, reviews, primary, isMobile, onClose, onSignO
             <div key={i} style={{ marginBottom: 12 }}>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                 <span style={{ fontSize: 10.5, fontWeight: 800, color: TIERS[f.tier].colour, background: TIERS[f.tier].bg, borderRadius: 6, padding: '2px 7px' }}>{f.label}</span>
-                {f.tier === 1 && <span style={{ fontSize: 10, fontWeight: 800, color: '#B91C1C' }}>{TIERS[1].label}</span>}
+                {f.tier === 1 && <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--danger-text)' }}>{TIERS[1].label}</span>}
               </div>
               <div style={{ fontSize: 13, color: f.detail ? '#374151' : '#9CA3AF', lineHeight: 1.5 }}>
                 {f.detail || 'No further detail recorded.'}

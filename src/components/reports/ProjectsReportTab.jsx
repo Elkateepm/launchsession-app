@@ -282,6 +282,6 @@ function Para({ label, color, text }) {
   )
 }
 const chip = {
-  fontSize: 11.5, fontWeight: 700, color: '#5B21B6', background: '#F5F3FF',
-  border: '1px solid #DDD6FE', borderRadius: 99, padding: '4px 11px',
+  fontSize: 11.5, fontWeight: 700, color: 'var(--violet-text)', background: 'var(--violet-bg)',
+  border: '1px solid var(--violet-border)', borderRadius: 99, padding: '4px 11px',
 }

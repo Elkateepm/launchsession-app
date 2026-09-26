@@ -15,9 +15,9 @@ const STATUS_COLORS = {
 }
 
 const PRIORITY_COLORS = {
-  urgent: { bg: 'rgba(239,68,68,0.12)', color: '#DC2626', label: 'Urgent' },
-  high:   { bg: 'rgba(245,158,11,0.12)', color: '#D97706', label: 'High' },
-  medium: { bg: 'rgba(59,130,246,0.12)', color: '#2563EB', label: 'Medium' },
+  urgent: { bg: 'rgba(239,68,68,0.12)', color: 'var(--danger-text)', label: 'Urgent' },
+  high:   { bg: 'rgba(245,158,11,0.12)', color: 'var(--warn-text)', label: 'High' },
+  medium: { bg: 'rgba(59,130,246,0.12)', color: 'var(--info-text)', label: 'Medium' },
   low:    { bg: 'rgba(100,116,139,0.12)', color: 'var(--text3)', label: 'Low' },
 }
 
@@ -226,7 +226,7 @@ function CaseDetailModal({ c, onClose, onStatusChange, orgId, userId, onNavigate
         {c.action_taken && <Row label="Immediate action taken" value={c.action_taken} />}
 
         <div style={{ background: 'rgba(245,208,0,0.06)', borderRadius: 12, padding: 16, border: '1px solid rgba(245,208,0,0.2)', marginBottom: 20 }}>
-          <div style={{ fontSize: 11, fontWeight: 900, color: '#856404', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 }}>Action Plan</div>
+          <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--warn-text)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 }}>Action Plan</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
             <Badge show={c.dsl_notified} label={'DSL Notified' + (c.dsl_notified_name ? ': ' + c.dsl_notified_name : '')} />
             <Badge show={c.parents_notified} label="Parents Notified" />
@@ -262,7 +262,7 @@ function CaseDetailModal({ c, onClose, onStatusChange, orgId, userId, onNavigate
                 })}
               </select>
               {!assignedTo && (
-                <div style={{ fontSize: 11.5, color: '#B45309', marginTop: 5 }}>An unassigned concern has nobody to chase it.</div>
+                <div style={{ fontSize: 11.5, color: 'var(--warn-text)', marginTop: 5 }}>An unassigned concern has nobody to chase it.</div>
               )}
             </div>
             <div>
@@ -300,7 +300,7 @@ function CaseDetailModal({ c, onClose, onStatusChange, orgId, userId, onNavigate
           )}
 
           {saveError && (
-            <div style={{ marginTop: 10, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', color: '#B91C1C', borderRadius: 10, padding: '9px 12px', fontSize: 12.5, fontWeight: 600 }}>
+            <div style={{ marginTop: 10, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger-text)', borderRadius: 10, padding: '9px 12px', fontSize: 12.5, fontWeight: 600 }}>
               {saveError}
             </div>
           )}
@@ -390,7 +390,7 @@ function CasesTab({ cases, loading, filter, setFilter, onSelect, isMobile }) {
                         actually being worked as a case is the confusion this
                         whole change is about. */}
                     {isHandedOver(c) ? (
-                      <span style={{ fontSize: 10.5, fontWeight: 800, color: '#4338CA', background: '#EEF2FF', padding: '2px 7px', borderRadius: 999 }}>
+                      <span style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--info-text)', background: 'var(--info-bg)', padding: '2px 7px', borderRadius: 999 }}>
                         Now a case
                       </span>
                     ) : (
@@ -539,16 +539,16 @@ function ChildrenTab({ org, cases, isMobile }) {
                 </div>
 
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  {c.allergies && <span style={{ fontSize: 10, fontWeight: 700, color: '#DC2626', background: 'rgba(220,38,38,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="⚠️" /> Allergies</span>}
-                  {c.has_epipen && <span style={{ fontSize: 10, fontWeight: 700, color: '#DC2626', background: 'rgba(220,38,38,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="💉" /> EpiPen</span>}
-                  {c.has_asthma && <span style={{ fontSize: 10, fontWeight: 700, color: '#2563EB', background: 'rgba(37,99,235,0.1)', padding: '2px 8px', borderRadius: 999 }}>🫁 Asthma</span>}
-                  {c.has_diabetes && <span style={{ fontSize: 10, fontWeight: 700, color: '#7C3AED', background: 'rgba(124,58,237,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="💊" /> Diabetes</span>}
-                  {c.has_behaviour_plan && <span style={{ fontSize: 10, fontWeight: 700, color: '#D97706', background: 'rgba(217,119,6,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="📋" /> Behaviour Plan</span>}
-                  {c.sen && <span style={{ fontSize: 10, fontWeight: 700, color: '#059669', background: 'rgba(5,150,105,0.1)', padding: '2px 8px', borderRadius: 999 }}>SEN</span>}
+                  {c.allergies && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--danger-text)', background: 'rgba(220,38,38,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="⚠️" /> Allergies</span>}
+                  {c.has_epipen && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--danger-text)', background: 'rgba(220,38,38,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="💉" /> EpiPen</span>}
+                  {c.has_asthma && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--info-text)', background: 'rgba(37,99,235,0.1)', padding: '2px 8px', borderRadius: 999 }}>🫁 Asthma</span>}
+                  {c.has_diabetes && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--violet-text)', background: 'rgba(124,58,237,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="💊" /> Diabetes</span>}
+                  {c.has_behaviour_plan && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--warn-text)', background: 'rgba(217,119,6,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="📋" /> Behaviour Plan</span>}
+                  {c.sen && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--ok-text)', background: 'rgba(5,150,105,0.1)', padding: '2px 8px', borderRadius: 999 }}>SEN</span>}
                 </div>
 
                 {concernsFor(c) > 0 && (
-                  <div style={{ fontSize: 11, color: '#DC2626', fontWeight: 700 }}>{concernsFor(c)} concern{concernsFor(c) === 1 ? '' : 's'} on file</div>
+                  <div style={{ fontSize: 11, color: 'var(--danger-text)', fontWeight: 700 }}>{concernsFor(c)} concern{concernsFor(c) === 1 ? '' : 's'} on file</div>
                 )}
 
                 <button onClick={() => setWellbeingChild(c)} style={{ marginTop: 4, padding: '9px 12px', borderRadius: 10, border: 'none', background: PRIMARY, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
@@ -619,10 +619,10 @@ function MedicalTab({ org, isMobile }) {
               <div style={{ flex: 1, minWidth: 200 }}>
                 <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>{c.first_name} {c.last_name}</div>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-                  {c.has_epipen && <span style={{ fontSize: 10, fontWeight: 700, color: '#DC2626', background: 'rgba(220,38,38,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="💉" /> EpiPen</span>}
-                  {c.has_asthma && <span style={{ fontSize: 10, fontWeight: 700, color: '#2563EB', background: 'rgba(37,99,235,0.1)', padding: '2px 8px', borderRadius: 999 }}>🫁 Asthma</span>}
-                  {c.has_diabetes && <span style={{ fontSize: 10, fontWeight: 700, color: '#7C3AED', background: 'rgba(124,58,237,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="💊" /> Diabetes</span>}
-                  {c.has_medication && <span style={{ fontSize: 10, fontWeight: 700, color: '#D97706', background: 'rgba(217,119,6,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="💊" /> Medication</span>}
+                  {c.has_epipen && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--danger-text)', background: 'rgba(220,38,38,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="💉" /> EpiPen</span>}
+                  {c.has_asthma && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--info-text)', background: 'rgba(37,99,235,0.1)', padding: '2px 8px', borderRadius: 999 }}>🫁 Asthma</span>}
+                  {c.has_diabetes && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--violet-text)', background: 'rgba(124,58,237,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="💊" /> Diabetes</span>}
+                  {c.has_medication && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--warn-text)', background: 'rgba(217,119,6,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="💊" /> Medication</span>}
                 </div>
                 {c.allergies && <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 4 }}><b>Allergies:</b> {c.allergies}</div>}
                 {c.medical_notes && <div style={{ fontSize: 12, color: 'var(--text2)' }}><b>Notes:</b> {c.medical_notes}</div>}
@@ -695,7 +695,7 @@ function DocumentsTab({ org, userId, isMobile }) {
           <input type="file" multiple hidden onChange={e => handleFiles(e.target.files)} disabled={uploading} accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" />
         </label>
         <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 10 }}>PDFs, images, body maps, referral letters, meeting notes</div>
-        {error && <div style={{ marginTop: 10, fontSize: 12, color: '#DC2626', fontWeight: 600 }}>{error}</div>}
+        {error && <div style={{ marginTop: 10, fontSize: 12, color: 'var(--danger-text)', fontWeight: 600 }}>{error}</div>}
       </div>
 
       {loading ? (
@@ -833,7 +833,7 @@ function StatusPills({ stats }) {
     { icon: '🟠', value: stats.followUp, label: 'Follow-ups', color: '#F59E0B' },
     // Shown only once something has been handed over, so the row does not
     // carry a zero for a thing this organisation has never done.
-    ...(stats.escalated ? [{ icon: '📋', value: stats.escalated, label: 'Now cases', color: '#4338CA' }] : []),
+    ...(stats.escalated ? [{ icon: '📋', value: stats.escalated, label: 'Now cases', color: 'var(--info-text)' }] : []),
     { icon: '✅', value: stats.resolvedThisMonth, label: 'Resolved', color: '#22C55E' },
   ]
   return (
@@ -904,10 +904,10 @@ export function attentionItems(cases) {
 }
 
 const ATTENTION_TONE = [
-  { bg: 'rgba(239,68,68,0.07)', border: 'rgba(239,68,68,0.3)', color: '#B91C1C', icon: '🚨' },
-  { bg: 'rgba(239,68,68,0.07)', border: 'rgba(239,68,68,0.3)', color: '#B91C1C', icon: '⏰' },
-  { bg: 'rgba(245,158,11,0.07)', border: 'rgba(245,158,11,0.3)', color: '#B45309', icon: '⚠️' },
-  { bg: 'rgba(245,158,11,0.07)', border: 'rgba(245,158,11,0.3)', color: '#B45309', icon: '⚠️' },
+  { bg: 'rgba(239,68,68,0.07)', border: 'rgba(239,68,68,0.3)', color: 'var(--danger-text)', icon: '🚨' },
+  { bg: 'rgba(239,68,68,0.07)', border: 'rgba(239,68,68,0.3)', color: 'var(--danger-text)', icon: '⏰' },
+  { bg: 'rgba(245,158,11,0.07)', border: 'rgba(245,158,11,0.3)', color: 'var(--warn-text)', icon: '⚠️' },
+  { bg: 'rgba(245,158,11,0.07)', border: 'rgba(245,158,11,0.3)', color: 'var(--warn-text)', icon: '⚠️' },
   { bg: 'rgba(100,116,139,0.07)', border: 'rgba(100,116,139,0.28)', color: '#475569', icon: '👤' },
   { bg: 'rgba(100,116,139,0.07)', border: 'rgba(100,116,139,0.28)', color: '#475569', icon: '🕐' },
 ]
@@ -1062,10 +1062,10 @@ export default function SafeguardingDashboard({ org, session, onReportConcern, o
   ]
 
   const QUICK_ACTIONS = [
-    { icon: '🛡️', label: 'Report Concern', color: '#DC2626', onClick: () => onReportConcern && onReportConcern() },
-    { icon: '❤️', label: 'Medical Incident', color: '#2563EB', onClick: () => setTab('medical') },
-    { icon: '📞', label: 'Parent Contact', color: '#7C3AED', onClick: () => setTab('cases') },
-    { icon: '📎', label: 'Upload Document', color: '#059669', onClick: () => setTab('documents') },
+    { icon: '🛡️', label: 'Report Concern', color: 'var(--danger-text)', onClick: () => onReportConcern && onReportConcern() },
+    { icon: '❤️', label: 'Medical Incident', color: 'var(--info-text)', onClick: () => setTab('medical') },
+    { icon: '📞', label: 'Parent Contact', color: 'var(--violet-text)', onClick: () => setTab('cases') },
+    { icon: '📎', label: 'Upload Document', color: 'var(--ok-text)', onClick: () => setTab('documents') },
   ]
 
   return (

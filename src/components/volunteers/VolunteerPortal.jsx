@@ -497,7 +497,7 @@ export default function VolunteerPortal() {
           </div>
         </div>
         <div style={s.body}>
-          {error && <div style={{ background:'#FFF0F0', border:'1px solid #FFD0D0', color:'#C00', borderRadius:10, padding:'10px 14px', fontSize:13, marginBottom:16, fontWeight:600 }}>{error}</div>}
+          {error && <div style={{ background: 'var(--danger-bg)', border:'1px solid var(--danger-border)', color:'#C00', borderRadius:10, padding:'10px 14px', fontSize:13, marginBottom:16, fontWeight:600 }}>{error}</div>}
           <form onSubmit={handleAuth}>
             <label style={s.label}>Email address</label>
             <input style={s.inp} type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@email.com" required autoFocus />

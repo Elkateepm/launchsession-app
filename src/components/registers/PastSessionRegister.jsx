@@ -165,7 +165,7 @@ export default function PastSessionRegister({
         {!isMobile && <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 8 }}>This session has ended and the final attendance record is locked.</div>}
 
         {session.reopened_at && !session.closed_at && (
-          <div style={{ marginTop: 10, background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 10, padding: '8px 12px', fontSize: 12, color: '#92400E', fontWeight: 700 }}>
+          <div style={{ marginTop: 10, background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 10, padding: '8px 12px', fontSize: 12, color: 'var(--warn-text)', fontWeight: 700 }}>
             Register reopened by {reopenedByName} at {fmtTime(session.reopened_at)}
           </div>
         )}
@@ -197,7 +197,7 @@ export default function PastSessionRegister({
         </div>
         )}
         {totalExpected === 0 && (
-          <div style={{ marginTop: 10, fontSize: 12, fontWeight: 700, color: '#B45309' }}>Attendance record incomplete</div>
+          <div style={{ marginTop: 10, fontSize: 12, fontWeight: 700, color: 'var(--warn-text)' }}>Attendance record incomplete</div>
         )}
 
         {/* REGISTER COMPLETION */}
@@ -211,7 +211,7 @@ export default function PastSessionRegister({
             <div style={{ height: '100%', width: `${completionPct}%`, background: `linear-gradient(90deg, ${primary}, ${secondary})` }} />
           </div>
           {hasUnresolved && (
-            <div style={{ marginTop: 8, fontSize: 12, fontWeight: 700, color: '#B91C1C' }}><Icon name="⚠" /> Register was closed with {grouped.expected.length} unresolved young people.</div>
+            <div style={{ marginTop: 8, fontSize: 12, fontWeight: 700, color: 'var(--danger-text)' }}><Icon name="⚠" /> Register was closed with {grouped.expected.length} unresolved young people.</div>
           )}
         </div>
         )}
@@ -304,16 +304,16 @@ function Stat({ label, value, color }) {
 }
 
 const STATUS_PILL = {
-  signed_in: { label: 'Attended', color: '#16A34A', bg: '#DCFCE7' },
-  signed_out: { label: 'Signed out', color: '#2563EB', bg: '#DBEAFE' },
-  absent: { label: 'Absent', color: '#DC2626', bg: '#FEE2E2' },
-  walk_in: { label: 'Walk-in', color: '#7C3AED', bg: '#EDE9FE' },
+  signed_in: { label: 'Attended', color: 'var(--ok-text)', bg: 'var(--ok-bg)' },
+  signed_out: { label: 'Signed out', color: 'var(--info-text)', bg: 'var(--info-bg)' },
+  absent: { label: 'Absent', color: 'var(--danger-text)', bg: 'var(--danger-bg)' },
+  walk_in: { label: 'Walk-in', color: 'var(--violet-text)', bg: 'var(--violet-bg)' },
 }
 
 function HistoricalRow({ child, att, groupLabel, peopleProfiles, isCorrected, onOpen, onViewAudit }) {
   const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
   const status = att?.status
-  const pill = STATUS_PILL[status] || { label: 'Unmarked', color: 'var(--text3)', bg: '#F3F4F6' }
+  const pill = STATUS_PILL[status] || { label: 'Unmarked', color: 'var(--text3)', bg: 'var(--surface2)' }
   const recordedBy = peopleProfiles[att?.signed_out_by || att?.signed_in_by] || null
 
   return (
@@ -324,7 +324,7 @@ function HistoricalRow({ child, att, groupLabel, peopleProfiles, isCorrected, on
       <div onClick={onOpen} style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
         <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>
           {child.first_name} {child.last_name}
-          {child.is_walk_in && <span style={{ marginLeft: 6, fontSize: 9.5, fontWeight: 800, color: '#7C3AED', background: '#EDE9FE', borderRadius: 6, padding: '1px 6px' }}>WALK-IN</span>}
+          {child.is_walk_in && <span style={{ marginLeft: 6, fontSize: 9.5, fontWeight: 800, color: 'var(--violet-text)', background: 'var(--violet-bg)', borderRadius: 6, padding: '1px 6px' }}>WALK-IN</span>}
         </div>
         <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2 }}>{groupLabel(child.group_name)}</div>
         <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2 }}>
@@ -419,7 +419,7 @@ function ReopenRegisterModal({ session, authUserId, onClose, onDone }) {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
       <div style={{ background: 'var(--surface)', borderRadius: 16, padding: 22, width: 400, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box' }} onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 10 }}>Reopen register</div>
-        <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: 12, marginBottom: 14, fontSize: 12.5, color: '#B91C1C', fontWeight: 600 }}>
+        <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 10, padding: 12, marginBottom: 14, fontSize: 12.5, color: 'var(--danger-text)', fontWeight: 600 }}>
           Reopening this register will allow attendance records to be changed. All changes will be audited.
         </div>
         <textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Reason for reopening (required)" style={{ ...sel, minHeight: 70, marginBottom: 14 }} />

@@ -7,11 +7,11 @@ import { useOrgSettings } from '../../hooks/useOrgSettings'
 import Icon from '../../lib/icons'
 
 const STATUS_META = {
-  planning:  { label: 'Planning',  bg: '#FEF3C7', color: '#B45309', dotColor: '#F59E0B' },
-  confirmed: { label: 'Confirmed', bg: '#EDE9FE', color: '#6D28D9', dotColor: '#8B5CF6' },
-  live:      { label: 'Live Now',  bg: '#DCFCE7', color: '#15803D', dotColor: '#22C55E' },
-  completed: { label: 'Completed', bg: '#E0E7FF', color: '#3730A3', dotColor: '#6366F1' },
-  cancelled: { label: 'Cancelled', bg: '#FEE2E2', color: '#B91C1C', dotColor: '#EF4444' },
+  planning:  { label: 'Planning',  bg: 'var(--warn-bg)', color: 'var(--warn-text)', dotColor: '#F59E0B' },
+  confirmed: { label: 'Confirmed', bg: 'var(--violet-bg)', color: 'var(--violet-text)', dotColor: '#8B5CF6' },
+  live:      { label: 'Live Now',  bg: 'var(--ok-bg)', color: 'var(--ok-text)', dotColor: '#22C55E' },
+  completed: { label: 'Completed', bg: 'var(--info-bg)', color: 'var(--info-text)', dotColor: '#6366F1' },
+  cancelled: { label: 'Cancelled', bg: 'var(--danger-bg)', color: 'var(--danger-text)', dotColor: '#EF4444' },
 }
 
 const CARD_COLORS = {
@@ -196,7 +196,7 @@ function EventDrawer({ event, org, session, onClose, onNavigate, onChanged }) {
         <div style={{ padding: '22px 24px 16px', borderBottom: '1px solid var(--border-soft)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <div style={{ width: 44, height: 44, borderRadius: 13, background: '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}><Icon name={typeMeta.icon} /></div>
+              <div style={{ width: 44, height: 44, borderRadius: 13, background: 'var(--violet-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}><Icon name={typeMeta.icon} /></div>
               <div>
                 <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)' }}>{event.title}</div>
                 <div style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 600 }}>{typeMeta.label}</div>
@@ -212,7 +212,7 @@ function EventDrawer({ event, org, session, onClose, onNavigate, onChanged }) {
             )}
             <button onClick={duplicateEvent} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Duplicate</button>
             {event.status !== 'cancelled' && (
-              <button onClick={cancelEvent} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Cancel Event</button>
+              <button onClick={cancelEvent} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: 'var(--danger-text)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Cancel Event</button>
             )}
           </div>
         </div>
@@ -542,9 +542,9 @@ export default function EventsTrips({ org, session, onNavigate }) {
               <button onClick={() => onNavigate && onNavigate('calendar')} style={{ border: 'none', background: 'none', color: primary, fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>View Calendar</button>
             </div>
             {[
-              { icon: '⚡', bg: '#DCFCE7', title: 'Event live now', sub: todaysLive.map(e => e.title).join(', ') || 'None right now' },
-              { icon: '👥', bg: '#DBEAFE', title: 'Upcoming today', sub: todaysUpcoming.map(e => e.title).join(', ') || 'Nothing else today' },
-              { icon: '📋', bg: '#FEF3C7', title: 'Tasks due today', sub: `${tasksDueToday} task${tasksDueToday === 1 ? '' : 's'} need attention` },
+              { icon: '⚡', bg: 'var(--ok-bg)', title: 'Event live now', sub: todaysLive.map(e => e.title).join(', ') || 'None right now' },
+              { icon: '👥', bg: 'var(--info-bg)', title: 'Upcoming today', sub: todaysUpcoming.map(e => e.title).join(', ') || 'Nothing else today' },
+              { icon: '📋', bg: 'var(--warn-bg)', title: 'Tasks due today', sub: `${tasksDueToday} task${tasksDueToday === 1 ? '' : 's'} need attention` },
             ].map((row, i) => (
               <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '9px 0', borderBottom: i < 2 ? '1px solid #F8FAFC' : 'none' }}>
                 <div style={{ width: 30, height: 30, borderRadius: 9, background: row.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}><Icon name={row.icon} /></div>
@@ -559,9 +559,9 @@ export default function EventsTrips({ org, session, onNavigate }) {
           <div style={{ ...cardStyle, padding: 18 }}>
             <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)', marginBottom: 14 }}><Icon name="⚡" /> Quick Actions</div>
             {[
-              { icon: '🚀', bg: '#F5F3FF', title: 'Create New Event / Trip', sub: 'Start planning something amazing', onClick: () => setShowWizard(true) },
-              { icon: '📄', bg: '#EFF6FF', title: 'Copy from Template', sub: 'Coming soon', onClick: () => alert('Templates are coming soon!') },
-              { icon: '🗂️', bg: '#FFF7ED', title: 'Event Templates', sub: 'Coming soon', onClick: () => alert('Templates are coming soon!') },
+              { icon: '🚀', bg: 'var(--violet-bg)', title: 'Create New Event / Trip', sub: 'Start planning something amazing', onClick: () => setShowWizard(true) },
+              { icon: '📄', bg: 'var(--info-bg)', title: 'Copy from Template', sub: 'Coming soon', onClick: () => alert('Templates are coming soon!') },
+              { icon: '🗂️', bg: 'var(--warn-bg)', title: 'Event Templates', sub: 'Coming soon', onClick: () => alert('Templates are coming soon!') },
               { icon: '📅', bg: '#FDF2F8', title: 'Import from Calendar', sub: 'Coming soon', onClick: () => alert('Calendar import is coming soon!') },
             ].map((row, i) => (
               <button key={i} onClick={row.onClick} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '9px 0', width: '100%', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer' }}>
@@ -574,9 +574,9 @@ export default function EventsTrips({ org, session, onNavigate }) {
           <div style={{ ...cardStyle, padding: 18, background: 'linear-gradient(135deg,#FFFBEB,#FEF3C7)' }}>
             <div style={{ fontSize: 13.5, fontWeight: 800, color: '#78350F', marginBottom: 12 }}><Icon name="🌟" /> Need help?</div>
             <div style={{ fontSize: 12.5, fontWeight: 700, color: '#78350F', marginBottom: 2 }}>Events & Trips Help Centre</div>
-            <div style={{ fontSize: 11, color: '#92400E', marginBottom: 10 }}>Step-by-step guides and tips</div>
+            <div style={{ fontSize: 11, color: 'var(--warn-text)', marginBottom: 10 }}>Step-by-step guides and tips</div>
             <div style={{ fontSize: 12.5, fontWeight: 700, color: '#78350F', marginBottom: 2 }}>Contact Support</div>
-            <div style={{ fontSize: 11, color: '#92400E' }}>We're here to help</div>
+            <div style={{ fontSize: 11, color: 'var(--warn-text)' }}>We're here to help</div>
           </div>
         </div>
       </div>

@@ -54,8 +54,8 @@ export default function VolunteersApplications({ org, applicants, onDataChange, 
                     <div style={{ fontSize: 10, color: '#CBD5E1', marginTop: 6 }}>Applied {new Date(a.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
-                    <button onClick={() => onApprovePublic?.(a)} style={{ fontSize: 11.5, fontWeight: 800, padding: '6px 12px', borderRadius: 8, border: 'none', background: 'rgba(34,197,94,0.12)', color: '#15803D', cursor: 'pointer', whiteSpace: 'nowrap' }}><Icon name="✓" /> Approve & Invite</button>
-                    <button onClick={() => onRejectPublic?.(a.id)} style={{ fontSize: 11.5, fontWeight: 800, padding: '6px 12px', borderRadius: 8, border: 'none', background: 'rgba(239,68,68,0.1)', color: '#B91C1C', cursor: 'pointer' }}>Decline</button>
+                    <button onClick={() => onApprovePublic?.(a)} style={{ fontSize: 11.5, fontWeight: 800, padding: '6px 12px', borderRadius: 8, border: 'none', background: 'rgba(34,197,94,0.12)', color: 'var(--ok-text)', cursor: 'pointer', whiteSpace: 'nowrap' }}><Icon name="✓" /> Approve & Invite</button>
+                    <button onClick={() => onRejectPublic?.(a.id)} style={{ fontSize: 11.5, fontWeight: 800, padding: '6px 12px', borderRadius: 8, border: 'none', background: 'rgba(239,68,68,0.1)', color: 'var(--danger-text)', cursor: 'pointer' }}>Decline</button>
                   </div>
                 </div>
               </Card>
@@ -100,10 +100,10 @@ export default function VolunteersApplications({ org, applicants, onDataChange, 
                       )}
                       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                         {stage.key !== 'accepted' && stage.key !== 'rejected' && (
-                          <button onClick={() => moveTo(a.id, 'accepted')} style={{ fontSize: 10.5, fontWeight: 800, padding: '4px 8px', borderRadius: 7, border: 'none', background: 'rgba(34,197,94,0.12)', color: '#15803D', cursor: 'pointer' }}>Accept</button>
+                          <button onClick={() => moveTo(a.id, 'accepted')} style={{ fontSize: 10.5, fontWeight: 800, padding: '4px 8px', borderRadius: 7, border: 'none', background: 'rgba(34,197,94,0.12)', color: 'var(--ok-text)', cursor: 'pointer' }}>Accept</button>
                         )}
                         {stage.key !== 'rejected' && stage.key !== 'accepted' && (
-                          <button onClick={() => moveTo(a.id, 'rejected')} style={{ fontSize: 10.5, fontWeight: 800, padding: '4px 8px', borderRadius: 7, border: 'none', background: 'rgba(239,68,68,0.1)', color: '#B91C1C', cursor: 'pointer' }}>Reject</button>
+                          <button onClick={() => moveTo(a.id, 'rejected')} style={{ fontSize: 10.5, fontWeight: 800, padding: '4px 8px', borderRadius: 7, border: 'none', background: 'rgba(239,68,68,0.1)', color: 'var(--danger-text)', cursor: 'pointer' }}>Reject</button>
                         )}
                         {stage.key === 'new' && (
                           <button onClick={() => moveTo(a.id, 'reviewing')} style={{ fontSize: 10.5, fontWeight: 800, padding: '4px 8px', borderRadius: 7, border: 'none', background: 'var(--surface-hover)', color: '#475569', cursor: 'pointer' }}>Review <Icon name="→" /></button>

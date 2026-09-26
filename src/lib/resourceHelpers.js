@@ -15,14 +15,14 @@ export function categoryMeta(key) {
 }
 
 export const STATUS_CONFIG = {
-  available: { label: 'Available', color: '#16A34A', bg: '#F0FDF4', icon: '✓' },
-  booked: { label: 'Booked', color: '#2563EB', bg: '#EFF6FF', icon: '📅' },
-  partially_available: { label: 'Partially Available', color: '#D97706', bg: '#FFFBEB', icon: '◐' },
-  checked_out: { label: 'Checked Out', color: '#7C3AED', bg: '#F5F3FF', icon: '↗' },
-  low_stock: { label: 'Low Stock', color: '#D97706', bg: '#FFFBEB', icon: '⚠' },
-  maintenance: { label: 'Maintenance', color: '#DC2626', bg: '#FEF2F2', icon: '🔧' },
-  unavailable: { label: 'Unavailable', color: 'var(--text3)', bg: '#F9FAFB', icon: '✕' },
-  overdue: { label: 'Overdue', color: '#DC2626', bg: '#FEF2F2', icon: '⏰' },
+  available: { label: 'Available', color: 'var(--ok-text)', bg: 'var(--ok-bg)', icon: '✓' },
+  booked: { label: 'Booked', color: 'var(--info-text)', bg: 'var(--info-bg)', icon: '📅' },
+  partially_available: { label: 'Partially Available', color: 'var(--warn-text)', bg: 'var(--warn-bg)', icon: '◐' },
+  checked_out: { label: 'Checked Out', color: 'var(--violet-text)', bg: 'var(--violet-bg)', icon: '↗' },
+  low_stock: { label: 'Low Stock', color: 'var(--warn-text)', bg: 'var(--warn-bg)', icon: '⚠' },
+  maintenance: { label: 'Maintenance', color: 'var(--danger-text)', bg: 'var(--danger-bg)', icon: '🔧' },
+  unavailable: { label: 'Unavailable', color: 'var(--text3)', bg: 'var(--surface2)', icon: '✕' },
+  overdue: { label: 'Overdue', color: 'var(--danger-text)', bg: 'var(--danger-bg)', icon: '⏰' },
 }
 
 export function statusMeta(key) {
@@ -30,12 +30,12 @@ export function statusMeta(key) {
 }
 
 export const BOOKING_STATUS_CONFIG = {
-  pending: { label: 'Pending', color: '#D97706', bg: '#FFFBEB' },
-  confirmed: { label: 'Confirmed', color: '#16A34A', bg: '#F0FDF4' },
-  declined: { label: 'Declined', color: '#DC2626', bg: '#FEF2F2' },
-  changes_requested: { label: 'Changes Requested', color: '#D97706', bg: '#FFFBEB' },
-  cancelled: { label: 'Cancelled', color: 'var(--text3)', bg: '#F9FAFB' },
-  completed: { label: 'Completed', color: '#2563EB', bg: '#EFF6FF' },
+  pending: { label: 'Pending', color: 'var(--warn-text)', bg: 'var(--warn-bg)' },
+  confirmed: { label: 'Confirmed', color: 'var(--ok-text)', bg: 'var(--ok-bg)' },
+  declined: { label: 'Declined', color: 'var(--danger-text)', bg: 'var(--danger-bg)' },
+  changes_requested: { label: 'Changes Requested', color: 'var(--warn-text)', bg: 'var(--warn-bg)' },
+  cancelled: { label: 'Cancelled', color: 'var(--text3)', bg: 'var(--surface2)' },
+  completed: { label: 'Completed', color: 'var(--info-text)', bg: 'var(--info-bg)' },
 }
 
 export function fmtDate(d) {

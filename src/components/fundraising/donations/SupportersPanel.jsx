@@ -200,7 +200,7 @@ export default function SupportersPanel({ org, isAdmin, campaigns = [] }) {
                     {s.gift_aid_status === 'declaration_held' && (
                       <span style={{
                         marginLeft: 7, padding: '2px 7px', borderRadius: 999, fontSize: 10.5,
-                        fontWeight: 700, background: '#E7F8ED', color: LS.success,
+                        fontWeight: 700, background: 'var(--ok-bg)', color: LS.success,
                       }}>Gift Aid</span>
                     )}
                   </div>

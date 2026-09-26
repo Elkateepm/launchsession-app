@@ -20,8 +20,8 @@ export function TrialBanner({ org, isAdmin, onChoosePlan }) {
 
   const urgent = days <= URGENT_DAYS
   const tone = urgent
-    ? { bg: 'rgba(239,68,68,0.07)', border: 'rgba(239,68,68,0.22)', text: '#DC2626' }
-    : { bg: 'rgba(59,130,246,0.06)', border: 'rgba(59,130,246,0.16)', text: '#1D4ED8' }
+    ? { bg: 'rgba(239,68,68,0.07)', border: 'rgba(239,68,68,0.22)', text: 'var(--danger-text)' }
+    : { bg: 'rgba(59,130,246,0.06)', border: 'rgba(59,130,246,0.16)', text: 'var(--info-text)' }
 
   return (
     <div style={{ padding: '6px 20px 0' }}>
@@ -67,7 +67,7 @@ export function ReadOnlyBanner({ isAdmin, onChoosePlan }) {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
           <span style={{ fontSize: 13 }} aria-hidden="true">🔒</span>
-          <span style={{ fontSize: 13, color: '#DC2626', fontWeight: 600 }}>
+          <span style={{ fontSize: 13, color: 'var(--danger-text)', fontWeight: 600 }}>
             Read-only — your plan has ended. Nothing has been deleted.
           </span>
         </div>

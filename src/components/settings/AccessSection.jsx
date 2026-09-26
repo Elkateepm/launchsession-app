@@ -76,7 +76,7 @@ export default function AccessSection({ org, isAdmin }) {
       </div>
 
       {error && (
-        <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 14 }}>
+        <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 14 }}>
           {error}
         </div>
       )}
@@ -101,7 +101,7 @@ export default function AccessSection({ org, isAdmin }) {
                     <span style={{ fontSize: 15, marginRight: 8 }}><Icon name={m.icon} /></span>
                     <span style={{ fontSize: 13, fontWeight: 700 }}>{m.label}</span>
                     {!orgModules.includes(m.key) && (
-                      <span style={{ marginLeft: 8, background: '#FEF3C7', color: '#92400E', borderRadius: 6, padding: '2px 6px', fontSize: 10, fontWeight: 800 }}>Not on plan</span>
+                      <span style={{ marginLeft: 8, background: 'var(--warn-bg)', color: 'var(--warn-text)', borderRadius: 6, padding: '2px 6px', fontSize: 10, fontWeight: 800 }}>Not on plan</span>
                     )}
                   </td>
                   {TEMPLATABLE_ROLES.map(r => {

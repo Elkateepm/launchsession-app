@@ -138,18 +138,18 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
     .sort((a, b) => a.daysLeft - b.daysLeft)
 
   const kpis = [
-    { label: 'Total Volunteers', value: volunteers.length + applicants.length, icon: '👥', color: '#16A34A', bg: 'rgba(34,197,94,0.12)' },
+    { label: 'Total Volunteers', value: volunteers.length + applicants.length, icon: '👥', color: 'var(--ok-text)', bg: 'rgba(34,197,94,0.12)' },
     { label: 'Active Volunteers', value: volunteers.length, icon: '🟢', color: '#0891B2', bg: 'rgba(8,145,178,0.12)' },
-    { label: 'Sessions Today', value: todaySessions.length, icon: '📅', color: '#B45309', bg: 'rgba(245,158,11,0.14)' },
-    { label: 'Need Cover', value: needCoverToday, icon: '⚠️', color: '#DC2626', bg: 'rgba(220,38,38,0.12)' },
-    { label: 'Training Due', value: trainingDueSoon.length, icon: '🎓', color: '#7C3AED', bg: 'rgba(124,58,237,0.12)' },
+    { label: 'Sessions Today', value: todaySessions.length, icon: '📅', color: 'var(--warn-text)', bg: 'rgba(245,158,11,0.14)' },
+    { label: 'Need Cover', value: needCoverToday, icon: '⚠️', color: 'var(--danger-text)', bg: 'rgba(220,38,38,0.12)' },
+    { label: 'Training Due', value: trainingDueSoon.length, icon: '🎓', color: 'var(--violet-text)', bg: 'rgba(124,58,237,0.12)' },
     { label: 'Volunteer Hours', value: hoursThisMonth, icon: '⭐', color: '#4F46E5', bg: 'rgba(79,70,229,0.12)' },
   ]
 
   // Activity feed — merged from real signals, not fake data
   const activityFeed = [
     ...volunteers.slice(0, 5).map(v => ({
-      id: `join-${v.id}`, ts: v.created_at, icon: '👤', color: '#16A34A',
+      id: `join-${v.id}`, ts: v.created_at, icon: '👤', color: 'var(--ok-text)',
       title: `${v.full_name} joined your team`, sub: v.role_title || 'Volunteer',
     })),
     ...broadcasts.slice(0, 5).map(b => ({
@@ -157,11 +157,11 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
       title: `Broadcast sent to ${b.recipient_count} volunteer${b.recipient_count === 1 ? '' : 's'}`, sub: b.subject || b.body?.slice(0, 50) || 'Update',
     })),
     ...recognition.slice(0, 5).map(r => ({
-      id: `rec-${r.id}`, ts: r.awarded_at || r.created_at, icon: '🏆', color: '#B45309',
+      id: `rec-${r.id}`, ts: r.awarded_at || r.created_at, icon: '🏆', color: 'var(--warn-text)',
       title: `${volunteers.find(v => v.id === r.volunteer_id)?.full_name || 'A volunteer'} — ${r.title}`, sub: r.note || 'Recognition',
     })),
     ...todaySessionsWithCoverage.filter(s => s.covered).map(s => ({
-      id: `cov-${s.id}`, ts: s.updated_at || s.created_at || s.session_date, icon: '✅', color: '#16A34A',
+      id: `cov-${s.id}`, ts: s.updated_at || s.created_at || s.session_date, icon: '✅', color: 'var(--ok-text)',
       title: `${s.title} is fully covered`, sub: 'Today',
     })),
   ].filter(a => a.ts).sort((a, b) => new Date(b.ts) - new Date(a.ts)).slice(0, 6)
@@ -368,7 +368,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                                 </div>
                                 <Badge bg={`${barColor}18`} color={barColor}>{assigned}/{required}</Badge>
                               </div>
-                              <div style={{ height: 5, borderRadius: 99, background: '#E2E8F0', overflow: 'hidden', marginBottom: 8 }}>
+                              <div style={{ height: 5, borderRadius: 99, background: 'var(--surface3)', overflow: 'hidden', marginBottom: 8 }}>
                                 <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6 }} style={{ height: '100%', background: barColor, borderRadius: 99 }} />
                               </div>
                               <div style={{ display: 'flex', gap: 6 }}>
@@ -402,7 +402,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                                 <span style={{ fontSize: 11, fontWeight: 800, color: barColor }}>{s.covered ? '🟢 Ready' : `🟡 Need ${s.required - s.assigned}`}</span>
                               </div>
                               <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 6 }}>{s.required} needed · {s.assigned} confirmed</div>
-                              <div style={{ height: 5, borderRadius: 99, background: '#E2E8F0', overflow: 'hidden' }}>
+                              <div style={{ height: 5, borderRadius: 99, background: 'var(--surface3)', overflow: 'hidden' }}>
                                 <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6 }} style={{ height: '100%', background: barColor, borderRadius: 99 }} />
                               </div>
                             </div>
@@ -446,7 +446,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                         {publicApplications.length > 0 && (
-                          <div style={{ fontSize: 11.5, fontWeight: 700, color: '#DC2626', background: 'rgba(220,38,38,0.06)', borderRadius: 8, padding: '6px 10px' }}>
+                          <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--danger-text)', background: 'rgba(220,38,38,0.06)', borderRadius: 8, padding: '6px 10px' }}>
                             {publicApplications.length} new sign-up{publicApplications.length !== 1 ? 's' : ''} from your volunteer QR / link
                           </div>
                         )}

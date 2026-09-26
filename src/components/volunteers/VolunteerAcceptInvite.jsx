@@ -156,7 +156,7 @@ export default function VolunteerAcceptInvite() {
 
             <form onSubmit={confirmInvite} style={{ padding: '28px 28px 24px' }}>
               {error && (
-                <div style={{ background: '#FFF0F0', border: '1px solid #FFD0D0', color: '#C00', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16, fontWeight: 600 }}>
+                <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: '#C00', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16, fontWeight: 600 }}>
                   {error}
                 </div>
               )}
@@ -204,8 +204,8 @@ export default function VolunteerAcceptInvite() {
                 placeholder="Repeat password"
                 style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${confirm && confirm !== password ? '#FCA5A5' : '#E5E7EB'}`, fontSize: 15, outline: 'none', marginBottom: 6, fontFamily: 'Inter,sans-serif' }}
               />
-              {confirm && confirm !== password && <div style={{ fontSize: 11, color: '#DC2626', marginBottom: 14, fontWeight: 600 }}>Passwords don't match</div>}
-              {confirm && confirm === password && <div style={{ fontSize: 11, color: '#16A34A', marginBottom: 14, fontWeight: 600 }}><Icon name="✓" /> Passwords match</div>}
+              {confirm && confirm !== password && <div style={{ fontSize: 11, color: 'var(--danger-text)', marginBottom: 14, fontWeight: 600 }}>Passwords don't match</div>}
+              {confirm && confirm === password && <div style={{ fontSize: 11, color: 'var(--ok-text)', marginBottom: 14, fontWeight: 600 }}><Icon name="✓" /> Passwords match</div>}
 
               <button
                 type="submit"

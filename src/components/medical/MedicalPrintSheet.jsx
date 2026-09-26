@@ -62,8 +62,8 @@ export default function MedicalPrintSheet({ org, rows, scopeLabel, todaySessions
         </div>
 
         <div style={{
-          marginTop: 16, padding: '10px 13px', border: '1.5px solid #FECACA',
-          background: '#FEF2F2', borderRadius: 8, fontSize: 12, color: '#7F1D1D', lineHeight: 1.55,
+          marginTop: 16, padding: '10px 13px', border: '1.5px solid var(--danger-border)',
+          background: 'var(--danger-bg)', borderRadius: 8, fontSize: 12, color: 'var(--danger-text)', lineHeight: 1.55,
         }}>
           Confidential. This sheet holds medical information about {rows.length === 1 ? 'a child' : 'children'} in
           your care. Keep it with the first aid kit, do not leave it unattended, and destroy it when the session ends.
@@ -83,7 +83,7 @@ export default function MedicalPrintSheet({ org, rows, scopeLabel, todaySessions
               <span style={{ fontSize: 15.5, fontWeight: 900 }}>{child.first_name} {child.last_name}</span>
               {child.group_name && <span style={{ fontSize: 11.5, color: 'var(--text3)', fontWeight: 700 }}>{child.group_name}</span>}
               {tier === 1 && (
-                <span style={{ fontSize: 10, fontWeight: 900, color: '#B91C1C', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+                <span style={{ fontSize: 10, fontWeight: 900, color: 'var(--danger-text)', letterSpacing: 0.5, textTransform: 'uppercase' }}>
                   {TIERS[1].label}
                 </span>
               )}

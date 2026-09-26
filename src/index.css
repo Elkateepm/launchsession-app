@@ -65,6 +65,17 @@ body {
      precisely because they vary -- so the plate behind one cannot follow the
      theme without making somebody's dark logo vanish. */
   --logo-backdrop: #FFFFFF;
+
+  /* Status tints. A pale tint with dark text is a light-mode idea: in dark it
+     becomes a bright card floating on a dark page, and worse, the pair breaks
+     the moment only one half is themed. Each family moves as bg + text +
+     border together. Dark uses a translucent wash of the same hue so the
+     surface beneath still shows through, with light text of that hue. */
+  --danger-bg: #FEF2F2;  --danger-text: #B91C1C;  --danger-border: #FECACA;
+  --warn-bg:   #FFFBEB;  --warn-text:   #92400E;  --warn-border:   #FDE68A;
+  --ok-bg:     #F0FDF4;  --ok-text:     #15803D;  --ok-border:     #BBF7D0;
+  --info-bg:   #EFF6FF;  --info-text:   #1D4ED8;  --info-border:   #BFDBFE;
+  --violet-bg: #F5F3FF;  --violet-text: #5B21B6;  --violet-border: #DDD6FE;
   --border2:  #D1D5DB;
   --card-bg:     #ffffff;
   --card-border: #E5E7EB;
@@ -221,6 +232,12 @@ body {
   --text-faint:  #7C7C96;
   --border-soft: #24243A;
   --logo-backdrop: #FFFFFF;   /* deliberately unchanged -- see the light block */
+
+  --danger-bg: rgba(248,113,113,0.13);  --danger-text: #FCA5A5;  --danger-border: rgba(248,113,113,0.32);
+  --warn-bg:   rgba(251,191,36,0.13);   --warn-text:   #FCD34D;  --warn-border:   rgba(251,191,36,0.32);
+  --ok-bg:     rgba(74,222,128,0.13);   --ok-text:     #86EFAC;  --ok-border:     rgba(74,222,128,0.32);
+  --info-bg:   rgba(96,165,250,0.13);   --info-text:   #93C5FD;  --info-border:   rgba(96,165,250,0.32);
+  --violet-bg: rgba(167,139,250,0.13);  --violet-text: #C4B5FD;  --violet-border: rgba(167,139,250,0.32);
 
   --border:   #2D2D3F;
   --border2:  #3D3D5F;

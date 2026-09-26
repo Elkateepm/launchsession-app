@@ -334,8 +334,8 @@ export default function RecordDonationDrawer({ open, onClose, org, campaigns = [
 
               {error && (
                 <div style={{
-                  padding: '11px 13px', borderRadius: 10, background: '#FEF2F2',
-                  border: '1px solid #FECACA', color: LS.danger, fontSize: 13, marginBottom: 4,
+                  padding: '11px 13px', borderRadius: 10, background: 'var(--danger-bg)',
+                  border: '1px solid var(--danger-border)', color: LS.danger, fontSize: 13, marginBottom: 4,
                 }}>{error}</div>
               )}
             </div>

@@ -113,7 +113,7 @@ export default function StaffDocuments({ org, staff, primary, canEdit, sensitive
       )}
 
       {error && (
-        <div style={{ ...card, background: '#FEF2F2', border: '1px solid #FECACA', color: '#B42318', fontSize: 13 }}>
+        <div style={{ ...card, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13 }}>
           {error}
         </div>
       )}
@@ -140,7 +140,7 @@ export default function StaffDocuments({ org, staff, primary, canEdit, sensitive
               {d.confidentiality === 'sensitive' && (
                 <span style={{
                   display: 'inline-block', padding: '3px 10px', borderRadius: 99,
-                  background: '#FEF2F2', color: '#B42318', fontSize: 11.5, fontWeight: 800,
+                  background: 'var(--danger-bg)', color: 'var(--danger-text)', fontSize: 11.5, fontWeight: 800,
                   whiteSpace: 'nowrap',
                 }}>Restricted</span>
               )}
@@ -280,8 +280,8 @@ function UploadForm({ org, staff, primary, sensitiveView, onCancel, onSaved }) {
       )}
 
       {err && (
-        <div style={{ padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
-          border: '1px solid #FECACA', color: '#B42318', fontSize: 13, marginBottom: 10 }}>{err}</div>
+        <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--danger-bg)',
+          border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13, marginBottom: 10 }}>{err}</div>
       )}
 
       <div style={{ display: 'flex', gap: 8 }}>

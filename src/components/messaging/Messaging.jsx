@@ -329,7 +329,7 @@ function MessageGroup({ group, mine, profile, isMobile, onRetry }) {
           {last.status === 'failed' ? (
             <>
               <span>Not sent</span>
-              <button onClick={() => onRetry(last)} style={{ border: 'none', background: 'none', padding: 0, color: '#DC2626', fontWeight: 800, fontSize: 11, cursor: 'pointer', textDecoration: 'underline' }}>Try again</button>
+              <button onClick={() => onRetry(last)} style={{ border: 'none', background: 'none', padding: 0, color: 'var(--danger-text)', fontWeight: 800, fontSize: 11, cursor: 'pointer', textDecoration: 'underline' }}>Try again</button>
             </>
           ) : last.status === 'sending' ? 'Sending…' : clockTime(last.created_at)}
         </div>
@@ -393,7 +393,7 @@ function NewConversation({ onCreate, onClose, isMobile }) {
           })}
         </div>
 
-        {error && <div role="alert" style={{ fontSize: 13, color: '#B91C1C', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: '9px 12px', marginBottom: 12 }}>{error}</div>}
+        {error && <div role="alert" style={{ fontSize: 13, color: 'var(--danger-text)', background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 10, padding: '9px 12px', marginBottom: 12 }}>{error}</div>}
 
         <button onClick={create} disabled={!subject.trim() || creating} style={{
           width: '100%', minHeight: 48, borderRadius: 14, border: 'none', fontSize: 15, fontWeight: 800,

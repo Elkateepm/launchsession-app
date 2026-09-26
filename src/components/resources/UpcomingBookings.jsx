@@ -81,7 +81,7 @@ export default function UpcomingBookings({ bookings, resources, sessions, staff,
         })}
       </div>
 
-      <button onClick={onViewAll} style={{ width: '100%', marginTop: 14, background: 'none', border: 'none', color: '#7C3AED', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>View all bookings <Icon name="→" /></button>
+      <button onClick={onViewAll} style={{ width: '100%', marginTop: 14, background: 'none', border: 'none', color: 'var(--violet-text)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>View all bookings <Icon name="→" /></button>
     </div>
   )
 }

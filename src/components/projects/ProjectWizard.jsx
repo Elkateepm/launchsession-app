@@ -237,12 +237,12 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
                 ))}
               </div>
 
-              <div style={{ padding: '12px 14px', borderRadius: 12, background: '#F5F3FF', border: '1px solid #DDD6FE', marginBottom: 16 }}>
-                <div style={{ fontSize: 14, fontWeight: 900, color: '#5B21B6' }}>
+              <div style={{ padding: '12px 14px', borderRadius: 12, background: 'var(--violet-bg)', border: '1px solid var(--violet-border)', marginBottom: 16 }}>
+                <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--violet-text)' }}>
                   {dates.length} project {dates.length === 1 ? 'day' : 'days'} will be created
                 </div>
                 {form.excluded.length > 0 && (
-                  <div style={{ fontSize: 11.5, color: '#7C3AED', marginTop: 2 }}>{form.excluded.length} excluded</div>
+                  <div style={{ fontSize: 11.5, color: 'var(--violet-text)', marginTop: 2 }}>{form.excluded.length} excluded</div>
                 )}
               </div>
 
@@ -277,9 +277,9 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
               {form.custom.length > 0 && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
                   {form.custom.map(c => (
-                    <span key={c} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 99, background: '#EFF6FF', color: '#1D4ED8', fontSize: 11.5, fontWeight: 700 }}>
+                    <span key={c} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 99, background: 'var(--info-bg)', color: 'var(--info-text)', fontSize: 11.5, fontWeight: 700 }}>
                       {fmtNice(c)}
-                      <button onClick={() => set('custom', form.custom.filter(x => x !== c))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1D4ED8', fontSize: 13 }}><Icon name="✕" /></button>
+                      <button onClick={() => set('custom', form.custom.filter(x => x !== c))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--info-text)', fontSize: 13 }}><Icon name="✕" /></button>
                     </span>
                   ))}
                 </div>
@@ -360,7 +360,7 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
             </>
           )}
 
-          {error && <div style={{ marginTop: 14, fontSize: 12.5, color: '#DC2626', fontWeight: 600 }}>{error}</div>}
+          {error && <div style={{ marginTop: 14, fontSize: 12.5, color: 'var(--danger-text)', fontWeight: 600 }}>{error}</div>}
         </div>
 
         {/* Footer */}

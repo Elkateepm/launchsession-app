@@ -284,10 +284,10 @@ function AttendanceBreakdownModal({ session, attendance, onClose }) {
   }).length : 0
 
   const rows = [
-    { label: 'Signed in', value: signedIn, color: '#16A34A' },
-    { label: 'Absent', value: absent, color: '#DC2626' },
-    { label: 'Expected', value: expected, color: '#D97706' },
-    { label: 'Late arrivals', value: late, color: '#7C3AED' },
+    { label: 'Signed in', value: signedIn, color: 'var(--ok-text)' },
+    { label: 'Absent', value: absent, color: 'var(--danger-text)' },
+    { label: 'Expected', value: expected, color: 'var(--warn-text)' },
+    { label: 'Late arrivals', value: late, color: 'var(--violet-text)' },
   ]
 
   return createPortal(
@@ -442,7 +442,7 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
       {composing && (
         <div style={{ background: 'var(--surface2)', border: '1.5px solid var(--border-soft)', borderRadius: 16, padding: 16, marginBottom: 14 }}>
           {error && (
-            <div style={{ background: '#FFF0F0', border: '1px solid #FFD0D0', color: '#C00', borderRadius: 8, padding: '8px 12px', fontSize: 12, marginBottom: 10, fontWeight: 600 }}>
+            <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: '#C00', borderRadius: 8, padding: '8px 12px', fontSize: 12, marginBottom: 10, fontWeight: 600 }}>
               {error}
             </div>
           )}
@@ -499,7 +499,7 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
                     <span style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 600 }}>{timeAgo(a.created_at)}</span>
                     {a.created_by === userId && (
-                      <button onClick={() => remove(a.id)} style={{ fontSize: 11, color: '#DC2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>
+                      <button onClick={() => remove(a.id)} style={{ fontSize: 11, color: 'var(--danger-text)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>
                         Delete
                       </button>
                     )}
@@ -2507,7 +2507,7 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
 
               {isMobile && (
                 <div style={{ padding: '10px 0 2px', flexShrink: 0 }}>
-                  <div style={{ width: 40, height: 4.5, borderRadius: 99, background: '#E2E8F0', margin: '0 auto' }} />
+                  <div style={{ width: 40, height: 4.5, borderRadius: 99, background: 'var(--surface3)', margin: '0 auto' }} />
                 </div>
               )}
 
@@ -2964,10 +2964,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   // registers yet" must not render as a crisis.
   const attendanceTone = React.useMemo(() => {
     // No marked places means no rate, which is different from a rate of zero.
-    if (attendanceRate == null) return { bg: '#F1F5F9', fg: '#64748B' }
-    if (attendanceRate >= 75) return { bg: '#DCFCE7', fg: '#15803D' }
-    if (attendanceRate >= 50) return { bg: '#FEF3C7', fg: '#B45309' }
-    return { bg: '#FEE2E2', fg: '#B91C1C' }
+    if (attendanceRate == null) return { bg: 'var(--surface-hover)', fg: '#64748B' }
+    if (attendanceRate >= 75) return { bg: 'var(--ok-bg)', fg: 'var(--ok-text)' }
+    if (attendanceRate >= 50) return { bg: 'var(--warn-bg)', fg: 'var(--warn-text)' }
+    return { bg: 'var(--danger-bg)', fg: 'var(--danger-text)' }
   }, [attendanceRate])
   // Mobile-first: full-width, 44px-tall touch targets that lay out in a grid.
   // These used to be an inline-flex row with flexShrink:0, which pushed the
@@ -4097,13 +4097,13 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               ) : (
                 completedWithoutReflection.map(s => (
                   <button key={s.id} onClick={() => { setShowReflectionsModal(false); go('planner', { reflectSessionId: s.id }) }}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', border: '1px solid var(--border-soft)', background: '#FFFBEB', borderRadius: 14, padding: '12px 14px', marginBottom: 8, cursor: 'pointer' }}>
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', border: '1px solid var(--border-soft)', background: 'var(--warn-bg)', borderRadius: 14, padding: '12px 14px', marginBottom: 8, cursor: 'pointer' }}>
                     <span style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg, #FBBF24, #D97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0, color: '#fff' }}><Icon name="📝" /></span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text, #111)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.title || 'Untitled session'}</div>
-                      <div style={{ fontSize: 11.5, color: '#92400E', marginTop: 1 }}>{formatDate(s.session_date)}{s.start_time ? ` · ${s.start_time.slice(0, 5)}` : ''}</div>
+                      <div style={{ fontSize: 11.5, color: 'var(--warn-text)', marginTop: 1 }}>{formatDate(s.session_date)}{s.start_time ? ` · ${s.start_time.slice(0, 5)}` : ''}</div>
                     </div>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: '#B45309', flexShrink: 0 }}>Write <Icon name="→" /></span>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--warn-text)', flexShrink: 0 }}>Write <Icon name="→" /></span>
                   </button>
                 ))
               )}
@@ -4140,9 +4140,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
 function OperationalPulse({ items, isMobile, primary }) {
   const tone = {
-    good: { bg: '#ECFDF5', color: '#047857', border: '#A7F3D0' },
-    amber: { bg: '#FFF7ED', color: '#B45309', border: '#FED7AA' },
-    sky: { bg: '#EFF6FF', color: '#2563EB', border: '#BFDBFE' },
+    good: { bg: 'var(--ok-bg)', color: 'var(--ok-text)', border: 'var(--ok-border)' },
+    amber: { bg: 'var(--warn-bg)', color: 'var(--warn-text)', border: '#FED7AA' },
+    sky: { bg: 'var(--info-bg)', color: 'var(--info-text)', border: 'var(--info-border)' },
     calm: { bg: 'var(--surface, #fff)', color: 'var(--org-ink)', border: 'var(--org-a20)' },
   }
   return (

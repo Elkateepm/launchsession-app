@@ -204,7 +204,7 @@ export default function ReportBuilder({ org, session, role, initialType, default
                     {new Date(`${to}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </div>
 
-                  <div style={{ height: 1, background: '#E2E8F0', margin: '18px 0' }} />
+                  <div style={{ height: 1, background: 'var(--surface3)', margin: '18px 0' }} />
 
                   {sections.includes('summary') && (
                     <PreviewBlock title="Programme overview">
@@ -272,7 +272,7 @@ export default function ReportBuilder({ org, session, role, initialType, default
                 </div>
               )}
 
-              {error && <div style={{ marginTop: 12, fontSize: 12.5, color: '#DC2626', fontWeight: 600 }}>{error}</div>}
+              {error && <div style={{ marginTop: 12, fontSize: 12.5, color: 'var(--danger-text)', fontWeight: 600 }}>{error}</div>}
             </>
           )}
         </div>

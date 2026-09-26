@@ -111,8 +111,8 @@ export default function InjuryLog({ org, session, isAdmin }) {
     <div>
       {outstanding.length > 0 && (
         <div style={{
-          background: '#FEF3C7', border: '1.5px solid #FDE68A', borderRadius: 12,
-          padding: '11px 14px', marginBottom: 14, fontSize: 12.5, fontWeight: 700, color: '#92400E', lineHeight: 1.5,
+          background: 'var(--warn-bg)', border: '1.5px solid var(--warn-border)', borderRadius: 12,
+          padding: '11px 14px', marginBottom: 14, fontSize: 12.5, fontWeight: 700, color: 'var(--warn-text)', lineHeight: 1.5,
         }}>
           <strong>{outstanding.length} {outstanding.length === 1 ? 'entry needs' : 'entries need'} finishing.</strong>{' '}
           {rows.filter(r => !r.parent_notified).length > 0 && `${rows.filter(r => !r.parent_notified).length} where a parent or carer has not been told. `}

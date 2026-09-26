@@ -78,7 +78,7 @@ function FieldInput({ field, value, onChange, invalid, accent, id }) {
             {/* Must match the builder preview, or staff approve wording that
                 respondents never see. */}
             {field.checkboxText || field.label}
-            {field.required && <span style={{ color: '#DC2626' }}> *</span>}
+            {field.required && <span style={{ color: 'var(--danger-text)' }}> *</span>}
           </span>
         </label>
       )
@@ -132,7 +132,7 @@ function FieldInput({ field, value, onChange, invalid, accent, id }) {
 
 function Shell({ org, primary, secondary, children }) {
   return (
-    <div style={{ minHeight: '100dvh', background: '#F7F8FC', paddingBottom: 48 }}>
+    <div style={{ minHeight: '100dvh', background: 'var(--surface2)', paddingBottom: 48 }}>
       <div style={{
         background: `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`,
         padding: '26px 20px 34px',
@@ -293,7 +293,7 @@ export default function PublicForm() {
 
   if (status === 'loading') {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', background: '#F7F8FC' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', background: 'var(--surface2)' }}>
         <div style={{ width: 40, height: 40, border: '3px solid var(--border)', borderTop: '3px solid #7C5CFC', borderRadius: '50%', animation: 'ls-spin 0.8s linear infinite' }} />
         <style>{'@keyframes ls-spin { to { transform: rotate(360deg); } }'}</style>
       </div>
@@ -304,7 +304,7 @@ export default function PublicForm() {
     return (
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh',
-        background: '#F7F8FC', flexDirection: 'column', gap: 10, padding: 24, textAlign: 'center',
+        background: 'var(--surface2)', flexDirection: 'column', gap: 10, padding: 24, textAlign: 'center',
       }}>
         <div style={{ fontSize: 34 }}><Icon name="🔍" /></div>
         <div style={{ fontSize: 19, fontWeight: 800, color: 'var(--text)' }}>This form isn't available</div>
@@ -323,7 +323,7 @@ export default function PublicForm() {
           <div style={{ textAlign: 'center' }}>
             <div style={{
               width: 62, height: 62, borderRadius: '50%', margin: '0 auto 16px',
-              background: '#E7F8ED', color: '#04713C',
+              background: 'var(--ok-bg)', color: 'var(--ok-text)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30,
             }}><Icon name="✓" /></div>
             <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>Thank you</div>
@@ -332,7 +332,7 @@ export default function PublicForm() {
             </div>
             <div style={{
               display: 'inline-block', padding: '10px 16px', borderRadius: 12,
-              background: '#F7F8FC', fontSize: 13.5, color: '#475569', fontWeight: 600,
+              background: 'var(--surface2)', fontSize: 13.5, color: '#475569', fontWeight: 600,
             }}>{form.name}</div>
             <div style={{ fontSize: 13, color: 'var(--text-faint)', marginTop: 18 }}>You can close this page.</div>
           </div>
@@ -414,7 +414,7 @@ export default function PublicForm() {
                     marginBottom: 8, lineHeight: 1.45,
                   }}>
                     {field.label}
-                    {field.required && <span style={{ color: '#DC2626' }}> *</span>}
+                    {field.required && <span style={{ color: 'var(--danger-text)' }}> *</span>}
                   </label>
                 )}
                 <FieldInput
@@ -426,7 +426,7 @@ export default function PublicForm() {
                   accent={primary}
                 />
                 {bad && (
-                  <div role="alert" style={{ fontSize: 13, color: '#DC2626', marginTop: 7 }}>
+                  <div role="alert" style={{ fontSize: 13, color: 'var(--danger-text)', marginTop: 7 }}>
                     This one is needed before you can continue.
                   </div>
                 )}
@@ -438,7 +438,7 @@ export default function PublicForm() {
         {error && (
           <div role="alert" style={{
             marginTop: 18, padding: '12px 14px', borderRadius: 12,
-            background: '#FEF2F2', border: '1px solid #FECACA', color: '#B42318',
+            background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)',
             fontSize: 14, lineHeight: 1.5,
           }}>{error}</div>
         )}

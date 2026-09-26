@@ -213,7 +213,7 @@ export function ProjectReflectionModal({ org, session, project, summary, existin
             onChange={v => set('would_run_again', v)}
             options={[['yes', 'Yes'], ['yes_with_changes', 'Yes, with changes'], ['no', 'No']]} />
 
-          {error && <div style={{ fontSize: 12.5, color: '#DC2626', fontWeight: 600 }}>{error}</div>}
+          {error && <div style={{ fontSize: 12.5, color: 'var(--danger-text)', fontWeight: 600 }}>{error}</div>}
         </div>
 
         <div style={{ padding: 16, borderTop: '1px solid var(--border-soft)', display: 'flex', gap: 8, flexShrink: 0 }}>
@@ -302,7 +302,7 @@ export function AddParticipantsModal({ org, projectId, existingChildIds, onClose
                     display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 11, width: '100%', textAlign: 'left', cursor: 'pointer',
                     border: on ? `2px solid ${PURPLE}` : '1px solid #F1F5F9', background: on ? '#F5F3FF' : '#fff',
                   }}>
-                    <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#EDE9FE', color: '#5B21B6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0, overflow: 'hidden' }}>
+                    <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--violet-bg)', color: 'var(--violet-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0, overflow: 'hidden' }}>
                       {c.photo_url ? <SignedImg bucket="gallery" src={c.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : `${c.first_name?.[0] || ''}${c.last_name?.[0] || ''}`.toUpperCase()}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -315,7 +315,7 @@ export function AddParticipantsModal({ org, projectId, existingChildIds, onClose
               })}
             </div>
           )}
-          {error && <div style={{ fontSize: 12.5, color: '#DC2626', fontWeight: 600, marginTop: 10 }}>{error}</div>}
+          {error && <div style={{ fontSize: 12.5, color: 'var(--danger-text)', fontWeight: 600, marginTop: 10 }}>{error}</div>}
         </div>
         <div style={{ padding: 16, borderTop: '1px solid var(--border-soft)', display: 'flex', gap: 8, flexShrink: 0 }}>
           <button onClick={onClose} style={{ padding: '11px 18px', borderRadius: 11, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
@@ -392,7 +392,7 @@ export function AddTeamModal({ org, projectId, existingUserIds, onClose, onAdded
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {filtered.map(p => (
                 <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 11, border: '1px solid var(--border-soft)' }}>
-                  <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#EDE9FE', color: '#5B21B6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0, overflow: 'hidden' }}>
+                  <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--violet-bg)', color: 'var(--violet-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0, overflow: 'hidden' }}>
                     {p.photo_url ? <SignedImg bucket="staff-photos" src={p.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (p.full_name || '?')[0]?.toUpperCase()}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -407,7 +407,7 @@ export function AddTeamModal({ org, projectId, existingUserIds, onClose, onAdded
               ))}
             </div>
           )}
-          {error && <div style={{ fontSize: 12.5, color: '#DC2626', fontWeight: 600, marginTop: 10 }}>{error}</div>}
+          {error && <div style={{ fontSize: 12.5, color: 'var(--danger-text)', fontWeight: 600, marginTop: 10 }}>{error}</div>}
         </div>
         <div style={{ padding: 16, borderTop: '1px solid var(--border-soft)', flexShrink: 0 }}>
           <button onClick={onClose} style={{ width: '100%', padding: '11px 18px', borderRadius: 11, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Done</button>
@@ -477,7 +477,7 @@ export function EditProjectModal({ project, onClose, onSaved }) {
           <div style={{ fontSize: 11.5, color: 'var(--text-faint)', lineHeight: 1.5 }}>
             Changing the date range doesn't add or remove project days — build those from the Schedule tab.
           </div>
-          {error && <div style={{ fontSize: 12.5, color: '#DC2626', fontWeight: 600, marginTop: 10 }}>{error}</div>}
+          {error && <div style={{ fontSize: 12.5, color: 'var(--danger-text)', fontWeight: 600, marginTop: 10 }}>{error}</div>}
         </div>
         <div style={{ padding: 16, borderTop: '1px solid var(--border-soft)', display: 'flex', gap: 8, flexShrink: 0 }}>
           <button onClick={onClose} style={{ padding: '11px 18px', borderRadius: 11, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
@@ -578,7 +578,7 @@ export function DuplicateProjectModal({ project, onClose, onDuplicated }) {
           <label style={lbl}>What to copy</label>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '10px 12px', borderRadius: 10, background: 'var(--surface2)', fontSize: 13, fontWeight: 600, color: 'var(--text2)' }}>
-              <span style={{ color: '#16A34A' }}><Icon name="✓" /></span> Project structure, defaults and settings
+              <span style={{ color: 'var(--ok-text)' }}><Icon name="✓" /></span> Project structure, defaults and settings
             </div>
             <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--text2)' }}>
               <input type="checkbox" checked={copyTeam} onChange={e => setCopyTeam(e.target.checked)} /> Project team
@@ -593,7 +593,7 @@ export function DuplicateProjectModal({ project, onClose, onDuplicated }) {
             so you can build its schedule from the new dates.
           </div>
 
-          {error && <div style={{ marginTop: 12, fontSize: 12.5, color: '#DC2626', fontWeight: 600 }}>{error}</div>}
+          {error && <div style={{ marginTop: 12, fontSize: 12.5, color: 'var(--danger-text)', fontWeight: 600 }}>{error}</div>}
         </div>
 
         <div style={{ padding: 16, borderTop: '1px solid var(--border-soft)', display: 'flex', gap: 8 }}>

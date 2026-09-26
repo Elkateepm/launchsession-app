@@ -75,7 +75,7 @@ function Overview({ profile, org, attendance, primary, onSignOut }) {
         <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 4 }}>{profile?.email}</div>
         <div style={{ fontSize: 13, color: 'var(--text2)' }}>{profile?.phone || 'No phone on file'}</div>
       </div>
-      <button onClick={onSignOut} style={{ width: '100%', padding: 13, borderRadius: 14, border: '1.5px solid #FCA5A5', background: 'var(--surface)', color: '#DC2626', fontWeight: 800, fontSize: 13.5, cursor: 'pointer' }}>Sign Out</button>
+      <button onClick={onSignOut} style={{ width: '100%', padding: 13, borderRadius: 14, border: '1.5px solid var(--danger-border)', background: 'var(--surface)', color: 'var(--danger-text)', fontWeight: 800, fontSize: 13.5, cursor: 'pointer' }}>Sign Out</button>
     </div>
   )
 }
@@ -235,7 +235,7 @@ function Settings({ profile, onSignOut }) {
           <span style={{ color: '#CBD5E1' }}>›</span>
         </div>
       ))}
-      <button onClick={onSignOut} style={{ width: '100%', marginTop: 8, padding: 13, borderRadius: 14, border: '1.5px solid #FCA5A5', background: 'var(--surface)', color: '#DC2626', fontWeight: 800, fontSize: 13.5, cursor: 'pointer' }}>Sign Out</button>
+      <button onClick={onSignOut} style={{ width: '100%', marginTop: 8, padding: 13, borderRadius: 14, border: '1.5px solid var(--danger-border)', background: 'var(--surface)', color: 'var(--danger-text)', fontWeight: 800, fontSize: 13.5, cursor: 'pointer' }}>Sign Out</button>
     </div>
   )
 }

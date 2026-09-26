@@ -160,18 +160,18 @@ export default function TeamCentre({ org, session, userProfile, onNavigate }) {
       {pending.length > 0 && (
         <button onClick={() => onNavigate && onNavigate('hr')} style={{
           width: '100%', textAlign: 'left', marginBottom: 12, cursor: 'pointer',
-          background: '#FEF6E7', border: '1px solid #FCD9A5', borderRadius: 12,
+          background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 12,
           padding: '12px 14px', fontFamily: 'inherit', display: 'flex',
           alignItems: 'center', gap: 10, minHeight: 44,
         }}>
-          <span style={{ color: '#93500A', display: 'flex' }}><Icon name="⚠️" /></span>
-          <span style={{ fontSize: 13.5, color: '#93500A', fontWeight: 700, flex: 1, minWidth: 0 }}>
+          <span style={{ color: 'var(--warn-text)', display: 'flex' }}><Icon name="⚠️" /></span>
+          <span style={{ fontSize: 13.5, color: 'var(--warn-text)', fontWeight: 700, flex: 1, minWidth: 0 }}>
             {pending.length} {pending.length === 1 ? 'person is' : 'people are'} waiting for approval
             <span style={{ display: 'block', fontWeight: 500, fontSize: 12.5, marginTop: 1 }}>
               Approvals moved to HR &amp; Staff, where approving someone starts their record
             </span>
           </span>
-          <span style={{ color: '#93500A', fontSize: 18, flexShrink: 0 }}>›</span>
+          <span style={{ color: 'var(--warn-text)', fontSize: 18, flexShrink: 0 }}>›</span>
         </button>
       )}
 
@@ -189,8 +189,8 @@ export default function TeamCentre({ org, session, userProfile, onNavigate }) {
 
       {toast && (
         <div style={{
-          ...card, background: '#E7F8ED', border: '1px solid #A7E7C1',
-          color: '#04713C', fontSize: 13.5, fontWeight: 700,
+          ...card, background: 'var(--ok-bg)', border: '1px solid var(--ok-border)',
+          color: 'var(--ok-text)', fontSize: 13.5, fontWeight: 700,
         }}>{toast}</div>
       )}
 
@@ -355,17 +355,17 @@ function PersonDrawer({ person, org, primary, isMobile, isAdmin, canDecide, myRo
 
         {error && (
           <div style={{
-            padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
-            border: '1px solid #FECACA', color: '#B42318', fontSize: 13, marginBottom: 14,
+            padding: '10px 12px', borderRadius: 10, background: 'var(--danger-bg)',
+            border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13, marginBottom: 14,
           }}>{error}</div>
         )}
 
         {person.approval_status === 'pending' && canDecide && !isSelf && (
           <div style={{
-            padding: 14, borderRadius: 12, background: '#FEF6E7',
-            border: '1px solid #FCD9A5', marginBottom: 16,
+            padding: 14, borderRadius: 12, background: 'var(--warn-bg)',
+            border: '1px solid var(--warn-border)', marginBottom: 16,
           }}>
-            <div style={{ fontSize: 13.5, fontWeight: 800, color: '#93500A', marginBottom: 10 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--warn-text)', marginBottom: 10 }}>
               This account is waiting for approval
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -374,8 +374,8 @@ function PersonDrawer({ person, org, primary, isMobile, isAdmin, canDecide, myRo
                 color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
               }}>Approve</button>
               <button onClick={() => onDecide(person, 'declined')} style={{
-                flex: 1, minHeight: 44, borderRadius: 11, border: '1px solid #FECACA',
-                background: 'var(--surface)', color: '#B42318', fontSize: 14, fontWeight: 800,
+                flex: 1, minHeight: 44, borderRadius: 11, border: '1px solid var(--danger-border)',
+                background: 'var(--surface)', color: 'var(--danger-text)', fontSize: 14, fontWeight: 800,
                 cursor: 'pointer', fontFamily: 'inherit',
               }}>Decline</button>
             </div>
@@ -561,8 +561,8 @@ function InternalMail({ org, people, primary, isMobile, onFlash }) {
 
         {error && (
           <div style={{
-            padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
-            border: '1px solid #FECACA', color: '#B42318', fontSize: 13, marginBottom: 12,
+            padding: '10px 12px', borderRadius: 10, background: 'var(--danger-bg)',
+            border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13, marginBottom: 12,
           }}>{error}</div>
         )}
 

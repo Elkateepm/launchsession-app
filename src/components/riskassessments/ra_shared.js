@@ -10,9 +10,9 @@ export const RA_STATUS_LABELS = {
 }
 export const RA_STATUS_STYLE = {
   draft: { bg: 'rgba(100,116,139,0.14)', color: '#475569' },
-  active: { bg: 'rgba(34,197,94,0.13)', color: '#15803D' },
-  review_due: { bg: 'rgba(245,158,11,0.15)', color: '#B45309' },
-  expired: { bg: 'rgba(239,68,68,0.13)', color: '#B91C1C' },
+  active: { bg: 'rgba(34,197,94,0.13)', color: 'var(--ok-text)' },
+  review_due: { bg: 'rgba(245,158,11,0.15)', color: 'var(--warn-text)' },
+  expired: { bg: 'rgba(239,68,68,0.13)', color: 'var(--danger-text)' },
   archived: { bg: 'rgba(148,163,184,0.16)', color: 'var(--text3)' },
 }
 
@@ -45,10 +45,10 @@ export function riskRating(score) {
 }
 
 export const RATING_STYLE = {
-  low: { bg: 'rgba(34,197,94,0.13)', color: '#15803D', solid: '#22C55E', label: 'Low' },
-  medium: { bg: 'rgba(245,158,11,0.15)', color: '#B45309', solid: '#F59E0B', label: 'Medium' },
-  high: { bg: 'rgba(239,68,68,0.13)', color: '#B91C1C', solid: '#EF4444', label: 'High' },
-  critical: { bg: 'rgba(124,58,237,0.16)', color: '#6D28D9', solid: '#7C3AED', label: 'Critical' },
+  low: { bg: 'rgba(34,197,94,0.13)', color: 'var(--ok-text)', solid: '#22C55E', label: 'Low' },
+  medium: { bg: 'rgba(245,158,11,0.15)', color: 'var(--warn-text)', solid: '#F59E0B', label: 'Medium' },
+  high: { bg: 'rgba(239,68,68,0.13)', color: 'var(--danger-text)', solid: '#EF4444', label: 'High' },
+  critical: { bg: 'rgba(124,58,237,0.16)', color: 'var(--violet-text)', solid: '#7C3AED', label: 'Critical' },
 }
 
 // Colour for a matrix cell given its raw score

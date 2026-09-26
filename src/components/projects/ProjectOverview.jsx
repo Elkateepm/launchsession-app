@@ -261,7 +261,7 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
                 {(project.status === 'archived') ? (
                   <button onClick={restoreProject} disabled={archiving} style={menuItemStyle}>Restore project</button>
                 ) : (
-                  <button onClick={archiveProject} disabled={archiving} style={{ ...menuItemStyle, color: '#B91C1C' }}>Archive project</button>
+                  <button onClick={archiveProject} disabled={archiving} style={{ ...menuItemStyle, color: 'var(--danger-text)' }}>Archive project</button>
                 )}
               </div>
             </>
@@ -308,7 +308,7 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
           {todayDay && (
             <button onClick={() => onNavigate && onNavigate('registers', { sessionId: todayDay.id, returnTo: 'projects', projectId })}
               style={{
-                padding: '12px 22px', borderRadius: 12, border: 'none', background: 'var(--surface)', color: '#5B21B6',
+                padding: '12px 22px', borderRadius: 12, border: 'none', background: 'var(--surface)', color: 'var(--violet-text)',
                 fontSize: 13.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
                 boxShadow: '0 8px 20px -8px rgba(0,0,0,0.4)',
               }}>
@@ -359,8 +359,8 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
 
           {/* Today */}
           {todayDay && (
-            <div style={card({ padding: 18, marginBottom: 14, border: '1.5px solid #BBF7D0', background: 'linear-gradient(180deg,#F0FDF4,#fff)' })}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: '#15803D', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6 }}>Today</div>
+            <div style={card({ padding: 18, marginBottom: 14, border: '1.5px solid var(--ok-border)', background: 'linear-gradient(180deg,#F0FDF4,#fff)' })}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--ok-text)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6 }}>Today</div>
               <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)' }}>{todayDay.title}</div>
               <div style={{ fontSize: 12.5, color: 'var(--text3)', fontWeight: 600, margin: '3px 0 10px' }}>
                 {todayDay.start_time}{todayDay.end_time ? `–${todayDay.end_time}` : ''}{todayDay.location ? ` · ${todayDay.location}` : ''}
@@ -434,7 +434,7 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
             <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>Needs attention</div>
             {attentionItems.length === 0 ? (
               <div style={{ padding: '18px 0', textAlign: 'center' }}>
-                <div style={{ fontSize: 14, fontWeight: 800, color: '#15803D' }}><Icon name="✓" /> Everything is ready</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--ok-text)' }}><Icon name="✓" /> Everything is ready</div>
                 <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 3 }}>No outstanding actions for this project.</div>
               </div>
             ) : (
@@ -562,9 +562,9 @@ function ScheduleTab({ days, countsFor, reflections, raLinked, isMobile, onNavig
                   <div style={{ flex: 1, minWidth: 160 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{d.title}</span>
-                      {isTrip && <span style={{ fontSize: 10, fontWeight: 800, color: '#1D4ED8', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 99, padding: '2px 8px' }}>Trip</span>}
-                      {st === 'completed' && <span style={{ fontSize: 10, fontWeight: 800, color: '#15803D', background: '#DCFCE7', borderRadius: 99, padding: '2px 8px' }}><Icon name="✓" /> Completed</span>}
-                      {st === 'today' && <span style={{ fontSize: 10, fontWeight: 800, color: '#15803D', background: '#DCFCE7', borderRadius: 99, padding: '2px 8px' }}>Today</span>}
+                      {isTrip && <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--info-text)', background: 'var(--info-bg)', border: '1px solid var(--info-border)', borderRadius: 99, padding: '2px 8px' }}>Trip</span>}
+                      {st === 'completed' && <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--ok-text)', background: 'var(--ok-bg)', borderRadius: 99, padding: '2px 8px' }}><Icon name="✓" /> Completed</span>}
+                      {st === 'today' && <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--ok-text)', background: 'var(--ok-bg)', borderRadius: 99, padding: '2px 8px' }}>Today</span>}
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600, marginTop: 2 }}>
                       {(d.start_time || '').slice(0, 5)}{d.end_time ? `–${d.end_time.slice(0, 5)}` : ''}{d.location ? ` · ${d.location}` : ''} · {c.total} expected
@@ -572,7 +572,7 @@ function ScheduleTab({ days, countsFor, reflections, raLinked, isMobile, onNavig
                     {issues.length > 0 && (
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
                         {issues.map(i => (
-                          <span key={i} style={{ fontSize: 10.5, fontWeight: 800, color: '#92400E', background: '#FEF3C7', borderRadius: 99, padding: '2px 8px' }}><Icon name="⚠" /> {i}</span>
+                          <span key={i} style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--warn-text)', background: 'var(--warn-bg)', borderRadius: 99, padding: '2px 8px' }}><Icon name="⚠" /> {i}</span>
                         ))}
                       </div>
                     )}
@@ -629,7 +629,7 @@ function PeopleTab({ participants, days, attendance, isMobile, onAdd, onWithdraw
             const withdrawn = p.status !== 'active'
             return (
               <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 11, border: '1px solid var(--border-soft)', flexWrap: 'wrap', opacity: withdrawn ? 0.6 : 1 }}>
-                <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#EDE9FE', color: '#5B21B6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, flexShrink: 0 }}>
+                <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--violet-bg)', color: 'var(--violet-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, flexShrink: 0 }}>
                   {`${ch?.first_name?.[0] || ''}${ch?.last_name?.[0] || ''}`.toUpperCase()}
                 </div>
                 <div style={{ flex: 1, minWidth: 120 }}>
@@ -684,7 +684,7 @@ function TeamTab({ team, staffProfiles, onAdd, onRemove, onToggleLead }) {
                   color: t.is_lead ? '#5B21B6' : '#94A3B8', background: t.is_lead ? '#F5F3FF' : '#F1F5F9',
                 }}>{t.is_lead ? 'Lead' : 'Make lead'}</button>
                 <span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600 }}>{t.role}</span>
-                <button onClick={() => onRemove(t)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 8, padding: '4px 9px', fontSize: 11, fontWeight: 700, color: '#B91C1C', cursor: 'pointer' }}>Remove</button>
+                <button onClick={() => onRemove(t)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 8, padding: '4px 9px', fontSize: 11, fontWeight: 700, color: 'var(--danger-text)', cursor: 'pointer' }}>Remove</button>
               </span>
             </div>
           ))}
@@ -697,12 +697,12 @@ function TeamTab({ team, staffProfiles, onAdd, onRemove, onToggleLead }) {
 // ── small shared bits ──
 function Metric({ value, label, icon, tone = 'purple' }) {
   const TONES = {
-    purple: { bg: '#F5F3FF', bd: '#DDD6FE', fg: '#6D28D9' },
-    blue:   { bg: '#EFF6FF', bd: '#BFDBFE', fg: '#1D4ED8' },
-    indigo: { bg: '#EEF2FF', bd: '#C7D2FE', fg: '#4338CA' },
-    green:  { bg: '#F0FDF4', bd: '#BBF7D0', fg: '#15803D' },
-    amber:  { bg: '#FFFBEB', bd: '#FDE68A', fg: '#B45309' },
-    pink:   { bg: '#FDF2F8', bd: '#FBCFE8', fg: '#BE185D' },
+    purple: { bg: 'var(--violet-bg)', bd: 'var(--violet-border)', fg: 'var(--violet-text)' },
+    blue:   { bg: 'var(--info-bg)', bd: 'var(--info-border)', fg: 'var(--info-text)' },
+    indigo: { bg: 'var(--info-bg)', bd: 'var(--info-border)', fg: 'var(--info-text)' },
+    green:  { bg: 'var(--ok-bg)', bd: 'var(--ok-border)', fg: 'var(--ok-text)' },
+    amber:  { bg: 'var(--warn-bg)', bd: 'var(--warn-border)', fg: 'var(--warn-text)' },
+    pink:   { bg: '#FDF2F8', bd: 'var(--danger-border)', fg: '#BE185D' },
     teal:   { bg: '#F0FDFA', bd: '#99F6E4', fg: '#0F766E' },
   }
   const t = TONES[tone] || TONES.purple
@@ -722,20 +722,20 @@ function DayCounts({ counts }) {
   return (
     <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
       <span style={{ fontSize: 12.5, color: 'var(--text3)' }}><b style={{ color: 'var(--text)' }}>{counts.total}</b> expected</span>
-      {counts.signedIn > 0 && <span style={{ fontSize: 12.5, color: 'var(--text3)' }}><b style={{ color: '#15803D' }}>{counts.signedIn}</b> signed in</span>}
-      {counts.absent > 0 && <span style={{ fontSize: 12.5, color: 'var(--text3)' }}><b style={{ color: '#B91C1C' }}>{counts.absent}</b> absent</span>}
+      {counts.signedIn > 0 && <span style={{ fontSize: 12.5, color: 'var(--text3)' }}><b style={{ color: 'var(--ok-text)' }}>{counts.signedIn}</b> signed in</span>}
+      {counts.absent > 0 && <span style={{ fontSize: 12.5, color: 'var(--text3)' }}><b style={{ color: 'var(--danger-text)' }}>{counts.absent}</b> absent</span>}
     </div>
   )
 }
 
 function StatusChip({ status, onDark }) {
   const map = {
-    draft: { t: 'Draft', c: '#64748B', b: '#F1F5F9', dot: '#94A3B8' },
-    upcoming: { t: 'Upcoming', c: '#1D4ED8', b: '#EFF6FF', dot: '#3B82F6' },
-    active: { t: 'Active', c: '#15803D', b: '#DCFCE7', dot: '#22C55E' },
-    completed: { t: 'Completed', c: '#64748B', b: '#F1F5F9', dot: '#94A3B8' },
-    cancelled: { t: 'Cancelled', c: '#B91C1C', b: '#FEE2E2', dot: '#EF4444' },
-    archived: { t: 'Archived', c: '#64748B', b: '#F1F5F9', dot: '#94A3B8' },
+    draft: { t: 'Draft', c: '#64748B', b: 'var(--surface-hover)', dot: '#94A3B8' },
+    upcoming: { t: 'Upcoming', c: 'var(--info-text)', b: 'var(--info-bg)', dot: '#3B82F6' },
+    active: { t: 'Active', c: 'var(--ok-text)', b: 'var(--ok-bg)', dot: '#22C55E' },
+    completed: { t: 'Completed', c: '#64748B', b: 'var(--surface-hover)', dot: '#94A3B8' },
+    cancelled: { t: 'Cancelled', c: 'var(--danger-text)', b: 'var(--danger-bg)', dot: '#EF4444' },
+    archived: { t: 'Archived', c: '#64748B', b: 'var(--surface-hover)', dot: '#94A3B8' },
   }
   const m = map[status] || map.draft
   // On the gradient hero the light pastel backgrounds vanish, so use a

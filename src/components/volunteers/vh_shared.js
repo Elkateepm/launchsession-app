@@ -92,16 +92,16 @@ export function CountUp({ value, style }) {
 
 export function statusStyle(status) {
   const map = {
-    active: { bg: 'rgba(34,197,94,0.12)', color: '#15803D', label: '● Active' },
-    available: { bg: 'rgba(34,197,94,0.12)', color: '#15803D', label: 'Available' },
-    pending: { bg: 'rgba(245,158,11,0.14)', color: '#B45309', label: 'Pending' },
+    active: { bg: 'rgba(34,197,94,0.12)', color: 'var(--ok-text)', label: '● Active' },
+    available: { bg: 'rgba(34,197,94,0.12)', color: 'var(--ok-text)', label: 'Available' },
+    pending: { bg: 'rgba(245,158,11,0.14)', color: 'var(--warn-text)', label: 'Pending' },
     unavailable: { bg: 'rgba(148,163,184,0.16)', color: '#475569', label: 'Unavailable' },
-    rejected: { bg: 'rgba(239,68,68,0.12)', color: '#B91C1C', label: 'Rejected' },
-    expiring: { bg: 'rgba(245,158,11,0.14)', color: '#B45309', label: 'Expiring' },
-    expired: { bg: 'rgba(239,68,68,0.12)', color: '#B91C1C', label: 'Expired' },
-    complete: { bg: 'rgba(34,197,94,0.12)', color: '#15803D', label: 'Complete' },
+    rejected: { bg: 'rgba(239,68,68,0.12)', color: 'var(--danger-text)', label: 'Rejected' },
+    expiring: { bg: 'rgba(245,158,11,0.14)', color: 'var(--warn-text)', label: 'Expiring' },
+    expired: { bg: 'rgba(239,68,68,0.12)', color: 'var(--danger-text)', label: 'Expired' },
+    complete: { bg: 'rgba(34,197,94,0.12)', color: 'var(--ok-text)', label: 'Complete' },
   }
-  return map[status] || { bg: '#F1F5F9', color: '#475569', label: status || '—' }
+  return map[status] || { bg: 'var(--surface-hover)', color: '#475569', label: status || '—' }
 }
 
 export function daysUntil(dateStr) {

@@ -6,9 +6,9 @@ export default function FundraisingQuickActions({ onNewCampaign, onFindFunding, 
   const isMobile = useIsMobile()
 
   const actions = [
-    { key: 'campaign', icon: 'plus', color: '#7C5CFC', bg: '#F1EDFF', title: 'New Campaign', desc: 'Start a new fundraising campaign', onClick: onNewCampaign, adminOnly: true },
+    { key: 'campaign', icon: 'plus', color: 'var(--violet-text)', bg: 'var(--violet-bg)', title: 'New Campaign', desc: 'Start a new fundraising campaign', onClick: onNewCampaign, adminOnly: true },
     { key: 'find', icon: 'search', color: '#2F6F63', bg: '#EAF5F2', title: 'Find Funding', desc: 'Discover grants and opportunities', onClick: onFindFunding },
-    { key: 'application', icon: 'file-plus', color: '#BA7517', bg: '#FDF3E4', title: 'New Application', desc: 'Create a grant application', onClick: onNewApplication, adminOnly: true },
+    { key: 'application', icon: 'file-plus', color: 'var(--warn-text)', bg: 'var(--warn-bg)', title: 'New Application', desc: 'Create a grant application', onClick: onNewApplication, adminOnly: true },
     { key: 'documents', icon: 'folder', color: '#375A82', bg: '#E9F0F7', title: 'Documents', desc: 'Access policies, reports & files', onClick: onDocuments },
     { key: 'share', icon: 'share', color: '#4E7A3A', bg: '#EEF3EA', title: 'Share Campaign', desc: 'Promote and share your campaign', onClick: onShareCampaign },
     { key: 'reports', icon: 'chart', color: '#8C5A3C', bg: '#F6EFEA', title: 'Reports & Insights', desc: 'View analytics & impact reports', onClick: onReports },

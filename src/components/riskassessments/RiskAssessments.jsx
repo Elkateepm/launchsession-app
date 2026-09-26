@@ -336,7 +336,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
       {/* KPI CARDS */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, marginBottom: 18 }}>
         {[
-          { label: 'All Assessments', value: kpis.total, icon: '🎮', color: '#7C5CFC', suffix: '' },
+          { label: 'All Assessments', value: kpis.total, icon: '🎮', color: 'var(--violet-text)', suffix: '' },
           { label: 'Require Review', value: kpis.requireReview, icon: '⏰', color: '#F59E0B', suffix: '' },
           { label: 'High Risk Activities', value: kpis.highRisk, icon: '🔥', color: '#EF4444', suffix: '' },
           { label: 'Drafts', value: kpis.drafts, icon: '🗂', color: 'var(--text3)', suffix: '' },
@@ -867,7 +867,7 @@ function CreateModal({ org, staff, venues, onClose, onCreate, primary, prefillSe
                   Use a one-off location instead
                 </button>
                 {selectedVenue?.default_hazards?.length > 0 && (
-                  <div style={{ marginTop: 6, fontSize: 11, color: '#15803D', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 8, padding: '6px 10px', fontWeight: 700 }}>
+                  <div style={{ marginTop: 6, fontSize: 11, color: 'var(--ok-text)', background: 'var(--ok-bg)', border: '1px solid var(--ok-border)', borderRadius: 8, padding: '6px 10px', fontWeight: 700 }}>
                     ✓ {selectedVenue.default_hazards.length} default hazard(s) for this venue will be added automatically
                   </div>
                 )}

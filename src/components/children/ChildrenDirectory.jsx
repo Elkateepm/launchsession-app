@@ -24,11 +24,11 @@ function age(dob) {
 
 function medicalAlerts(child) {
   const chips = []
-  if (child.allergies) chips.push({ label: 'Allergy', color: '#B45309', bg: '#FEF3C7' })
-  if (child.has_asthma) chips.push({ label: 'Asthma', color: '#B91C1C', bg: '#FEE2E2' })
-  if (child.has_diabetes) chips.push({ label: 'Diabetes', color: '#B91C1C', bg: '#FEE2E2' })
-  if (child.takes_medication || child.has_medication) chips.push({ label: 'Medication', color: '#6D28D9', bg: '#EDE9FE' })
-  if (child.has_epipen) chips.push({ label: 'EpiPen', color: '#B91C1C', bg: '#FEE2E2' })
+  if (child.allergies) chips.push({ label: 'Allergy', color: 'var(--warn-text)', bg: 'var(--warn-bg)' })
+  if (child.has_asthma) chips.push({ label: 'Asthma', color: 'var(--danger-text)', bg: 'var(--danger-bg)' })
+  if (child.has_diabetes) chips.push({ label: 'Diabetes', color: 'var(--danger-text)', bg: 'var(--danger-bg)' })
+  if (child.takes_medication || child.has_medication) chips.push({ label: 'Medication', color: 'var(--violet-text)', bg: 'var(--violet-bg)' })
+  if (child.has_epipen) chips.push({ label: 'EpiPen', color: 'var(--danger-text)', bg: 'var(--danger-bg)' })
   return chips
 }
 
@@ -276,7 +276,7 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
             {child.date_of_birth && `DOB ${new Date(child.date_of_birth).toLocaleDateString('en-GB')} · `}
             {groupLabel || 'Ungrouped'}
           </div>
-          {child.has_behaviour_plan && <span style={{ display: 'inline-block', marginTop: 6, fontSize: 10.5, fontWeight: 800, background: '#FEF3C7', color: '#B45309', borderRadius: 99, padding: '2px 9px' }}>Support Plan</span>}
+          {child.has_behaviour_plan && <span style={{ display: 'inline-block', marginTop: 6, fontSize: 10.5, fontWeight: 800, background: 'var(--warn-bg)', color: 'var(--warn-text)', borderRadius: 99, padding: '2px 9px' }}>Support Plan</span>}
         </div>
         <span style={{ fontSize: 11, fontWeight: 800, color: latestAtt?.status === 'signed_in' ? '#15803D' : '#64748B', background: latestAtt?.status === 'signed_in' ? '#DCFCE7' : '#F1F5F9', borderRadius: 99, padding: '4px 10px' }}>
           {latestAtt?.status === 'signed_in' ? '● Signed in' : latestAtt?.status === 'signed_out' ? 'Signed out' : latestAtt?.status === 'absent' ? 'Absent' : 'No recent activity'}
@@ -285,24 +285,24 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
 
       {/* Alert banners */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 10, marginBottom: 18 }}>
-        <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 12, padding: 12 }}>
-          <div style={{ fontSize: 11.5, fontWeight: 800, color: '#B91C1C', marginBottom: 6 }}><Icon name="❤️" /> Medical alerts</div>
+        <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 12, padding: 12 }}>
+          <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--danger-text)', marginBottom: 6 }}><Icon name="❤️" /> Medical alerts</div>
           {medicalAlerts(child).length === 0 ? <div style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>None recorded</div> : (
             <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 6 }}>
               {medicalAlerts(child).map(ch => <span key={ch.label} style={{ fontSize: 10.5, fontWeight: 800, color: ch.color, background: ch.bg, borderRadius: 99, padding: '2px 8px' }}>{ch.label}</span>)}
             </div>
           )}
-          {child.medication_details && <div style={{ fontSize: 11, color: '#7F1D1D' }}>{child.medication_details}</div>}
+          {child.medication_details && <div style={{ fontSize: 11, color: 'var(--danger-text)' }}>{child.medication_details}</div>}
         </div>
-        <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 12, padding: 12 }}>
-          <div style={{ fontSize: 11.5, fontWeight: 800, color: '#B45309', marginBottom: 6 }}><Icon name="🛡️" /> Safeguarding / Support</div>
+        <div style={{ background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 12, padding: 12 }}>
+          <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--warn-text)', marginBottom: 6 }}><Icon name="🛡️" /> Safeguarding / Support</div>
           <div style={{ fontSize: 11.5, color: child.has_behaviour_plan ? '#92400E' : '#94A3B8' }}>{child.has_behaviour_plan ? 'Support plan in place' : 'None recorded'}</div>
-          {child.behaviour_plan_notes && <div style={{ fontSize: 11, color: '#92400E', marginTop: 4 }}>{child.behaviour_plan_notes}</div>}
+          {child.behaviour_plan_notes && <div style={{ fontSize: 11, color: 'var(--warn-text)', marginTop: 4 }}>{child.behaviour_plan_notes}</div>}
         </div>
-        <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 12, padding: 12 }}>
-          <div style={{ fontSize: 11.5, fontWeight: 800, color: '#15803D', marginBottom: 6 }}><Icon name="🚗" /> Collection / Travel</div>
-          <div style={{ fontSize: 11.5, color: '#166534' }}>{child.travel_consent ? 'Can travel home' : 'Must be collected'}</div>
-          {child.collection_restricted && <div style={{ fontSize: 11, color: '#B91C1C', marginTop: 4, fontWeight: 700 }}>⚠ Collection restricted{child.collection_restriction_note ? `: ${child.collection_restriction_note}` : ''}</div>}
+        <div style={{ background: 'var(--ok-bg)', border: '1px solid var(--ok-border)', borderRadius: 12, padding: 12 }}>
+          <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--ok-text)', marginBottom: 6 }}><Icon name="🚗" /> Collection / Travel</div>
+          <div style={{ fontSize: 11.5, color: 'var(--ok-text)' }}>{child.travel_consent ? 'Can travel home' : 'Must be collected'}</div>
+          {child.collection_restricted && <div style={{ fontSize: 11, color: 'var(--danger-text)', marginTop: 4, fontWeight: 700 }}>⚠ Collection restricted{child.collection_restriction_note ? `: ${child.collection_restriction_note}` : ''}</div>}
         </div>
       </div>
 
@@ -347,7 +347,7 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
               <Row label="Email" value={child.parent_email} />
               <Row label="Emergency contact" value={child.emergency_contact_name} />
               <Row label="Emergency phone" value={child.emergency_contact_phone} />
-              {!child.parent_email && <div style={{ fontSize: 11, color: '#B45309', marginTop: 4 }}><Icon name="⚠" /> No email on file — add one to enable emailing this parent.</div>}
+              {!child.parent_email && <div style={{ fontSize: 11, color: 'var(--warn-text)', marginTop: 4 }}><Icon name="⚠" /> No email on file — add one to enable emailing this parent.</div>}
               {child.parent_phone && (
                 <a href={`tel:${child.parent_phone}`} style={{ display: 'inline-block', marginTop: 8, padding: '7px 14px', borderRadius: 9, border: `1px solid var(--org-a20)`, color: primary, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}><Icon name="📞" /> Call parent</a>
               )}
@@ -479,7 +479,7 @@ function OnSiteTab({ children, latestAttByChild, groupLabel, primary, org, authU
               <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>{c.first_name} {c.last_name}</div>
               <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{groupLabel(c.group_name) || 'Ungrouped'} · Signed in {att?.signed_in_at ? new Date(att.signed_in_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : ''}</div>
             </div>
-            {hasMedicalAlert(c) && <span style={{ fontSize: 9.5, fontWeight: 800, color: '#B91C1C', background: '#FEE2E2', borderRadius: 99, padding: '2px 8px' }}><Icon name="❤️" /> Alert</span>}
+            {hasMedicalAlert(c) && <span style={{ fontSize: 9.5, fontWeight: 800, color: 'var(--danger-text)', background: 'var(--danger-bg)', borderRadius: 99, padding: '2px 8px' }}><Icon name="❤️" /> Alert</span>}
             <button onClick={() => signOut(c.id)} style={{ padding: '7px 14px', borderRadius: 9, border: `1px solid var(--org-a20)`, background: 'var(--surface)', color: primary, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Sign out</button>
           </div>
         )
@@ -541,7 +541,7 @@ function ConsentsTab({ children, consentsByChild, groupLabel, primary, onOpenChi
               <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{groupLabel(c.group_name) || 'Ungrouped'}{c.parent_name ? ` · ${c.parent_name}` : ''}</div>
             </div>
             <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 220 }}>
-              {missing.map(t => <span key={t.key} style={{ fontSize: 9.5, fontWeight: 800, color: '#7C3AED', background: '#EDE9FE', borderRadius: 99, padding: '2px 8px' }}>{t.label}</span>)}
+              {missing.map(t => <span key={t.key} style={{ fontSize: 9.5, fontWeight: 800, color: 'var(--violet-text)', background: 'var(--violet-bg)', borderRadius: 99, padding: '2px 8px' }}>{t.label}</span>)}
             </div>
             <span style={{ color: primary, fontSize: 12, fontWeight: 700 }}>View <Icon name="→" /></span>
           </div>
@@ -645,12 +645,12 @@ function RegistrationRequestsTab({ registrations, org, authUserId, primary, onRe
         {pending.length === 0 ? (
           <div style={{ padding: 30, textAlign: 'center', color: 'var(--text-faint)', fontSize: 13 }}>No pending registrations.</div>
         ) : pending.map(r => (
-          <div key={r.id} onClick={() => setOpenId(r.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: openId === r.id ? 'var(--org-a05)' : '#FFFBFA', borderLeft: '3px solid #FCA5A5' }}>
+          <div key={r.id} onClick={() => setOpenId(r.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: openId === r.id ? 'var(--org-a05)' : '#FFFBFA', borderLeft: '3px solid var(--danger-border)' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>{r.first_name} {r.last_name}</div>
               <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>Submitted {new Date(r.submitted_at).toLocaleDateString('en-GB')} · {r.parent_name}</div>
             </div>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 800, color: '#B45309', background: '#FEF3C7', borderRadius: 99, padding: '2px 9px' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 800, color: 'var(--warn-text)', background: 'var(--warn-bg)', borderRadius: 99, padding: '2px 9px' }}>
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#D97706', animation: 'pulse-live 1.5s infinite', flexShrink: 0 }} />
               Pending
             </span>
@@ -698,7 +698,7 @@ function RegistrationRequestsTab({ registrations, org, authUserId, primary, onRe
               </div>
             ) : (
               <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                <button onClick={() => setRejectReasonFor(open.id)} style={{ flex: 1, padding: '11px', borderRadius: 10, border: '1px solid #FECACA', background: '#FEF2F2', color: '#DC2626', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Decline</button>
+                <button onClick={() => setRejectReasonFor(open.id)} style={{ flex: 1, padding: '11px', borderRadius: 10, border: '1px solid var(--danger-border)', background: 'var(--danger-bg)', color: 'var(--danger-text)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Decline</button>
                 <button onClick={() => approve(open)} disabled={busy} style={{ flex: 1, padding: '11px', borderRadius: 10, border: 'none', background: '#16A34A', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Approving…' : '✓ Approve & create profile'}</button>
               </div>
             )
@@ -768,8 +768,8 @@ export function InviteParentModal({ org, onClose }) {
             {sending ? 'Sending…' : 'Send'}
           </button>
         </div>
-        {sendResult?.ok && <div style={{ fontSize: 12, color: '#15803D', fontWeight: 700, marginBottom: 14 }}><Icon name="✓" /> Invite sent.</div>}
-        {sendResult?.error && <div style={{ fontSize: 12, color: '#DC2626', fontWeight: 700, marginBottom: 14 }}>{sendResult.error}</div>}
+        {sendResult?.ok && <div style={{ fontSize: 12, color: 'var(--ok-text)', fontWeight: 700, marginBottom: 14 }}><Icon name="✓" /> Invite sent.</div>}
+        {sendResult?.error && <div style={{ fontSize: 12, color: 'var(--danger-text)', fontWeight: 700, marginBottom: 14 }}>{sendResult.error}</div>}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 16px' }}>
           <div style={{ flex: 1, height: 1, background: 'var(--border)' }} /><span style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 700 }}>OR</span><div style={{ flex: 1, height: 1, background: 'var(--border)' }} />

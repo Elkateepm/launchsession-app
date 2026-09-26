@@ -154,7 +154,7 @@ export default function ResourceBooking({ org, session: authSession }) {
 
       {/* Add resource */}
       {showAddResource && (
-        <div style={{ background: '#F0F9FF', border: '1.5px solid #BAE6FD', borderRadius: 16, padding: 18, marginBottom: 20 }}>
+        <div style={{ background: 'var(--info-bg)', border: '1.5px solid var(--info-border)', borderRadius: 16, padding: 18, marginBottom: 20 }}>
           <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 14 }}><Icon name="📦" /> Add Resource</div>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
             <div><label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>NAME *</label><input value={newResource.name} onChange={e => setNewResource(n => ({ ...n, name: e.target.value }))} placeholder="e.g. Main Hall, Blue Minibus" style={inp} /></div>

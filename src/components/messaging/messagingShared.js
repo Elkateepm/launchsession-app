@@ -4,11 +4,11 @@
 // created by the volunteer portal when a volunteer writes to staff; it is not
 // in this list and is handled by audienceOf().
 export const AUDIENCES = [
-  { key: 'all_staff',        label: 'All staff',        short: 'Staff',      icon: '👥', color: '#2563EB', who: 'Admins and staff' },
+  { key: 'all_staff',        label: 'All staff',        short: 'Staff',      icon: '👥', color: 'var(--info-text)', who: 'Admins and staff' },
   { key: 'volunteers',       label: 'Volunteers',       short: 'Volunteers', icon: '❤️', color: '#DB2777', who: 'Volunteers, and staff who read along' },
-  { key: 'team',             label: 'Team leads',       short: 'Leads',      icon: '⭐', color: '#D97706', who: 'Admins and owners' },
+  { key: 'team',             label: 'Team leads',       short: 'Leads',      icon: '⭐', color: 'var(--warn-text)', who: 'Admins and owners' },
   { key: 'general',          label: 'Everyone',         short: 'Everyone',   icon: '💬', color: '#475569', who: 'Staff and volunteers' },
-  { key: 'event_staff',      label: 'Event staff',      short: 'Event',      icon: '📅', color: '#7C3AED', who: 'Staff on this event' },
+  { key: 'event_staff',      label: 'Event staff',      short: 'Event',      icon: '📅', color: 'var(--violet-text)', who: 'Staff on this event' },
   { key: 'event_volunteers', label: 'Event volunteers', short: 'Event',      icon: '📅', color: '#0891B2', who: 'Volunteers on this event' },
 ]
 

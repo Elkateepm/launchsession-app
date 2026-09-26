@@ -140,10 +140,10 @@ export default function RASessionCard({ sessionId, sessionTitle, org, session: a
               {sessionId && full && (
                 <>
                   <button onClick={() => setDynamicOpen(true)} style={{ fontSize: 11.5, fontWeight: 700, color: primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ Dynamic Update</button>
-                  <button onClick={() => setEmergencyOpen(true)} style={{ fontSize: 11.5, fontWeight: 700, color: '#B42318', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><Icon name="🚨" /> Emergency</button>
+                  <button onClick={() => setEmergencyOpen(true)} style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--danger-text)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><Icon name="🚨" /> Emergency</button>
                 </>
               )}
-              <button onClick={detach} style={{ fontSize: 11.5, fontWeight: 700, color: '#DC2626', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginLeft: 'auto' }}>Detach</button>
+              <button onClick={detach} style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--danger-text)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginLeft: 'auto' }}>Detach</button>
             </div>
           </div>
         ) : (

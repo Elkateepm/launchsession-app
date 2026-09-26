@@ -19,13 +19,13 @@ const WIZARD_TYPES = [
   { key: 'trip',        label: 'Trip',              icon: '🚌', color: '#F59E0B' },
   { key: 'workshop',     label: 'Workshop',          icon: '🛠️', color: '#0EA5E9' },
   { key: 'mentoring',    label: 'Mentoring',         icon: '🤝', color: '#EC4899' },
-  { key: 'sports',       label: 'Sports Event',      icon: '⚽', color: '#16A34A' },
-  { key: 'residential',  label: 'Residential',       icon: '🏕️', color: '#059669' },
-  { key: 'theatre',      label: 'Theatre Visit',     icon: '🎭', color: '#7C3AED' },
-  { key: 'competition',  label: 'Competition',       icon: '🏆', color: '#D97706' },
+  { key: 'sports',       label: 'Sports Event',      icon: '⚽', color: 'var(--ok-text)' },
+  { key: 'residential',  label: 'Residential',       icon: '🏕️', color: 'var(--ok-text)' },
+  { key: 'theatre',      label: 'Theatre Visit',     icon: '🎭', color: 'var(--violet-text)' },
+  { key: 'competition',  label: 'Competition',       icon: '🏆', color: 'var(--warn-text)' },
   { key: 'community',    label: 'Community Event',   icon: '🎉', color: '#DB2777' },
   { key: 'celebration',  label: 'Celebration',       icon: '🎊', color: '#E11D48' },
-  { key: 'training',     label: 'Training',          icon: '📚', color: '#2563EB' },
+  { key: 'training',     label: 'Training',          icon: '📚', color: 'var(--info-text)' },
   { key: 'custom',       label: 'Custom Session',    icon: '✨', color: '#6D5DF6' },
 ]
 
@@ -331,8 +331,8 @@ function StepType({ form, setForm, templates, appliedTemplateId, onApplyTemplate
 // States come from compliance_state_for() in the database, so this and the HR
 // screens cannot disagree.
 const COMPLIANCE_FLAG = {
-  expired:  { label: 'Checks expired', color: '#DC2626' },
-  expiring: { label: 'Checks expiring', color: '#B45309' },
+  expired:  { label: 'Checks expired', color: 'var(--danger-text)' },
+  expiring: { label: 'Checks expiring', color: 'var(--warn-text)' },
 }
 
 function StepDetails({ form, setForm, staff, org }) {
@@ -553,14 +553,14 @@ function StepPeople({ form, setForm, staff, children, expectedCount, bubbleDefs,
                 <span>{s.full_name}</span>
                 {s.job_title && <span style={{ color: 'var(--text3)', fontSize: 11.5 }}>{s.job_title}</span>}
                 {flag && <span style={{ fontSize: 11, fontWeight: 700, color: flag.color }}>{flag.label}</span>}
-                {s.on_leave_today && <span style={{ fontSize: 11, fontWeight: 700, color: '#7C5CFC' }}>On leave</span>}
+                {s.on_leave_today && <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--violet-text)' }}>On leave</span>}
                 {!s.assignable && <span style={{ fontSize: 11, color: 'var(--text3)', marginLeft: 'auto' }}>No account yet</span>}
               </label>
             )
           })}
         </div>
         {minStaffUnmet && (
-          <div style={{ background: '#FFFBEB', border: '1.5px solid #F5D000', borderRadius: 10, padding: '10px 14px', fontSize: 12.5, color: '#856404', fontWeight: 700 }}>
+          <div style={{ background: 'var(--warn-bg)', border: '1.5px solid #F5D000', borderRadius: 10, padding: '10px 14px', fontSize: 12.5, color: 'var(--warn-text)', fontWeight: 700 }}>
             ⚠ Minimum staffing is not yet met — {form.min_staff} required · {staffCount} assigned
           </div>
         )}
@@ -572,7 +572,7 @@ function StepPeople({ form, setForm, staff, children, expectedCount, bubbleDefs,
           <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
             <input style={{ ...inp, flex: 1 }} value={slot.role} onChange={e => updateSlot(i, { role: e.target.value })} placeholder="Role e.g. General helper" />
             <input type="number" style={{ ...inp, width: 90 }} value={slot.spaces_required} onChange={e => updateSlot(i, { spaces_required: e.target.value })} placeholder="Spaces" />
-            <button onClick={() => removeSlot(i)} style={{ background: '#FEE2E2', border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', color: '#C00' }}>×</button>
+            <button onClick={() => removeSlot(i)} style={{ background: 'var(--danger-bg)', border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', color: '#C00' }}>×</button>
           </div>
         ))}
         <button onClick={addVolunteerSlot} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px dashed var(--border)', background: 'var(--surface)', fontSize: 12.5, fontWeight: 700, color: '#1B9AAA', cursor: 'pointer' }}>
@@ -626,7 +626,7 @@ function StepRequirements({ form, setForm, orgForms, org, onFormCreated, expecte
       ))}
 
       {form.risk_assessment_required && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, border: '1.5px solid #FDE68A', background: '#FFFBEB', marginBottom: 16, fontSize: 12.5, color: '#92400E', fontWeight: 600 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, border: '1.5px solid var(--warn-border)', background: 'var(--warn-bg)', marginBottom: 16, fontSize: 12.5, color: 'var(--warn-text)', fontWeight: 600 }}>
           <span style={{ fontSize: 15 }}><Icon name="🛡️" /></span>
           <span>The next step lets you attach an existing risk assessment or create one for this session.</span>
         </div>
@@ -667,7 +667,7 @@ function StepRequirements({ form, setForm, orgForms, org, onFormCreated, expecte
 
       <div style={card}>
         <SectionHeader icon="🎯" title="What should change?" subtitle="Choose intended outcomes now; staff will record which were observed after delivery" color="#059669" />
-        <div style={{ fontSize: 12, lineHeight: 1.5, color: '#374151', padding: '10px 12px', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10, marginBottom: 12 }}>
+        <div style={{ fontSize: 12, lineHeight: 1.5, color: 'var(--ok-text)', padding: '10px 12px', background: 'var(--ok-bg)', border: '1px solid var(--ok-border)', borderRadius: 10, marginBottom: 12 }}>
           Selected outcomes become evidence prompts in the session reflection and feed the Session Learning Report.
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -708,9 +708,9 @@ const RA_ACTIVITY_TYPES = ['Sports / physical activity', 'Day trip / off-site', 
 
 function raRatingStyle(rating) {
   const r = (rating || '').toLowerCase()
-  if (r === 'high') return { bg: '#FEF2F2', border: '#FECACA', color: '#B91C1C' }
-  if (r === 'medium') return { bg: '#FFFBEB', border: '#FDE68A', color: '#B45309' }
-  if (r === 'low') return { bg: '#F0FDF4', border: '#BBF7D0', color: '#15803D' }
+  if (r === 'high') return { bg: 'var(--danger-bg)', border: 'var(--danger-border)', color: 'var(--danger-text)' }
+  if (r === 'medium') return { bg: 'var(--warn-bg)', border: 'var(--warn-border)', color: 'var(--warn-text)' }
+  if (r === 'low') return { bg: 'var(--ok-bg)', border: 'var(--ok-border)', color: 'var(--ok-text)' }
   return { bg: 'var(--surface2)', border: 'var(--border)', color: 'var(--text3)' }
 }
 
@@ -786,7 +786,7 @@ function RiskAssessmentPicker({ form, setForm, org, riskAssessments, onCreated, 
     return (
       <>
       {standaloneHeader}
-      <div style={{ ...card, borderColor: '#FCA5A5' }}>
+      <div style={{ ...card, borderColor: 'var(--danger-border)' }}>
         <SectionHeader icon="🛡️" title="New risk assessment" subtitle="Created as a draft and attached to this session. You can complete the full detail in Risk Assessments." color="#DC2626" />
         <div><label style={label}>Name *</label><input value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} placeholder="e.g. Horse Riding — Risk Assessment" style={inp} /></div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -806,7 +806,7 @@ function RiskAssessmentPicker({ form, setForm, org, riskAssessments, onCreated, 
         </div>
         <div><label style={label}>Key hazards</label><textarea value={draft.summary} onChange={e => setDraft({ ...draft, summary: e.target.value })} placeholder="What could cause harm on this session?" style={{ ...inp, minHeight: 64, resize: 'vertical' }} /></div>
         <div><label style={label}>Control measures</label><textarea value={draft.control_measures} onChange={e => setDraft({ ...draft, control_measures: e.target.value })} placeholder="What's in place to reduce those risks?" style={{ ...inp, minHeight: 64, resize: 'vertical' }} /></div>
-        {err && <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: '9px 12px', fontSize: 12, fontWeight: 600, color: '#B91C1C', marginBottom: 12 }}>{err}</div>}
+        {err && <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 10, padding: '9px 12px', fontSize: 12, fontWeight: 600, color: 'var(--danger-text)', marginBottom: 12 }}>{err}</div>}
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => setShowBuilder(false)} style={{ flex: 1, padding: '11px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
           <button onClick={handleSave} disabled={!draft.name.trim() || saving}
@@ -828,7 +828,7 @@ function RiskAssessmentPicker({ form, setForm, org, riskAssessments, onCreated, 
         color="#DC2626" />
 
       {attached ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 12, border: '1.5px solid #BBF7D0', background: '#F0FDF4' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 12, border: '1.5px solid var(--ok-border)', background: 'var(--ok-bg)' }}>
           <span style={{ fontSize: 18 }}><Icon name="✅" /></span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>{attached.name}</div>
@@ -860,7 +860,7 @@ function RiskAssessmentPicker({ form, setForm, org, riskAssessments, onCreated, 
                       <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ra.name}</div>
                       <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>
                         {[ra.activity_type, ra.location].filter(Boolean).join(' · ') || 'No detail set'}
-                        {overdue && <span style={{ color: '#B45309', fontWeight: 700 }}> · review overdue</span>}
+                        {overdue && <span style={{ color: 'var(--warn-text)', fontWeight: 700 }}> · review overdue</span>}
                       </div>
                     </div>
                     {ra.risk_rating && (
@@ -875,7 +875,7 @@ function RiskAssessmentPicker({ form, setForm, org, riskAssessments, onCreated, 
             </div>
           )}
           <button onClick={openBuilder}
-            style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px dashed #DC262660', background: '#DC26260A', fontSize: 12.5, fontWeight: 700, color: '#DC2626', cursor: 'pointer' }}>
+            style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px dashed #DC262660', background: '#DC26260A', fontSize: 12.5, fontWeight: 700, color: 'var(--danger-text)', cursor: 'pointer' }}>
             + Create new risk assessment
           </button>
         </>
@@ -921,10 +921,10 @@ function StepRisk({ form, setForm, org, riskAssessments, onCreated }) {
 
 function ReadinessRow({ ok, label: text, severity = 'warn' }) {
   const tone = ok
-    ? { icon: '✓', color: '#15803D', bg: '#F0FDF4', border: '#BBF7D0' }
+    ? { icon: '✓', color: 'var(--ok-text)', bg: 'var(--ok-bg)', border: 'var(--ok-border)' }
     : severity === 'blocker'
-      ? { icon: '!', color: '#B91C1C', bg: '#FEF2F2', border: '#FECACA' }
-      : { icon: '!', color: '#B45309', bg: '#FFFBEB', border: '#FDE68A' }
+      ? { icon: '!', color: 'var(--danger-text)', bg: 'var(--danger-bg)', border: 'var(--danger-border)' }
+      : { icon: '!', color: 'var(--warn-text)', bg: 'var(--warn-bg)', border: 'var(--warn-border)' }
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderBottom: '1px solid var(--border)' }}>
       <span style={{ width: 20, height: 20, borderRadius: 6, flexShrink: 0, background: tone.bg, border: `1px solid ${tone.border}`, color: tone.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900 }}><Icon name={tone.icon} /></span>
@@ -1016,7 +1016,7 @@ function StepReview({ form, staff, expectedCount, primary, riskAssessments = [],
               {(form.session_type || 'session').replace(/_/g, ' ')}
             </span>
             {outstanding.length === 0 ? (
-              <span style={{ fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.6, color: '#15803D', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 99, padding: '3px 10px' }}>Ready to publish</span>
+              <span style={{ fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.6, color: 'var(--ok-text)', background: 'var(--ok-bg)', border: '1px solid var(--ok-border)', borderRadius: 99, padding: '3px 10px' }}>Ready to publish</span>
             ) : (
               <span style={{ fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.6, color: blockers ? '#B91C1C' : '#B45309', background: blockers ? '#FEF2F2' : '#FFFBEB', border: `1px solid ${blockers ? '#FECACA' : '#FDE68A'}`, borderRadius: 99, padding: '3px 10px' }}>
                 {outstanding.length} outstanding
@@ -1066,15 +1066,15 @@ function StepReview({ form, staff, expectedCount, primary, riskAssessments = [],
           <SectionHeader icon="📎" title="Attached" color="#7C3AED" />
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
             {attachedRa && (
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#B91C1C', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 99, padding: '5px 12px' }}><Icon name="🛡️" /> {attachedRa.name}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--danger-text)', background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 99, padding: '5px 12px' }}><Icon name="🛡️" /> {attachedRa.name}</span>
             )}
             {form.form_ids.length > 0 && (
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#7C3AED', background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.25)', borderRadius: 99, padding: '5px 12px' }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--violet-text)', background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.25)', borderRadius: 99, padding: '5px 12px' }}>
                 📎 {form.form_ids.length} form{form.form_ids.length === 1 ? '' : 's'}
               </span>
             )}
             {form.outcome_areas.map(a => (
-              <span key={a} style={{ fontSize: 12, fontWeight: 700, color: '#059669', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 99, padding: '5px 12px' }}><Icon name="🎯" /> {a}</span>
+              <span key={a} style={{ fontSize: 12, fontWeight: 700, color: 'var(--ok-text)', background: 'var(--ok-bg)', border: '1px solid var(--ok-border)', borderRadius: 99, padding: '5px 12px' }}><Icon name="🎯" /> {a}</span>
             ))}
           </div>
         </div>
@@ -1544,7 +1544,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
       {stepKey === 'review' && <><div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>{STEP_DEFS.filter(s => !['review', 'type'].includes(s.key)).map(s => <button key={s.key} onClick={() => setStep(STEP_DEFS.findIndex(item => item.key === s.key) + 1)} style={{ ...flowButton, fontSize: 12 }}>Change {s.label.toLowerCase()}</button>)}</div><StepReview form={form} staff={staff} expectedCount={expectedCount} primary={primary} riskAssessments={riskAssessments} typeColor={typeColor} /></>}
     </div>{showSidebar && <LiveSummary form={form} leadName={staff.find(s => s.id === form.lead_staff_id)?.full_name} expectedCount={expectedCount} />}</div></div>
     <footer style={{ padding: compact ? '12px 16px calc(12px + env(safe-area-inset-bottom, 0px))' : '16px 28px', borderTop: '1px solid var(--border)', background: 'var(--surface)', flexShrink: 0 }}>
-      {error && <div role="alert" style={{ color: '#B91C1C', fontSize: 13, marginBottom: 10 }}>{error}</div>}
+      {error && <div role="alert" style={{ color: 'var(--danger-text)', fontSize: 13, marginBottom: 10 }}>{error}</div>}
       {missingDetails.length > 0 && <div role="status" style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10 }}>Still needed: {missingDetails.join(', ')}</div>}
       {isLastStep && (!isEditing || editingDraft) && <label style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Save as<select aria-label="Save as" disabled={saving} value={saveAs} onChange={e => setSaveAs(e.target.value)} style={{ ...inp, flex: 1 }}><option value="ready">Published — ready to run</option><option value="scheduled">Scheduled</option><option value="draft">Draft — finish later</option></select></label>}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}><button onClick={() => step === 1 ? closeWizard() : setStep(s => s - 1)} disabled={saving} style={flowButton}>{step === 1 ? 'Cancel' : '← Back'}</button>{!compact && !isEditing && lastSaved && <span style={{ color: 'var(--text3)', fontSize: 12 }}>Draft saved on this device</span>}<button onClick={() => isLastStep ? publish(isEditing && !editingDraft ? null : saveAs) : canContinue() && setStep(s => s + 1)} disabled={saving || !canContinue()} style={{ ...flowButton, background: !canContinue() || saving ? '#94A3B8' : primary, borderColor: 'transparent', color: '#fff', flex: compact ? 1 : undefined }}>{saving ? 'Saving…' : isLastStep ? isEditing && !editingDraft ? 'Save changes' : saveAs === 'draft' ? 'Save draft' : saveAs === 'scheduled' ? `Schedule ${terms.session}` : `Publish ${terms.session}` : 'Continue →'}</button></div>

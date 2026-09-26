@@ -113,10 +113,10 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
   }, [cases])
 
   const ATTENTION = [
-    { key: 'danger', label: 'Immediate danger, not acknowledged', colour: '#B91C1C' },
-    { key: 'overdue', label: 'Review date passed', colour: '#B45309' },
-    { key: 'unassigned', label: 'Nobody assigned', colour: '#B45309' },
-    { key: 'dsl', label: 'Needs the safeguarding lead', colour: '#4338CA' },
+    { key: 'danger', label: 'Immediate danger, not acknowledged', colour: 'var(--danger-text)' },
+    { key: 'overdue', label: 'Review date passed', colour: 'var(--warn-text)' },
+    { key: 'unassigned', label: 'Nobody assigned', colour: 'var(--warn-text)' },
+    { key: 'dsl', label: 'Needs the safeguarding lead', colour: 'var(--info-text)' },
   ].filter(a => slipping[a.key].length > 0)
 
   const filteredCases = useMemo(() => {
@@ -241,7 +241,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
       {/* KPI CARDS */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, marginBottom: 18 }}>
         {[
-          { label: 'Open Cases', value: kpis.open, icon: '📂', color: '#7C5CFC', trend: kpis.trend },
+          { label: 'Open Cases', value: kpis.open, icon: '📂', color: 'var(--violet-text)', trend: kpis.trend },
           { label: 'In Progress', value: kpis.inProgress, icon: '⏳', color: '#F59E0B' },
           { label: 'Monitoring', value: kpis.monitoring, icon: '👁️', color: '#3B82F6' },
           { label: 'Resolved This Month', value: kpis.resolvedThisMonth, icon: '✅', color: '#22C55E' },
@@ -384,7 +384,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                           {/* Where a case came from is part of reading it: one
                               raised from a concern has a reporter's account
                               behind it, one raised directly does not. */}
-                          {fromConcern && <span style={{ color: '#4338CA', fontWeight: 700 }}> · from a concern</span>}
+                          {fromConcern && <span style={{ color: 'var(--info-text)', fontWeight: 700 }}> · from a concern</span>}
                         </div>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
@@ -423,10 +423,10 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
             <button onClick={() => setSelectedCase(null)} style={{ ...btnGhost, marginBottom: 12, fontSize: 12, padding: '6px 12px' }}><Icon name="←" /> Back to cases</button>
 
             {selectedCase.source_concern_id && (
-              <div style={{ background: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: 12, padding: '10px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-                <div style={{ fontSize: 12.5, color: '#5B21B6', fontWeight: 600 }}><Icon name="🛡️" /> Escalated from a safeguarding concern</div>
+              <div style={{ background: 'var(--violet-bg)', border: '1px solid var(--violet-border)', borderRadius: 12, padding: '10px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                <div style={{ fontSize: 12.5, color: 'var(--violet-text)', fontWeight: 600 }}><Icon name="🛡️" /> Escalated from a safeguarding concern</div>
                 <button onClick={() => onNavigate && onNavigate('safeguarding', { openConcernId: selectedCase.source_concern_id })}
-                  style={{ background: 'none', border: 'none', color: '#6D28D9', fontWeight: 800, fontSize: 12, cursor: 'pointer' }}>
+                  style={{ background: 'none', border: 'none', color: 'var(--violet-text)', fontWeight: 800, fontSize: 12, cursor: 'pointer' }}>
                   View original concern →
                 </button>
               </div>
@@ -434,9 +434,9 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
 
             {/* Risk banner */}
             {(selectedCase.risk_level === 'high' || selectedCase.priority === 'high') && (
-              <div style={{ background: '#FEF2F2', border: '1.5px solid #FCA5A5', borderRadius: 12, padding: '10px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ background: 'var(--danger-bg)', border: '1.5px solid var(--danger-border)', borderRadius: 12, padding: '10px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontSize: 16 }}><Icon name="⚠️" /></span>
-                <div style={{ flex: 1, fontSize: 12.5, color: '#B91C1C', fontWeight: 700 }}>High risk — requires review within 24 hours.</div>
+                <div style={{ flex: 1, fontSize: 12.5, color: 'var(--danger-text)', fontWeight: 700 }}>High risk — requires review within 24 hours.</div>
               </div>
             )}
             {(selectedCase.risk_level === 'critical' || selectedCase.priority === 'critical') && (
@@ -464,9 +464,9 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                 </div>
                 {linkedChild && (linkedChild.has_epipen || linkedChild.has_asthma || linkedChild.has_diabetes || linkedChild.takes_medication) && (
                   <div style={{ marginTop: 6, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {linkedChild.has_epipen && <span style={{ fontSize: 10.5, fontWeight: 800, background: '#FEF2F2', color: '#B91C1C', borderRadius: 99, padding: '2px 8px' }}><Icon name="⚠" /> EpiPen</span>}
-                    {linkedChild.has_asthma && <span style={{ fontSize: 10.5, fontWeight: 800, background: '#FEF9C3', color: '#92400E', borderRadius: 99, padding: '2px 8px' }}>Asthma</span>}
-                    {linkedChild.has_diabetes && <span style={{ fontSize: 10.5, fontWeight: 800, background: '#FEF9C3', color: '#92400E', borderRadius: 99, padding: '2px 8px' }}>Diabetes</span>}
+                    {linkedChild.has_epipen && <span style={{ fontSize: 10.5, fontWeight: 800, background: 'var(--danger-bg)', color: 'var(--danger-text)', borderRadius: 99, padding: '2px 8px' }}><Icon name="⚠" /> EpiPen</span>}
+                    {linkedChild.has_asthma && <span style={{ fontSize: 10.5, fontWeight: 800, background: 'var(--warn-bg)', color: 'var(--warn-text)', borderRadius: 99, padding: '2px 8px' }}>Asthma</span>}
+                    {linkedChild.has_diabetes && <span style={{ fontSize: 10.5, fontWeight: 800, background: 'var(--warn-bg)', color: 'var(--warn-text)', borderRadius: 99, padding: '2px 8px' }}>Diabetes</span>}
                     {linkedChild.takes_medication && <span style={{ fontSize: 10.5, fontWeight: 800, background: 'var(--surface-hover)', color: '#475569', borderRadius: 99, padding: '2px 8px' }}>Medication</span>}
                   </div>
                 )}
@@ -485,7 +485,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                 <select value={selectedCase.status} onChange={e => changeStatus(selectedCase, e.target.value)} style={{ ...inputStyle, width: 'auto', fontSize: 12, padding: '6px 10px' }}>
                   {STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
                 </select>
-                {selectedCase.requires_dsl && <span style={{ fontSize: 11, fontWeight: 800, background: '#EEF2FF', color: '#4338CA', borderRadius: 99, padding: '5px 10px' }}>Requires DSL</span>}
+                {selectedCase.requires_dsl && <span style={{ fontSize: 11, fontWeight: 800, background: 'var(--info-bg)', color: 'var(--info-text)', borderRadius: 99, padding: '5px 10px' }}>Requires DSL</span>}
                 {selectedCase.next_review_date && <span style={{ fontSize: 11, fontWeight: 700, background: 'var(--surface)', border: '1px solid rgba(15,23,42,0.08)', borderRadius: 99, padding: '5px 10px', color: '#475569' }}>📅 Review {new Date(selectedCase.next_review_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
               </div>
             </div>

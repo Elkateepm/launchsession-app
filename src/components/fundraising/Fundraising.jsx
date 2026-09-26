@@ -346,7 +346,7 @@ function CampaignDetail({ campaign, org, onBack, onUpdate, isAdmin }) {
             <div style={{ width: 34, height: 34, flexShrink: 0 }}>
               <Lottie animationData={successCheckAnimation} loop={false} autoplay />
             </div>
-            <span style={{ fontSize: 14, fontWeight: 600, color: '#16A34A' }}>Target reached.</span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--ok-text)' }}>Target reached.</span>
           </div>
         )}
 
@@ -380,7 +380,7 @@ function CampaignDetail({ campaign, org, onBack, onUpdate, isAdmin }) {
             <button onClick={saveEdit} style={{ padding: '9px 22px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>Save changes</button>
             <button onClick={() => setEditing(false)} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           </div>
-          {editError && <div style={{ marginTop: 10, fontSize: 12, color: '#B91C1C' }}>Couldn't save: {editError}</div>}
+          {editError && <div style={{ marginTop: 10, fontSize: 12, color: 'var(--danger-text)' }}>Couldn't save: {editError}</div>}
         </div>
       )}
 
@@ -402,7 +402,7 @@ function CampaignDetail({ campaign, org, onBack, onUpdate, isAdmin }) {
             Gift Aid eligible (+25% from HMRC)
           </label>
           {newDonation.gift_aid && newDonation.amount && (
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#16A34A', fontWeight: 600, marginBottom: 12 }}>
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: 'var(--ok-text)', fontWeight: 600, marginBottom: 12 }}>
               Gift Aid adds £{(parseFloat(newDonation.amount) * 0.25).toFixed(2)} — total value £{(parseFloat(newDonation.amount) * 1.25).toFixed(2)}
             </div>
           )}
@@ -410,7 +410,7 @@ function CampaignDetail({ campaign, org, onBack, onUpdate, isAdmin }) {
             <button onClick={addDonation} disabled={saving || !newDonation.amount} style={{ padding: '9px 22px', borderRadius: 10, border: 'none', background: saving || !newDonation.amount ? '#9CA3AF' : primary, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{saving ? 'Saving...' : 'Record donation'}</button>
             <button onClick={() => setShowAdd(false)} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           </div>
-          {donationError && <div style={{ marginTop: 10, fontSize: 12, color: '#B91C1C' }}>Couldn't record donation: {donationError}</div>}
+          {donationError && <div style={{ marginTop: 10, fontSize: 12, color: 'var(--danger-text)' }}>Couldn't record donation: {donationError}</div>}
         </div>
       )}
 
@@ -429,14 +429,14 @@ function CampaignDetail({ campaign, org, onBack, onUpdate, isAdmin }) {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
                   <span style={{ fontWeight: 600, fontSize: 14 }}>{d.donor_name || 'Anonymous'}</span>
-                  {d.gift_aid && <span style={{ background: '#E7F6EC', color: '#16803C', borderRadius: 6, padding: '2px 7px', fontSize: 10, fontWeight: 600 }}>Gift Aid</span>}
+                  {d.gift_aid && <span style={{ background: 'var(--ok-bg)', color: 'var(--ok-text)', borderRadius: 6, padding: '2px 7px', fontSize: 10, fontWeight: 600 }}>Gift Aid</span>}
                 </div>
                 {d.message && <div style={{ fontSize: 12, color: 'var(--text3)' }}>{d.message}</div>}
                 <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 2 }}>{format(new Date(d.created_at), 'd MMM yyyy')}</div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
                 <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 16, color: '#1C2333' }}>£{d.amount.toFixed(2)}</div>
-                {d.gift_aid && <div style={{ fontSize: 10, color: '#16803C' }}>+£{(d.amount * 0.25).toFixed(2)} GA</div>}
+                {d.gift_aid && <div style={{ fontSize: 10, color: 'var(--ok-text)' }}>+£{(d.amount * 0.25).toFixed(2)} GA</div>}
               </div>
             </div>
           ))}
@@ -720,7 +720,7 @@ export default function Fundraising({ org, isAdmin }) {
                 <button onClick={createCampaign} disabled={creating || !newCampaign.name} style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: creating || !newCampaign.name ? '#9CA3AF' : LS.purple, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{creating ? 'Creating...' : 'Launch campaign'}</button>
                 <button onClick={() => setShowCreate(false)} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
               </div>
-              {createError && <div style={{ marginTop: 10, fontSize: 12, color: '#B91C1C' }}>Couldn't create the campaign: {createError}</div>}
+              {createError && <div style={{ marginTop: 10, fontSize: 12, color: 'var(--danger-text)' }}>Couldn't create the campaign: {createError}</div>}
             </div>
           )}
 

@@ -225,7 +225,7 @@ function NoModuleAccess({ label, icon, onNavigate }) {
 // it -- this banner exists so the refusal is not a surprise.
 function ViewOnlyBanner() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#EFF6FF', border: '1px solid #BFDBFE', color: '#1E40AF', borderRadius: 12, padding: '9px 14px', fontSize: 12.5, fontWeight: 700, margin: '0 0 14px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--info-bg)', border: '1px solid var(--info-border)', color: 'var(--info-text)', borderRadius: 12, padding: '9px 14px', fontSize: 12.5, fontWeight: 700, margin: '0 0 14px' }}>
       👁 View only — you can read this area but not make changes.
     </div>
   )

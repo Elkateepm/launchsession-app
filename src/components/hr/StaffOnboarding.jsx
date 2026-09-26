@@ -91,7 +91,7 @@ export default function StaffOnboarding({ org, staff, primary, canEdit, onJumpTo
           {staff.employment_type ? ` (${staff.employment_type})` : ''}. A volunteer gets a
           shorter list than an employee — no contract, no Right to Work check.
         </div>
-        {error && <div style={{ fontSize: 13, color: '#B42318', marginBottom: 12 }}>{error}</div>}
+        {error && <div style={{ fontSize: 13, color: 'var(--danger-text)', marginBottom: 12 }}>{error}</div>}
         {canEdit && (
           <button onClick={seed} disabled={busy} style={{
             minHeight: 46, padding: '0 20px', borderRadius: 12, border: 'none',
@@ -129,7 +129,7 @@ export default function StaffOnboarding({ org, staff, primary, canEdit, onJumpTo
       </div>
 
       {error && (
-        <div style={{ ...card, background: '#FEF2F2', border: '1px solid #FECACA', color: '#B42318', fontSize: 13 }}>
+        <div style={{ ...card, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13 }}>
           {error}
         </div>
       )}

@@ -143,10 +143,10 @@ export default function Mentoring({ org, session }) {
         subtitle="Build long-term relationships, track outcomes and support every young person"
         primary={primary}
         stats={[
-          { label: 'Active Matches', value: activeMatches.length, icon: '💚', color: '#16A34A' },
+          { label: 'Active Matches', value: activeMatches.length, icon: '💚', color: 'var(--ok-text)' },
           { label: 'Awaiting Match', value: awaiting.length, icon: '⏰', color: '#F59E0B' },
           { label: 'Reviews Due', value: reviewsDue.length, icon: '⭐', color: '#E91E63' },
-          { label: 'New This Month', value: thisMonth.length, icon: '✨', color: '#7C3AED' },
+          { label: 'New This Month', value: thisMonth.length, icon: '✨', color: 'var(--violet-text)' },
         ]}
       />
       <div style={{ flex: 1, overflowY: 'auto' }}>
@@ -740,16 +740,16 @@ const styles = {
     flexShrink: 0,
   },
   pendingBadge: {
-    background: '#FEF3C7',
-    color: '#B45309',
+    background: 'var(--warn-bg)',
+    color: 'var(--warn-text)',
     borderRadius: 999,
     padding: '7px 10px',
     fontSize: 11,
     fontWeight: 950,
   },
   activeBadge: {
-    background: '#DCFCE7',
-    color: '#15803D',
+    background: 'var(--ok-bg)',
+    color: 'var(--ok-text)',
     borderRadius: 999,
     padding: '7px 10px',
     fontSize: 11,

@@ -48,8 +48,8 @@ export default function RAEmergencyPlan({ assessment, org, venues }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {venue && fillableFromVenue.length > 0 && (
-        <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 12, padding: 12, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 12, color: '#166534', fontWeight: 700, flex: 1 }}><Icon name="📍" /> {venue.name} has {fillableFromVenue.length} emergency detail(s) on file</span>
+        <div style={{ background: 'var(--ok-bg)', border: '1px solid var(--ok-border)', borderRadius: 12, padding: 12, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 12, color: 'var(--ok-text)', fontWeight: 700, flex: 1 }}><Icon name="📍" /> {venue.name} has {fillableFromVenue.length} emergency detail(s) on file</span>
           <button onClick={fillFromVenue} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: '#16A34A', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Fill from venue</button>
         </div>
       )}

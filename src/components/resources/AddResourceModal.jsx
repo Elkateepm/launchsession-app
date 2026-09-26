@@ -68,7 +68,7 @@ export default function AddResourceModal({ org, staff, venues, existingResource,
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--text3)' }}>×</button>
         </div>
 
-        {error && <div style={{ background: '#FEF2F2', color: '#B91C1C', border: '1px solid #FECACA', borderRadius: 8, padding: '10px 12px', fontSize: 12.5, marginBottom: 14, fontWeight: 600 }}>{error}</div>}
+        {error && <div style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)', border: '1px solid var(--danger-border)', borderRadius: 8, padding: '10px 12px', fontSize: 12.5, marginBottom: 14, fontWeight: 600 }}>{error}</div>}
 
         <div style={field}>
           <label style={label}>Resource name *</label>
@@ -100,7 +100,7 @@ export default function AddResourceModal({ org, staff, venues, existingResource,
                   {activeVenues.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
                 </select>
                 <button type="button" onClick={() => { setUseCustomLocation(true); setForm(f => ({ ...f, venue_id: null })) }}
-                  style={{ background: 'none', border: 'none', padding: '5px 0 0', fontSize: 11, fontWeight: 700, color: '#7C3AED', cursor: 'pointer' }}>
+                  style={{ background: 'none', border: 'none', padding: '5px 0 0', fontSize: 11, fontWeight: 700, color: 'var(--violet-text)', cursor: 'pointer' }}>
                   Use a one-off location instead
                 </button>
               </>
@@ -109,7 +109,7 @@ export default function AddResourceModal({ org, staff, venues, existingResource,
                 <input style={inp} value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} placeholder="e.g. Main Depot" />
                 {activeVenues.length > 0 && (
                   <button type="button" onClick={() => setUseCustomLocation(false)}
-                    style={{ background: 'none', border: 'none', padding: '5px 0 0', fontSize: 11, fontWeight: 700, color: '#7C3AED', cursor: 'pointer' }}>
+                    style={{ background: 'none', border: 'none', padding: '5px 0 0', fontSize: 11, fontWeight: 700, color: 'var(--violet-text)', cursor: 'pointer' }}>
                     Choose a saved venue instead
                   </button>
                 )}

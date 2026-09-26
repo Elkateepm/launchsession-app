@@ -60,11 +60,11 @@ export const EMPLOYMENT_TYPES = [
 ]
 
 export const EMPLOYMENT_STATUSES = [
-  { key: 'active', label: 'Active', tone: '#04713C', bg: '#E7F8ED' },
-  { key: 'suspended', label: 'Suspended', tone: '#93500A', bg: '#FEF6E7' },
-  { key: 'on_leave', label: 'On leave', tone: '#3730A3', bg: '#EEF2FF' },
-  { key: 'leaving', label: 'Leaving', tone: '#93500A', bg: '#FEF6E7' },
-  { key: 'left', label: 'Left', tone: '#5A5772', bg: '#F3F2F7' },
+  { key: 'active', label: 'Active', tone: 'var(--ok-text)', bg: 'var(--ok-bg)' },
+  { key: 'suspended', label: 'Suspended', tone: 'var(--warn-text)', bg: 'var(--warn-bg)' },
+  { key: 'on_leave', label: 'On leave', tone: 'var(--info-text)', bg: 'var(--info-bg)' },
+  { key: 'leaving', label: 'Leaving', tone: 'var(--warn-text)', bg: 'var(--warn-bg)' },
+  { key: 'left', label: 'Left', tone: '#5A5772', bg: 'var(--surface2)' },
 ]
 
 export const CONTRACT_TYPES = ['Permanent', 'Fixed term', 'Sessional', 'Volunteer', 'Casual']

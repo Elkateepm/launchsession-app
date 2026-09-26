@@ -160,11 +160,11 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
 
         {/* SAFEGUARDING BANNER */}
         <motion.button onClick={onRaiseConcern} whileTap={{ scale: 0.98 }}
-          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: '#FEF2F2', border: '1.5px solid #FECACA', borderRadius: 16, padding: '13px 14px', marginBottom: 14, cursor: 'pointer', textAlign: 'left' }}>
-          <div style={{ width: 38, height: 38, borderRadius: 12, background: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}><Icon name="🛡️" /></div>
+          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: 'var(--danger-bg)', border: '1.5px solid var(--danger-border)', borderRadius: 16, padding: '13px 14px', marginBottom: 14, cursor: 'pointer', textAlign: 'left' }}>
+          <div style={{ width: 38, height: 38, borderRadius: 12, background: 'var(--danger-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}><Icon name="🛡️" /></div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: '#B91C1C' }}>Safeguarding</div>
-            <div style={{ fontSize: 11.5, color: '#7F1D1D' }}>Report any concerns to the DSL immediately</div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--danger-text)' }}>Safeguarding</div>
+            <div style={{ fontSize: 11.5, color: 'var(--danger-text)' }}>Report any concerns to the DSL immediately</div>
           </div>
           <div style={{ background: '#DC2626', color: '#fff', borderRadius: 10, padding: '7px 12px', fontSize: 11.5, fontWeight: 800 }}>Raise</div>
         </motion.button>
@@ -173,9 +173,9 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
         <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Today's Overview</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 14 }}>
           {[
-            { icon: '📅', value: todaySessions.length, label: todaySessions.length === 1 ? 'Session today' : 'Sessions today', bg: '#EFF6FF' },
-            { icon: '🙋', value: todayExpected, label: 'Young people expected', bg: '#F5F3FF' },
-            { icon: '⏱️', value: todayHours.toFixed(1), label: 'Hours scheduled', bg: '#FFFBEB' },
+            { icon: '📅', value: todaySessions.length, label: todaySessions.length === 1 ? 'Session today' : 'Sessions today', bg: 'var(--info-bg)' },
+            { icon: '🙋', value: todayExpected, label: 'Young people expected', bg: 'var(--violet-bg)' },
+            { icon: '⏱️', value: todayHours.toFixed(1), label: 'Hours scheduled', bg: 'var(--warn-bg)' },
           ].map(k => (
             <div key={k.label} style={{ ...glassCard({ padding: '13px 8px', background: k.bg }) }}>
               <div style={{ fontSize: 18, marginBottom: 4 }}><Icon name={k.icon} /></div>

@@ -25,11 +25,11 @@ const lbl = {
 }
 
 export const COMPLIANCE_TONES = {
-  complete:     { label: 'Complete',     tone: '#04713C', bg: '#E7F8ED' },
-  due_soon:     { label: 'Due soon',     tone: '#93500A', bg: '#FEF6E7' },
-  overdue:      { label: 'Overdue',      tone: '#B42318', bg: '#FEF2F2' },
-  missing:      { label: 'Missing',      tone: '#5A5772', bg: '#F3F2F7' },
-  not_required: { label: 'Not required', tone: '#5A5772', bg: '#F3F2F7' },
+  complete:     { label: 'Complete',     tone: 'var(--ok-text)', bg: 'var(--ok-bg)' },
+  due_soon:     { label: 'Due soon',     tone: 'var(--warn-text)', bg: 'var(--warn-bg)' },
+  overdue:      { label: 'Overdue',      tone: 'var(--danger-text)', bg: 'var(--danger-bg)' },
+  missing:      { label: 'Missing',      tone: '#5A5772', bg: 'var(--surface2)' },
+  not_required: { label: 'Not required', tone: '#5A5772', bg: 'var(--surface2)' },
 }
 
 function Tone({ status }) {
@@ -79,11 +79,11 @@ export function ComplianceTab({ org, staff, primary, canEdit, isAdmin, onSummary
 
   if (error) {
     return (
-      <div style={{ ...card, background: '#FEF2F2', border: '1px solid #FECACA' }}>
-        <div style={{ fontSize: 13.5, color: '#B42318', marginBottom: 10 }}>{error}</div>
+      <div style={{ ...card, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)' }}>
+        <div style={{ fontSize: 13.5, color: 'var(--danger-text)', marginBottom: 10 }}>{error}</div>
         <button onClick={load} style={{
-          minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid #FECACA',
-          background: 'var(--surface)', color: '#B42318', fontSize: 14, fontWeight: 700,
+          minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid var(--danger-border)',
+          background: 'var(--surface)', color: 'var(--danger-text)', fontSize: 14, fontWeight: 700,
           cursor: 'pointer', fontFamily: 'inherit',
         }}>Try again</button>
       </div>
@@ -232,8 +232,8 @@ function RecordForm({ row, staffId, primary, onCancel, onSaved }) {
         <input value={notes} onChange={e => setNotes(e.target.value)} style={field} />
       </div>
       {err && (
-        <div style={{ padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
-          border: '1px solid #FECACA', color: '#B42318', fontSize: 13, marginBottom: 10 }}>{err}</div>
+        <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--danger-bg)',
+          border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13, marginBottom: 10 }}>{err}</div>
       )}
       <div style={{ display: 'flex', gap: 8 }}>
         <button onClick={save} disabled={saving} style={{
@@ -281,11 +281,11 @@ export function TrainingTab({ org, staff, primary, canEdit }) {
 
   if (error) {
     return (
-      <div style={{ ...card, background: '#FEF2F2', border: '1px solid #FECACA' }}>
-        <div style={{ fontSize: 13.5, color: '#B42318', marginBottom: 10 }}>{error}</div>
+      <div style={{ ...card, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)' }}>
+        <div style={{ fontSize: 13.5, color: 'var(--danger-text)', marginBottom: 10 }}>{error}</div>
         <button onClick={load} style={{
-          minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid #FECACA',
-          background: 'var(--surface)', color: '#B42318', fontSize: 14, fontWeight: 700,
+          minHeight: 44, padding: '0 16px', borderRadius: 11, border: '1px solid var(--danger-border)',
+          background: 'var(--surface)', color: 'var(--danger-text)', fontSize: 14, fontWeight: 700,
           cursor: 'pointer', fontFamily: 'inherit',
         }}>Try again</button>
       </div>
@@ -418,8 +418,8 @@ function TrainingForm({ org, staff, reqs, primary, onCancel, onSaved }) {
         <span style={{ fontSize: 14, color: 'var(--text)' }}>Mandatory for this role</span>
       </label>
       {err && (
-        <div style={{ padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
-          border: '1px solid #FECACA', color: '#B42318', fontSize: 13, marginBottom: 10 }}>{err}</div>
+        <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--danger-bg)',
+          border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13, marginBottom: 10 }}>{err}</div>
       )}
       <div style={{ display: 'flex', gap: 8 }}>
         <button onClick={save} disabled={saving || !f.course.trim()} style={{

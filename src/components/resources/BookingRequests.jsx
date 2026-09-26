@@ -57,17 +57,17 @@ export default function BookingRequests({ org, bookings, resources, sessions, st
                   </div>
                   {requester && <div style={{ fontSize: 11.5, color: 'var(--text-faint)', marginTop: 2 }}>Requested by {requester.full_name}</div>}
                 </div>
-                <span style={{ fontSize: 10.5, fontWeight: 800, color: '#D97706', background: '#FFFBEB', borderRadius: 99, padding: '3px 10px', flexShrink: 0 }}>Pending</span>
+                <span style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--warn-text)', background: 'var(--warn-bg)', borderRadius: 99, padding: '3px 10px', flexShrink: 0 }}>Pending</span>
               </div>
               {b.purpose && <div style={{ fontSize: 12.5, color: 'var(--text2)', marginBottom: 8 }}>{b.purpose}</div>}
               {conflict && (
-                <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '8px 10px', fontSize: 11.5, color: '#B91C1C', fontWeight: 700, marginBottom: 10 }}>
+                <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 8, padding: '8px 10px', fontSize: 11.5, color: 'var(--danger-text)', fontWeight: 700, marginBottom: 10 }}>
                   ⚠ Conflicts with another confirmed booking
                 </div>
               )}
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <button onClick={() => handleApprove(b)} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: '#16A34A', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Approve</button>
-                <button onClick={() => handleDecline(b)} style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid #FECACA', background: '#FEF2F2', color: '#DC2626', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Decline</button>
+                <button onClick={() => handleDecline(b)} style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid var(--danger-border)', background: 'var(--danger-bg)', color: 'var(--danger-text)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Decline</button>
                 <button onClick={() => handleSuggestTime(b)} style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Suggest Different Time</button>
                 <button onClick={() => setMessagingId(messagingId === b.id ? null : b.id)} style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Message Requester</button>
               </div>

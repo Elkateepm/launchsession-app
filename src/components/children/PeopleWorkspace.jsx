@@ -31,7 +31,7 @@ export function PeopleHeader({ terms, primary, stats, loading, onAdd, onInvite, 
         {!mobile && <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.6, color: primary, marginBottom: 10 }}>PEOPLE & CONNECTIONS</div>}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: mobile ? 'space-between' : 'flex-start', gap: 16 }}>
           <h1 style={{ margin: 0, color: UI.text, fontSize: mobile ? 28 : 34, letterSpacing: -1, fontWeight: 800 }}>{terms.People}</h1>
-          <button onClick={onOnSite} style={{ ...button, minHeight: 44, padding: '7px 10px', color: '#166534', background: '#F0FDF4', border: '1px solid #DCFCE7', fontSize: 11, whiteSpace: 'nowrap', flexShrink: 0 }}>
+          <button onClick={onOnSite} style={{ ...button, minHeight: 44, padding: '7px 10px', color: 'var(--ok-text)', background: 'var(--ok-bg)', border: '1px solid #DCFCE7', fontSize: 11, whiteSpace: 'nowrap', flexShrink: 0 }}>
             <span aria-hidden="true">●</span> {loading ? '…' : stats.onSite} on site
           </button>
         </div>
@@ -55,7 +55,7 @@ export function PeopleTabs({ terms, stats, value, onChange }) {
       ].map(([key, label, count]) => (
         <button key={key} onClick={() => onChange(key)} aria-current={value === key ? 'page' : undefined}
           style={{ ...button, padding: '13px 0', borderRadius: 0, border: 'none', borderBottom: `3px solid ${value === key ? 'var(--org-primary, #7C5CFC)' : 'transparent'}`, background: 'transparent', color: value === key ? 'var(--org-primary, #7C5CFC)' : UI.muted, whiteSpace: 'nowrap', flexShrink: 0 }}>
-          {label}{count > 0 && <span style={{ background: '#FEF3C7', color: '#92400E', padding: '2px 7px', borderRadius: 6, fontSize: 11 }}>{count}</span>}
+          {label}{count > 0 && <span style={{ background: 'var(--warn-bg)', color: 'var(--warn-text)', padding: '2px 7px', borderRadius: 6, fontSize: 11 }}>{count}</span>}
         </button>
       ))}
     </nav>

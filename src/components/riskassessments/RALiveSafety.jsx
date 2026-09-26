@@ -11,9 +11,9 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 // emergency screen shows only what is useful in the next sixty seconds.
 
 const OUTCOMES = [
-  { key: 'safe_to_continue', label: 'Safe to continue', dot: '#12B76A', bg: '#E7F8ED', text: '#04713C' },
-  { key: 'activity_modified', label: 'Activity modified', dot: '#F79009', bg: '#FEF6E7', text: '#93500A' },
-  { key: 'activity_stopped', label: 'Activity stopped', dot: '#E5484D', bg: '#FEF2F2', text: '#B42318' },
+  { key: 'safe_to_continue', label: 'Safe to continue', dot: '#12B76A', bg: 'var(--ok-bg)', text: 'var(--ok-text)' },
+  { key: 'activity_modified', label: 'Activity modified', dot: '#F79009', bg: 'var(--warn-bg)', text: 'var(--warn-text)' },
+  { key: 'activity_stopped', label: 'Activity stopped', dot: '#E5484D', bg: 'var(--danger-bg)', text: 'var(--danger-text)' },
 ]
 
 const OUTCOME_BY_KEY = Object.fromEntries(OUTCOMES.map(o => [o.key, o]))
@@ -147,8 +147,8 @@ export function DynamicUpdateDrawer({ open, onClose, assessment, org, authSessio
 
               {error && (
                 <div style={{
-                  marginTop: 14, padding: '11px 13px', borderRadius: 10, background: '#FEF2F2',
-                  border: '1px solid #FECACA', color: '#B42318', fontSize: 13,
+                  marginTop: 14, padding: '11px 13px', borderRadius: 10, background: 'var(--danger-bg)',
+                  border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13,
                 }}>{error}</div>
               )}
             </div>

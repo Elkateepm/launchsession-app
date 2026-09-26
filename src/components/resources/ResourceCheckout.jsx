@@ -101,7 +101,7 @@ export default function ResourceCheckout({ org, resources, checkouts, sessions, 
                       <div style={{ fontSize: 11.5, color: 'var(--text3)' }}>
                         To {borrower?.full_name || 'Unknown'} · out since {fmtDate(c.checked_out_at)}
                         {c.expected_return_at && ` · due ${fmtDate(c.expected_return_at)} ${fmtTime(c.expected_return_at)}`}
-                        {isOverdue && <span style={{ color: '#DC2626', fontWeight: 700 }}> · OVERDUE</span>}
+                        {isOverdue && <span style={{ color: 'var(--danger-text)', fontWeight: 700 }}> · OVERDUE</span>}
                       </div>
                     </div>
                     <button onClick={() => setReturning(returning === c.id ? null : c.id)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Return</button>
@@ -117,8 +117,8 @@ export default function ResourceCheckout({ org, resources, checkouts, sessions, 
                       <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginBottom: 8 }}>Photo evidence upload isn't available in this version — use notes to describe any damage.</div>
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button onClick={() => handleReturn(c, false, false)} style={{ padding: '7px 12px', borderRadius: 8, border: 'none', background: '#16A34A', color: '#fff', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Mark Returned</button>
-                        <button onClick={() => handleReturn(c, true, false)} style={{ padding: '7px 12px', borderRadius: 8, border: '1px solid #FDE68A', background: '#FFFBEB', color: '#92400E', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Mark Damaged</button>
-                        <button onClick={() => handleReturn(c, false, true)} style={{ padding: '7px 12px', borderRadius: 8, border: '1px solid #FECACA', background: '#FEF2F2', color: '#DC2626', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Mark Missing</button>
+                        <button onClick={() => handleReturn(c, true, false)} style={{ padding: '7px 12px', borderRadius: 8, border: '1px solid var(--warn-border)', background: 'var(--warn-bg)', color: 'var(--warn-text)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Mark Damaged</button>
+                        <button onClick={() => handleReturn(c, false, true)} style={{ padding: '7px 12px', borderRadius: 8, border: '1px solid var(--danger-border)', background: 'var(--danger-bg)', color: 'var(--danger-text)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Mark Missing</button>
                       </div>
                     </div>
                   )}

@@ -65,7 +65,7 @@ function ChildCard({ child, index, total, primary, open, onToggle, onChange, onR
           }}>{index + 1}</span>
           <span style={{ flex: 1, minWidth: 0 }}>
             <span style={{ display: 'block', fontSize: 14.5, fontWeight: 800, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
-            {incomplete && <span style={{ display: 'block', fontSize: 11.5, color: '#B45309', marginTop: 1 }}>Needs a first name</span>}
+            {incomplete && <span style={{ display: 'block', fontSize: 11.5, color: 'var(--warn-text)', marginTop: 1 }}>Needs a first name</span>}
           </span>
           <span style={{ color: 'var(--text-faint)', fontSize: 13 }}>{open ? '▲' : '▼'}</span>
         </button>
@@ -193,7 +193,7 @@ export default function PublicChildRegistration() {
       ? `${names[0]}'s details have`
       : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}'s details have`
     return (
-      <div style={{ minHeight: '100dvh', background: '#F6F8FC', fontFamily: 'system-ui, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div style={{ minHeight: '100dvh', background: 'var(--surface2)', fontFamily: 'system-ui, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
         <div style={{ background: 'var(--surface)', borderRadius: 20, padding: 40, maxWidth: 460, textAlign: 'center', boxShadow: '0 20px 60px rgba(15,23,42,0.08)' }}>
           <div style={{ fontSize: 46, marginBottom: 14 }}><Icon name="✅" /></div>
           <div style={{ fontSize: 19, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>
@@ -208,7 +208,7 @@ export default function PublicChildRegistration() {
   }
 
   return (
-    <div style={{ minHeight: '100dvh', background: '#F6F8FC', fontFamily: 'system-ui, sans-serif' }}>
+    <div style={{ minHeight: '100dvh', background: 'var(--surface2)', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ background: `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`, padding: '28px 20px', color: '#fff', textAlign: 'center' }}>
         {org.logo_url && <img src={org.logo_url} alt="" style={{ width: 52, height: 52, borderRadius: 14, objectFit: 'contain', background: 'var(--logo-backdrop)', padding: 6, boxSizing: 'border-box', marginBottom: 10 }} />}
         <div style={{ fontSize: 20, fontWeight: 900 }}>{org.name}</div>
@@ -318,7 +318,7 @@ export default function PublicChildRegistration() {
               </div>
             ))}
 
-            {error && <div style={{ marginTop: 14, color: '#DC2626', fontSize: 12.5, fontWeight: 600 }}>{error}</div>}
+            {error && <div style={{ marginTop: 14, color: 'var(--danger-text)', fontSize: 12.5, fontWeight: 600 }}>{error}</div>}
           </div>
         )}
 
@@ -338,7 +338,7 @@ export default function PublicChildRegistration() {
         </div>
 
         {step === 2 && children.length > namedChildren.length && (
-          <div style={{ textAlign: 'center', fontSize: 12, color: '#B45309', marginTop: 10 }}>
+          <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--warn-text)', marginTop: 10 }}>
             Every young person needs at least a first name before you can continue.
           </div>
         )}

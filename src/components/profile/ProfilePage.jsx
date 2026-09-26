@@ -56,8 +56,8 @@ function ChangePasswordModal({ onClose }) {
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 16, width: '100%', maxWidth: 400, padding: 24, boxShadow: '0 24px 60px rgba(0,0,0,0.2)' }}>
         <div style={{ fontSize: 16, fontWeight: 800, color: '#111', marginBottom: 16 }}>Change Password</div>
-        {error && <div style={{ background: '#FEF2F2', borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontSize: 13, color: '#DC2626', fontWeight: 600 }}>{error}</div>}
-        {success && <div style={{ background: '#F0FDF4', borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontSize: 13, color: '#15803D', fontWeight: 600 }}><Icon name="✓" /> Password updated!</div>}
+        {error && <div style={{ background: 'var(--danger-bg)', borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontSize: 13, color: 'var(--danger-text)', fontWeight: 600 }}>{error}</div>}
+        {success && <div style={{ background: 'var(--ok-bg)', borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontSize: 13, color: 'var(--ok-text)', fontWeight: 600 }}><Icon name="✓" /> Password updated!</div>}
         <input style={inp} type="password" placeholder="New password (min. 8 chars)" value={newPw} onChange={e => setNewPw(e.target.value)} />
         <input style={{ ...inp, marginBottom: 16 }} type="password" placeholder="Confirm new password" value={confirm} onChange={e => setConfirm(e.target.value)} />
         <div style={{ display: 'flex', gap: 8 }}>
@@ -153,7 +153,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
       <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: isMobile ? 0 : 20, width: '100%', maxWidth: isMobile ? '100%' : 860, height: isMobile ? '100%' : 'auto', maxHeight: isMobile ? '100%' : '90vh', overflow: 'hidden', display: 'flex', flexDirection: isMobile ? 'column' : 'row', boxShadow: '0 32px 80px rgba(0,0,0,0.25)' }}>
 
         {/* LEFT SIDEBAR */}
-        <div style={{ width: isMobile ? '100%' : 260, background: '#fafafa', borderRight: isMobile ? 'none' : '1px solid #f0f0f0', borderBottom: isMobile ? '1px solid #f0f0f0' : 'none', display: 'flex', flexDirection: 'column', flexShrink: 0, maxHeight: isMobile ? '40vh' : 'none', overflowY: isMobile ? 'auto' : 'visible' }}>
+        <div style={{ width: isMobile ? '100%' : 260, background: 'var(--surface2)', borderRight: isMobile ? 'none' : '1px solid #f0f0f0', borderBottom: isMobile ? '1px solid #f0f0f0' : 'none', display: 'flex', flexDirection: 'column', flexShrink: 0, maxHeight: isMobile ? '40vh' : 'none', overflowY: isMobile ? 'auto' : 'visible' }}>
 
           {/* Avatar */}
           <div style={{ padding: '28px 20px 20px', borderBottom: '1px solid #f0f0f0', textAlign: 'center' }}>
@@ -203,7 +203,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
 
           {/* Sign out */}
           <div style={{ padding: '12px 16px', borderTop: '1px solid #f0f0f0' }}>
-            <button onClick={() => { onSignOut && onSignOut() }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', color: '#DC2626' }}>
+            <button onClick={() => { onSignOut && onSignOut() }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', color: 'var(--danger-text)' }}>
               <span style={{ fontSize: 16 }}><Icon name="🚪" /></span>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>Sign Out</div>
@@ -240,7 +240,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
                 <div style={{ background: 'linear-gradient(135deg, #EEF2FF, #F5F3FF)', border: '1px solid #E0E7FF', borderRadius: 16, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
                   <div style={{ width: 44, height: 44, borderRadius: 12, background: '#4F6EF7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}><Icon name="✅" /></div>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#3730A3' }}>Your account is active</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--info-text)' }}>Your account is active</div>
                     <div style={{ fontSize: 12, color: '#6366F1' }}>LaunchSession · {role.badge} Account · {org?.name || ''}</div>
                   </div>
                 </div>
@@ -254,11 +254,11 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
                   <InfoRow icon="🔒" label="Password" value="Last changed recently" onAction={() => setShowPassword(true)} actionLabel="Update" />
                   <InfoRow icon="🛡️" label="Two-factor authentication" value="Not enabled" onAction={() => {}} actionLabel="Enable" />
                 </div>
-                <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 16, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{ background: 'var(--ok-bg)', border: '1px solid var(--ok-border)', borderRadius: 16, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
                   <span style={{ fontSize: 28 }}>🔐</span>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#15803D' }}>Your account is secure</div>
-                    <div style={{ fontSize: 12, color: '#16A34A' }}>We'll notify you if we see any suspicious activity.</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ok-text)' }}>Your account is secure</div>
+                    <div style={{ fontSize: 12, color: 'var(--ok-text)' }}>We'll notify you if we see any suspicious activity.</div>
                   </div>
                 </div>
               </div>
@@ -267,11 +267,11 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
             {activeSection === 'dbs' && (
               <div>
                 {dbsWarning && (
-                  <div style={{ background: '#FFFBEB', border: '1.5px solid #FDE68A', borderRadius: 12, padding: '14px 16px', marginBottom: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <div style={{ background: 'var(--warn-bg)', border: '1.5px solid var(--warn-border)', borderRadius: 12, padding: '14px 16px', marginBottom: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
                     <span style={{ fontSize: 22 }}><Icon name="⚠️" /></span>
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: '#92400E' }}>DBS Expiring Soon</div>
-                      <div style={{ fontSize: 12, color: '#92400E' }}>Your DBS check expires in {daysUntilExpiry} days. Please renew it.</div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--warn-text)' }}>DBS Expiring Soon</div>
+                      <div style={{ fontSize: 12, color: 'var(--warn-text)' }}>Your DBS check expires in {daysUntilExpiry} days. Please renew it.</div>
                     </div>
                   </div>
                 )}

@@ -19,10 +19,10 @@ import Icon from '../../lib/icons'
 const CARD = { background: 'var(--surface)', border: '1px solid #ECE9F5', borderRadius: 16 }
 
 const DBS_STATES = {
-  clear: { label: 'Clear', tone: '#04713C', bg: '#E7F8ED' },
-  expiring: { label: 'Expiring soon', tone: '#93500A', bg: '#FEF6E7' },
-  expired: { label: 'Expired', tone: '#B42318', bg: '#FEF2F2' },
-  none: { label: 'Not recorded', tone: '#5A5772', bg: '#F3F2F7' },
+  clear: { label: 'Clear', tone: 'var(--ok-text)', bg: 'var(--ok-bg)' },
+  expiring: { label: 'Expiring soon', tone: 'var(--warn-text)', bg: 'var(--warn-bg)' },
+  expired: { label: 'Expired', tone: 'var(--danger-text)', bg: 'var(--danger-bg)' },
+  none: { label: 'Not recorded', tone: '#5A5772', bg: 'var(--surface2)' },
 }
 
 const londonToday = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' })
@@ -207,7 +207,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
       {notice && (
         <div style={{
           padding: '11px 14px', borderRadius: 11, marginBottom: 14, fontSize: 13.5,
-          background: '#E7F8ED', border: '1px solid #A7E9C1', color: '#04713C',
+          background: 'var(--ok-bg)', border: '1px solid var(--ok-border)', color: 'var(--ok-text)',
         }}>{notice}</div>
       )}
 
@@ -369,7 +369,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
                       {p.on_leave_today && (
                         <span style={{
                           padding: '3px 10px', borderRadius: 999, fontSize: 11.5, fontWeight: 700,
-                          background: '#FEF6E7', color: '#93500A',
+                          background: 'var(--warn-bg)', color: 'var(--warn-text)',
                         }}>On leave</span>
                       )}
                       {p.source === 'record' && (
@@ -377,7 +377,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
                         // has no login yet, which changes what you can do for them.
                         <span style={{
                           padding: '3px 10px', borderRadius: 999, fontSize: 11.5, fontWeight: 700,
-                          background: '#F3F2F7', color: '#5A5772',
+                          background: 'var(--surface2)', color: '#5A5772',
                         }}>No account</span>
                       )}
                     </div>
@@ -412,8 +412,8 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
                             load()
                           }}
                           style={{
-                            padding: '8px 14px', borderRadius: 10, border: '1px solid #FECACA',
-                            background: 'var(--surface)', color: '#B42318', fontSize: 12.5, fontWeight: 700,
+                            padding: '8px 14px', borderRadius: 10, border: '1px solid var(--danger-border)',
+                            background: 'var(--surface)', color: 'var(--danger-text)', fontSize: 12.5, fontWeight: 700,
                             cursor: 'pointer', fontFamily: 'inherit',
                           }}
                         >Cancel</button>
@@ -874,8 +874,8 @@ export function InviteStaffModal({ org, primary, onClose, onSent }) {
 
               {error && (
                 <div style={{
-                  padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
-                  border: '1px solid #FECACA', color: '#B42318', fontSize: 13,
+                  padding: '10px 12px', borderRadius: 10, background: 'var(--danger-bg)',
+                  border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13,
                 }}>{error}</div>
               )}
 
@@ -1024,8 +1024,8 @@ export function EditStaffModal({ person, org, primary, onClose, onSaved }) {
 
           {error && (
             <div style={{
-              padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
-              border: '1px solid #FECACA', color: '#B42318', fontSize: 13,
+              padding: '10px 12px', borderRadius: 10, background: 'var(--danger-bg)',
+              border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13,
             }}>{error}</div>
           )}
 
@@ -1112,8 +1112,8 @@ export function RecordLeaveModal({ person, org, primary, onClose, onSaved }) {
 
           {error && (
             <div style={{
-              padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
-              border: '1px solid #FECACA', color: '#B42318', fontSize: 13,
+              padding: '10px 12px', borderRadius: 10, background: 'var(--danger-bg)',
+              border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13,
             }}>{error}</div>
           )}
 

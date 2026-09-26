@@ -104,15 +104,15 @@ function NeedsAttention({ items, onOpen, onCreateForSession, primary, truncated 
         <span style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>Needs attention</span>
         <span style={{
           padding: '2px 9px', borderRadius: 999, fontSize: 11.5, fontWeight: 700,
-          background: '#FEF2F2', color: '#B42318',
+          background: 'var(--danger-bg)', color: 'var(--danger-text)',
         }}>{items.length}</span>
       </div>
 
       <div>
         {items.slice(0, 6).map((item, i) => {
           const tone = item.severity === 'action'
-            ? { dot: '#E5484D', bg: '#FEF2F2' }
-            : { dot: '#F79009', bg: '#FEF6E7' }
+            ? { dot: '#E5484D', bg: 'var(--danger-bg)' }
+            : { dot: '#F79009', bg: 'var(--warn-bg)' }
 
           return (
             <motion.div
@@ -174,7 +174,7 @@ function UpcomingActivities({ sessions, coverage, outstandingByAssessment = {}, 
         {upcoming.map(s => {
           const cover = coverage[s.id]
           const state = cover ? safetyStateOf(cover, { outstandingByAssessment }) : null
-          const meta = state ? SAFETY_META[state] : { dot: '#E5484D', bg: '#FEF2F2', text: '#B42318', label: 'No risk assessment' }
+          const meta = state ? SAFETY_META[state] : { dot: '#E5484D', bg: 'var(--danger-bg)', text: 'var(--danger-text)', label: 'No risk assessment' }
 
           return (
             <div key={s.id} style={{ ...CARD, padding: 14 }}>
@@ -276,7 +276,7 @@ function RecentAssessments({ assessments, onOpen, staffById, outstandingByAssess
         <div style={{ ...CARD, overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
             <thead>
-              <tr style={{ background: '#FAF9FE' }}>
+              <tr style={{ background: 'var(--surface2)' }}>
                 {['Assessment', 'Activity', 'Risk', 'Status', 'Owner', 'Next review', 'Updated'].map(h => (
                   <th key={h} style={{
                     textAlign: 'left', padding: '10px 14px', fontSize: 11.5, fontWeight: 700,

@@ -5,8 +5,8 @@ import { useIsMobile } from '../../../hooks/useIsMobile'
 import Icon from '../../../lib/icons'
 
 function priorityOf(days) {
-  if (days <= 7) return { label: 'High priority', color: '#B91C1C', bg: '#FCEAEA' }
-  if (days <= 21) return { label: 'Medium priority', color: '#B45309', bg: '#FDF3E4' }
+  if (days <= 7) return { label: 'High priority', color: 'var(--danger-text)', bg: 'var(--danger-bg)' }
+  if (days <= 21) return { label: 'Medium priority', color: 'var(--warn-text)', bg: 'var(--warn-bg)' }
   return { label: 'Low priority', color: '#375A82', bg: '#E9F0F7' }
 }
 

@@ -17,10 +17,10 @@ export const SAFETY = {
 }
 
 export const SAFETY_META = {
-  [SAFETY.READY]:  { label: 'Ready to run', dot: '#12B76A', bg: '#E7F8ED', text: '#04713C' },
-  [SAFETY.REVIEW]: { label: 'Need review', dot: '#F79009', bg: '#FEF6E7', text: '#93500A' },
-  [SAFETY.ACTION]: { label: 'Requires action', dot: '#E5484D', bg: '#FEF2F2', text: '#B42318' },
-  [SAFETY.DRAFT]:  { label: 'Drafts',      dot: '#98A2B3', bg: '#F3F2F7', text: '#5A5772' },
+  [SAFETY.READY]:  { label: 'Ready to run', dot: '#12B76A', bg: 'var(--ok-bg)', text: 'var(--ok-text)' },
+  [SAFETY.REVIEW]: { label: 'Need review', dot: '#F79009', bg: 'var(--warn-bg)', text: 'var(--warn-text)' },
+  [SAFETY.ACTION]: { label: 'Requires action', dot: '#E5484D', bg: 'var(--danger-bg)', text: 'var(--danger-text)' },
+  [SAFETY.DRAFT]:  { label: 'Drafts',      dot: '#98A2B3', bg: 'var(--surface2)', text: '#5A5772' },
 }
 
 // Review is treated as lapsed a week before the date, not on it: an assessment

@@ -19,10 +19,10 @@ const LEAVE_TYPES = [
   { key: 'other',     label: 'Other',           icon: '📋', color: 'var(--text3)' },
 ]
 const DBS_STATUS = {
-  clear:    { label: 'Clear',    color: '#16A34A', bg: '#F0FDF4' },
-  pending:  { label: 'Pending',  color: '#F59E0B', bg: '#FFFBEB' },
-  expired:  { label: 'Expired',  color: '#DC2626', bg: '#FEF2F2' },
-  none:     { label: 'None',     color: 'var(--text3)', bg: '#F9FAFB' },
+  clear:    { label: 'Clear',    color: 'var(--ok-text)', bg: 'var(--ok-bg)' },
+  pending:  { label: 'Pending',  color: '#F59E0B', bg: 'var(--warn-bg)' },
+  expired:  { label: 'Expired',  color: 'var(--danger-text)', bg: 'var(--danger-bg)' },
+  none:     { label: 'None',     color: 'var(--text3)', bg: 'var(--surface2)' },
 }
 const inp = { width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'inherit', outline: 'none' }
 const label = { fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }
@@ -36,10 +36,10 @@ function initials(name) {
 
 function AccountBadge({ status }) {
   const cfg = {
-    active:   { label: 'Active login',   color: '#16A34A', bg: '#F0FDF4' },
-    pending:  { label: 'Invite pending', color: '#D97706', bg: '#FFFBEB' },
-    none:     { label: 'Not invited',    color: 'var(--text3)', bg: '#F9FAFB' },
-  }[status] || { label: 'Not invited', color: 'var(--text3)', bg: '#F9FAFB' }
+    active:   { label: 'Active login',   color: 'var(--ok-text)', bg: 'var(--ok-bg)' },
+    pending:  { label: 'Invite pending', color: 'var(--warn-text)', bg: 'var(--warn-bg)' },
+    none:     { label: 'Not invited',    color: 'var(--text3)', bg: 'var(--surface2)' },
+  }[status] || { label: 'Not invited', color: 'var(--text3)', bg: 'var(--surface2)' }
   return <span style={{ background: cfg.bg, color: cfg.color, borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800, whiteSpace: 'nowrap' }}>{cfg.label}</span>
 }
 
@@ -228,7 +228,7 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
                 <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>{staff.role} · {staff.contract_type}</div>
                 <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
                   <span style={{ background: dbs.bg, color: dbs.color, borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800 }}><Icon name="🔍" /> DBS: {dbs.label}</span>
-                  {staff.is_active === false && <span style={{ background: '#FEF2F2', color: '#DC2626', borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800 }}>Inactive</span>}
+                  {staff.is_active === false && <span style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)', borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800 }}>Inactive</span>}
                   <AccountBadge status={accountStatus} />
                 </div>
               </div>
@@ -298,8 +298,8 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
               ))}
             </div>
             {staff.notes && (
-              <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 14, padding: 16 }}>
-                <div style={{ fontSize: 12, fontWeight: 800, color: '#92400E', marginBottom: 6 }}><Icon name="📝" /> Notes</div>
+              <div style={{ background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 14, padding: 16 }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--warn-text)', marginBottom: 6 }}><Icon name="📝" /> Notes</div>
                 <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6 }}>{staff.notes}</div>
               </div>
             )}
@@ -313,7 +313,7 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
               <button onClick={() => setShowLeave(!showLeave)} style={{ padding: '8px 16px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 12, cursor: 'pointer' }}>+ Log Leave</button>
             </div>
             {showLeave && (
-              <div style={{ background: '#F0F9FF', border: '1.5px solid #BAE6FD', borderRadius: 14, padding: 16, marginBottom: 14 }}>
+              <div style={{ background: 'var(--info-bg)', border: '1.5px solid var(--info-border)', borderRadius: 14, padding: 16, marginBottom: 14 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10, marginBottom: 10 }}>
                   <div><label style={label}>TYPE</label>
                     <select value={newLeave.type} onChange={e => setNewLeave(n => ({ ...n, type: e.target.value }))} style={inp}>
@@ -400,15 +400,15 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
                   <button onClick={sendInvite} disabled={inviting || !staff.email} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: !staff.email ? '#9CA3AF' : primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: staff.email ? 'pointer' : 'not-allowed' }}>
                     {inviting ? 'Sending…' : accountStatus === 'pending' ? '↻ Resend Invite' : '✉️ Send Invite'}
                   </button>
-                  {!staff.email && <div style={{ fontSize: 12, color: '#DC2626', marginTop: 8 }}>Add an email address above to invite this person.</div>}
+                  {!staff.email && <div style={{ fontSize: 12, color: 'var(--danger-text)', marginTop: 8 }}>Add an email address above to invite this person.</div>}
                 </>
               )}
             </div>
 
             {accountStatus === 'active' && accountProfile && (
-              <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 14, padding: 18 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: '#991B1B', marginBottom: 6 }}><Icon name="⚠️" /> Danger Zone</div>
-                <div style={{ fontSize: 12, color: '#B91C1C', lineHeight: 1.6, marginBottom: 14 }}>
+              <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 14, padding: 18 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--danger-text)', marginBottom: 6 }}><Icon name="⚠️" /> Danger Zone</div>
+                <div style={{ fontSize: 12, color: 'var(--danger-text)', lineHeight: 1.6, marginBottom: 14 }}>
                   Permanently deletes {staff.full_name}'s LaunchSession login — completely removing their account row from the database. This cannot be undone. Their HR record (DBS, leave history, notes) is kept.
                 </div>
                 <button onClick={deleteAccount} disabled={deleting} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: '#DC2626', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: deleting ? 'default' : 'pointer', opacity: deleting ? 0.6 : 1 }}>
@@ -489,7 +489,7 @@ function AddStaffModal({ org, onClose, onAdded, showToast }) {
           <div><label style={label}>LEAVE ALLOWANCE (days)</label><input type="number" value={form.leave_allowance} onChange={e => setForm(f => ({ ...f, leave_allowance: e.target.value }))} style={inp} /></div>
         </div>
 
-        <div style={{ background: '#F5F3FF', border: '1.5px solid #DDD6FE', borderRadius: 14, padding: 16, marginBottom: 18 }}>
+        <div style={{ background: 'var(--violet-bg)', border: '1.5px solid var(--violet-border)', borderRadius: 14, padding: 16, marginBottom: 18 }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: sendInvite ? 12 : 0 }}>
             <input type="checkbox" checked={sendInvite} onChange={e => setSendInvite(e.target.checked)} style={{ width: 16, height: 16 }} />
             <span style={{ fontSize: 13, fontWeight: 800 }}><Icon name="✉️" /> Send them a LaunchSession login invite</span>
@@ -587,7 +587,7 @@ export default function HR({ org, session, userProfile }) {
     staff.forEach(s => {
       if (s.dbs_expiry && s.is_active !== false) {
         const days = differenceInDays(new Date(s.dbs_expiry), today)
-        if (days >= 0 && days <= 90) items.push({ key: `dbs-${s.id}`, date: s.dbs_expiry, days, label: `${s.full_name} — DBS renewal`, chip: 'DBS', color: '#DC2626' })
+        if (days >= 0 && days <= 90) items.push({ key: `dbs-${s.id}`, date: s.dbs_expiry, days, label: `${s.full_name} — DBS renewal`, chip: 'DBS', color: 'var(--danger-text)' })
       }
     })
     allLeave.forEach(l => {
@@ -650,7 +650,7 @@ export default function HR({ org, session, userProfile }) {
   const donutSegments = [
     { label: 'Active', value: activeCount - onLeaveTodayIds.size, color: primary },
     { label: 'On Leave', value: [...onLeaveTodayIds].filter(id => staff.find(s => s.id === id)?.is_active !== false).length, color: '#F59E0B' },
-    { label: 'DBS Expiring', value: dbsExpiringCount, color: '#DC2626' },
+    { label: 'DBS Expiring', value: dbsExpiringCount, color: 'var(--danger-text)' },
     { label: 'Inactive', value: staff.length - activeCount, color: '#D1D5DB' },
   ].filter(s => s.value > 0)
 
@@ -815,7 +815,7 @@ export default function HR({ org, session, userProfile }) {
             const dbsExpiring = member.dbs_expiry && differenceInDays(new Date(member.dbs_expiry), today) < 90 && differenceInDays(new Date(member.dbs_expiry), today) >= 0
             const onLeave = onLeaveTodayIds.has(member.id)
             return (
-              <motion.div key={member.id} onClick={() => setSelected(member)} whileHover={{ backgroundColor: '#FAFAFA' }}
+              <motion.div key={member.id} onClick={() => setSelected(member)} whileHover={{ backgroundColor: 'var(--surface2)' }}
                 style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr 0.9fr 0.9fr 1.2fr', gap: 8, alignItems: 'center', padding: '12px 18px', borderBottom: '1px solid var(--border-soft)', cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                   <div style={{ width: 38, height: 38, borderRadius: 10, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: primary, flexShrink: 0 }}>{initials(member.full_name)}</div>
@@ -828,14 +828,14 @@ export default function HR({ org, session, userProfile }) {
                 <div style={{ fontSize: 12.5, color: 'var(--text2)' }}>{member.contract_type}</div>
                 <div>
                   <span style={{ background: dbs.bg, color: dbs.color, borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800, whiteSpace: 'nowrap' }}>{dbs.label}</span>
-                  {dbsExpiring && <div style={{ fontSize: 10, color: '#DC2626', fontWeight: 700, marginTop: 2 }}><Icon name="⚠️" /> Expiring</div>}
+                  {dbsExpiring && <div style={{ fontSize: 10, color: 'var(--danger-text)', fontWeight: 700, marginTop: 2 }}><Icon name="⚠️" /> Expiring</div>}
                 </div>
                 <div>
                   {member.is_active === false
-                    ? <span style={{ background: '#FEF2F2', color: '#DC2626', borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800 }}>Inactive</span>
+                    ? <span style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)', borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800 }}>Inactive</span>
                     : onLeave
-                      ? <span style={{ background: '#FFFBEB', color: '#D97706', borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800 }}>On Leave</span>
-                      : <span style={{ background: '#F0FDF4', color: '#16A34A', borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800 }}>Active</span>}
+                      ? <span style={{ background: 'var(--warn-bg)', color: 'var(--warn-text)', borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800 }}>On Leave</span>
+                      : <span style={{ background: 'var(--ok-bg)', color: 'var(--ok-text)', borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 800 }}>Active</span>}
                 </div>
                 <div><AccountBadge status={getAccountStatus(member)} /></div>
               </motion.div>

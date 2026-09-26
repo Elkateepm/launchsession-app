@@ -57,7 +57,7 @@ export default function ResourceCard({ resource, nextBooking, onBook, onOpen, on
         <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
           <button onClick={e => { e.stopPropagation(); onBook(resource) }}
             disabled={resource.status === 'maintenance' || resource.status === 'unavailable'}
-            style={{ flex: 1, padding: '9px 12px', borderRadius: 9, border: '1.5px solid #7C3AED', background: 'var(--surface)', color: '#7C3AED', fontSize: 12.5, fontWeight: 700, cursor: resource.status === 'maintenance' || resource.status === 'unavailable' ? 'not-allowed' : 'pointer', opacity: resource.status === 'maintenance' || resource.status === 'unavailable' ? 0.4 : 1 }}>
+            style={{ flex: 1, padding: '9px 12px', borderRadius: 9, border: '1.5px solid #7C3AED', background: 'var(--surface)', color: 'var(--violet-text)', fontSize: 12.5, fontWeight: 700, cursor: resource.status === 'maintenance' || resource.status === 'unavailable' ? 'not-allowed' : 'pointer', opacity: resource.status === 'maintenance' || resource.status === 'unavailable' ? 0.4 : 1 }}>
             Book
           </button>
         </div>

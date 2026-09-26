@@ -17,11 +17,11 @@ const timeRange = (start, end) => start ? `${hhmm(start)}${end ? ` – ${hhmm(en
 const TYPE_CONFIG = {
   activity:  { label: 'Activity',  icon: '🏃', color: '#1B9AAA', bg: 'rgba(27,154,170,0.12)',  border: 'rgba(27,154,170,0.35)'  },
   workshop:  { label: 'Workshop',  icon: '🛠️', color: '#417505', bg: 'rgba(65,117,5,0.12)',   border: 'rgba(65,117,5,0.35)'   },
-  trip:      { label: 'Day Trip',  icon: '🚌', color: '#D97706', bg: 'rgba(217,119,6,0.12)',   border: 'rgba(217,119,6,0.35)'   },
+  trip:      { label: 'Day Trip',  icon: '🚌', color: 'var(--warn-text)', bg: 'rgba(217,119,6,0.12)',   border: 'rgba(217,119,6,0.35)'   },
   holiday:   { label: 'Holiday',   icon: '🏖️', color: '#9B59B6', bg: 'rgba(155,89,182,0.12)',  border: 'rgba(155,89,182,0.35)'  },
-  sports:    { label: 'Sport',     icon: '⚽', color: '#16a34a', bg: 'rgba(22,163,74,0.12)',   border: 'rgba(22,163,74,0.35)'   },
-  arts:      { label: 'Arts',      icon: '🎨', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)',  border: 'rgba(124,58,237,0.35)'  },
-  mentoring: { label: 'Mentoring', icon: '🤝', color: '#2563eb', bg: 'rgba(37,99,235,0.12)',   border: 'rgba(37,99,235,0.35)'   },
+  sports:    { label: 'Sport',     icon: '⚽', color: 'var(--ok-text)', bg: 'rgba(22,163,74,0.12)',   border: 'rgba(22,163,74,0.35)'   },
+  arts:      { label: 'Arts',      icon: '🎨', color: 'var(--violet-text)', bg: 'rgba(124,58,237,0.12)',  border: 'rgba(124,58,237,0.35)'  },
+  mentoring: { label: 'Mentoring', icon: '🤝', color: 'var(--info-text)', bg: 'rgba(37,99,235,0.12)',   border: 'rgba(37,99,235,0.35)'   },
 }
 const getCfg = (type) => TYPE_CONFIG[type] || TYPE_CONFIG.activity
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
@@ -148,8 +148,8 @@ function PlanPickerModal({ date, org, onClose, onNavigate }) {
 
   const options = [
     { key: 'planner', icon: '📅', title: 'Session', desc: 'Plan a regular activity, workshop or club session', colour: '#8B5CF6', always: true },
-    { key: 'events_trips', icon: '✈️', title: 'Event or Trip', desc: 'Day trip, holiday, or one-off special event', colour: '#D97706', always: true },
-    { key: 'resource_booking', icon: '🗓️', title: 'Resource Booking', desc: 'Reserve a room, vehicle or piece of equipment', colour: '#2563EB', module: 'resource_booking' },
+    { key: 'events_trips', icon: '✈️', title: 'Event or Trip', desc: 'Day trip, holiday, or one-off special event', colour: 'var(--warn-text)', always: true },
+    { key: 'resource_booking', icon: '🗓️', title: 'Resource Booking', desc: 'Reserve a room, vehicle or piece of equipment', colour: 'var(--info-text)', module: 'resource_booking' },
   ].filter(o => o.always || hasModule(o.module))
 
   return (
@@ -194,7 +194,7 @@ function SessionModal({ session, org, onClose, onDelete, project, onOpenProject,
   return <SessionSheet title={session.title} subtitle={phase === 'live' ? 'Live now' : phase.charAt(0).toUpperCase() + phase.slice(1)} onClose={onClose} busy={deleting}
     footer={<div style={{ display: 'flex', gap: 8 }}><button onClick={() => { onClose(); onNavigate && onNavigate('planner', { editSessionId: session.id }) }} style={{ ...flowButton, flex: 1 }}>{phase === 'draft' ? 'Continue planning' : 'Edit plan'}</button>{!['draft', 'cancelled'].includes(phase) && <button onClick={() => { onClose(); onNavigate && onNavigate('registers', { sessionId: session.id, returnTo: 'calendar' }) }} style={{ ...flowButton, flex: 1, background: primary, borderColor: primary, color: '#fff' }}>Open register →</button>}</div>}>
     <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12, marginBottom: 20 }}>{[['Date', session.session_date ? format(parseISO(session.session_date), 'EEE d MMM yyyy') : 'To be confirmed'], ['Time', timeRange(session.start_time, session.end_time) || 'To be confirmed'], ['Location', session.location || 'To be confirmed'], ['Capacity', session.max_capacity || 'Not set']].map(([label, value]) => <div key={label} style={{ padding: 14, borderRadius: 12, background: 'var(--surface2)', overflowWrap: 'anywhere' }}><div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 8 }}>{label}</div><strong style={{ fontSize: 14 }}>{value}</strong></div>)}</div>
-    {project && <button onClick={() => onOpenProject(project)} style={{ ...flowButton, width: '100%', textAlign: 'left', marginBottom: 16 }}>Project: {project.name} →</button>}{session.description && <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.7 }}>{session.description}</p>}{error && <p role="alert" style={{ color: '#B91C1C' }}>{error}</p>}{phase !== 'live' && <button onClick={handleDelete} disabled={deleting} style={{ ...flowButton, marginTop: 24, color: '#B91C1C' }}>{deleting ? 'Deleting…' : 'Delete plan'}</button>}
+    {project && <button onClick={() => onOpenProject(project)} style={{ ...flowButton, width: '100%', textAlign: 'left', marginBottom: 16 }}>Project: {project.name} →</button>}{session.description && <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.7 }}>{session.description}</p>}{error && <p role="alert" style={{ color: 'var(--danger-text)' }}>{error}</p>}{phase !== 'live' && <button onClick={handleDelete} disabled={deleting} style={{ ...flowButton, marginTop: 24, color: 'var(--danger-text)' }}>{deleting ? 'Deleting…' : 'Delete plan'}</button>}
   </SessionSheet>
 }
 
@@ -497,7 +497,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
           ) : viewMode === 'month' ? (
             <div key={gridKey.current} style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', borderLeft: '1px solid var(--border-soft)', animation: `${slideAnim} 0.28s ease` }}>
               {monthDays.map((day, i) => {
-                if (!day) return <div key={`e${i}`} style={{ minHeight: 110, borderRight: '1px solid var(--border-soft)', borderBottom: '1px solid var(--border-soft)', background: '#FAFAFA' }} />
+                if (!day) return <div key={`e${i}`} style={{ minHeight: 110, borderRight: '1px solid var(--border-soft)', borderBottom: '1px solid var(--border-soft)', background: 'var(--surface2)' }} />
                 const key = format(day, 'yyyy-MM-dd')
                 const daySessions = sessionsByDate[key] || []
                 const today = isToday(day)
@@ -519,7 +519,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, position: 'relative' }}>
                       <div style={{ display: 'flex', gap: 2, flex: 1, minWidth: 0, alignItems: 'center' }}>
                         {inMonth && bankHoliday && (
-                          <span title={bankHoliday} style={{ fontSize: 9, background: '#F59E0B26', color: '#B45309', borderRadius: 4, padding: '1px 4px', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>🏵️ {bankHoliday}</span>
+                          <span title={bankHoliday} style={{ fontSize: 9, background: '#F59E0B26', color: 'var(--warn-text)', borderRadius: 4, padding: '1px 4px', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>🏵️ {bankHoliday}</span>
                         )}
                         {inMonth && !bankHoliday && novelty && (
                           <span title={novelty.title} style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-faint)', opacity: 0.65, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>{novelty.title}</span>
@@ -701,7 +701,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
             {[
               { label: 'Sessions', value: thisMonthCount, color: primary },
               { label: 'Types', value: [...new Set(sessions.filter(s => s.session_date?.startsWith(format(currentDate, 'yyyy-MM'))).map(s => s.session_type))].length, color: '#8B5CF6' },
-              { label: 'Young People', value: monthYoungPeople, color: '#16a34a' },
+              { label: 'Young People', value: monthYoungPeople, color: 'var(--ok-text)' },
             ].map(s => (
               <div key={s.label} style={{ background: `${s.color}12`, border: `1px solid ${s.color}25`, borderRadius: 10, padding: '10px 10px' }}>
                 <div style={{ fontSize: 20, fontWeight: 900, color: s.color }}>{s.value}</div>
@@ -763,7 +763,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
           </div>
           <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border-soft)', display: 'flex', flexDirection: 'column', gap: 5 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11 }}>
-              <div style={{ width: 10, height: 10, borderRadius: 3, background: '#FEF3C7', border: '1px solid #FDE68A', flexShrink: 0 }} />
+              <div style={{ width: 10, height: 10, borderRadius: 3, background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', flexShrink: 0 }} />
               <span style={{ color: 'var(--text-faint)' }}>🏵️ UK Bank Holiday</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11 }}>

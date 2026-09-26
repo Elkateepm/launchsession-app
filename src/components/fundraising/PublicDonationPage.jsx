@@ -67,7 +67,7 @@ export default function PublicDonationPage() {
   const amounts = (page.suggested_amounts || [10, 25, 50, 100]).map(Number)
 
   return (
-    <div style={{ minHeight: '100dvh', background: '#FAF9FE', padding: '0 0 48px' }}>
+    <div style={{ minHeight: '100dvh', background: 'var(--surface2)', padding: '0 0 48px' }}>
       <div style={{ maxWidth: 560, margin: '0 auto', padding: '28px 18px 0' }}>
 
         {/* org */}
@@ -112,7 +112,7 @@ export default function PublicDonationPage() {
           </div>
           {pct !== null && (
             <>
-              <div style={{ height: 9, background: '#F1EDFF', borderRadius: 9, overflow: 'hidden', margin: '12px 0 8px' }}>
+              <div style={{ height: 9, background: 'var(--violet-bg)', borderRadius: 9, overflow: 'hidden', margin: '12px 0 8px' }}>
                 <div style={{ width: `${pct}%`, height: '100%', background: brand, borderRadius: 9 }} />
               </div>
               <div style={{ fontSize: 12.5, color: MUTED }}>{Math.round(pct)}% of the way there</div>
@@ -217,7 +217,7 @@ function Centered({ children }) {
   return (
     <div style={{
       minHeight: '100dvh', display: 'grid', placeItems: 'center',
-      background: '#FAF9FE', padding: 24,
+      background: 'var(--surface2)', padding: 24,
     }}>{children}</div>
   )
 }

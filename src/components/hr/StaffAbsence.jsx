@@ -74,8 +74,8 @@ export default function StaffAbsence({ org, staff, primary, canEdit }) {
   return (
     <>
       {rtwDue.length > 0 && (
-        <div style={{ ...card, background: '#FEF6E7', border: '1px solid #FCD9A5' }}>
-          <div style={{ fontSize: 13.5, fontWeight: 800, color: '#93500A' }}>
+        <div style={{ ...card, background: 'var(--warn-bg)', border: '1px solid var(--warn-border)' }}>
+          <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--warn-text)' }}>
             {rtwDue.length} return-to-work meeting{rtwDue.length === 1 ? '' : 's'} still to hold
           </div>
         </div>
@@ -100,7 +100,7 @@ export default function StaffAbsence({ org, staff, primary, canEdit }) {
       )}
 
       {error && (
-        <div style={{ ...card, background: '#FEF2F2', border: '1px solid #FECACA', color: '#B42318', fontSize: 13 }}>
+        <div style={{ ...card, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13 }}>
           {error}
         </div>
       )}
@@ -236,8 +236,8 @@ function AbsenceForm({ org, staff, primary, onCancel, onSaved }) {
         <span style={{ fontSize: 14, color: 'var(--text)' }}>A return-to-work meeting is needed</span>
       </label>
       {err && (
-        <div style={{ padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
-          border: '1px solid #FECACA', color: '#B42318', fontSize: 13, marginBottom: 10 }}>{err}</div>
+        <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--danger-bg)',
+          border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13, marginBottom: 10 }}>{err}</div>
       )}
       <div style={{ display: 'flex', gap: 8 }}>
         <button onClick={save} disabled={busy || !f.start_date} style={{
@@ -326,8 +326,8 @@ function RtwForm({ org, staff, absence, primary, onCancel, onSaved }) {
           style={{ ...field, resize: 'vertical', lineHeight: 1.5 }} />
       </div>
       {err && (
-        <div style={{ padding: '10px 12px', borderRadius: 10, background: '#FEF2F2',
-          border: '1px solid #FECACA', color: '#B42318', fontSize: 13, marginBottom: 10 }}>{err}</div>
+        <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--danger-bg)',
+          border: '1px solid var(--danger-border)', color: 'var(--danger-text)', fontSize: 13, marginBottom: 10 }}>{err}</div>
       )}
       <div style={{ display: 'flex', gap: 8 }}>
         <button onClick={save} disabled={busy} style={{

@@ -3,8 +3,8 @@ import { LS, IconGlyph, PurpleProgress, statusOf, daysLeftLabel, CAMPAIGN_TYPES 
 import FundraisingEmptyState from './FundraisingEmptyState'
 
 const STATUS_META = {
-  active:    { label: 'Active',    color: '#16803C', bg: '#E7F6EC' },
-  planning:  { label: 'Draft',     color: 'var(--text3)', bg: '#F3F2F7' },
+  active:    { label: 'Active',    color: 'var(--ok-text)', bg: 'var(--ok-bg)' },
+  planning:  { label: 'Draft',     color: 'var(--text3)', bg: 'var(--surface2)' },
   completed: { label: 'Completed', color: '#375A82', bg: '#E9F0F7' },
 }
 

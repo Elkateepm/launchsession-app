@@ -90,7 +90,7 @@ export default function EndSessionFlow({ session, org, authUserId, canCloseRegis
       <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--org-primary, #2563EB)', letterSpacing: 1 }}>ATTENDANCE → CLOSE → REFLECT</div>
       <h2 id="finish-title" style={{ fontSize: 21, margin: '10px 0 6px' }}>{closed ? `${terms.Session} closed` : `Finish ${terms.session}`}</h2>
       <p style={{ color: 'var(--text2, #64748B)', marginTop: 0 }}>{session.title}</p>
-      {error && <p role="alert" style={{ color: '#B91C1C', background: '#FEF2F2', padding: 12, borderRadius: 10 }}>{error}</p>}
+      {error && <p role="alert" style={{ color: 'var(--danger-text)', background: 'var(--danger-bg)', padding: 12, borderRadius: 10 }}>{error}</p>}
       {closed ? <>
         <p role="status">Attendance is saved and the register is closed.</p>
         <p style={{ color: 'var(--text2, #64748B)', lineHeight: 1.6 }}>Capture outcomes and follow-up actions while they are fresh. You can also return to the reflection from the planner.</p>

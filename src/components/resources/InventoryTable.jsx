@@ -118,7 +118,7 @@ export default function InventoryTable({ org, resources, staff, authUserId, onCh
                     {adjustingId === r.id ? (
                       <div style={{ display: 'flex', gap: 4 }}>
                         <input type="number" value={adjustQty} onChange={e => setAdjustQty(e.target.value)} style={{ width: 50, padding: 3, borderRadius: 6, border: '1px solid var(--border)', fontSize: 11 }} autoFocus />
-                        <button onClick={() => handleAdjust(r)} style={{ fontSize: 10, color: '#16A34A', background: 'none', border: 'none', cursor: 'pointer' }}><Icon name="✓" /></button>
+                        <button onClick={() => handleAdjust(r)} style={{ fontSize: 10, color: 'var(--ok-text)', background: 'none', border: 'none', cursor: 'pointer' }}><Icon name="✓" /></button>
                         <button onClick={() => setAdjustingId(null)} style={{ fontSize: 10, color: 'var(--text-faint)', background: 'none', border: 'none', cursor: 'pointer' }}><Icon name="✕" /></button>
                       </div>
                     ) : (
