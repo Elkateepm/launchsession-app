@@ -301,7 +301,7 @@ function OverviewView({ loading, metrics, learning, insights, isMobile, savedRep
                 { v: learning.avg_inclusion ? `${learning.avg_inclusion}/5` : '—', l: 'inclusion' },
                 { v: learning.evidence_count || 0, l: 'with evidence' },
                 { v: learning.actions_open || 0, l: 'open actions' },
-              ].map(x => <div key={x.l} style={{ background: 'rgba(255,255,255,0.78)', border: '1px solid #E0E7FF', borderRadius: 11, padding: 11 }}><div style={{ fontSize: 19, fontWeight: 900, color: 'var(--info-text)' }}>{x.v}</div><div style={{ fontSize: 10.5, color: 'var(--text3)', fontWeight: 700 }}>{x.l}</div></div>)}
+              ].map(x => <div key={x.l} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 11, padding: 11 }}><div style={{ fontSize: 19, fontWeight: 900, color: 'var(--info-text)' }}>{x.v}</div><div style={{ fontSize: 10.5, color: 'var(--text3)', fontWeight: 700 }}>{x.l}</div></div>)}
             </div>
           </div>
         </>

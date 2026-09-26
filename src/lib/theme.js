@@ -15,6 +15,9 @@
 // been through every screen, flipping DEFAULT_CHOICE to 'system' is the whole
 // change.
 
+import { reapplyBrandPalette } from './brandColors'
+import { reapplyBrandTheme } from './brandTheme'
+
 export const THEME_KEY = 'ls_theme'
 export const THEME_CHOICES = ['system', 'light', 'dark']
 export const DEFAULT_CHOICE = 'light'
@@ -58,6 +61,10 @@ export function applyTheme(choice = getThemeChoice()) {
     // light bar above a dark app is the tell that a theme was half-applied.
     const meta = document.querySelector('meta[name="theme-color"]')
     if (meta) meta.setAttribute('content', resolved === 'dark' ? '#0F0F1A' : '#FFFFFF')
+    // The brand washes are computed against the surface they sit on, so they
+    // have to be recomputed here -- not just when the organisation loads.
+    reapplyBrandPalette()
+    reapplyBrandTheme()
   } catch (e) { /* no DOM (tests) */ }
   return resolved
 }

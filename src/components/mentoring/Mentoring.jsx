@@ -640,7 +640,7 @@ const styles = {
   },
   metric: {
     background: 'var(--surface)',
-    border: '1px solid #E5EAF2',
+    border: '1px solid var(--border)',
     borderRadius: 18,
     padding: 16,
     display: 'flex',
@@ -701,7 +701,7 @@ const styles = {
   },
   panel: {
     background: 'var(--surface)',
-    border: '1px solid #E5EAF2',
+    border: '1px solid var(--border)',
     borderRadius: 20,
     padding: 18,
     boxShadow: '0 12px 28px rgba(15,23,42,0.06)',
@@ -713,7 +713,7 @@ const styles = {
   },
   row: {
     width: '100%',
-    border: '1px solid #E5EAF2',
+    border: '1px solid var(--border)',
     background: 'var(--surface2)',
     borderRadius: 16,
     padding: 14,
@@ -773,7 +773,7 @@ const styles = {
     gap: 12,
     alignItems: 'flex-start',
     background: 'var(--surface2)',
-    border: '1px solid #E5EAF2',
+    border: '1px solid var(--border)',
     borderRadius: 14,
     padding: 12,
     marginBottom: 10,
@@ -802,7 +802,7 @@ const styles = {
   },
   nextStep: {
     background: 'var(--surface2)',
-    border: '1px solid #E5EAF2',
+    border: '1px solid var(--border)',
     borderRadius: 12,
     padding: 11,
     marginBottom: 8,

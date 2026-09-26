@@ -526,7 +526,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
 
       {/* STICKY BOTTOM BAR */}
       <div style={{
-        background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
+        background: 'var(--surface)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
         borderTop: '1px solid rgba(226,232,240,0.8)', padding: '12px 16px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         boxShadow: '0 -8px 24px -18px rgba(15,23,42,0.25)',

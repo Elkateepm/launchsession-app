@@ -65,7 +65,7 @@ export const darken = (hex, amount) => mix(hex, '#000000', amount)
  * charity whose brand is a bright yellow should still have readable labels
  * rather than the interface silently becoming illegible.
  */
-export function brandPalette(primary) {
+export function brandPalette(primary, dark = isDarkTheme()) {
   const base = hexToRgb(primary) ? primary : '#1B9AAA'
 
   let ink = base
@@ -77,6 +77,31 @@ export function brandPalette(primary) {
 
   // White or near-black on top of the brand colour, whichever is readable.
   const onPrimary = contrastRatio(base, '#ffffff') >= 3.2 ? '#ffffff' : '#10131A'
+
+  // In dark, a wash made by lightening toward white is still a pale pastel --
+  // it does not know what it is sitting on. The same chip that reads as a
+  // gentle tint on a white page becomes a bright card on a dark one, and its
+  // `ink` partner, darkened for contrast against white, turns unreadable.
+  //
+  // So the dark palette inverts the direction: washes darken toward the dark
+  // surface, and ink lightens until it is legible against it.
+  if (dark) {
+    let darkInk = base
+    let g = 0
+    while (contrastRatio(darkInk, '#1A1A2E') < 4.5 && g < 20) {
+      darkInk = lighten(darkInk, 0.12)
+      g++
+    }
+    return {
+      primary: base,
+      ink: darkInk,
+      onPrimary,
+      tint: darken(base, 0.80),
+      soft: darken(base, 0.70),
+      border: darken(base, 0.45),
+      strong: lighten(base, 0.18),
+    }
+  }
 
   return {
     primary: base,
@@ -122,7 +147,23 @@ export function rgba(hex, alpha) {
  * an inline style can read var(--org-soft) without every component needing to
  * subscribe to the org.
  */
+/** Reads the theme the document is actually in, so the palette can match it. */
+export function isDarkTheme() {
+  try { return document.documentElement.getAttribute('data-theme') === 'dark' } catch (e) { return false }
+}
+
+// The last colour applied, so a theme change can recompute without the caller
+// having to remember it. OrgContext applies the palette once on load; the
+// theme can change long after that.
+let lastPrimary = null
+
+/** Recompute the brand palette for the theme the document is now in. */
+export function reapplyBrandPalette() {
+  if (lastPrimary) applyBrandPalette(lastPrimary)
+}
+
 export function applyBrandPalette(primary) {
+  lastPrimary = primary
   const p = brandPalette(primary)
   const root = document.documentElement.style
   root.setProperty('--org-primary', p.primary)

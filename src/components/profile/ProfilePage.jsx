@@ -237,7 +237,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
                   <InfoRow icon="📍" label="Location" value={profile?.location} onAction={() => setEditField({ field: 'location', label: 'Location', value: profile?.location })} />
                 </div>
 
-                <div style={{ background: 'linear-gradient(135deg, #EEF2FF, #F5F3FF)', border: '1px solid #E0E7FF', borderRadius: 16, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{ background: 'linear-gradient(135deg, #EEF2FF, #F5F3FF)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
                   <div style={{ width: 44, height: 44, borderRadius: 12, background: '#4F6EF7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}><Icon name="✅" /></div>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--info-text)' }}>Your account is active</div>

@@ -6,7 +6,7 @@ const ORG_SLUG = window.location.pathname.split('/register-volunteer/')[1]?.spli
 
 const inp = { width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'inherit', outline: 'none', background: 'var(--surface)' }
 const label = { fontSize: 12.5, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 5 }
-const section = { background: 'var(--surface)', border: '1px solid #EEF1F6', borderRadius: 16, padding: '20px 22px', marginBottom: 16 }
+const section = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '20px 22px', marginBottom: 16 }
 const sectionTitle = { fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 14 }
 
 const SKILL_OPTIONS = ['Coaching', 'First Aid', 'Driving', 'Mentoring', 'Admin & Office', 'Cooking / Catering', 'Music / Arts', 'Safeguarding Lead']

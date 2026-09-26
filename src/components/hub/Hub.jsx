@@ -959,7 +959,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
         <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={org?.name || ''} style={{
           position: 'absolute', top: 20, left: 22, zIndex: 1,
           width: isMobile ? 52 : 58, height: isMobile ? 52 : 58, borderRadius: 15, objectFit: 'contain',
-          background: 'rgba(255,255,255,0.96)', padding: 2, border: '1.5px solid rgba(255,255,255,0.25)',
+          background: 'var(--logo-backdrop)', padding: 2, border: '1.5px solid rgba(255,255,255,0.25)',
           boxShadow: '0 1px 0 rgba(255,255,255,0.5) inset, 0 6px 16px -6px rgba(0,0,0,0.4)',
         }} />
 
@@ -1561,7 +1561,7 @@ function KioskModeOverlay({ session, org, primary, secondary, regTab, setRegTab,
       </button>
 
       <div style={{ textAlign: 'center', padding: '28px 24px 16px' }}>
-        {org?.logo_url && <img src={org.logo_url} alt="" style={{ width: 56, height: 56, borderRadius: 15, objectFit: 'contain', background: 'rgba(255,255,255,0.96)', padding: 2, marginBottom: 10 }} />}
+        {org?.logo_url && <img src={org.logo_url} alt="" style={{ width: 56, height: 56, borderRadius: 15, objectFit: 'contain', background: 'var(--logo-backdrop)', padding: 2, marginBottom: 10 }} />}
         <h2 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#fff', letterSpacing: -0.5 }}>{session?.title}</h2>
         <p style={{ margin: '6px 0 0', fontSize: 14, color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>Tap your name to sign in or out</p>
 
@@ -4315,24 +4315,24 @@ const styles = {
   mainGrid: { display: "grid", gridTemplateColumns: "minmax(0, 1fr) 320px", gap: 18 },
   leftColumn: { display: "flex", flexDirection: "column", gap: 18 },
   rightColumn: { display: "flex", flexDirection: "column", gap: 18 },
-  panel: { background: "rgba(255,255,255,0.92)", border: "1px solid #E5EAF2", borderRadius: 20, padding: 18, boxShadow: "0 12px 28px rgba(15,23,42,0.06)" },
+  panel: { background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, padding: 18, boxShadow: "0 12px 28px rgba(15,23,42,0.06)" },
   panelTitle: { margin: "0 0 14px", fontSize: 15, fontWeight: 900, color: 'var(--text, #111)' },
   glanceGrid: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 },
   mobileGrid: { gridTemplateColumns: "1fr" },
-  statCard: { background: "#fff", border: "1px solid #E5EAF2", borderRadius: 16, padding: 16, textAlign: "center", cursor: "pointer", boxShadow: "0 4px 12px rgba(15,23,42,0.05)", width: "100%" },
+  statCard: { background: "#fff", border: "1px solid var(--border)", borderRadius: 16, padding: 16, textAlign: "center", cursor: "pointer", boxShadow: "0 4px 12px rgba(15,23,42,0.05)", width: "100%" },
   bigIcon: { fontSize: 36, marginBottom: 8 },
   statTitle: { margin: "0 0 4px", fontSize: 14, fontWeight: 900 },
   cardText: { margin: 0, color: "var(--text3)", fontSize: 12, lineHeight: 1.45 },
   softBadge: { marginTop: 12, background: "var(--violet-bg)", borderRadius: 10, padding: "7px 10px", fontSize: 11, fontWeight: 800 },
-  actionCard: { border: "1px solid #E5EAF2", borderRadius: 14, padding: "12px 14px", cursor: "pointer", display: "flex", gap: 10, alignItems: "center", width: "100%" },
+  actionCard: { border: "1px solid var(--border)", borderRadius: 14, padding: "12px 14px", cursor: "pointer", display: "flex", gap: 10, alignItems: "center", width: "100%" },
   actionIcon: { width: 36, height: 36, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 18, flexShrink: 0 },
-  attentionRow: { width: "100%", border: "1px solid #E5EAF2", background: "var(--surface2)", borderRadius: 12, padding: "10px 12px", display: "flex", alignItems: "center", gap: 12, marginBottom: 8, textAlign: "left", cursor: "pointer" },
+  attentionRow: { width: "100%", border: "1px solid var(--border)", background: "var(--surface2)", borderRadius: 12, padding: "10px 12px", display: "flex", alignItems: "center", gap: 12, marginBottom: 8, textAlign: "left", cursor: "pointer" },
   attentionIcon: { width: 34, height: 34, borderRadius: 10, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" },
   dot: { width: 9, height: 9, borderRadius: "50%", flexShrink: 0 },
   miniRow: { display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid #EEF2F7", padding: "10px 0" },
   dueBadge: { background: "var(--warn-bg)", color: "var(--warn-text)", borderRadius: 8, padding: "4px 8px", fontSize: 11, fontWeight: 800 },
   yellowButton: { width: "100%", border: "none", background: "#FACC15", color: "#111827", borderRadius: 10, padding: 11, marginTop: 12, fontWeight: 900, cursor: "pointer" },
-  smallMetric: { background: "var(--surface2)", border: "1px solid #E5EAF2", borderRadius: 12, padding: 12, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", width: "100%" },
+  smallMetric: { background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 12, padding: 12, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", width: "100%" },
   snapshotGrid: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 },
   impactGrid: { display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 },
 };

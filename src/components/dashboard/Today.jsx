@@ -308,7 +308,7 @@ export default function Today({ org, session: authSession, userProfile, onNaviga
               ...CARD, width: '100%', padding: '14px 16px', marginBottom: 16, minHeight: 44,
               display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
               textAlign: 'left', fontFamily: 'inherit',
-              border: `1px solid ${hrAttention.urgent > 0 ? '#FCD9A5' : '#E5EAF2'}`,
+              border: `1px solid ${hrAttention.urgent > 0 ? '#FCD9A5' : 'var(--border)'}`,
               background: hrAttention.urgent > 0 ? 'var(--warn-bg)' : '#fff',
             }}>
               <span style={{ fontSize: 20, flexShrink: 0 }}>🧑‍💼</span>

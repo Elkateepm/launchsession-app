@@ -866,7 +866,7 @@ export default function Dashboard({ session, org }) {
         <div style={{ padding: '16px 12px 14px', borderBottom: `1px solid var(--org-a10)`, background: `linear-gradient(180deg, var(--org-a10), transparent)`, position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${primary}, var(--org-a20))` }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: sidebarCollapsed ? 38 : 48, height: sidebarCollapsed ? 38 : 48, borderRadius: 10, objectFit: 'contain', flexShrink: 0, background: 'rgba(255,255,255,0.95)', padding: 3, border: `1.5px solid var(--org-a20)` }} />
+            <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: sidebarCollapsed ? 38 : 48, height: sidebarCollapsed ? 38 : 48, borderRadius: 10, objectFit: 'contain', flexShrink: 0, background: 'var(--logo-backdrop)', padding: 3, border: `1.5px solid var(--org-a20)` }} />
             {!sidebarCollapsed && <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-display, sans-serif)' }}>{orgName}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
