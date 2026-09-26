@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 
-const PALETTE = ['#BA7517', '#375A82', '#4E7A3A', '#7A4066', '#2F6F63', '#8C5A3C', '#4C4A8C', '#54524A']
+const PALETTE = ['var(--warn-text)', '#375A82', '#4E7A3A', '#7A4066', '#2F6F63', '#8C5A3C', '#4C4A8C', '#54524A']
 
 export default function FundingMixChart({ campaigns }) {
   const withRaised = campaigns.filter(c => (c.raised || 0) > 0).sort((a, b) => (b.raised || 0) - (a.raised || 0))

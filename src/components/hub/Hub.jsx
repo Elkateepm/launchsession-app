@@ -42,9 +42,9 @@ const sectionLinkBtn = (colour) => ({
   background: 'none', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap',
 })
 const RA_RATING_COLORS = {
-  low: { bg: 'rgba(34,197,94,0.18)', color: '#86EFAC' },
+  low: { bg: 'rgba(34,197,94,0.18)', color: 'var(--ok-text)' },
   medium: { bg: 'rgba(245,158,11,0.18)', color: '#FDE047' },
-  high: { bg: 'rgba(239,68,68,0.18)', color: '#FCA5A5' },
+  high: { bg: 'rgba(239,68,68,0.18)', color: 'var(--danger-text)' },
   critical: { bg: 'rgba(124,58,237,0.2)', color: '#C4B5FD' },
 }
 
@@ -180,7 +180,7 @@ function TimeRing({ kind, target, totalSeconds, isClosed, onClick }) {
       <div onClick={onClick} style={{ position: 'relative', width: 60, height: 60, flexShrink: 0, cursor: onClick ? 'pointer' : 'default' }}>
         <svg width="60" height="60" viewBox="0 0 54 54" style={{ transform: 'rotate(-90deg)' }}>
           <circle cx="27" cy="27" r={RING_R} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5" />
-          <circle cx="27" cy="27" r={RING_R} fill="none" stroke="#94A3B8" strokeWidth="5" strokeLinecap="round" strokeDasharray={RING_C} strokeDashoffset={0} />
+          <circle cx="27" cy="27" r={RING_R} fill="none" stroke="var(--text-faint)" strokeWidth="5" strokeLinecap="round" strokeDasharray={RING_C} strokeDashoffset={0} />
         </svg>
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: '#4ADE80' }}><Icon name="✓" /></div>
       </div>
@@ -450,7 +450,7 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
           <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
             {ANNOUNCEMENT_EMOJIS.map(e => (
               <button key={e} onClick={() => setEmoji(e)}
-                style={{ fontSize: 18, width: 34, height: 34, borderRadius: 9, border: `1.5px solid ${emoji === e ? primary : '#E5E7EB'}`, background: emoji === e ? primary + '15' : '#fff', cursor: 'pointer' }}>
+                style={{ fontSize: 18, width: 34, height: 34, borderRadius: 9, border: `1.5px solid ${emoji === e ? primary : 'var(--border)'}`, background: emoji === e ? primary + '15' : '#fff', cursor: 'pointer' }}>
                 {e}
               </button>
             ))}
@@ -471,7 +471,7 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
               <input type="checkbox" checked={pinned} onChange={e => setPinned(e.target.checked)} />
               📌 Pin to top
             </label>
-            <button onClick={post} disabled={posting} style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: posting ? '#E5E7EB' : primary, color: posting ? '#9CA3AF' : '#fff', fontSize: 13, fontWeight: 800, cursor: posting ? 'default' : 'pointer' }}>
+            <button onClick={post} disabled={posting} style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: posting ? 'var(--border)' : primary, color: posting ? 'var(--text-faint)' : '#fff', fontSize: 13, fontWeight: 800, cursor: posting ? 'default' : 'pointer' }}>
               {posting ? 'Posting...' : 'Post →'}
             </button>
           </div>
@@ -495,7 +495,7 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
                 <div style={{ fontSize: 22, flexShrink: 0, lineHeight: 1 }}>{a.emoji || '📣'}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--text)', marginBottom: 3, paddingRight: a.pinned ? 20 : 0 }}>{a.title}</div>
-                  <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{a.content}</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{a.content}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
                     <span style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 600 }}>{timeAgo(a.created_at)}</span>
                     {a.created_by === userId && (
@@ -697,7 +697,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   const getBubbleColor = (groupName) => {
     const name = (groupName || '').trim().toLowerCase()
     const match = (orgGroups || []).find(g => (g.label || '').trim().toLowerCase() === name)
-    return match?.color || '#9CA3AF'
+    return match?.color || 'var(--text-faint)'
   }
 
   // All children with an attendance record for this session — this is the
@@ -1013,8 +1013,8 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
         <div style={{ textAlign: 'center', marginBottom: sessionPhase !== 'closed' && isMobile ? 14 : 0, padding: isMobile ? '0 56px' : '0 130px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 7 }}>
             {sessionPhase === 'closed' ? (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(148,163,184,0.16)', border: '1px solid rgba(148,163,184,0.35)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: '#CBD5E1', letterSpacing: 0.8 }}>
-                <span style={{ width: 5, height: 5, background: '#94A3B8', borderRadius: '50%' }}></span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(148,163,184,0.16)', border: '1px solid rgba(148,163,184,0.35)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: 'var(--text-faint)', letterSpacing: 0.8 }}>
+                <span style={{ width: 5, height: 5, background: 'var(--text-faint)', borderRadius: '50%' }}></span>
                 CLOSED
               </span>
             ) : sessionPhase === 'ending' ? (
@@ -1082,7 +1082,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
       ) : (
         <div style={{ padding: '14px 22px 20px' }}>
           {ratioBreached && (
-            <div style={{ marginBottom: 14, background: 'rgba(239,68,68,0.14)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: 12, padding: '10px 14px', fontSize: 12, fontWeight: 700, color: '#FCA5A5' }}>
+            <div style={{ marginBottom: 14, background: 'rgba(239,68,68,0.14)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: 12, padding: '10px 14px', fontSize: 12, fontWeight: 700, color: 'var(--danger-text)' }}>
               ⚠ Staff-to-child ratio is currently 1:{currentRatio.toFixed(1)}. Required ratio: 1:{requiredRatio}.
             </div>
           )}
@@ -1246,7 +1246,7 @@ function SessionOverflowMenu({ isClosed, isUpcoming, duplicating, cancelling, on
           <button key={i} onClick={item.onClick} disabled={item.disabled}
             style={{
               display: 'block', width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: 9,
-              border: 'none', background: 'transparent', color: item.danger ? '#FCA5A5' : '#fff',
+              border: 'none', background: 'transparent', color: item.danger ? 'var(--danger-border)' : '#fff',
               fontSize: 12.5, fontWeight: 700, cursor: item.disabled ? 'default' : 'pointer', opacity: item.disabled ? 0.5 : 1,
             }}
             onMouseEnter={e => !item.disabled && (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
@@ -1404,7 +1404,7 @@ function RegisterAndStaffContent({
                     {att?.status === 'absent' && ` · ${att.absence_reason || 'Absent'}`}
                   </div>
                   {(child.allergies || child.medical_notes || child.has_epipen || child.has_asthma) && (
-                    <span style={{ fontSize: 8.5, fontWeight: 800, color: '#FCA5A5', background: 'rgba(239,68,68,0.15)', borderRadius: 6, padding: '1px 5px', marginTop: 2, display: 'inline-block' }}>⚕ Medical</span>
+                    <span style={{ fontSize: 8.5, fontWeight: 800, color: 'var(--danger-text)', background: 'rgba(239,68,68,0.15)', borderRadius: 6, padding: '1px 5px', marginTop: 2, display: 'inline-block' }}>⚕ Medical</span>
                   )}
                 </div>
                 {activeSession?.closed_at ? (
@@ -1533,7 +1533,7 @@ function ClosedSessionSummary({ session, stats, sessionStaff, hasReflection, act
             </div>
           )}
           {activeReflection.safeguarding_flag && (
-            <div style={{ marginTop: 8, fontSize: 11, color: '#FCA5A5', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="🛡️" /> Safeguarding note flagged</div>
+            <div style={{ marginTop: 8, fontSize: 11, color: 'var(--danger-text)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="🛡️" /> Safeguarding note flagged</div>
           )}
         </div>
       )}
@@ -1804,7 +1804,7 @@ export function SessionQuickActions({ session, org, orgId, authUserId, onNavigat
         <button
           onClick={(e) => { e.stopPropagation(); setViewingRA(true) }}
           style={{
-            display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 800, color: '#86EFAC',
+            display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 800, color: 'var(--ok-text)',
             background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 99, padding: '5px 10px', cursor: 'pointer', whiteSpace: 'nowrap',
           }}>
           🛡 Risk Assessment Attached
@@ -1848,7 +1848,7 @@ function HubRAPicker({ options, search, onSearchChange, busy, error, onAttach, o
           {busy ? 'Working…' : '+ Create new for this session'}
         </button>
         <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Or attach existing</div>
-        {error && <div role="alert" style={{ color: '#FCA5A5', marginBottom: 12, fontSize: 13 }}>{error}</div>}
+        {error && <div role="alert" style={{ color: 'var(--danger-text)', marginBottom: 12, fontSize: 13 }}>{error}</div>}
         <input autoFocus value={search} onChange={e => onSearchChange(e.target.value)} placeholder="Search risk assessments…"
           style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', marginBottom: 10 }} />
         <div style={{ maxHeight: 220, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -1863,7 +1863,7 @@ function HubRAPicker({ options, search, onSearchChange, busy, error, onAttach, o
                 <span style={{
                   fontSize: 9.5, fontWeight: 900, letterSpacing: 0.4, textTransform: 'uppercase', borderRadius: 99, padding: '2px 8px',
                   background: RA_RATING_COLORS[a.risk_rating]?.bg || 'rgba(148,163,184,0.16)',
-                  color: RA_RATING_COLORS[a.risk_rating]?.color || '#CBD5E1',
+                  color: RA_RATING_COLORS[a.risk_rating]?.color || 'var(--text-faint)',
                 }}>{a.risk_rating}</span>
               )}
             </button>
@@ -1924,7 +1924,7 @@ function HubRAPreviewModal({ assessmentId, onClose, onNavigate }) {
               <span style={{
                 fontSize: 10.5, fontWeight: 900, letterSpacing: 0.4, textTransform: 'uppercase', borderRadius: 99, padding: '3px 10px',
                 background: RA_RATING_COLORS[ra.risk_rating]?.bg || 'rgba(148,163,184,0.16)',
-                color: RA_RATING_COLORS[ra.risk_rating]?.color || '#CBD5E1',
+                color: RA_RATING_COLORS[ra.risk_rating]?.color || 'var(--text-faint)',
               }}>{ra.risk_rating || 'Unrated'}</span>
               <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 0.4, textTransform: 'uppercase', borderRadius: 99, padding: '3px 10px', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)' }}>{ra.status || 'draft'}</span>
             </div>
@@ -2060,7 +2060,7 @@ function SessionInfoModal({ session, attendance, allChildren, primary, secondary
     { key: 'signed_in', label: 'Signed in', color: '#4ADE80', dot: '#22C55E' },
     { key: 'expected', label: 'Expected', color: 'rgba(255,255,255,0.65)', dot: 'rgba(255,255,255,0.4)' },
     { key: 'signed_out', label: 'Signed out', color: '#C4B5FD', dot: '#8B5CF6' },
-    { key: 'absent', label: 'Absent', color: '#FCA5A5', dot: '#EF4444' },
+    { key: 'absent', label: 'Absent', color: 'var(--danger-text)', dot: '#EF4444' },
   ]
   const grouped = groupDefs.map(g => ({ ...g, rows: rows.filter(r => (r.att.status || 'expected') === g.key) })).filter(g => g.rows.length > 0)
 
@@ -2526,7 +2526,7 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
                   <div style={{ display: 'flex', gap: 4, background: 'var(--surface-hover)', borderRadius: 10, padding: 3 }}>
                     {[{ key: 'all', label: 'All' }, { key: 'unread', label: `Unread${total ? ` (${total})` : ''}` }].map(f => (
                       <button key={f.key} onClick={() => setFilter(f.key)}
-                        style={{ padding: isMobile ? '8px 15px' : '5px 11px', borderRadius: isMobile ? 9 : 7, border: 'none', background: filter === f.key ? '#fff' : 'transparent', color: filter === f.key ? '#0F172A' : '#64748B', fontSize: isMobile ? 13 : 11, fontWeight: 700, cursor: 'pointer', boxShadow: filter === f.key ? '0 1px 3px rgba(15,23,42,0.12)' : 'none', transition: 'all 0.15s' }}>
+                        style={{ padding: isMobile ? '8px 15px' : '5px 11px', borderRadius: isMobile ? 9 : 7, border: 'none', background: filter === f.key ? '#fff' : 'transparent', color: filter === f.key ? '#0F172A' : 'var(--text3)', fontSize: isMobile ? 13 : 11, fontWeight: 700, cursor: 'pointer', boxShadow: filter === f.key ? '0 1px 3px rgba(15,23,42,0.12)' : 'none', transition: 'all 0.15s' }}>
                         {f.label}
                       </button>
                     ))}
@@ -2555,7 +2555,7 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
                           return (
                             <button key={n.id} onClick={() => openItem(n)}
                               style={{ width: '100%', position: 'relative', display: 'flex', alignItems: 'flex-start', gap: isMobile ? 12 : 11, padding: isMobile ? '14px 12px 14px 16px' : '11px 10px 11px 14px', marginBottom: isMobile ? 6 : 2, border: 'none', background: n.read_at ? 'transparent' : color + '0A', cursor: 'pointer', textAlign: 'left', borderRadius: isMobile ? 16 : 12, transition: 'background 0.12s' }}
-                              onMouseEnter={e => e.currentTarget.style.background = isCritical ? '#FEE2E2' : color + '14'}
+                              onMouseEnter={e => e.currentTarget.style.background = isCritical ? 'var(--danger-bg)' : color + '14'}
                               onMouseLeave={e => e.currentTarget.style.background = n.read_at ? 'transparent' : color + '0A'}>
                               {!n.read_at && <span style={{ position: 'absolute', left: 3, top: 12, bottom: 12, width: 3, borderRadius: 2, background: color }} />}
                               <div style={{ position: 'relative', width: isMobile ? 40 : 34, height: isMobile ? 40 : 34, borderRadius: isMobile ? 13 : 10, background: color + '18', border: `1px solid ${color}2A`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 18 : 15, flexShrink: 0 }}>
@@ -2964,7 +2964,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   // registers yet" must not render as a crisis.
   const attendanceTone = React.useMemo(() => {
     // No marked places means no rate, which is different from a rate of zero.
-    if (attendanceRate == null) return { bg: 'var(--surface-hover)', fg: '#64748B' }
+    if (attendanceRate == null) return { bg: 'var(--surface-hover)', fg: 'var(--text3)' }
     if (attendanceRate >= 75) return { bg: 'var(--ok-bg)', fg: 'var(--ok-text)' }
     if (attendanceRate >= 50) return { bg: 'var(--warn-bg)', fg: 'var(--warn-text)' }
     return { bg: 'var(--danger-bg)', fg: 'var(--danger-text)' }
@@ -3110,7 +3110,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#fff', background: `linear-gradient(90deg, ${primary}, ${secondary})`, borderRadius: 5, padding: '3px 9px', boxShadow: `0 2px 8px var(--org-a20)` }}>{org?.plan || 'Starter'} Plan</span>
                   {org?.status === 'trial' && trialDaysLeft !== null && (
-                    <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.04em', color: trialDaysLeft <= 2 ? '#DC2626' : '#B45309', background: trialDaysLeft <= 2 ? '#FEE2E2' : '#FEF3C7', borderRadius: 5, padding: '3px 8px', border: `1px solid ${trialDaysLeft <= 2 ? '#FCA5A5' : '#FDE68A'}` }}>
+                    <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.04em', color: trialDaysLeft <= 2 ? '#DC2626' : 'var(--warn-text)', background: trialDaysLeft <= 2 ? 'var(--danger-bg)' : 'var(--warn-bg)', borderRadius: 5, padding: '3px 8px', border: `1px solid ${trialDaysLeft <= 2 ? 'var(--danger-border)' : 'var(--warn-border)'}` }}>
                       ⭐ {trialDaysLeft}d left
                     </span>
                   )}
@@ -3477,7 +3477,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             // still-open/overrun so staff know the register is still live and
             // editable until they close it themselves.
             const statusLabel = isClosed ? 'Closed' : hasEnded ? 'Overrun' : isLiveNow ? 'Live now' : 'Upcoming'
-            const statusColour = isClosed ? '#94A3B8' : hasEnded ? '#F87171' : isLiveNow ? '#DC2626' : '#FBBF24'
+            const statusColour = isClosed ? 'var(--text-faint)' : hasEnded ? '#F87171' : isLiveNow ? '#DC2626' : '#FBBF24'
             const cardStatus = hasEnded ? 'ended' : isLiveNow ? 'live' : 'upcoming'
             // isClosed (closed_at actually set) is distinct from hasEnded (which
             // also covers "scheduled end time passed but register still open").
@@ -3584,7 +3584,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                             )}
                             <span style={{ position: 'relative', zIndex: 2, width: 7, height: 7, borderRadius: '50%', display: 'block', background: statusColour, animation: (cardStatus === 'live' || (hasEnded && !isClosed)) ? 'pulse-live 1.5s infinite' : 'none' }} />
                           </div>
-                          <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.7, textTransform: 'uppercase', color: cardStatus === 'live' ? '#FCA5A5' : cardStatus === 'upcoming' ? '#FDE68A' : (hasEnded && !isClosed) ? '#FCA5A5' : '#CBD5E1' }}>{statusLabel}</span>
+                          <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.7, textTransform: 'uppercase', color: cardStatus === 'live' ? 'var(--danger-border)' : cardStatus === 'upcoming' ? 'var(--warn-border)' : (hasEnded && !isClosed) ? 'var(--danger-border)' : 'var(--text-faint)' }}>{statusLabel}</span>
                         </div>
                         {cardStatus === 'ended' && (
                           <button onClick={() => toggleEndedExpanded(s.id)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 8, marginBottom: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.55)', cursor: 'pointer' }}>
@@ -3607,7 +3607,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                           </div>
                         )}
                         {hasEnded && !isClosed && (
-                          <div style={{ marginTop: 6, fontSize: 11, fontWeight: 700, color: '#FCA5A5', display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <div style={{ marginTop: 6, fontSize: 11, fontWeight: 700, color: 'var(--danger-text)', display: 'flex', alignItems: 'center', gap: 5 }}>
                             ⏰ This session has ended — close the register when you're ready
                           </div>
                         )}
@@ -3851,7 +3851,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       <span style={{ width: 30, height: 30, borderRadius: 9, background: isClosed ? 'rgba(148,163,184,0.16)' : 'rgba(248,113,113,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>{isClosed ? '🔒' : '🔺'}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 12.5, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
-                        <div style={{ fontSize: 10.5, color: isClosed ? '#CBD5E1' : '#FCA5A5' }}>{isClosed ? 'Closed' : 'Overrun — still open'} · {attended}/{total} attended</div>
+                        <div style={{ fontSize: 10.5, color: isClosed ? 'var(--text-faint)' : 'var(--danger-border)' }}>{isClosed ? 'Closed' : 'Overrun — still open'} · {attended}/{total} attended</div>
                       </div>
                       <span style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.55)', flexShrink: 0, whiteSpace: 'nowrap' }}>▾ Expand</span>
                     </button>
@@ -4286,7 +4286,7 @@ const railPanel = {
 
 const styles = {
   page: { height: "100%", background: "var(--bg)", padding: 0, color: "#0F172A", overflow: "hidden", display: "flex", flexDirection: "column", boxSizing: "border-box" },
-  loading: { padding: 50, textAlign: "center", color: "#64748B", fontWeight: 800 },
+  loading: { padding: 50, textAlign: "center", color: "var(--text3)", fontWeight: 800 },
   liveHero: { background: "linear-gradient(135deg, #081226, #12235A)", borderRadius: 22, color: "#fff", padding: 24, marginBottom: 22, boxShadow: "0 18px 38px rgba(15,23,42,0.25)" },
   liveHeroTop: { display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 22 },
   liveBadge: { color: "#5EEAD4", fontSize: 12, fontWeight: 950, letterSpacing: 2 },
@@ -4322,17 +4322,17 @@ const styles = {
   statCard: { background: "#fff", border: "1px solid #E5EAF2", borderRadius: 16, padding: 16, textAlign: "center", cursor: "pointer", boxShadow: "0 4px 12px rgba(15,23,42,0.05)", width: "100%" },
   bigIcon: { fontSize: 36, marginBottom: 8 },
   statTitle: { margin: "0 0 4px", fontSize: 14, fontWeight: 900 },
-  cardText: { margin: 0, color: "#64748B", fontSize: 12, lineHeight: 1.45 },
-  softBadge: { marginTop: 12, background: "#F5F3FF", borderRadius: 10, padding: "7px 10px", fontSize: 11, fontWeight: 800 },
+  cardText: { margin: 0, color: "var(--text3)", fontSize: 12, lineHeight: 1.45 },
+  softBadge: { marginTop: 12, background: "var(--violet-bg)", borderRadius: 10, padding: "7px 10px", fontSize: 11, fontWeight: 800 },
   actionCard: { border: "1px solid #E5EAF2", borderRadius: 14, padding: "12px 14px", cursor: "pointer", display: "flex", gap: 10, alignItems: "center", width: "100%" },
   actionIcon: { width: 36, height: 36, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 18, flexShrink: 0 },
-  attentionRow: { width: "100%", border: "1px solid #E5EAF2", background: "#F8FAFC", borderRadius: 12, padding: "10px 12px", display: "flex", alignItems: "center", gap: 12, marginBottom: 8, textAlign: "left", cursor: "pointer" },
+  attentionRow: { width: "100%", border: "1px solid #E5EAF2", background: "var(--surface2)", borderRadius: 12, padding: "10px 12px", display: "flex", alignItems: "center", gap: 12, marginBottom: 8, textAlign: "left", cursor: "pointer" },
   attentionIcon: { width: 34, height: 34, borderRadius: 10, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" },
   dot: { width: 9, height: 9, borderRadius: "50%", flexShrink: 0 },
   miniRow: { display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid #EEF2F7", padding: "10px 0" },
-  dueBadge: { background: "#FEF3C7", color: "#B45309", borderRadius: 8, padding: "4px 8px", fontSize: 11, fontWeight: 800 },
+  dueBadge: { background: "var(--warn-bg)", color: "var(--warn-text)", borderRadius: 8, padding: "4px 8px", fontSize: 11, fontWeight: 800 },
   yellowButton: { width: "100%", border: "none", background: "#FACC15", color: "#111827", borderRadius: 10, padding: 11, marginTop: 12, fontWeight: 900, cursor: "pointer" },
-  smallMetric: { background: "#F8FAFC", border: "1px solid #E5EAF2", borderRadius: 12, padding: 12, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", width: "100%" },
+  smallMetric: { background: "var(--surface2)", border: "1px solid #E5EAF2", borderRadius: 12, padding: 12, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", width: "100%" },
   snapshotGrid: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 },
   impactGrid: { display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 },
 };

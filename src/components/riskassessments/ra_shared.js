@@ -9,7 +9,7 @@ export const RA_STATUS_LABELS = {
   draft: 'Draft', active: 'Active', review_due: 'Review Due', expired: 'Expired', archived: 'Archived',
 }
 export const RA_STATUS_STYLE = {
-  draft: { bg: 'rgba(100,116,139,0.14)', color: '#475569' },
+  draft: { bg: 'rgba(100,116,139,0.14)', color: 'var(--text2)' },
   active: { bg: 'rgba(34,197,94,0.13)', color: 'var(--ok-text)' },
   review_due: { bg: 'rgba(245,158,11,0.15)', color: 'var(--warn-text)' },
   expired: { bg: 'rgba(239,68,68,0.13)', color: 'var(--danger-text)' },
@@ -54,9 +54,9 @@ export const RATING_STYLE = {
 // Colour for a matrix cell given its raw score
 export function matrixCellColor(score) {
   const r = riskRating(score)
-  if (r === 'low') return '#86EFAC'
+  if (r === 'low') return 'var(--ok-border)'
   if (r === 'medium') return '#FDE047'
-  if (r === 'high') return '#FCA5A5'
+  if (r === 'high') return 'var(--danger-border)'
   return '#C4B5FD'
 }
 

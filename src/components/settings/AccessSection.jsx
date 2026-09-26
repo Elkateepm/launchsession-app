@@ -115,7 +115,7 @@ export default function AccessSection({ org, isAdmin }) {
                           onChange={e => setCell(r.key, m.key, e.target.value)}
                           style={{
                             padding: '6px 8px', borderRadius: 8, fontSize: 12.5, fontWeight: 600,
-                            border: `1px solid ${value === 'none' ? '#FCA5A5' : '#e5e7eb'}`,
+                            border: `1px solid ${value === 'none' ? 'var(--danger-border)' : 'var(--border)'}`,
                             background: 'var(--surface)', cursor: 'pointer', minWidth: 110,
                           }}>
                           <option value="default">Default</option>

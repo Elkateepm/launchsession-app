@@ -87,7 +87,7 @@ export default function SpaceBackground({ height = 620 }) {
         <defs>
           <linearGradient id="cometFade" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#93C5FD" stopOpacity="0" />
-            <stop offset="100%" stopColor="#DBEAFE" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="var(--info-bg)" stopOpacity="0.85" />
           </linearGradient>
         </defs>
         <path d="M 232 78 L 288 108" stroke="url(#cometFade)" strokeWidth="1.6" fill="none" strokeLinecap="round" />

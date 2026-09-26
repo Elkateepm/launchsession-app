@@ -116,8 +116,8 @@ export default function MemberAccess({ member, org, viewerRole }) {
                 onChange={e => setLevel(m.key, e.target.value)}
                 style={{
                   width: '100%', padding: '8px 10px', borderRadius: 9,
-                  border: `1px solid ${current === 'none' ? '#FCA5A5' : '#e5e7eb'}`,
-                  background: viewerMayEdit ? '#fff' : '#F9FAFB',
+                  border: `1px solid ${current === 'none' ? 'var(--danger-border)' : 'var(--border)'}`,
+                  background: viewerMayEdit ? '#fff' : 'var(--surface2)',
                   fontSize: 13, fontWeight: 600, color: 'var(--text)',
                   cursor: viewerMayEdit ? 'pointer' : 'not-allowed',
                 }}>

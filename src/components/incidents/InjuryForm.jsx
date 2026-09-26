@@ -56,9 +56,9 @@ function Chips({ options, value, onChange, accent = ALERT }) {
       {options.map(o => (
         <button key={o} type="button" onClick={() => onChange(value === o ? '' : o)} style={{
           minHeight: 36, padding: '7px 12px', borderRadius: 99, cursor: 'pointer', fontFamily: 'inherit',
-          border: `1.5px solid ${value === o ? accent : '#E2E8F0'}`,
+          border: `1.5px solid ${value === o ? accent : 'var(--border)'}`,
           background: value === o ? `${accent}12` : '#fff',
-          color: value === o ? accent : '#64748B',
+          color: value === o ? accent : 'var(--text3)',
           fontSize: 12.5, fontWeight: 800,
         }}>{o}</button>
       ))}
@@ -70,15 +70,15 @@ function Toggle({ on, onClick, colour, children }) {
   return (
     <button type="button" onClick={onClick} style={{
       width: '100%', minHeight: 44, borderRadius: 10, cursor: 'pointer', textAlign: 'left',
-      border: `1.5px solid ${on ? colour : '#E2E8F0'}`,
+      border: `1.5px solid ${on ? colour : 'var(--border)'}`,
       background: on ? `${colour}12` : '#fff', padding: '10px 12px',
       fontSize: 13, fontWeight: 800, fontFamily: 'inherit',
-      color: on ? colour : '#64748B',
+      color: on ? colour : 'var(--text3)',
       display: 'flex', alignItems: 'center', gap: 8,
     }}>
       <span style={{
         width: 18, height: 18, borderRadius: 5, flexShrink: 0,
-        border: `1.5px solid ${on ? colour : '#CBD5E1'}`, background: on ? colour : '#fff',
+        border: `1.5px solid ${on ? colour : 'var(--text-faint)'}`, background: on ? colour : '#fff',
         color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11,
       }}>{on ? <Icon name="✓" /> : null}</span>
       {children}
@@ -339,7 +339,7 @@ export default function InjuryForm({ org, userProfile, session, people: provided
 
       <div style={{ display: 'flex', gap: 10 }}>
         <button onClick={onClose} style={{ flex: 1, minHeight: 48, borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 800, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-        <button onClick={submit} disabled={saving} style={{ flex: 2, minHeight: 48, borderRadius: 12, border: 'none', background: saving ? '#94A3B8' : ALERT, color: '#fff', fontWeight: 800, fontSize: 14, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+        <button onClick={submit} disabled={saving} style={{ flex: 2, minHeight: 48, borderRadius: 12, border: 'none', background: saving ? 'var(--text-faint)' : ALERT, color: '#fff', fontWeight: 800, fontSize: 14, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit' }}>
           {saving ? 'Saving…' : 'Save to accident book'}
         </button>
       </div>

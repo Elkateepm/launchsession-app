@@ -55,7 +55,7 @@ export default function ResourceCalendar({ resources, bookings, onSlotClick, onB
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
         <div style={{ display: 'flex', gap: 6 }}>
           {['day', 'week', 'month', 'agenda'].map(v => (
-            <button key={v} onClick={() => setView(v)} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: view === v ? '#7C3AED' : '#F1F5F9', color: view === v ? '#fff' : '#374151', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', textTransform: 'capitalize' }}>{v}</button>
+            <button key={v} onClick={() => setView(v)} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: view === v ? '#7C3AED' : 'var(--border-soft)', color: view === v ? '#fff' : 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', textTransform: 'capitalize' }}>{v}</button>
           ))}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -135,7 +135,7 @@ export default function ResourceCalendar({ resources, bookings, onSlotClick, onB
             const dayBookings = bookingsForDay(d)
             const inMonth = d.getMonth() === cursor.getMonth()
             return (
-              <div key={d.toISOString()} onClick={() => onSlotClick(d, 9)} style={{ minHeight: 64, border: '1px solid var(--border-soft)', borderRadius: 8, padding: 6, cursor: 'pointer', opacity: inMonth ? 1 : 0.35, background: d.toDateString() === new Date().toDateString() ? '#F5F3FF' : '#fff' }}>
+              <div key={d.toISOString()} onClick={() => onSlotClick(d, 9)} style={{ minHeight: 64, border: '1px solid var(--border-soft)', borderRadius: 8, padding: 6, cursor: 'pointer', opacity: inMonth ? 1 : 0.35, background: d.toDateString() === new Date().toDateString() ? 'var(--violet-bg)' : '#fff' }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', marginBottom: 3 }}>{d.getDate()}</div>
                 {dayBookings.slice(0, 2).map(b => {
                   const r = resources.find(x => x.id === b.resource_id)

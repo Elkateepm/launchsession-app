@@ -37,7 +37,7 @@ const field = {
   border: '1px solid #ECE9F5', background: 'var(--surface)', color: 'var(--text)',
   outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
 }
-const labelStyle = { display: 'block', fontSize: 12.5, fontWeight: 700, color: '#8B87A3', marginBottom: 7, letterSpacing: 0.2 }
+const labelStyle = { display: 'block', fontSize: 12.5, fontWeight: 700, color: 'var(--text3)', marginBottom: 7, letterSpacing: 0.2 }
 
 function ScorePicker({ value, onChange, labels, primary }) {
   return (
@@ -50,9 +50,9 @@ function ScorePicker({ value, onChange, labels, primary }) {
             onClick={() => onChange(n)}
             style={{
               padding: '10px 3px', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit',
-              border: `1px solid ${active ? 'transparent' : '#ECE9F5'}`,
+              border: `1px solid ${active ? 'transparent' : 'var(--border)'}`,
               background: active ? primary : '#fff',
-              color: active ? '#fff' : '#5A5772',
+              color: active ? '#fff' : 'var(--text2)',
             }}
           >
             <div style={{ fontSize: 16, fontWeight: 800, lineHeight: 1 }}>{n}</div>
@@ -72,7 +72,7 @@ function ScoreReadout({ likelihood, severity, caption }) {
     medium: { bg: 'var(--warn-bg)', text: 'var(--warn-text)' },
     high: { bg: '#FEF0E7', text: '#B54708' },
     critical: { bg: 'var(--danger-bg)', text: 'var(--danger-text)' },
-  }[rating] || { bg: 'var(--surface2)', text: '#5A5772' }
+  }[rating] || { bg: 'var(--surface2)', text: 'var(--text2)' }
 
   return (
     <div style={{
@@ -277,7 +277,7 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
                 </div>
                 <button onClick={onClose} style={{
                   border: 'none', background: 'transparent', fontSize: 22,
-                  color: '#8B87A3', cursor: 'pointer', lineHeight: 1, padding: 4,
+                  color: 'var(--text3)', cursor: 'pointer', lineHeight: 1, padding: 4,
                 }}>×</button>
               </div>
 
@@ -286,11 +286,11 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
                   <div key={label} style={{ flex: 1 }}>
                     <div style={{
                       height: 3, borderRadius: 3,
-                      background: i <= step ? primary : '#ECE9F5',
+                      background: i <= step ? primary : 'var(--border)',
                     }} />
                     <div style={{
                       fontSize: 10, marginTop: 5, textAlign: 'center',
-                      color: i === step ? '#1C1B2E' : '#B4B0C6',
+                      color: i === step ? 'var(--text)' : '#B4B0C6',
                       fontWeight: i === step ? 700 : 500,
                     }}>{label}</div>
                   </div>
@@ -310,7 +310,7 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
                     style={field}
                     autoFocus
                   />
-                  <div style={{ fontSize: 12, color: '#8B87A3', margin: '14px 0 8px' }}>
+                  <div style={{ fontSize: 12, color: 'var(--text3)', margin: '14px 0 8px' }}>
                     Common hazards — tap to use one as a starting point
                   </div>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -320,7 +320,7 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
                         onClick={() => setName(h.label)}
                         style={{
                           padding: '7px 12px', borderRadius: 999, fontSize: 12.5, fontWeight: 600,
-                          border: '1px solid #ECE9F5', background: 'var(--surface)', color: '#5A5772',
+                          border: '1px solid #ECE9F5', background: 'var(--surface)', color: 'var(--text2)',
                           cursor: 'pointer', fontFamily: 'inherit',
                         }}
                       >{h.icon} {h.label}</button>
@@ -342,7 +342,7 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
                           style={{
                             display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
                             padding: '12px 13px', borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit',
-                            border: `1px solid ${active ? primary : '#ECE9F5'}`,
+                            border: `1px solid ${active ? primary : 'var(--border)'}`,
                             background: active ? '#F6F3FF' : '#fff',
                           }}
                         >
@@ -392,9 +392,9 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
                             style={{
                               display: 'flex', alignItems: 'center', gap: 7,
                               padding: '7px 11px', borderRadius: 9, cursor: 'pointer', fontFamily: 'inherit',
-                              border: `1px solid ${c.completed ? '#12B76A' : '#ECE9F5'}`,
-                              background: c.completed ? '#E7F8ED' : '#fff',
-                              color: c.completed ? '#04713C' : '#8B87A3',
+                              border: `1px solid ${c.completed ? '#12B76A' : 'var(--border)'}`,
+                              background: c.completed ? 'var(--ok-bg)' : '#fff',
+                              color: c.completed ? 'var(--ok-text)' : 'var(--text3)',
                               fontSize: 12.5, fontWeight: 700,
                             }}
                           >{c.completed ? '✓ In place' : 'Not yet in place'}</button>
@@ -435,7 +435,7 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
 
               {step === 4 && (
                 <>
-                  <div style={{ fontSize: 13, color: '#8B87A3', lineHeight: 1.5, marginBottom: 16 }}>
+                  <div style={{ fontSize: 13, color: 'var(--text3)', lineHeight: 1.5, marginBottom: 16 }}>
                     With those controls in place, how likely and how serious is it now?
                   </div>
                   <label style={labelStyle}>LIKELIHOOD AFTER CONTROLS</label>
@@ -474,7 +474,7 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
               {step > 0 && (
                 <button onClick={() => setStep(s => s - 1)} style={{
                   padding: '13px 18px', borderRadius: 12, border: '1px solid #ECE9F5',
-                  background: 'var(--surface)', color: '#8B87A3', fontSize: 15, fontWeight: 700,
+                  background: 'var(--surface)', color: 'var(--text3)', fontSize: 15, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}>Back</button>
               )}

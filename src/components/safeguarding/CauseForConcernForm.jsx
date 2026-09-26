@@ -10,7 +10,7 @@ const lStyle = { fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTrans
 function Toggle({ checked, onChange, label, sublabel }) {
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
-      <div onClick={() => onChange(!checked)} style={{ width: 44, height: 26, borderRadius: 13, background: checked ? '#EF4444' : '#D1D5DB', cursor: 'pointer', position: 'relative', flexShrink: 0, transition: 'background 0.2s', marginTop: 2 }}>
+      <div onClick={() => onChange(!checked)} style={{ width: 44, height: 26, borderRadius: 13, background: checked ? '#EF4444' : 'var(--text-faint)', cursor: 'pointer', position: 'relative', flexShrink: 0, transition: 'background 0.2s', marginTop: 2 }}>
         <div style={{ position: 'absolute', top: 3, left: checked ? 21 : 3, width: 20, height: 20, borderRadius: '50%', background: 'var(--surface)', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
       </div>
       <div>
@@ -222,7 +222,7 @@ export default function CauseForConcernForm({ org, session: authSession, initial
             picked from the register, and that is not obvious from a text box.
             Say which it is instead of leaving it to chance. */}
         {form.child_name.trim() !== '' && (
-          <div style={{ fontSize: 11.5, marginTop: 6, color: linkedChildId ? '#15803D' : '#B45309', fontWeight: 600 }}>
+          <div style={{ fontSize: 11.5, marginTop: 6, color: linkedChildId ? 'var(--ok-text)' : 'var(--warn-text)', fontWeight: 600 }}>
             {linkedChildId
               ? '✓ Linked to a child on the register — this will show in their safeguarding history.'
               : 'Not linked to anyone on the register. Search above to link it, so it appears in that child\'s history.'}

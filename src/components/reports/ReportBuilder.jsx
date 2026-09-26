@@ -115,8 +115,8 @@ export default function ReportBuilder({ org, session, role, initialType, default
           <div style={{ display: 'flex', gap: 6 }}>
             {STEPS.map((s, i) => (
               <div key={s} style={{ flex: 1 }}>
-                <div style={{ height: 4, borderRadius: 99, background: i <= step ? 'linear-gradient(90deg,#4F46E5,#3B82F6)' : '#E2E8F0' }} />
-                <div style={{ fontSize: 10.5, fontWeight: 700, color: i === step ? '#4F46E5' : '#94A3B8', marginTop: 5 }}>{s}</div>
+                <div style={{ height: 4, borderRadius: 99, background: i <= step ? 'linear-gradient(90deg,#4F46E5,#3B82F6)' : 'var(--border)' }} />
+                <div style={{ fontSize: 10.5, fontWeight: 700, color: i === step ? '#4F46E5' : 'var(--text-faint)', marginTop: 5 }}>{s}</div>
               </div>
             ))}
           </div>
@@ -131,7 +131,7 @@ export default function ReportBuilder({ org, session, role, initialType, default
                   <button key={r.key} onClick={() => setType(r.key)} style={{
                     textAlign: 'left', padding: 14, borderRadius: 12, cursor: 'pointer',
                     border: type === r.key ? '2px solid #4F46E5' : '1px solid #E2E8F0',
-                    background: type === r.key ? '#EEF2FF' : '#fff',
+                    background: type === r.key ? 'var(--info-bg)' : '#fff',
                   }}>
                     <div style={{ fontSize: 16, marginBottom: 6 }}><Icon name={r.icon} /></div>
                     <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{r.name}</div>
@@ -288,9 +288,9 @@ export default function ReportBuilder({ org, session, role, initialType, default
             </button>
           )}
           {step < 3 ? (
-            <button onClick={next} disabled={!canNext} style={{ ...btnPrimary, ...(canNext ? {} : { background: '#CBD5E1', cursor: 'default' }) }}>Continue</button>
+            <button onClick={next} disabled={!canNext} style={{ ...btnPrimary, ...(canNext ? {} : { background: 'var(--text-faint)', cursor: 'default' }) }}>Continue</button>
           ) : (
-            <button onClick={handleSave} disabled={saving} style={{ ...btnPrimary, ...(saving ? { background: '#CBD5E1', cursor: 'default' } : {}) }}>
+            <button onClick={handleSave} disabled={saving} style={{ ...btnPrimary, ...(saving ? { background: 'var(--text-faint)', cursor: 'default' } : {}) }}>
               {saving ? 'Saving…' : 'Save report'}
             </button>
           )}

@@ -43,13 +43,13 @@ export const CASE_TYPES = [
 ]
 
 const STATUSES = [
-  ['open', 'Open', '#3730A3', '#EEF2FF'],
-  ['triage', 'Triage', '#3730A3', '#EEF2FF'],
-  ['review', 'Review', '#93500A', '#FEF6E7'],
-  ['action_required', 'Action required', '#B42318', '#FEF2F2'],
-  ['monitoring', 'Monitoring', '#93500A', '#FEF6E7'],
-  ['resolved', 'Resolved', '#04713C', '#E7F8ED'],
-  ['closed', 'Closed', '#5A5772', '#F3F2F7'],
+  ['open', 'Open', '#3730A3', 'var(--info-bg)'],
+  ['triage', 'Triage', '#3730A3', 'var(--info-bg)'],
+  ['review', 'Review', 'var(--warn-text)', 'var(--warn-bg)'],
+  ['action_required', 'Action required', 'var(--danger-text)', 'var(--danger-bg)'],
+  ['monitoring', 'Monitoring', 'var(--warn-text)', 'var(--warn-bg)'],
+  ['resolved', 'Resolved', 'var(--ok-text)', 'var(--ok-bg)'],
+  ['closed', 'Closed', 'var(--text2)', 'var(--surface2)'],
 ]
 const st = (k) => STATUSES.find(s => s[0] === k) || STATUSES[0]
 const typeLabel = (k) => (CASE_TYPES.find(t => t[0] === k) || [null, k])[1]
@@ -181,7 +181,7 @@ function CaseWizard({ org, staff, primary, onCancel, onCreated }) {
         {[1, 2, 3, 4].map(n => (
           <div key={n} style={{
             flex: 1, height: 5, borderRadius: 99,
-            background: n <= step ? primary : '#E2E8F0',
+            background: n <= step ? primary : 'var(--border)',
           }} />
         ))}
       </div>
@@ -656,7 +656,7 @@ function EscalatePanel({ caseId, caseRef, primary, onCancel, onDone }) {
             this HR case. The original HR case will remain available as part of the audit trail.
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => setConfirmed(true)} style={primaryBtn('#B42318', false)}>
+            <button onClick={() => setConfirmed(true)} style={primaryBtn('var(--danger-text)', false)}>
               I understand — continue
             </button>
             <button onClick={onCancel} style={ghostBtn}>Cancel</button>
@@ -702,7 +702,7 @@ function EscalatePanel({ caseId, caseRef, primary, onCancel, onDone }) {
           )}
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={go} disabled={busy || !f.reason.trim() || !f.allegation.trim()}
-              style={primaryBtn('#B42318', busy || !f.reason.trim() || !f.allegation.trim())}>
+              style={primaryBtn('var(--danger-text)', busy || !f.reason.trim() || !f.allegation.trim())}>
               {busy ? 'Opening…' : 'Open disciplinary'}
             </button>
             <button onClick={onCancel} style={ghostBtn}>Cancel</button>

@@ -124,9 +124,9 @@ export default function InjuryLog({ org, session, isAdmin }) {
         {FILTERS.map(([k, l]) => (
           <button key={k} onClick={() => setFilter(k)} style={{
             minHeight: 38, padding: '7px 12px', borderRadius: 99, cursor: 'pointer', fontFamily: 'inherit',
-            border: `1.5px solid ${filter === k ? '#0F172A' : '#E2E8F0'}`,
+            border: `1.5px solid ${filter === k ? '#0F172A' : 'var(--border)'}`,
             background: filter === k ? '#0F172A' : '#fff',
-            color: filter === k ? '#fff' : '#64748B',
+            color: filter === k ? '#fff' : 'var(--text3)',
             fontSize: 12.5, fontWeight: 800,
           }}>{l}</button>
         ))}
@@ -156,7 +156,7 @@ export default function InjuryLog({ org, session, isAdmin }) {
           return (
             <div key={r.id} style={{
               ...card,
-              borderLeft: `4px solid ${r.sent_to_hospital ? '#B91C1C' : !r.parent_notified ? '#D97706' : r.follow_up_needed ? '#B45309' : '#E9EDF2'}`,
+              borderLeft: `4px solid ${r.sent_to_hospital ? 'var(--danger-text)' : !r.parent_notified ? '#D97706' : r.follow_up_needed ? 'var(--warn-text)' : '#E9EDF2'}`,
             }}>
               <button onClick={() => setOpenId(isOpen ? null : r.id)} style={{
                 width: '100%', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
@@ -171,14 +171,14 @@ export default function InjuryLog({ org, session, isAdmin }) {
                   {isOpen ? r.what_happened : (r.what_happened || '').slice(0, 120) + ((r.what_happened || '').length > 120 ? '…' : '')}
                 </div>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  {r.injury_type && <span style={flag('#F1F5F9', '#64748B')}>{r.injury_type}</span>}
-                  {r.body_part && <span style={flag('#F1F5F9', '#64748B')}>{r.body_part}</span>}
+                  {r.injury_type && <span style={flag('var(--border-soft)', 'var(--text3)')}>{r.injury_type}</span>}
+                  {r.body_part && <span style={flag('var(--border-soft)', 'var(--text3)')}>{r.body_part}</span>}
                   {r.sent_to_hospital && <span style={flag('#FDE7E7', '#A11')}>Hospital or doctor</span>}
                   <span style={r.parent_notified ? flag('#E4F5E8', '#1B7A34') : flag('#FDE7E7', '#A11')}>
                     {r.parent_notified ? 'Parent told' : `Parent not told${days > 0 ? ` · ${days}d` : ''}`}
                   </span>
                   {r.follow_up_needed && <span style={flag('#FDF0D5', '#8A5A00')}>Follow-up open</span>}
-                  {r.session?.title && <span style={flag('#EEF2FF', '#4338CA')}>{r.session.title}</span>}
+                  {r.session?.title && <span style={flag('var(--info-bg)', '#4338CA')}>{r.session.title}</span>}
                 </div>
               </button>
 
@@ -188,7 +188,7 @@ export default function InjuryLog({ org, session, isAdmin }) {
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 11, paddingTop: 11, borderTop: '1px solid var(--border-soft)' }}>
                   {!r.parent_notified && (
                     <button disabled={busyId === r.id} onClick={() => setNotifyFor(notifyFor === r.id ? null : r.id)}
-                      style={btn('#166534', '#fff')}>
+                      style={btn('var(--ok-text)', '#fff')}>
                       {busyId === r.id ? 'Saving…' : 'Parent has been told'}
                     </button>
                   )}
@@ -209,7 +209,7 @@ export default function InjuryLog({ org, session, isAdmin }) {
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     {NOTIFY_METHODS.map(m => (
                       <button key={m} onClick={() => markParentTold(r, m)} disabled={busyId === r.id}
-                        style={btn('#fff', '#334155', '1.5px solid #E2E8F0')}>{m}</button>
+                        style={btn('#fff', 'var(--text2)', '1.5px solid #E2E8F0')}>{m}</button>
                     ))}
                   </div>
                 </div>

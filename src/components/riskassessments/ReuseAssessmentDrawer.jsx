@@ -198,16 +198,16 @@ export default function ReuseAssessmentDrawer({
             <div style={{ padding: '16px 20px 14px', borderBottom: '1px solid #ECE9F5', flexShrink: 0 }}>
               {isMobile && <div style={{ width: 38, height: 4, borderRadius: 4, background: '#E4DFF5', margin: '0 auto 12px' }} />}
               <div style={{ fontSize: 16.5, fontWeight: 800, color: 'var(--text)' }}>Use a previous assessment</div>
-              <div style={{ fontSize: 12.5, color: '#8B87A3', marginTop: 3, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 3, lineHeight: 1.5 }}>
                 Copies the hazards and controls into a new assessment. The original is left untouched.
               </div>
             </div>
 
             <div style={{ padding: 20, overflowY: 'auto', flex: 1 }}>
-              {loading && <div style={{ color: '#8B87A3', fontSize: 13.5, textAlign: 'center', padding: 20 }}>Looking…</div>}
+              {loading && <div style={{ color: 'var(--text3)', fontSize: 13.5, textAlign: 'center', padding: 20 }}>Looking…</div>}
 
               {!loading && !candidates.length && (
-                <div style={{ color: '#8B87A3', fontSize: 13.5, textAlign: 'center', padding: 20, lineHeight: 1.55 }}>
+                <div style={{ color: 'var(--text3)', fontSize: 13.5, textAlign: 'center', padding: 20, lineHeight: 1.55 }}>
                   There aren't any previous assessments to reuse yet.
                 </div>
               )}
@@ -224,7 +224,7 @@ export default function ReuseAssessmentDrawer({
                             fontSize: 14, fontWeight: 800, color: 'var(--text)',
                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                           }}>{a.name}</div>
-                          <div style={{ fontSize: 12, color: '#8B87A3', marginTop: 2 }}>
+                          <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>
                             {a.location || a.activity_type || '—'} · updated {timeAgo(a.updated_at || a.created_at)}
                           </div>
                         </div>
@@ -261,7 +261,7 @@ export default function ReuseAssessmentDrawer({
             }}>
               <button onClick={onClose} style={{
                 width: '100%', padding: '12px', borderRadius: 12, border: '1px solid #ECE9F5',
-                background: 'var(--surface)', color: '#8B87A3', fontSize: 14, fontWeight: 700,
+                background: 'var(--surface)', color: 'var(--text3)', fontSize: 14, fontWeight: 700,
                 cursor: 'pointer', fontFamily: 'inherit',
               }}>Close</button>
             </div>

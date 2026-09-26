@@ -361,7 +361,7 @@ export default function Signup() {
       />
 
       {error && (
-        <div role="alert" ref={errorRef} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#FCA5A5', borderRadius: 12, padding: '12px 16px', marginBottom: 20, fontSize: 13, fontWeight: 600, lineHeight: 1.5, animation: reducedMotion ? 'ls-fade-in 150ms ease' : 'ls-label-in 260ms cubic-bezier(0.16,1,0.3,1)' }}>
+        <div role="alert" ref={errorRef} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger-text)', borderRadius: 12, padding: '12px 16px', marginBottom: 20, fontSize: 13, fontWeight: 600, lineHeight: 1.5, animation: reducedMotion ? 'ls-fade-in 150ms ease' : 'ls-label-in 260ms cubic-bezier(0.16,1,0.3,1)' }}>
           ⚠️ {error}
         </div>
       )}

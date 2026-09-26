@@ -298,7 +298,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
         {TABS.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
             flex: '1 0 auto', padding: '9px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700,
-            background: tab === t.key ? primary : 'transparent', color: tab === t.key ? '#fff' : '#64748B',
+            background: tab === t.key ? primary : 'transparent', color: tab === t.key ? '#fff' : 'var(--text3)',
             boxShadow: tab === t.key ? `0 4px 14px -4px var(--org-a60)` : 'none', whiteSpace: 'nowrap',
           }}>{t.icon} {t.label}</button>
         ))}
@@ -372,8 +372,8 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                                 <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6 }} style={{ height: '100%', background: barColor, borderRadius: 99 }} />
                               </div>
                               <div style={{ display: 'flex', gap: 6 }}>
-                                <button onClick={() => setTab('coverage')} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 11, fontWeight: 700, color: '#475569', cursor: 'pointer' }}>Open Register</button>
-                                <button onClick={() => openComposerForSession(s)} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 11, fontWeight: 700, color: '#475569', cursor: 'pointer' }}>Message Volunteers</button>
+                                <button onClick={() => setTab('coverage')} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 11, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>Open Register</button>
+                                <button onClick={() => openComposerForSession(s)} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 11, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>Message Volunteers</button>
                                 {!covered && <button onClick={() => openComposerForSession(s)} style={{ padding: '5px 10px', borderRadius: 8, border: 'none', background: barColor, fontSize: 11, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>Find Cover</button>}
                               </div>
                             </div>
@@ -542,9 +542,9 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                 {inviteMsg && (
                   <div style={{
                     display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5, fontWeight: 700, marginBottom: 16, padding: '10px 14px', borderRadius: 12,
-                    color: inviteMsg.startsWith('Error') ? '#B91C1C' : '#15803D',
-                    background: inviteMsg.startsWith('Error') ? '#FEF2F2' : '#F0FDF4',
-                    border: `1px solid ${inviteMsg.startsWith('Error') ? '#FECACA' : '#BBF7D0'}`,
+                    color: inviteMsg.startsWith('Error') ? 'var(--danger-text)' : 'var(--ok-text)',
+                    background: inviteMsg.startsWith('Error') ? 'var(--danger-bg)' : 'var(--ok-bg)',
+                    border: `1px solid ${inviteMsg.startsWith('Error') ? 'var(--danger-border)' : 'var(--ok-border)'}`,
                   }}>
                     <span style={{ fontSize: 16 }}>{inviteMsg.startsWith('Error') ? '⚠️' : '📨'}</span>
                     <span>{inviteMsg}</span>
@@ -599,7 +599,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                     title={!c.wired ? 'Coming soon' : ''}
                     style={{
                       padding: '7px 12px', borderRadius: 10, border: 'none', cursor: c.wired ? 'pointer' : 'not-allowed', fontSize: 12, fontWeight: 700,
-                      background: channel === c.key ? primary : '#F1F5F9', color: channel === c.key ? '#fff' : c.wired ? '#475569' : '#CBD5E1',
+                      background: channel === c.key ? primary : 'var(--border-soft)', color: channel === c.key ? '#fff' : c.wired ? 'var(--text2)' : 'var(--text-faint)',
                     }}>{c.icon} {c.label}</button>
                 ))}
               </div>
@@ -612,7 +612,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
 
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
                 {QUICK_INSERTS.map(q => (
-                  <button key={q.label} onClick={() => setBody(q.text)} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.08)', background: 'var(--surface)', color: '#475569', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>{q.label}</button>
+                  <button key={q.label} onClick={() => setBody(q.text)} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid rgba(15,23,42,0.08)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>{q.label}</button>
                 ))}
               </div>
 
@@ -621,7 +621,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                 {['all', 'active', 'pending', 'custom'].map(m => (
                   <button key={m} onClick={() => setAudienceMode(m)} style={{
                     padding: '5px 12px', borderRadius: 99, border: 'none', cursor: 'pointer', fontSize: 11.5, fontWeight: 700,
-                    background: audienceMode === m ? primary : '#F1F5F9', color: audienceMode === m ? '#fff' : '#475569',
+                    background: audienceMode === m ? primary : 'var(--border-soft)', color: audienceMode === m ? '#fff' : 'var(--text2)',
                   }}>{m === 'all' ? 'All Volunteers' : m === 'active' ? 'Only Active' : m === 'pending' ? 'Only Pending' : 'Custom Selection'}</button>
                 ))}
               </div>
@@ -638,7 +638,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                 </div>
               )}
 
-              {sendResult && <div style={{ fontSize: 12.5, fontWeight: 700, color: sendResult.startsWith('Error') ? '#DC2626' : '#15803D', marginBottom: 10 }}>{sendResult}</div>}
+              {sendResult && <div style={{ fontSize: 12.5, fontWeight: 700, color: sendResult.startsWith('Error') ? '#DC2626' : 'var(--ok-text)', marginBottom: 10 }}>{sendResult}</div>}
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: broadcasts.length > 0 ? 20 : 0 }}>
                 <button onClick={sendBroadcast} disabled={sendingMsg || !body.trim()} style={{ ...btnPrimary(primary), opacity: sendingMsg || !body.trim() ? 0.6 : 1 }}>
@@ -657,7 +657,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                           <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)' }}>{b.subject || b.body?.slice(0, 60)}</div>
                           <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{b.audience_label} · {new Date(b.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
                         </div>
-                        <Badge bg="rgba(34,197,94,0.12)" color="#15803D">{b.sent_count}/{b.recipient_count}</Badge>
+                        <Badge bg="rgba(34,197,94,0.12)" color="var(--ok-text)">{b.sent_count}/{b.recipient_count}</Badge>
                       </div>
                     ))}
                   </div>

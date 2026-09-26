@@ -50,8 +50,8 @@ export default function VolunteersApplications({ org, applicants, onDataChange, 
                       <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginTop: 4 }}>Available: {a.availability.join(', ')}</div>
                     )}
                     {a.dbs_number && <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginTop: 2 }}>DBS: {a.dbs_number}{a.dbs_expiry ? ` (expires ${new Date(a.dbs_expiry).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })})` : ''}</div>}
-                    {a.notes && <div style={{ fontSize: 11.5, color: '#475569', marginTop: 6, fontStyle: 'italic' }}>"{a.notes}"</div>}
-                    <div style={{ fontSize: 10, color: '#CBD5E1', marginTop: 6 }}>Applied {new Date(a.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                    {a.notes && <div style={{ fontSize: 11.5, color: 'var(--text2)', marginTop: 6, fontStyle: 'italic' }}>"{a.notes}"</div>}
+                    <div style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 6 }}>Applied {new Date(a.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
                     <button onClick={() => onApprovePublic?.(a)} style={{ fontSize: 11.5, fontWeight: 800, padding: '6px 12px', borderRadius: 8, border: 'none', background: 'rgba(34,197,94,0.12)', color: 'var(--ok-text)', cursor: 'pointer', whiteSpace: 'nowrap' }}><Icon name="✓" /> Approve & Invite</button>
@@ -106,10 +106,10 @@ export default function VolunteersApplications({ org, applicants, onDataChange, 
                           <button onClick={() => moveTo(a.id, 'rejected')} style={{ fontSize: 10.5, fontWeight: 800, padding: '4px 8px', borderRadius: 7, border: 'none', background: 'rgba(239,68,68,0.1)', color: 'var(--danger-text)', cursor: 'pointer' }}>Reject</button>
                         )}
                         {stage.key === 'new' && (
-                          <button onClick={() => moveTo(a.id, 'reviewing')} style={{ fontSize: 10.5, fontWeight: 800, padding: '4px 8px', borderRadius: 7, border: 'none', background: 'var(--surface-hover)', color: '#475569', cursor: 'pointer' }}>Review <Icon name="→" /></button>
+                          <button onClick={() => moveTo(a.id, 'reviewing')} style={{ fontSize: 10.5, fontWeight: 800, padding: '4px 8px', borderRadius: 7, border: 'none', background: 'var(--surface-hover)', color: 'var(--text2)', cursor: 'pointer' }}>Review <Icon name="→" /></button>
                         )}
                         {stage.key === 'reviewing' && (
-                          <button onClick={() => moveTo(a.id, 'interview')} style={{ fontSize: 10.5, fontWeight: 800, padding: '4px 8px', borderRadius: 7, border: 'none', background: 'var(--surface-hover)', color: '#475569', cursor: 'pointer' }}>Interview <Icon name="→" /></button>
+                          <button onClick={() => moveTo(a.id, 'interview')} style={{ fontSize: 10.5, fontWeight: 800, padding: '4px 8px', borderRadius: 7, border: 'none', background: 'var(--surface-hover)', color: 'var(--text2)', cursor: 'pointer' }}>Interview <Icon name="→" /></button>
                         )}
                       </div>
                     </motion.div>

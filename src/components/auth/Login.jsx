@@ -178,7 +178,7 @@ export default function Login({ org }) {
   }
 
   const errBox = error ? (
-    <div role="alert" style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: '#FCA5A5', borderRadius: 10, padding: '11px 14px', fontSize: 13.5, marginBottom: 16, lineHeight: 1.5 }}>{error}</div>
+    <div role="alert" style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: 'var(--danger-text)', borderRadius: 10, padding: '11px 14px', fontSize: 13.5, marginBottom: 16, lineHeight: 1.5 }}>{error}</div>
   ) : null
 
   return (

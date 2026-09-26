@@ -120,7 +120,7 @@ export default function ResetPassword() {
               <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 6 }}>Set a new password</div>
               <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginBottom: 24 }}>Choose a strong password for your account.</div>
 
-              {error && <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: '#FCA5A5', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16 }}>{error}</div>}
+              {error && <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: 'var(--danger-text)', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16 }}>{error}</div>}
 
               <form onSubmit={handleSubmit}>
                 <div style={{ marginBottom: 14 }}>
@@ -147,7 +147,7 @@ export default function ResetPassword() {
                   <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.45)', display: 'block', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.6 }}>Confirm password</label>
                   <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required placeholder="Repeat password"
                     style={{ ...inputStyle, border: `1.5px solid ${confirm && confirm !== password ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.12)'}` }} />
-                  {confirm && confirm !== password && <div style={{ fontSize: 11, color: '#FCA5A5', marginTop: 6, fontWeight: 600 }}>Passwords don't match</div>}
+                  {confirm && confirm !== password && <div style={{ fontSize: 11, color: 'var(--danger-text)', marginTop: 6, fontWeight: 600 }}>Passwords don't match</div>}
                   {confirm && confirm === password && <div style={{ fontSize: 11, color: '#4ADE80', marginTop: 6, fontWeight: 600 }}><Icon name="✓" /> Passwords match</div>}
                 </div>
 

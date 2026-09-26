@@ -17,7 +17,7 @@ export default function ResourceCard({ resource, nextBooking, onBook, onOpen, on
       onMouseEnter={e => e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.06)'}
       onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}>
       <div style={{ display: 'flex', alignItems: view === 'grid' ? 'flex-start' : 'center', gap: 12, marginBottom: view === 'grid' ? 12 : 0, flex: view === 'grid' ? undefined : '0 0 auto' }}>
-        <div style={{ width: view === 'grid' ? '100%' : 48, height: view === 'grid' ? 90 : 48, borderRadius: 10, background: resource.image_url ? `url(${resource.image_url}) center/cover` : '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: view === 'grid' ? 30 : 20, flexShrink: 0 }}>
+        <div style={{ width: view === 'grid' ? '100%' : 48, height: view === 'grid' ? 90 : 48, borderRadius: 10, background: resource.image_url ? `url(${resource.image_url}) center/cover` : 'var(--border-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: view === 'grid' ? 30 : 20, flexShrink: 0 }}>
           {!resource.image_url && cat.icon}
         </div>
       </div>

@@ -278,7 +278,7 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
           </div>
           {child.has_behaviour_plan && <span style={{ display: 'inline-block', marginTop: 6, fontSize: 10.5, fontWeight: 800, background: 'var(--warn-bg)', color: 'var(--warn-text)', borderRadius: 99, padding: '2px 9px' }}>Support Plan</span>}
         </div>
-        <span style={{ fontSize: 11, fontWeight: 800, color: latestAtt?.status === 'signed_in' ? '#15803D' : '#64748B', background: latestAtt?.status === 'signed_in' ? '#DCFCE7' : '#F1F5F9', borderRadius: 99, padding: '4px 10px' }}>
+        <span style={{ fontSize: 11, fontWeight: 800, color: latestAtt?.status === 'signed_in' ? 'var(--ok-text)' : 'var(--text3)', background: latestAtt?.status === 'signed_in' ? 'var(--ok-bg)' : 'var(--border-soft)', borderRadius: 99, padding: '4px 10px' }}>
           {latestAtt?.status === 'signed_in' ? '● Signed in' : latestAtt?.status === 'signed_out' ? 'Signed out' : latestAtt?.status === 'absent' ? 'Absent' : 'No recent activity'}
         </span>
       </div>
@@ -296,7 +296,7 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
         </div>
         <div style={{ background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 12, padding: 12 }}>
           <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--warn-text)', marginBottom: 6 }}><Icon name="🛡️" /> Safeguarding / Support</div>
-          <div style={{ fontSize: 11.5, color: child.has_behaviour_plan ? '#92400E' : '#94A3B8' }}>{child.has_behaviour_plan ? 'Support plan in place' : 'None recorded'}</div>
+          <div style={{ fontSize: 11.5, color: child.has_behaviour_plan ? 'var(--warn-text)' : 'var(--text-faint)' }}>{child.has_behaviour_plan ? 'Support plan in place' : 'None recorded'}</div>
           {child.behaviour_plan_notes && <div style={{ fontSize: 11, color: 'var(--warn-text)', marginTop: 4 }}>{child.behaviour_plan_notes}</div>}
         </div>
         <div style={{ background: 'var(--ok-bg)', border: '1px solid var(--ok-border)', borderRadius: 12, padding: 12 }}>
@@ -365,7 +365,7 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
               <div key={t.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0' }}>
                 <span style={{ fontSize: 12.5, color: 'var(--text2)' }}>{t.label}</span>
                 <button onClick={() => toggleConsent(t.key)} disabled={savingConsent === t.key}
-                  style={{ fontSize: 11, fontWeight: 800, borderRadius: 99, padding: '3px 10px', border: 'none', cursor: 'pointer', color: granted ? '#15803D' : '#94A3B8', background: granted ? '#DCFCE7' : '#F1F5F9' }}>
+                  style={{ fontSize: 11, fontWeight: 800, borderRadius: 99, padding: '3px 10px', border: 'none', cursor: 'pointer', color: granted ? 'var(--ok-text)' : 'var(--text-faint)', background: granted ? 'var(--ok-bg)' : 'var(--border-soft)' }}>
                   {savingConsent === t.key ? '…' : granted ? '✓ Granted' : 'Not granted'}
                 </button>
               </div>
@@ -440,7 +440,7 @@ function AddChildQuickModal({ org, onClose, onAdded }) {
           ['parent_email', 'Parent / carer email', 'email'],
         ].map(([key, label, type]) => (
           <div key={key} style={{ marginBottom: 10 }}>
-            <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>{label}</label>
+            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 4 }}>{label}</label>
             <input type={type || 'text'} value={form[key]} onChange={e => set(key, e.target.value)} style={inputStyle} />
           </div>
         ))}
@@ -638,7 +638,7 @@ function RegistrationRequestsTab({ registrations, org, authUserId, primary, onRe
   return (
     <div style={{ display: 'grid', gridTemplateColumns: open ? '1fr 1.3fr' : '1fr', gap: 16, alignItems: 'start' }}>
       <div style={glass({ padding: 0, overflow: 'hidden' })}>
-        <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 15, color: pending.length ? '#B91C1C' : '#0F172A', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(15,23,42,0.06)', fontWeight: 800, fontSize: 15, color: pending.length ? 'var(--danger-text)' : 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
           {pending.length > 0 && <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#DC2626', animation: 'pulse-live 1.5s infinite', flexShrink: 0 }} />}
           {pending.length} pending registration{pending.length === 1 ? '' : 's'}
         </div>
@@ -661,8 +661,8 @@ function RegistrationRequestsTab({ registrations, org, authUserId, primary, onRe
             <div style={{ padding: '10px 18px', fontSize: 11, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.5, borderTop: '1px solid rgba(15,23,42,0.06)' }}>Reviewed</div>
             {reviewed.slice(0, 20).map(r => (
               <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 18px', borderBottom: '1px solid rgba(15,23,42,0.05)' }}>
-                <div style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: '#475569' }}>{r.first_name} {r.last_name}</div>
-                <span style={{ fontSize: 10, fontWeight: 800, color: r.status === 'approved' ? '#15803D' : '#B91C1C', background: r.status === 'approved' ? '#DCFCE7' : '#FEE2E2', borderRadius: 99, padding: '2px 9px' }}>{r.status}</span>
+                <div style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: 'var(--text2)' }}>{r.first_name} {r.last_name}</div>
+                <span style={{ fontSize: 10, fontWeight: 800, color: r.status === 'approved' ? 'var(--ok-text)' : 'var(--danger-text)', background: r.status === 'approved' ? 'var(--ok-bg)' : 'var(--danger-bg)', borderRadius: 99, padding: '2px 9px' }}>{r.status}</span>
               </div>
             ))}
           </>
@@ -703,7 +703,7 @@ function RegistrationRequestsTab({ registrations, org, authUserId, primary, onRe
               </div>
             )
           ) : (
-            <div style={{ marginTop: 16, fontSize: 12.5, fontWeight: 700, color: open.status === 'approved' ? '#15803D' : '#B91C1C' }}>
+            <div style={{ marginTop: 16, fontSize: 12.5, fontWeight: 700, color: open.status === 'approved' ? 'var(--ok-text)' : 'var(--danger-text)' }}>
               {open.status === 'approved' ? '✓ Approved — profile created.' : `✕ Declined${open.rejection_reason ? `: ${open.rejection_reason}` : '.'}`}
             </div>
           )}

@@ -111,7 +111,7 @@ export default function ImpactOutcomes({ org, isAdmin }) {
               Record outcome
             </button>
           )}
-          <button onClick={() => setShowMoreMenu(v => !v)} style={{ ...btn, border: '1.5px solid var(--border)', background: 'var(--surface)', color: '#475569', padding: '11px 14px' }}>
+          <button onClick={() => setShowMoreMenu(v => !v)} style={{ ...btn, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', padding: '11px 14px' }}>
             <Icon name="⋯" />
           </button>
           {showMoreMenu && (
@@ -147,7 +147,7 @@ export default function ImpactOutcomes({ org, isAdmin }) {
             padding: '8px 16px', borderRadius: 9, border: 'none',
             background: period === p.key ? '#fff' : 'transparent',
             boxShadow: period === p.key ? '0 1px 3px rgba(0,0,0,0.09)' : 'none',
-            color: period === p.key ? primary : '#94A3B8',
+            color: period === p.key ? primary : 'var(--text-faint)',
             fontWeight: 800, fontSize: 12.5, cursor: 'pointer', fontFamily: 'inherit',
           }}>{p.label}</button>
         ))}

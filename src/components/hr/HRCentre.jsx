@@ -22,7 +22,7 @@ const DBS_STATES = {
   clear: { label: 'Clear', tone: 'var(--ok-text)', bg: 'var(--ok-bg)' },
   expiring: { label: 'Expiring soon', tone: 'var(--warn-text)', bg: 'var(--warn-bg)' },
   expired: { label: 'Expired', tone: 'var(--danger-text)', bg: 'var(--danger-bg)' },
-  none: { label: 'Not recorded', tone: '#5A5772', bg: 'var(--surface2)' },
+  none: { label: 'Not recorded', tone: 'var(--text2)', bg: 'var(--surface2)' },
 }
 
 const londonToday = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' })
@@ -197,9 +197,9 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
           <button key={key} onClick={() => setTab(key)} style={{
             padding: '8px 16px', borderRadius: 999, fontSize: 13, fontWeight: 700,
             whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: 'inherit',
-            border: `1px solid ${tab === key ? 'transparent' : '#E2E8F0'}`,
-            background: tab === key ? primary : '#fff',
-            color: tab === key ? '#fff' : '#64748B',
+            border: `1px solid ${tab === key ? 'transparent' : 'var(--border)'}`,
+            background: tab === key ? primary : 'var(--surface)',
+            color: tab === key ? '#fff' : 'var(--text3)',
           }}>{label}</button>
         ))}
       </div>
@@ -233,11 +233,11 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
                 }}>
                   <span style={{
                     width: 8, height: 8, borderRadius: 8, flexShrink: 0,
-                    background: item.severity === 'action' ? '#E5484D' : item.severity === 'review' ? '#F79009' : '#7C5CFC',
+                    background: item.severity === 'action' ? 'var(--danger-text)' : item.severity === 'review' ? '#F79009' : '#7C5CFC',
                   }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{item.title}</div>
-                    <div style={{ fontSize: 12.5, color: '#8B87A3', marginTop: 2 }}>{item.detail}</div>
+                    <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>{item.detail}</div>
                   </div>
                   <button
                     onClick={() => item.isInvites ? setTab('staff') : setSelected(item.person)}
@@ -257,7 +257,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
               <div style={{ fontSize: 15.5, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>
                 Everything is up to date
               </div>
-              <div style={{ fontSize: 13.5, color: '#8B87A3' }}>There are no outstanding HR actions.</div>
+              <div style={{ fontSize: 13.5, color: 'var(--text3)' }}>There are no outstanding HR actions.</div>
             </div>
           )}
 
@@ -324,7 +324,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
           {directory.length === 0 && (
             <div style={{ ...CARD, padding: '44px 24px', textAlign: 'center' }}>
               <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>Build your team</div>
-              <div style={{ fontSize: 14, color: '#8B87A3', maxWidth: 360, margin: '0 auto 18px', lineHeight: 1.55 }}>
+              <div style={{ fontSize: 14, color: 'var(--text3)', maxWidth: 360, margin: '0 auto 18px', lineHeight: 1.55 }}>
                 Invite staff to create their LaunchSession account, and their compliance
                 and leave will live here alongside it.
               </div>
@@ -359,7 +359,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
                       <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>
                         {p.full_name || 'Unnamed'}
                       </div>
-                      <div style={{ fontSize: 12.5, color: '#8B87A3', marginTop: 2 }}>
+                      <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>
                         {p.job_title || p.role || 'Staff'}{p.email ? ` · ${p.email}` : ''}
                       </div>
                     </div>
@@ -377,7 +377,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
                         // has no login yet, which changes what you can do for them.
                         <span style={{
                           padding: '3px 10px', borderRadius: 999, fontSize: 11.5, fontWeight: 700,
-                          background: 'var(--surface2)', color: '#5A5772',
+                          background: 'var(--surface2)', color: 'var(--text2)',
                         }}>No account</span>
                       )}
                     </div>
@@ -400,7 +400,7 @@ export default function HRCentre({ org, session, userProfile, onNavigate, hasHRM
                         <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>
                           {inv.full_name || inv.email}
                         </div>
-                        <div style={{ fontSize: 12.5, color: '#8B87A3', marginTop: 2 }}>
+                        <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>
                           {inv.email} · {inv.role} · sent {new Date(inv.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                         </div>
                       </div>
@@ -508,7 +508,7 @@ function ComplianceTab({ directory, isMobile, onOpen }) {
                 {['Staff', 'DBS', 'Safeguarding', 'First aid'].map(h => (
                   <th key={h} style={{
                     textAlign: 'left', padding: '10px 16px', fontSize: 11.5, fontWeight: 700,
-                    color: '#8B87A3', letterSpacing: 0.3, borderBottom: '1px solid #ECE9F5',
+                    color: 'var(--text3)', letterSpacing: 0.3, borderBottom: '1px solid #ECE9F5',
                   }}>{h.toUpperCase()}</th>
                 ))}
               </tr>
@@ -553,7 +553,7 @@ function LeaveTab({ leave, directory }) {
       <div style={{ ...CARD, padding: 18 }}>
         <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Today</div>
         {onNow.length === 0 ? (
-          <div style={{ fontSize: 13.5, color: '#8B87A3' }}>Nobody is on leave today.</div>
+          <div style={{ fontSize: 13.5, color: 'var(--text3)' }}>Nobody is on leave today.</div>
         ) : (
           <div style={{ display: 'grid', gap: 8 }}>
             {onNow.map(l => (
@@ -568,7 +568,7 @@ function LeaveTab({ leave, directory }) {
       <div style={{ ...CARD, padding: 18 }}>
         <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Upcoming</div>
         {upcoming.length === 0 ? (
-          <div style={{ fontSize: 13.5, color: '#8B87A3' }}>No leave booked.</div>
+          <div style={{ fontSize: 13.5, color: 'var(--text3)' }}>No leave booked.</div>
         ) : (
           <div style={{ display: 'grid', gap: 8 }}>
             {upcoming.map(l => (
@@ -594,7 +594,7 @@ function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, viewe
 
   const field = (label, value) => (
     <div key={label}>
-      <div style={{ fontSize: 11.5, fontWeight: 700, color: '#8B87A3', letterSpacing: 0.3 }}>
+      <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text3)', letterSpacing: 0.3 }}>
         {label.toUpperCase()}
       </div>
       <div style={{ fontSize: 14, color: 'var(--text)', marginTop: 3 }}>{value || '—'}</div>
@@ -641,9 +641,9 @@ function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, viewe
           <button key={k} onClick={() => setTab(k)} style={{
             padding: '8px 15px', borderRadius: 999, fontSize: 13, fontWeight: 700,
             whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: 'inherit',
-            border: `1px solid ${tab === k ? 'transparent' : '#E2E8F0'}`,
-            background: tab === k ? primary : '#fff',
-            color: tab === k ? '#fff' : '#64748B',
+            border: `1px solid ${tab === k ? 'transparent' : 'var(--border)'}`,
+            background: tab === k ? primary : 'var(--surface)',
+            color: tab === k ? '#fff' : 'var(--text3)',
           }}>{l}</button>
         ))}
       </div>
@@ -698,7 +698,7 @@ function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, viewe
             <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', minWidth: 150 }}>{label}</div>
               <Pill state={complianceState(expiry, recorded)} />
-              <div style={{ fontSize: 12.5, color: '#8B87A3' }}>
+              <div style={{ fontSize: 12.5, color: 'var(--text3)' }}>
                 {expiry ? `Expires ${new Date(expiry).toLocaleDateString('en-GB')}` : 'No expiry recorded'}
               </div>
             </div>
@@ -720,12 +720,12 @@ function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, viewe
             )}
           </div>
           {isAdmin && !person.hr_id && (
-            <div style={{ fontSize: 12.5, color: '#8B87A3', marginBottom: 12, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 12, lineHeight: 1.5 }}>
               Add employment details first — leave is recorded against a staff record.
             </div>
           )}
           {theirLeave.length === 0 ? (
-            <div style={{ fontSize: 13.5, color: '#8B87A3' }}>No upcoming leave.</div>
+            <div style={{ fontSize: 13.5, color: 'var(--text3)' }}>No upcoming leave.</div>
           ) : (
             <div style={{ display: 'grid', gap: 8 }}>
               {theirLeave.map(l => (
@@ -887,7 +887,7 @@ export function InviteStaffModal({ org, primary, onClose, onSent }) {
                 }}>Cancel</button>
                 <button onClick={send} disabled={busy || !email.trim()} style={{
                   flex: 1, padding: '12px 18px', borderRadius: 12, border: 'none',
-                  background: busy || !email.trim() ? '#E2E8F0' : primary, color: '#fff',
+                  background: busy || !email.trim() ? 'var(--surface3)' : primary, color: '#fff',
                   fontSize: 14, fontWeight: 800,
                   cursor: busy || !email.trim() ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
                 }}>{busy ? 'Sending…' : 'Send invite'}</button>
@@ -1037,7 +1037,7 @@ export function EditStaffModal({ person, org, primary, onClose, onSaved }) {
             }}>Cancel</button>
             <button onClick={save} disabled={busy} style={{
               flex: 1, padding: '12px 18px', borderRadius: 12, border: 'none',
-              background: busy ? '#E2E8F0' : primary, color: '#fff',
+              background: busy ? 'var(--surface3)' : primary, color: '#fff',
               fontSize: 14, fontWeight: 800,
               cursor: busy ? 'wait' : 'pointer', fontFamily: 'inherit',
             }}>{busy ? 'Saving…' : 'Save'}</button>
@@ -1125,7 +1125,7 @@ export function RecordLeaveModal({ person, org, primary, onClose, onSaved }) {
             }}>Cancel</button>
             <button onClick={save} disabled={busy || !start || !end} style={{
               flex: 1, padding: '12px 18px', borderRadius: 12, border: 'none',
-              background: busy || !start || !end ? '#E2E8F0' : primary, color: '#fff',
+              background: busy || !start || !end ? 'var(--surface3)' : primary, color: '#fff',
               fontSize: 14, fontWeight: 800,
               cursor: busy || !start || !end ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
             }}>{busy ? 'Saving…' : 'Record leave'}</button>

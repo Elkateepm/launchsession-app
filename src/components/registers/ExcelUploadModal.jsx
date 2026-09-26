@@ -114,7 +114,7 @@ export default function ExcelUploadModal({ orgId, bubbles, onClose, onImported }
             <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Step 2: Upload your file</div>
             <div onClick={() => fileRef.current?.click()} style={{ border: '2px dashed var(--border)', borderRadius: 12, padding: '28px 20px', textAlign: 'center', cursor: 'pointer', background: 'var(--surface2)' }}
               onMouseEnter={e => e.currentTarget.style.borderColor = '#1B9AAA'}
-              onMouseLeave={e => e.currentTarget.style.borderColor = '#e5e7eb'}>
+              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
               <div style={{ fontSize: 28, marginBottom: 8 }}><Icon name="📂" /></div>
               <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>Click to choose a file</div>
               <div style={{ fontSize: 12, color: 'var(--text3)' }}>Supports .xlsx, .xls, and .csv files</div>

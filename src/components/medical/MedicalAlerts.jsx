@@ -168,7 +168,7 @@ export default function MedicalAlerts({ org, session, onNavigate }) {
           { label: `${terms.People} with a medical need`, value: rows.length, icon: '💊',
             onClick: () => setTab('all'), active: tab === 'all' },
           { label: 'Immediate response', value: immediate.length, icon: '🚨',
-            color: immediate.length ? '#B91C1C' : undefined,
+            color: immediate.length ? 'var(--danger-text)' : undefined,
             onClick: immediate.length ? () => setTab('immediate') : undefined,
             active: tab === 'immediate' },
           { label: 'Needs review', value: needsReviewRows.length, icon: '⏳',
@@ -182,11 +182,11 @@ export default function MedicalAlerts({ org, session, onNavigate }) {
         {TABS.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
             padding: '8px 14px', borderRadius: 99, minHeight: 40, fontFamily: 'inherit',
-            border: `1.5px solid ${tab === t.key ? (t.tone || primary) : t.tone ? `${t.tone}55` : '#E5E7EB'}`,
+            border: `1.5px solid ${tab === t.key ? (t.tone || primary) : t.tone ? `${t.tone}55` : 'var(--border)'}`,
             background: tab === t.key
               ? (t.tone || `linear-gradient(135deg, ${primary}, var(--org-a85))`)
               : '#fff',
-            color: tab === t.key ? '#fff' : (t.tone || '#6B7280'),
+            color: tab === t.key ? '#fff' : (t.tone || 'var(--text3)'),
             fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
           }}>{t.label} {t.count}</button>
         ))}
@@ -260,7 +260,7 @@ function EmptyState({ tab, rows, todaySessions, terms, onSeeAll }) {
   const nothingAtAll = rows.length === 0
   return (
     <div style={{ padding: '56px 24px', textAlign: 'center' }}>
-      <div style={{ fontSize: 38, marginBottom: 10, color: '#CBD5E1' }}>
+      <div style={{ fontSize: 38, marginBottom: 10, color: 'var(--text-faint)' }}>
         <Icon name={nothingAtAll ? '💊' : '✅'} />
       </div>
       <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text2)', marginBottom: 5 }}>
@@ -286,7 +286,7 @@ function EmptyState({ tab, rows, todaySessions, terms, onSeeAll }) {
       {tab === 'today' && rows.length > 0 && (
         <button onClick={onSeeAll} style={{
           marginTop: 14, minHeight: 40, padding: '0 18px', borderRadius: 10, cursor: 'pointer',
-          border: '1.5px solid var(--border)', background: 'var(--surface)', color: '#475569', fontSize: 13, fontWeight: 800, fontFamily: 'inherit',
+          border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 800, fontFamily: 'inherit',
         }}>See everyone</button>
       )}
     </div>
@@ -350,7 +350,7 @@ function AlertCard({ row, primary, showToday, onOpen, onSignOff }) {
           </div>
         )}
 
-        <div style={{ fontSize: 11, color: needsReview ? '#B45309' : '#16A34A', fontWeight: 700, marginTop: 6 }}>
+        <div style={{ fontSize: 11, color: needsReview ? 'var(--warn-text)' : '#16A34A', fontWeight: 700, marginTop: 6 }}>
           {review
             ? `${needsReview ? 'Review due — l' : 'L'}ast checked ${format(new Date(review.reviewed_at), 'd MMM yyyy')} by ${review.reviewed_by_name || 'a team member'}`
             : 'Never checked'}
@@ -358,7 +358,7 @@ function AlertCard({ row, primary, showToday, onOpen, onSignOff }) {
       </div>
 
       <button onClick={e => { e.stopPropagation(); onSignOff() }}
-        style={{ ...btnPrimary(needsReview ? '#D97706' : '#94A3B8'), flexShrink: 0, fontSize: 12, whiteSpace: 'nowrap', minHeight: 40 }}>
+        style={{ ...btnPrimary(needsReview ? '#D97706' : 'var(--text-faint)'), flexShrink: 0, fontSize: 12, whiteSpace: 'nowrap', minHeight: 40 }}>
         {needsReview ? 'Sign off' : 'Re-confirm'}
       </button>
     </motion.div>
@@ -387,7 +387,7 @@ function SignOffModal({ child, onClose, onConfirm }) {
           style={{ ...inputStyle, minHeight: 80, marginBottom: 16, resize: 'vertical' }} />
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={onClose} style={{ ...btnGhost, flex: 1 }}>Cancel</button>
-          <button onClick={handleConfirm} disabled={saving} style={{ ...btnPrimary(saving ? '#9CA3AF' : '#16A34A'), flex: 1 }}>
+          <button onClick={handleConfirm} disabled={saving} style={{ ...btnPrimary(saving ? 'var(--text-faint)' : '#16A34A'), flex: 1 }}>
             {saving ? 'Saving…' : 'Confirm sign off'}
           </button>
         </div>
@@ -453,7 +453,7 @@ function MedicalDetailDrawer({ row, reviews, primary, isMobile, onClose, onSignO
                 <span style={{ fontSize: 10.5, fontWeight: 800, color: TIERS[f.tier].colour, background: TIERS[f.tier].bg, borderRadius: 6, padding: '2px 7px' }}>{f.label}</span>
                 {f.tier === 1 && <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--danger-text)' }}>{TIERS[1].label}</span>}
               </div>
-              <div style={{ fontSize: 13, color: f.detail ? '#374151' : '#9CA3AF', lineHeight: 1.5 }}>
+              <div style={{ fontSize: 13, color: f.detail ? 'var(--text2)' : 'var(--text-faint)', lineHeight: 1.5 }}>
                 {f.detail || 'No further detail recorded.'}
               </div>
             </div>

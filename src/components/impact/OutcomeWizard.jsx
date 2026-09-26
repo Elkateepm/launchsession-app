@@ -70,7 +70,7 @@ export default function OutcomeWizard({ org, children, presetChild, onClose, onS
           </div>
           <div style={{ display: 'flex', gap: 4, marginTop: 14 }}>
             {STEPS.map((s, i) => (
-              <div key={s} style={{ flex: 1, height: 4, borderRadius: 99, background: i <= step ? primary : '#F3F4F6', transition: 'background 0.3s' }} />
+              <div key={s} style={{ flex: 1, height: 4, borderRadius: 99, background: i <= step ? primary : 'var(--border-soft)', transition: 'background 0.3s' }} />
             ))}
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 700, marginTop: 6 }}>STEP {step + 1} OF {STEPS.length} · {STEPS[step].toUpperCase()}</div>
@@ -89,7 +89,7 @@ export default function OutcomeWizard({ org, children, presetChild, onClose, onS
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 280, overflowY: 'auto' }}>
                     {filteredChildren.map(c => (
                       <div key={c.id} onClick={() => set({ child: c })}
-                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12, cursor: 'pointer', border: `1.5px solid ${form.child?.id === c.id ? primary : '#F3F4F6'}`, background: form.child?.id === c.id ? primary + '10' : '#fff' }}>
+                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12, cursor: 'pointer', border: `1.5px solid ${form.child?.id === c.id ? primary : 'var(--border-soft)'}`, background: form.child?.id === c.id ? primary + '10' : '#fff' }}>
                         <div style={{ width: 34, height: 34, borderRadius: 9, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: primary }}>
                           {c.first_name?.[0]}{c.last_name?.[0]}
                         </div>
@@ -106,7 +106,7 @@ export default function OutcomeWizard({ org, children, presetChild, onClose, onS
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
                   {OUTCOME_AREAS.map(a => (
                     <div key={a.key} onClick={() => set({ area: a.key })}
-                      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 12, cursor: 'pointer', border: `1.5px solid ${form.area === a.key ? a.color : '#F3F4F6'}`, background: form.area === a.key ? a.color + '12' : '#fff' }}>
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 12, cursor: 'pointer', border: `1.5px solid ${form.area === a.key ? a.color : 'var(--border-soft)'}`, background: form.area === a.key ? a.color + '12' : '#fff' }}>
                       <span style={{ fontSize: 17 }}><Icon name={a.icon} /></span>
                       <span style={{ fontSize: 12.5, fontWeight: 700 }}>{a.label}</span>
                     </div>
@@ -118,7 +118,7 @@ export default function OutcomeWizard({ org, children, presetChild, onClose, onS
                 <div style={{ textAlign: 'center', padding: '10px 0' }}>
                   <div style={{ fontSize: 40, marginBottom: 6 }}>{areaObj?.icon}</div>
                   <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 20 }}>Rate {form.child?.first_name}'s {areaObj?.label}</div>
-                  <div style={{ fontSize: 48, fontWeight: 900, color: scoreColor(form.score) }}>{form.score}<span style={{ fontSize: 20, color: '#D1D5DB' }}>/10</span></div>
+                  <div style={{ fontSize: 48, fontWeight: 900, color: scoreColor(form.score) }}>{form.score}<span style={{ fontSize: 20, color: 'var(--text-faint)' }}>/10</span></div>
                   <div style={{ fontSize: 13, color: scoreColor(form.score), fontWeight: 700, marginTop: 4 }}>{scoreEmoji(form.score)} {scoreLabel(form.score)}</div>
                   <input type="range" min={1} max={10} value={form.score} onChange={e => set({ score: Number(e.target.value) })} style={{ width: '100%', marginTop: 24 }} />
                 </div>
@@ -180,7 +180,7 @@ export default function OutcomeWizard({ org, children, presetChild, onClose, onS
           )}
           <div style={{ flex: 1 }} />
           {step < STEPS.length - 1 ? (
-            <button disabled={!canNext[step]} onClick={() => setStep(s => s + 1)} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: canNext[step] ? primary : '#E5E7EB', color: '#fff', fontWeight: 800, cursor: canNext[step] ? 'pointer' : 'not-allowed', fontSize: 13 }}>Continue <Icon name="→" /></button>
+            <button disabled={!canNext[step]} onClick={() => setStep(s => s + 1)} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: canNext[step] ? primary : 'var(--border)', color: '#fff', fontWeight: 800, cursor: canNext[step] ? 'pointer' : 'not-allowed', fontSize: 13 }}>Continue <Icon name="→" /></button>
           ) : (
             <button disabled={saving} onClick={save} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, cursor: 'pointer', fontSize: 13 }}>{saving ? 'Saving...' : '📊 Save Outcome'}</button>
           )}

@@ -101,7 +101,7 @@ export function GroupsQuickSetupModal({ org, initialGroups, onClose, onSaved }) 
           Add the groups your participants are organised into — like "Under 10s" or "Beginners".
         </div>
 
-        {error && <div style={{ background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.4)', color: '#FCA5A5', borderRadius: 8, padding: '8px 12px', marginBottom: 14, fontSize: 12 }}><Icon name="⚠️" /> {error}</div>}
+        {error && <div style={{ background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.4)', color: 'var(--danger-text)', borderRadius: 8, padding: '8px 12px', marginBottom: 14, fontSize: 12 }}><Icon name="⚠️" /> {error}</div>}
 
         {/* Presets */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 20 }}>
@@ -141,7 +141,7 @@ export function GroupsQuickSetupModal({ org, initialGroups, onClose, onSaved }) 
           <button onClick={addCustom} style={{ width: '100%', padding: '13px 16px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>+ Add Group</button>
         </div>
 
-        <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: 13, borderRadius: 12, border: 'none', background: saving ? '#6B7280' : `linear-gradient(135deg, ${primary}, #6366F1)`, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
+        <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: 13, borderRadius: 12, border: 'none', background: saving ? 'var(--text3)' : `linear-gradient(135deg, ${primary}, #6366F1)`, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
           {saving ? 'Saving...' : `Save ${groups.length} Group${groups.length !== 1 ? 's' : ''} →`}
         </button>
       </div>
@@ -289,7 +289,7 @@ function EditChildForm({ child, onSaved }) {
         </div>
       </FormSection>
 
-      <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: '13px', borderRadius: 12, border: 'none', background: saving ? '#9ca3af' : '#111', color: '#fff', fontWeight: 800, fontSize: 14, cursor: saving ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+      <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: '13px', borderRadius: 12, border: 'none', background: saving ? 'var(--text-faint)' : '#111', color: '#fff', fontWeight: 800, fontSize: 14, cursor: saving ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
         {saving ? 'Saving...' : '⊙ Save Changes'}
       </button>
     </div>
@@ -396,7 +396,7 @@ function InlineChildImport({ org, template, onImported }) {
       </div>
       <div style={{ display: 'flex', gap: 6 }}>
         <button onClick={() => setStep('upload')} style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 11, fontWeight: 600, cursor: 'pointer', color: 'var(--text3)' }}><Icon name="←" /> Back</button>
-        <button onClick={handleImport} disabled={importing || errors.length > 0} style={{ flex: 2, padding: '8px', borderRadius: 8, border: 'none', background: errors.length > 0 ? '#9CA3AF' : primary, color: '#fff', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>
+        <button onClick={handleImport} disabled={importing || errors.length > 0} style={{ flex: 2, padding: '8px', borderRadius: 8, border: 'none', background: errors.length > 0 ? 'var(--text-faint)' : primary, color: '#fff', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>
           {importing ? 'Importing...' : `Import ${rows.filter(r=>r.first_name&&r.last_name).length}`}
         </button>
       </div>
@@ -415,7 +415,7 @@ function InlineChildImport({ org, template, onImported }) {
       <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
         <button onClick={downloadTemplate} style={{ flex: 1, padding: '7px', borderRadius: 8, border: `1px solid var(--org-a20)`, background: primary + '10', color: primary, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}><Icon name="⬇" /> Template</button>
         <button onClick={() => { const { rows: p, errs } = parseCSV(csvText); setRows(p); setErrors(errs); setStep('preview') }} disabled={!csvText.trim()}
-          style={{ flex: 1, padding: '7px', borderRadius: 8, border: 'none', background: csvText.trim() ? primary : '#9CA3AF', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Preview <Icon name="→" /></button>
+          style={{ flex: 1, padding: '7px', borderRadius: 8, border: 'none', background: csvText.trim() ? primary : 'var(--text-faint)', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Preview <Icon name="→" /></button>
       </div>
     </div>
   )
@@ -479,7 +479,7 @@ function NotesTab({ child }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)' }}>Private notes about {child.first_name}</div>
-        <div aria-live="polite" style={{ fontSize: 11, fontWeight: 700, color: error ? '#DC2626' : saving ? '#B45309' : saved ? '#15803D' : 'transparent' }}>
+        <div aria-live="polite" style={{ fontSize: 11, fontWeight: 700, color: error ? '#DC2626' : saving ? 'var(--warn-text)' : saved ? 'var(--ok-text)' : 'transparent' }}>
           {error || (saving ? 'Saving…' : '✓ Saved')}
         </div>
       </div>
@@ -686,7 +686,7 @@ function ActivityTab({ child, org }) {
   const TONES = {
     green: '#16A34A',
     blue: '#2563EB',
-    slate: '#94A3B8',
+    slate: 'var(--text-faint)',
   }
 
   if (loading) return <div style={{ padding: '28px 0', textAlign: 'center', fontSize: 13, color: 'var(--text3)' }}>Loading activity…</div>
@@ -992,8 +992,8 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
                 title="More actions"
-                style={{ width: 32, height: 32, borderRadius: 9, background: menuOpen ? '#F1F5F9' : 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 16, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                onMouseEnter={e => { e.currentTarget.style.background = '#F1F5F9' }}
+                style={{ width: 32, height: 32, borderRadius: 9, background: menuOpen ? 'var(--border-soft)' : 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 16, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--border-soft)' }}
                 onMouseLeave={e => { if (!menuOpen) e.currentTarget.style.background = 'transparent' }}
               >⋯</button>
               {menuOpen && (
@@ -1005,7 +1005,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
                   ].map(([label, fn]) => (
                     <button key={label} role="menuitem" onClick={fn}
                       style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 11px', borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--text)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                      onMouseEnter={e => { e.currentTarget.style.background = '#F8FAFC' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface2)' }}
                       onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
                       {label}
                     </button>
@@ -1013,7 +1013,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
                   <div style={{ height: 1, background: 'var(--surface-hover)', margin: '5px 0' }} />
                   <button role="menuitem" onClick={removeFromRegister}
                     style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 11px', borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--danger-text)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = '#FEF2F2' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--danger-bg)' }}
                     onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
                     Remove from register
                   </button>
@@ -1022,7 +1022,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
             </div>
             <button ref={closeBtnRef} onClick={onClose} aria-label="Close" title="Close"
               style={{ width: 32, height: 32, borderRadius: 9, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 19, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              onMouseEnter={e => { e.currentTarget.style.background = '#F1F5F9' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--border-soft)' }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>×</button>
           </div>
 
@@ -1110,7 +1110,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
                 onClick={() => { setDrawerTab(key); setEditing(false) }}
                 style={{
                   padding: '0 0 10px', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit',
-                  color: drawerTab === key ? PURPLE : '#64748B',
+                  color: drawerTab === key ? PURPLE : 'var(--text3)',
                   fontWeight: drawerTab === key ? 800 : 600, fontSize: 13.5,
                   borderBottom: `2px solid ${drawerTab === key ? PURPLE : 'transparent'}`,
                   marginBottom: -1, transition: 'color 0.15s',
@@ -1246,14 +1246,14 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
     signed_in:  { label: 'In',          bg: 'rgba(34,197,94,0.16)', color: '#4ADE80', dot: '#22C55E' },
     signed_out: { label: 'Out',         bg: 'rgba(59,130,246,0.16)', color: '#60A5FA', dot: '#3B82F6' },
     absent:     { label: 'Absent',      bg: 'rgba(239,68,68,0.16)', color: '#F87171', dot: '#EF4444' },
-    expected:   { label: 'Expected',    bg: 'rgba(255,255,255,0.06)', color: 'var(--text-faint)', dot: '#CBD5E1' },
-    unmarked:   { label: 'Not marked',  bg: 'rgba(255,255,255,0.06)', color: 'var(--text-faint)', dot: '#CBD5E1' },
+    expected:   { label: 'Expected',    bg: 'rgba(255,255,255,0.06)', color: 'var(--text-faint)', dot: 'var(--text-faint)' },
+    unmarked:   { label: 'Not marked',  bg: 'rgba(255,255,255,0.06)', color: 'var(--text-faint)', dot: 'var(--text-faint)' },
   } : {
     signed_in:  { label: 'In',          bg: 'linear-gradient(135deg,#DCFCE7,#BBF7D0)', color: 'var(--ok-text)', dot: '#16A34A' },
     signed_out: { label: 'Out',         bg: 'linear-gradient(135deg,#DBEAFE,#BFDBFE)', color: 'var(--info-text)', dot: '#2563EB' },
     absent:     { label: 'Absent',      bg: 'linear-gradient(135deg,#FEE2E2,#FECACA)', color: 'var(--danger-text)', dot: '#DC2626' },
-    expected:   { label: 'Expected',    bg: 'var(--surface-hover)', color: 'var(--text-faint)', dot: '#CBD5E1' },
-    unmarked:   { label: 'Not marked',  bg: 'var(--surface-hover)', color: 'var(--text-faint)', dot: '#CBD5E1' },
+    expected:   { label: 'Expected',    bg: 'var(--surface-hover)', color: 'var(--text-faint)', dot: 'var(--text-faint)' },
+    unmarked:   { label: 'Not marked',  bg: 'var(--surface-hover)', color: 'var(--text-faint)', dot: 'var(--text-faint)' },
   }
   const sc = statusConfig[status] || statusConfig.unmarked
 
@@ -1291,7 +1291,7 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
       {/* Checkbox — only shown once "Select" mode is switched on */}
       {selectMode && (
         <button onClick={e => { e.stopPropagation(); onToggleSelect(child.id) }}
-          style={{ width: 20, height: 20, borderRadius: 7, border: `2px solid ${selected ? primary : (dark ? 'rgba(255,255,255,0.25)' : '#D1D5DB')}`, background: selected ? primary : (dark ? 'transparent' : '#fff'), cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 900 }}>
+          style={{ width: 20, height: 20, borderRadius: 7, border: `2px solid ${selected ? primary : (dark ? 'rgba(255,255,255,0.25)' : 'var(--text-faint)')}`, background: selected ? primary : (dark ? 'transparent' : '#fff'), cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 900 }}>
           {selected ? '✓' : ''}
         </button>
       )}
@@ -1302,7 +1302,7 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
           {child.photo_url ? <SignedImg bucket="gallery" src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
         </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: dark ? '#F1F5F9' : '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: dark ? 'var(--border-soft)' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {child.first_name} {child.last_name}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, flexWrap: 'wrap' }}>
@@ -1328,12 +1328,12 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
           // school and age are at least worth reading while browsing the roster.
           <div style={{ textAlign: 'right', minWidth: 0 }}>
             {child.school && (
-              <div style={{ fontSize: 11.5, fontWeight: 600, color: dark ? '#94A3B8' : '#64748B', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>
+              <div style={{ fontSize: 11.5, fontWeight: 600, color: dark ? 'var(--text-faint)' : 'var(--text3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>
                 {child.school}
               </div>
             )}
             {child.date_of_birth && (
-              <div style={{ fontSize: 11, color: dark ? '#64748B' : '#94A3B8', marginTop: 1 }}>
+              <div style={{ fontSize: 11, color: dark ? 'var(--text3)' : 'var(--text-faint)', marginTop: 1 }}>
                 {Math.floor((Date.now() - new Date(child.date_of_birth)) / 31557600000)} yrs
               </div>
             )}
@@ -1513,9 +1513,9 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
       const alerts = [c.allergies && '⚠ Allergy', c.medical_notes && '✚ Medical', c.has_epipen && '💉 EpiPen'].filter(Boolean).join('  ')
       return `<tr>
         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-weight:700">${c.first_name} ${c.last_name}</td>
-        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;color:${bubble?.color || '#64748b'};font-weight:700">${bubble?.label || 'Ungrouped'}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;color:${bubble?.color || 'var(--text3)'};font-weight:700">${bubble?.label || 'Ungrouped'}</td>
         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-size:11px;color:#dc2626">${alerts}</td>
-        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-weight:800;color:${status === 'signed_in' ? '#16a34a' : status === 'absent' ? '#dc2626' : '#64748b'}">${statusLabel}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-weight:800;color:${status === 'signed_in' ? '#16a34a' : status === 'absent' ? '#dc2626' : 'var(--text3)'}">${statusLabel}</td>
         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;color:#94a3b8;font-size:12px">_______________</td>
       </tr>`
     }).join('')
@@ -1638,24 +1638,24 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   // Theme tokens — light values match the original design exactly; dark values
   // only apply when the Dark Mode toggle (in Register Options) is switched on.
   const t = {
-    pageBg: darkMode ? 'linear-gradient(180deg, #0A0D1C 0%, #12152A 100%)' : '#F8FAFC',
+    pageBg: darkMode ? 'linear-gradient(180deg, #0A0D1C 0%, #12152A 100%)' : 'var(--surface2)',
     headerBg: darkMode ? 'linear-gradient(165deg, #171B33 0%, rgba(16,19,36,0) 60%)' : `linear-gradient(165deg, var(--org-a05) 0%, #fff 55%)`,
     headerBorder: darkMode ? 'rgba(255,255,255,0.08)' : '#EEF1F6',
-    text: darkMode ? '#F1F5F9' : '#0B1220',
-    textSub: darkMode ? '#94A3B8' : '#64748B',
-    textMuted: darkMode ? '#64748B' : '#9CA3AF',
-    miniChipBg: darkMode ? 'rgba(255,255,255,0.06)' : '#F8FAFC',
+    text: darkMode ? 'var(--border-soft)' : '#0B1220',
+    textSub: darkMode ? 'var(--text-faint)' : 'var(--text3)',
+    textMuted: darkMode ? 'var(--text3)' : 'var(--text-faint)',
+    miniChipBg: darkMode ? 'rgba(255,255,255,0.06)' : 'var(--surface2)',
     miniChipBorder: darkMode ? 'rgba(255,255,255,0.1)' : '#EEF1F6',
     btnBg: darkMode ? null : '#fff',
-    btnBorder: darkMode ? null : '#E2E8F0',
+    btnBorder: darkMode ? null : 'var(--border)',
     btnShadow: darkMode ? null : '0 1px 4px -1px rgba(0,0,0,0.06)',
     cardBg: darkMode ? '#161A30' : '#fff',
-    cardBorder: darkMode ? 'rgba(255,255,255,0.08)' : '#E5E7EB',
+    cardBorder: darkMode ? 'rgba(255,255,255,0.08)' : 'var(--border)',
     inputBg: darkMode ? '#12152A' : (primary + '06'),
     inputBorder: darkMode ? 'rgba(255,255,255,0.1)' : (primary + '25'),
     filterBg: darkMode ? 'transparent' : '#fff',
-    filterBorder: darkMode ? 'rgba(255,255,255,0.08)' : '#F3F4F6',
-    listBg: darkMode ? 'transparent' : '#F8FAFC',
+    filterBorder: darkMode ? 'rgba(255,255,255,0.08)' : 'var(--border-soft)',
+    listBg: darkMode ? 'transparent' : 'var(--surface2)',
   }
   const actionColors = { past: '#8B5CF6', archive: '#6366F1', medical: '#3B82F6', groups: '#14B8A6', print: '#A855F7', import: '#EC4899' }
 
@@ -1732,7 +1732,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                     </span>
                   )}
                   {isLiveSession && liveProgress && (
-                    <span style={{ fontSize: isMobile ? 10.5 : 11.5, fontWeight: 700, color: darkMode ? '#4ADE80' : '#15803D', fontVariantNumeric: 'tabular-nums' }}>
+                    <span style={{ fontSize: isMobile ? 10.5 : 11.5, fontWeight: 700, color: darkMode ? '#4ADE80' : 'var(--ok-text)', fontVariantNumeric: 'tabular-nums' }}>
                       {liveProgress.elapsedLabel}
                       {liveProgress.remainingLabel ? ` · ${liveProgress.remainingLabel} left` : ''}
                     </span>
@@ -1766,7 +1766,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             </div>
             {isMobile && (
               <button onClick={() => setShowMobileTools(true)} aria-label="Register options"
-                style={{ width: 34, height: 34, borderRadius: 10, border: `1.5px solid ${darkMode ? 'rgba(255,255,255,0.12)' : '#E2E8F0'}`, background: darkMode ? 'rgba(255,255,255,0.06)' : '#fff', color: t.textSub, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                style={{ width: 34, height: 34, borderRadius: 10, border: `1.5px solid ${darkMode ? 'rgba(255,255,255,0.12)' : 'var(--border)'}`, background: darkMode ? 'rgba(255,255,255,0.06)' : '#fff', color: t.textSub, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 ⚙️
               </button>
             )}
@@ -1828,7 +1828,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                   }}><Icon name={s.icon} /></span>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: isMobile ? 17 : 20, fontWeight: 900, color: t.text, lineHeight: 1.1 }}>{s.value}</div>
-                    <div style={{ fontSize: isMobile ? 9.5 : 10.5, fontWeight: 700, color: s.live ? (darkMode ? '#4ADE80' : '#15803D') : t.textSub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <div style={{ fontSize: isMobile ? 9.5 : 10.5, fontWeight: 700, color: s.live ? (darkMode ? '#4ADE80' : 'var(--ok-text)') : t.textSub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 4 }}>
                       {s.live && <span data-reg-live-anim style={{ width: 5, height: 5, borderRadius: '50%', background: '#16A34A', flexShrink: 0, animation: 'reg-live-dot 2s ease-in-out infinite' }} />}
                       {s.live ? 'On Site Now' : s.label}
                     </div>
@@ -1853,13 +1853,13 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 />
                 {search && (
                   <button onClick={() => setSearch('')} aria-label="Clear search"
-                    style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: darkMode ? 'rgba(255,255,255,0.1)' : '#F1F5F9', borderRadius: '50%', width: 18, height: 18, cursor: 'pointer', fontSize: 10, color: t.textSub, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                    style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: darkMode ? 'rgba(255,255,255,0.1)' : 'var(--border-soft)', borderRadius: '50%', width: 18, height: 18, cursor: 'pointer', fontSize: 10, color: t.textSub, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
                 )}
               </div>
               <button
                 onClick={() => { if (selectMode) clearSelection(); setSelectMode(v => !v) }}
                 style={{
-                  padding: '0 14px', height: isMobile ? 38 : 40, borderRadius: 10, border: `1.5px solid ${selectMode ? primary : (darkMode ? 'rgba(255,255,255,0.12)' : '#E5E7EB')}`,
+                  padding: '0 14px', height: isMobile ? 38 : 40, borderRadius: 10, border: `1.5px solid ${selectMode ? primary : (darkMode ? 'rgba(255,255,255,0.12)' : 'var(--border)')}`,
                   background: selectMode ? primary : (darkMode ? 'rgba(255,255,255,0.06)' : '#fff'), color: selectMode ? '#fff' : t.textSub,
                   fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
                 }}
@@ -1872,9 +1872,9 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
 
         {/* OFFLINE BANNER */}
         {showOfflineBanner && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: darkMode ? 'rgba(217,119,6,0.16)' : '#FFFBEB', borderBottom: `1px solid ${darkMode ? 'rgba(217,119,6,0.3)' : '#FDE68A'}`, flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: darkMode ? 'rgba(217,119,6,0.16)' : 'var(--warn-bg)', borderBottom: `1px solid ${darkMode ? 'rgba(217,119,6,0.3)' : 'var(--warn-border)'}`, flexShrink: 0 }}>
             <span style={{ fontSize: 13 }}><Icon name="📡" /></span>
-            <span style={{ fontSize: 11.5, fontWeight: 700, color: darkMode ? '#FBBF24' : '#92400E' }}>
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: darkMode ? '#FBBF24' : 'var(--warn-text)' }}>
               {isOnline ? 'Reconnecting…' : "You're offline"} — showing the last saved register{isOnline ? '' : '. Changes made elsewhere won\'t appear until you\'re back online'}.
             </span>
           </div>
@@ -1889,7 +1889,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               const chipColor = bubble?.color || primary
               return (
                 <button key={g} onClick={() => setActiveGroup(g)} style={{
-                  padding: '6px 14px', borderRadius: 99, border: `1.5px solid ${isActive ? chipColor : (darkMode ? 'rgba(255,255,255,0.1)' : '#E5E7EB')}`,
+                  padding: '6px 14px', borderRadius: 99, border: `1.5px solid ${isActive ? chipColor : (darkMode ? 'rgba(255,255,255,0.1)' : 'var(--border)')}`,
                   background: isActive ? `linear-gradient(135deg, ${chipColor}, ${chipColor}CC)` : (darkMode ? '#161A30' : '#fff'),
                   color: isActive ? '#fff' : t.textSub,
                   fontSize: 12, fontWeight: isActive ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
@@ -1940,7 +1940,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 }}>Open a session</button>
                 <button onClick={() => setShowPastRegisters(true)} style={{
                   padding: '10px 15px', borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit',
-                  border: `1.5px solid ${darkMode ? 'rgba(255,255,255,0.14)' : '#E2E8F0'}`,
+                  border: `1.5px solid ${darkMode ? 'rgba(255,255,255,0.14)' : 'var(--border)'}`,
                   background: 'transparent', color: t.textSub, fontSize: 13, fontWeight: 700,
                 }}>Past registers</button>
               </div>
@@ -2062,10 +2062,10 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 onMouseLeave={e => {
                   e.currentTarget.style.transform = 'none'
                   e.currentTarget.style.boxShadow = 'none'
-                  e.currentTarget.style.borderColor = '#F3F4F6'
-                  e.currentTarget.style.background = '#FAFBFC'
+                  e.currentTarget.style.borderColor = 'var(--border-soft)'
+                  e.currentTarget.style.background = 'var(--surface2)'
                   const badge = e.currentTarget.querySelector('.tool-icon')
-                  if (badge) { badge.style.transform = 'none'; badge.style.background = '#F3F4F6' }
+                  if (badge) { badge.style.transform = 'none'; badge.style.background = 'var(--border-soft)' }
                 }}>
                 <div className="tool-icon" style={{ width: 32, height: 32, borderRadius: 10, background: 'var(--surface3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0, transition: 'transform 0.18s ease, background 0.18s ease' }}><Icon name={t.icon} /></div>
                 <div>
@@ -2153,7 +2153,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 </div>
               </div>
               <button onClick={() => setDarkMode(v => !v)} aria-label="Toggle dark mode"
-                style={{ width: 46, height: 26, borderRadius: 99, border: 'none', background: darkMode ? primary : '#D1D5DB', position: 'relative', cursor: 'pointer', flexShrink: 0, transition: 'background 0.15s' }}>
+                style={{ width: 46, height: 26, borderRadius: 99, border: 'none', background: darkMode ? primary : 'var(--text-faint)', position: 'relative', cursor: 'pointer', flexShrink: 0, transition: 'background 0.15s' }}>
                 <span style={{ position: 'absolute', top: 3, left: darkMode ? 23 : 3, width: 20, height: 20, borderRadius: '50%', background: 'var(--surface)', boxShadow: '0 1px 3px rgba(0,0,0,0.3)', transition: 'left 0.15s' }} />
               </button>
             </div>
@@ -2245,7 +2245,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 ) : bubbles.map(b => (
                   <button key={b.key} onClick={() => handleBulkAssignGroup(b.label)}
                     style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 8, fontSize: 13, fontWeight: 700, color: '#111' }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'none'}>
                     <span style={{ width: 10, height: 10, borderRadius: '50%', background: b.color, flexShrink: 0 }} />
                     {b.label}
@@ -2388,7 +2388,7 @@ function ChildrenFieldListModal({ title, icon, color, items, getFieldText, onClo
   return createPortal(
     <div style={{
       position: 'fixed', inset: 0, zIndex: 10900, display: 'flex', flexDirection: 'column',
-      background: isMobile ? '#F8FAFC' : 'rgba(15,23,42,0.45)',
+      background: isMobile ? 'var(--surface2)' : 'rgba(15,23,42,0.45)',
       alignItems: isMobile ? 'stretch' : 'center', justifyContent: isMobile ? 'flex-start' : 'center',
       padding: isMobile ? 0 : 24, boxSizing: 'border-box',
     }} onClick={isMobile ? undefined : (e) => { if (e.target === e.currentTarget) onClose() }}>
@@ -2443,7 +2443,7 @@ function ChildrenFieldListModal({ title, icon, color, items, getFieldText, onClo
                     </div>
                     <div style={{ fontSize: 12, color, fontWeight: 600, marginTop: 3, lineHeight: 1.4 }}>{getFieldText(c)}</div>
                   </div>
-                  <span style={{ fontSize: 14, color: '#CBD5E1', flexShrink: 0, marginTop: 4 }}><Icon name="→" /></span>
+                  <span style={{ fontSize: 14, color: 'var(--text-faint)', flexShrink: 0, marginTop: 4 }}><Icon name="→" /></span>
                 </button>
               ))}
             </div>
@@ -2485,7 +2485,7 @@ function PastRegistersListModal({ sessions, loading, primary, onClose, onSelect 
   return createPortal(
     <div style={{
       position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', flexDirection: 'column',
-      background: isMobile ? '#F8FAFC' : 'rgba(15,23,42,0.45)',
+      background: isMobile ? 'var(--surface2)' : 'rgba(15,23,42,0.45)',
       alignItems: isMobile ? 'stretch' : 'center', justifyContent: isMobile ? 'flex-start' : 'center',
       padding: isMobile ? 0 : 24, boxSizing: 'border-box',
     }} onClick={isMobile ? undefined : (e) => { if (e.target === e.currentTarget) onClose() }}>
@@ -2541,7 +2541,7 @@ function PastRegistersListModal({ sessions, loading, primary, onClose, onSelect 
                             {fmtDayDate(s.session_date)}{s.start_time ? ` · ${s.start_time}` : ''}{s.location ? ` · ${s.location}` : ''}
                           </div>
                         </div>
-                        <span style={{ fontSize: 14, color: '#CBD5E1', flexShrink: 0 }}><Icon name="→" /></span>
+                        <span style={{ fontSize: 14, color: 'var(--text-faint)', flexShrink: 0 }}><Icon name="→" /></span>
                       </button>
                     ))}
                   </div>
@@ -2602,7 +2602,7 @@ function ArchiveListModal({ sessions, loading, primary, org, onClose, onSelect, 
   return createPortal(
     <div style={{
       position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', flexDirection: 'column',
-      background: isMobile ? '#F8FAFC' : 'rgba(15,23,42,0.45)',
+      background: isMobile ? 'var(--surface2)' : 'rgba(15,23,42,0.45)',
       alignItems: isMobile ? 'stretch' : 'center', justifyContent: isMobile ? 'flex-start' : 'center',
       padding: isMobile ? 0 : 24, boxSizing: 'border-box',
     }} onClick={isMobile ? undefined : (e) => { if (e.target === e.currentTarget) onClose() }}>
@@ -2721,7 +2721,7 @@ function AddChildModal({ orgId, bubbles, onClose, onAdded }) {
             <label style={lb}>Group</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
               {bubbles.map(b => (
-                <button key={b.key} onClick={() => set('group_name', b.label)} style={{ padding: '6px 14px', borderRadius: 20, border: `2px solid ${form.group_name === b.label ? b.color : '#e5e7eb'}`, background: form.group_name === b.label ? b.color + '18' : '#fff', color: form.group_name === b.label ? b.color : '#6B7280', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                <button key={b.key} onClick={() => set('group_name', b.label)} style={{ padding: '6px 14px', borderRadius: 20, border: `2px solid ${form.group_name === b.label ? b.color : 'var(--border)'}`, background: form.group_name === b.label ? b.color + '18' : '#fff', color: form.group_name === b.label ? b.color : 'var(--text3)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                   {b.label}
                 </button>
               ))}
@@ -2731,7 +2731,7 @@ function AddChildModal({ orgId, bubbles, onClose, onAdded }) {
           <div style={{ marginBottom: 12 }}><label style={lb}>Medical Notes</label><input style={fi} value={form.medical_notes} onChange={e => set('medical_notes', e.target.value)} placeholder="e.g. Asthma" /></div>
           <div style={{ marginBottom: 12 }}><label style={lb}>Emergency Contact</label><input style={fi} value={form.emergency_contact_name} onChange={e => set('emergency_contact_name', e.target.value)} placeholder="Name" /></div>
           <div style={{ marginBottom: 20 }}><input style={fi} value={form.emergency_contact_phone} onChange={e => set('emergency_contact_phone', e.target.value)} placeholder="Phone number" type="tel" /></div>
-          <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: saving ? '#9ca3af' : '#1B9AAA', color: '#fff', fontWeight: 800, fontSize: 15, cursor: 'pointer', marginBottom: 20 }}>
+          <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: saving ? 'var(--text-faint)' : '#1B9AAA', color: '#fff', fontWeight: 800, fontSize: 15, cursor: 'pointer', marginBottom: 20 }}>
             {saving ? 'Adding...' : 'Add Child'}
           </button>
         </div>

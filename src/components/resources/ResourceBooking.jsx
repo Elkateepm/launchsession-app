@@ -44,7 +44,7 @@ function WeekView({ date, bookings, resources, org, onBook, onDelete }) {
               return (
                 <div key={day} onClick={() => onBook(day, hour)} style={{ background: 'var(--surface2)', borderRadius: 4, cursor: 'pointer', position: 'relative', minHeight: 44, border: '1px solid var(--border-soft)', transition: 'background 0.1s' }}
                   onMouseEnter={e => e.currentTarget.style.background = primary + '08'}
-                  onMouseLeave={e => e.currentTarget.style.background = '#F9FAFB'}>
+                  onMouseLeave={e => e.currentTarget.style.background = 'var(--surface2)'}>
                   {dayBookings.map(b => {
                     const resource = resources.find(r => r.id === b.resource_id)
                     const colorIndex = resources.indexOf(resource) % COLORS.length
@@ -167,7 +167,7 @@ export default function ResourceBooking({ org, session: authSession }) {
             <div><label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>DESCRIPTION</label><input value={newResource.description} onChange={e => setNewResource(n => ({ ...n, description: e.target.value }))} placeholder="Optional notes..." style={inp} /></div>
           </div>
           <div style={{ marginTop: 12, display: 'flex', gap: 10 }}>
-            <button onClick={addResource} disabled={saving || !newResource.name} style={{ padding: '9px 22px', borderRadius: 10, border: 'none', background: saving || !newResource.name ? '#9CA3AF' : primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>{saving ? 'Adding...' : '+ Add Resource'}</button>
+            <button onClick={addResource} disabled={saving || !newResource.name} style={{ padding: '9px 22px', borderRadius: 10, border: 'none', background: saving || !newResource.name ? 'var(--text-faint)' : primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>{saving ? 'Adding...' : '+ Add Resource'}</button>
             <button onClick={() => setShowAddResource(false)} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           </div>
         </div>
@@ -204,7 +204,7 @@ export default function ResourceBooking({ org, session: authSession }) {
               <div><label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>PURPOSE</label><input value={bookingForm.purpose} onChange={e => setBookingForm(f => ({ ...f, purpose: e.target.value }))} placeholder="e.g. U14 Football Training" style={inp} /></div>
             </div>
             <div style={{ marginTop: 20, display: 'flex', gap: 10 }}>
-              <button onClick={createBooking} disabled={saving || !bookingForm.resource_id || !bookingForm.date} style={{ flex: 1, padding: '12px', borderRadius: 12, border: 'none', background: saving || !bookingForm.resource_id || !bookingForm.date ? '#9CA3AF' : primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
+              <button onClick={createBooking} disabled={saving || !bookingForm.resource_id || !bookingForm.date} style={{ flex: 1, padding: '12px', borderRadius: 12, border: 'none', background: saving || !bookingForm.resource_id || !bookingForm.date ? 'var(--text-faint)' : primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
                 {saving ? 'Booking...' : '✓ Confirm Booking'}
               </button>
               <button onClick={() => setShowBook(false)} style={{ padding: '12px 20px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>

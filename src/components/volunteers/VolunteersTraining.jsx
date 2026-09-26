@@ -69,11 +69,11 @@ export default function VolunteersTraining({ org, volunteers, training, onDataCh
         {TRAINING_TYPES.map(t => (
           <button key={t.key} onClick={() => setActiveType(t.key)} style={{
             padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6,
-            background: activeType === t.key ? primary : '#fff', color: activeType === t.key ? '#fff' : '#475569',
+            background: activeType === t.key ? primary : '#fff', color: activeType === t.key ? '#fff' : 'var(--text2)',
             boxShadow: activeType === t.key ? 'none' : '0 1px 3px rgba(15,23,42,0.08)',
           }}>
             {t.icon} {t.label}
-            {counts[t.key] > 0 && <span style={{ background: activeType === t.key ? 'rgba(255,255,255,0.3)' : 'rgba(245,158,11,0.15)', color: activeType === t.key ? '#fff' : '#B45309', borderRadius: 99, padding: '1px 6px', fontSize: 10 }}>{counts[t.key]}</span>}
+            {counts[t.key] > 0 && <span style={{ background: activeType === t.key ? 'rgba(255,255,255,0.3)' : 'rgba(245,158,11,0.15)', color: activeType === t.key ? '#fff' : 'var(--warn-text)', borderRadius: 99, padding: '1px 6px', fontSize: 10 }}>{counts[t.key]}</span>}
           </button>
         ))}
       </div>

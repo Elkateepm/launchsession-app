@@ -193,10 +193,10 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
               <label key={item.key} onClick={() => setChecked(c => ({ ...c, [item.key]: !c[item.key] }))}
                 style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', cursor: 'pointer' }}>
                 <motion.div animate={checked[item.key] || item.done ? { scale: [1, 1.3, 1] } : {}}
-                  style={{ width: 22, height: 22, borderRadius: 7, border: `2px solid ${checked[item.key] || item.done ? primary : '#CBD5E1'}`, background: checked[item.key] || item.done ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  style={{ width: 22, height: 22, borderRadius: 7, border: `2px solid ${checked[item.key] || item.done ? primary : 'var(--text-faint)'}`, background: checked[item.key] || item.done ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {(checked[item.key] || item.done) && <span style={{ color: '#fff', fontSize: 12, fontWeight: 900 }}><Icon name="✓" /></span>}
                 </motion.div>
-                <span style={{ fontSize: 13, color: checked[item.key] || item.done ? '#94A3B8' : '#334155', fontWeight: 600, textDecoration: (checked[item.key] || item.done) ? 'line-through' : 'none' }}>{item.label}</span>
+                <span style={{ fontSize: 13, color: checked[item.key] || item.done ? 'var(--text-faint)' : 'var(--text2)', fontWeight: 600, textDecoration: (checked[item.key] || item.done) ? 'line-through' : 'none' }}>{item.label}</span>
               </label>
             ))}
           </div>
@@ -245,7 +245,7 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
                   <div style={{ fontSize: 20, marginBottom: 6 }}>{a.emoji || '📣'}</div>
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 3 }}>{a.title}</div>
                   <div style={{ fontSize: 11.5, color: 'var(--text3)', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{a.content}</div>
-                  <div style={{ fontSize: 10, color: '#CBD5E1', marginTop: 8, fontWeight: 700 }}>{timeAgo(a.created_at)}</div>
+                  <div style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 8, fontWeight: 700 }}>{timeAgo(a.created_at)}</div>
                 </div>
               ))}
             </div>
@@ -262,7 +262,7 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
               <div style={{ fontSize: 52, marginBottom: 12, filter: viewingBadge.earned ? 'none' : 'grayscale(1)', opacity: viewingBadge.earned ? 1 : 0.5 }}><Icon name={viewingBadge.icon} /></div>
               <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)', marginBottom: 6 }}>{viewingBadge.label}</div>
               <div style={{ fontSize: 13, color: 'var(--text3)', lineHeight: 1.5, marginBottom: 14 }}>{viewingBadge.desc}</div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: viewingBadge.earned ? '#F0FDF4' : '#F1F5F9', color: viewingBadge.earned ? '#16A34A' : '#94A3B8', borderRadius: 99, padding: '6px 14px', fontSize: 12, fontWeight: 800 }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: viewingBadge.earned ? 'var(--ok-bg)' : 'var(--border-soft)', color: viewingBadge.earned ? '#16A34A' : 'var(--text-faint)', borderRadius: 99, padding: '6px 14px', fontSize: 12, fontWeight: 800 }}>
                 {viewingBadge.earned ? '✓ Earned' : '🔒 Not yet earned'}
               </div>
             </motion.div>

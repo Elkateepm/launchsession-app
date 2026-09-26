@@ -228,7 +228,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                     ['⬇ Export Cases (CSV)', () => exportCasesToCSV(filteredCases)],
                   ].map(([label, fn]) => (
                     <button key={label} onClick={() => { fn(); setShowQuickMenu(false) }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: 8, border: 'none', background: 'none', fontSize: 13, fontWeight: 600, color: 'var(--text2)', cursor: 'pointer' }}
-                      onMouseEnter={e => e.currentTarget.style.background = '#F1F5F9'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>{label}</button>
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--border-soft)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>{label}</button>
                   ))}
                 </motion.div>
               )}
@@ -253,7 +253,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
             <div style={{ fontSize: 24, fontWeight: 900, color: k.color, lineHeight: 1 }}><CountUp value={k.value} /></div>
             <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 700, marginTop: 4 }}>{k.label}</div>
             {typeof k.trend === 'number' && (
-              <div style={{ fontSize: 10.5, color: k.trend >= 0 ? '#DC2626' : '#15803D', fontWeight: 700, marginTop: 4 }}>{k.trend >= 0 ? '↑' : '↓'} {Math.abs(k.trend)} from last month</div>
+              <div style={{ fontSize: 10.5, color: k.trend >= 0 ? '#DC2626' : 'var(--ok-text)', fontWeight: 700, marginTop: 4 }}>{k.trend >= 0 ? '↑' : '↓'} {Math.abs(k.trend)} from last month</div>
             )}
           </motion.div>
         ))}
@@ -370,7 +370,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                   return (
                     <motion.div key={cas.id} layout onClick={() => { setSelectedCase(cas); setTab('timeline') }}
                       style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: isSelected ? 'var(--org-a05)' : 'transparent', borderLeft: `3px solid ${isSelected ? primary : 'transparent'}` }}
-                      onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = '#F8FAFC' }}
+                      onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--surface2)' }}
                       onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'transparent' }}>
                       <input type="checkbox" checked={selectedIds.has(cas.id)} onClick={e => e.stopPropagation()} onChange={() => toggleSelect(cas.id)} style={{ flexShrink: 0 }} />
                       <Avatar name={cas.child_name} size={34} />
@@ -467,7 +467,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                     {linkedChild.has_epipen && <span style={{ fontSize: 10.5, fontWeight: 800, background: 'var(--danger-bg)', color: 'var(--danger-text)', borderRadius: 99, padding: '2px 8px' }}><Icon name="⚠" /> EpiPen</span>}
                     {linkedChild.has_asthma && <span style={{ fontSize: 10.5, fontWeight: 800, background: 'var(--warn-bg)', color: 'var(--warn-text)', borderRadius: 99, padding: '2px 8px' }}>Asthma</span>}
                     {linkedChild.has_diabetes && <span style={{ fontSize: 10.5, fontWeight: 800, background: 'var(--warn-bg)', color: 'var(--warn-text)', borderRadius: 99, padding: '2px 8px' }}>Diabetes</span>}
-                    {linkedChild.takes_medication && <span style={{ fontSize: 10.5, fontWeight: 800, background: 'var(--surface-hover)', color: '#475569', borderRadius: 99, padding: '2px 8px' }}>Medication</span>}
+                    {linkedChild.takes_medication && <span style={{ fontSize: 10.5, fontWeight: 800, background: 'var(--surface-hover)', color: 'var(--text2)', borderRadius: 99, padding: '2px 8px' }}>Medication</span>}
                   </div>
                 )}
               </div>
@@ -486,14 +486,14 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                   {STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
                 </select>
                 {selectedCase.requires_dsl && <span style={{ fontSize: 11, fontWeight: 800, background: 'var(--info-bg)', color: 'var(--info-text)', borderRadius: 99, padding: '5px 10px' }}>Requires DSL</span>}
-                {selectedCase.next_review_date && <span style={{ fontSize: 11, fontWeight: 700, background: 'var(--surface)', border: '1px solid rgba(15,23,42,0.08)', borderRadius: 99, padding: '5px 10px', color: '#475569' }}>📅 Review {new Date(selectedCase.next_review_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
+                {selectedCase.next_review_date && <span style={{ fontSize: 11, fontWeight: 700, background: 'var(--surface)', border: '1px solid rgba(15,23,42,0.08)', borderRadius: 99, padding: '5px 10px', color: 'var(--text2)' }}>📅 Review {new Date(selectedCase.next_review_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
               </div>
             </div>
 
             {/* Tabs */}
             <div style={{ display: 'flex', gap: 4, marginBottom: 14, background: 'var(--surface-hover)', borderRadius: 12, padding: 4 }}>
               {[['timeline', '🕐 Timeline'], ['tasks', '☑️ Tasks'], ['documents', '📎 Documents'], ['actions', '⚡ Safeguarding Actions']].map(([key, label]) => (
-                <button key={key} onClick={() => setTab(key)} style={{ flex: 1, padding: '8px 10px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 700, background: tab === key ? '#fff' : 'transparent', color: tab === key ? '#0F172A' : '#64748B' }}>{label}</button>
+                <button key={key} onClick={() => setTab(key)} style={{ flex: 1, padding: '8px 10px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 700, background: tab === key ? '#fff' : 'transparent', color: tab === key ? '#0F172A' : 'var(--text3)' }}>{label}</button>
               ))}
             </div>
 
@@ -527,10 +527,10 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                 <div style={glass({ padding: 18 })}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>Case Overview</div>
                   <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
-                    <DonutChart segments={riskDonut.length ? riskDonut : [{ label: 'No active cases', value: 1, color: '#E2E8F0' }]} />
+                    <DonutChart segments={riskDonut.length ? riskDonut : [{ label: 'No active cases', value: 1, color: 'var(--text-faint)' }]} />
                   </div>
                   {riskDonut.map(s => (
-                    <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#475569', marginBottom: 4 }}>
+                    <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text2)', marginBottom: 4 }}>
                       <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.color, display: 'inline-block' }} />
                       {s.label} ({s.value})
                     </div>

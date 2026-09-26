@@ -10,7 +10,7 @@ import { Avatar, Badge, Empty, HR, LoadError, PeopleDialog } from './peopleHRSha
 const indexByStaff = rows => Object.fromEntries((rows || []).map(r => [r.staff_id, r]))
 const LINK_TABS = { compliance: 'compliance', staff: 'employment', supervision: 'supervision', absence: 'absence', hr_case: 'cases', disciplinary: 'disciplinary', warning: 'disciplinary', document: 'documents', onboarding: 'onboarding', training: 'training' }
 const ACTIONS = { compliance: 'Review check', staff: 'Review employment', supervision: 'Open supervision', absence: 'Review leave', hr_case: 'Open HR record', disciplinary: 'Open HR record', warning: 'Open HR record', document: 'Review document', onboarding: 'View checklist', training: 'Review training' }
-const SEVERITY = { 1: ['Overdue', '#B42318', '#FFF0ED'], 2: ['Needs review', '#8A570A', '#FFF6DF'], 3: ['Coming up', '#48627E', '#EEF3F8'] }
+const SEVERITY = { 1: ['Overdue', 'var(--danger-text)', '#FFF0ED'], 2: ['Needs review', '#8A570A', '#FFF6DF'], 3: ['Coming up', '#48627E', '#EEF3F8'] }
 
 function Title({ children, detail, action }) {
   return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
@@ -133,7 +133,7 @@ export function OnboardingBoard({ data, primary, onOpen, onApprovals }) {
   const shown = people.filter(p => filter === 'all' || needsOnboarding(p, progress[p.id]))
   return <section style={HR.card}>
     <Title detail="A checklist matched to each person's employment type." action={<button style={HR.button} onClick={onApprovals}>Account approvals{data.pending ? ` (${data.pending})` : ''}<ArrowRight size={15} /></button>}>Onboarding</Title>
-    <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>{[['outstanding', 'Steps to finish'], ['all', 'All current people']].map(([key, label]) => <button key={key} aria-pressed={filter === key} style={{ ...HR.button, background: filter === key ? '#EEF2F7' : '#fff' }} onClick={() => setFilter(key)}>{label}</button>)}</div>
+    <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>{[['outstanding', 'Steps to finish'], ['all', 'All current people']].map(([key, label]) => <button key={key} aria-pressed={filter === key} style={{ ...HR.button, background: filter === key ? 'var(--surface2)' : '#fff' }} onClick={() => setFilter(key)}>{label}</button>)}</div>
     {data.errors.people || data.errors.onboarding ? <LoadError onRetry={data.reload} /> : !data.people || !data.onboarding ? <Empty title="Loading onboarding…" /> : shown.length === 0 ? <Empty title="No outstanding onboarding" detail="New starters will appear here once their HR record is created." /> : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 270px), 1fr))', gap: 14 }}>
       {shown.map(p => {
         const s = progress[p.id]

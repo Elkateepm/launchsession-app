@@ -128,7 +128,7 @@ export default function NewChargeModal({ org, session, children, sessions, onClo
                 <button key={key} onClick={() => { setAssignMode(key); setSelectedChildIds([]); setSelectedSessionId('') }} style={{
                   padding: '7px 12px', borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer',
                   border: assignMode === key ? `2px solid ${PB.blue}` : '1.5px solid #E2E8F0',
-                  background: assignMode === key ? '#EFF6FF' : '#fff', color: 'var(--text2)',
+                  background: assignMode === key ? 'var(--info-bg)' : '#fff', color: 'var(--text2)',
                 }}>{label}</button>
               ))}
             </div>
@@ -147,7 +147,7 @@ export default function NewChargeModal({ org, session, children, sessions, onClo
                     }} style={{
                       width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left',
                       padding: '11px 12px', border: 'none', borderBottom: '1px solid #F8FAFC', cursor: 'pointer',
-                      background: selected ? '#EFF6FF' : '#fff', fontSize: 13, color: 'var(--text)', fontWeight: selected ? 700 : 500,
+                      background: selected ? 'var(--info-bg)' : '#fff', fontSize: 13, color: 'var(--text)', fontWeight: selected ? 700 : 500,
                     }}>
                       {c.first_name} {c.last_name}
                       {selected && <span style={{ color: PB.blue }}><Icon name="✓" /></span>}

@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { inputStyle, btnPrimary, btnGhost, Avatar } from '../volunteers/vh_shared'
 import Icon from '../../lib/icons'
 
-const PRIORITY_COLOR = { low: '#64748B', medium: '#F59E0B', high: '#EF4444' }
+const PRIORITY_COLOR = { low: 'var(--text3)', medium: '#F59E0B', high: '#EF4444' }
 
 export default function CaseTasks({ caseId, org, session: authSession, staff = [] }) {
   const primary = org?.primary_color || '#7C5CFC'
@@ -77,18 +77,18 @@ export default function CaseTasks({ caseId, org, session: authSession, staff = [
             key={task.id}
             layout
             initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }}
-            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, border: `1.5px solid ${overdue(task) ? '#FCA5A5' : 'rgba(15,23,42,0.07)'}`, background: overdue(task) ? '#FEF2F2' : '#fff', marginBottom: 8 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, border: `1.5px solid ${overdue(task) ? 'var(--danger-border)' : 'rgba(15,23,42,0.07)'}`, background: overdue(task) ? 'var(--danger-bg)' : '#fff', marginBottom: 8 }}
           >
             <input type="checkbox" checked={task.completed} onChange={() => toggleComplete(task)} style={{ width: 17, height: 17, accentColor: primary, cursor: 'pointer', flexShrink: 0 }} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: task.completed ? '#94A3B8' : '#0F172A', textDecoration: task.completed ? 'line-through' : 'none' }}>{task.title}</div>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: task.completed ? 'var(--text-faint)' : 'var(--text)', textDecoration: task.completed ? 'line-through' : 'none' }}>{task.title}</div>
               <div style={{ display: 'flex', gap: 8, marginTop: 3, flexWrap: 'wrap', alignItems: 'center' }}>
-                {task.due_date && <span style={{ fontSize: 11, color: overdue(task) ? '#DC2626' : '#94A3B8', fontWeight: 700 }}>{overdue(task) ? '⚠ Overdue: ' : '📅 '}{new Date(task.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
-                <span style={{ fontSize: 10.5, fontWeight: 800, color: PRIORITY_COLOR[task.priority] || '#64748B', textTransform: 'uppercase' }}>{task.priority}</span>
+                {task.due_date && <span style={{ fontSize: 11, color: overdue(task) ? '#DC2626' : 'var(--text-faint)', fontWeight: 700 }}>{overdue(task) ? '⚠ Overdue: ' : '📅 '}{new Date(task.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
+                <span style={{ fontSize: 10.5, fontWeight: 800, color: PRIORITY_COLOR[task.priority] || 'var(--text3)', textTransform: 'uppercase' }}>{task.priority}</span>
                 {task.owner_id && (() => { const o = staff.find(s => s.id === task.owner_id); return o ? <span style={{ fontSize: 11, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 4 }}><Avatar name={o.full_name} size={16} />{o.full_name}</span> : null })()}
               </div>
             </div>
-            <button onClick={() => deleteTask(task.id)} style={{ background: 'none', border: 'none', color: '#CBD5E1', cursor: 'pointer', fontSize: 15, flexShrink: 0 }}><Icon name="✕" /></button>
+            <button onClick={() => deleteTask(task.id)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', cursor: 'pointer', fontSize: 15, flexShrink: 0 }}><Icon name="✕" /></button>
           </motion.div>
         ))}
       </AnimatePresence>

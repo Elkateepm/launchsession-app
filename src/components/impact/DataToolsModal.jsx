@@ -107,7 +107,7 @@ function ImportPane({ org, children, primary, onClose, onImported }) {
         </div>
       )}
       {result && (
-        <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 10, background: result.inserted ? '#F0FDF4' : '#FEF2F2', fontSize: 12.5, color: result.inserted ? '#16A34A' : '#DC2626', fontWeight: 700 }}>
+        <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 10, background: result.inserted ? 'var(--ok-bg)' : 'var(--danger-bg)', fontSize: 12.5, color: result.inserted ? '#16A34A' : '#DC2626', fontWeight: 700 }}>
           ✅ Imported {result.inserted} outcome{result.inserted !== 1 ? 's' : ''}{result.skipped ? ` · Skipped ${result.skipped} unmatched row${result.skipped !== 1 ? 's' : ''}` : ''}
         </div>
       )}
@@ -148,7 +148,7 @@ function ReportPane({ org, children, scores }) {
           return (
             <div key={area.key} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, padding: '4px 0', borderBottom: '1px solid #F9FAFB' }}>
               <span>{area.icon} {area.label}</span>
-              <span style={{ fontWeight: 800, color: avg ? scoreColor(avg) : '#9CA3AF' }}>{avg ? `${avg.toFixed(1)}/10` : 'No data'}</span>
+              <span style={{ fontWeight: 800, color: avg ? scoreColor(avg) : 'var(--text-faint)' }}>{avg ? `${avg.toFixed(1)}/10` : 'No data'}</span>
             </div>
           )
         })}

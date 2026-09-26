@@ -78,7 +78,7 @@ function Toggle({ value, onChange, label }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid var(--border-soft)' }}>
       <span style={{ fontSize: 14, color: 'var(--text2)', fontWeight: 500 }}>{label}</span>
-      <div onClick={() => onChange(!value)} style={{ width: 40, height: 22, borderRadius: 11, background: value ? '#1B9AAA' : '#D1D5DB', position: 'relative', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0 }}>
+      <div onClick={() => onChange(!value)} style={{ width: 40, height: 22, borderRadius: 11, background: value ? '#1B9AAA' : 'var(--text-faint)', position: 'relative', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0 }}>
         <div style={{ position: 'absolute', top: 2, left: value ? 20 : 2, width: 18, height: 18, borderRadius: '50%', background: 'var(--surface)', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
       </div>
     </div>
@@ -368,7 +368,7 @@ function OrgSection({ org }) {
           <Field label="Contact Phone"><input style={inp} value={form.contact_phone} onChange={e => set('contact_phone', e.target.value)} /></Field>
         </div>
         <Field label="Description"><textarea style={{ ...inp, resize: 'vertical', minHeight: 80 }} value={form.description} onChange={e => set('description', e.target.value)} placeholder="Brief description of your organisation..." /></Field>
-        <button onClick={handleSave} disabled={saving} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: saving ? '#9ca3af' : '#1B9AAA', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+        <button onClick={handleSave} disabled={saving} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: saving ? 'var(--text-faint)' : '#1B9AAA', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
           {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save Changes'}
         </button>
       </SettingCard>
@@ -378,7 +378,7 @@ function OrgSection({ org }) {
   )
 }
 
-const GROUP_COLOR_PRESETS = ['#E53935', '#1B9AAA', '#417505', '#B8860B', '#7B2D8B', '#1A1A1A', '#F97316', '#0EA5E9', '#EC4899', '#64748B']
+const GROUP_COLOR_PRESETS = ['#E53935', '#1B9AAA', '#417505', '#B8860B', '#7B2D8B', '#1A1A1A', '#F97316', '#0EA5E9', '#EC4899', 'var(--text3)']
 
 function RegisterGroupsManager({ org }) {
   const orgId = org?.id
@@ -615,7 +615,7 @@ function ModulePasswordCard({ moduleKey, label, icon, accentColor }) {
           </div>
           {pwError && <div style={{ fontSize: 12.5, color: 'var(--danger-text)', fontWeight: 600, marginBottom: 12 }}>{pwError}</div>}
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <button onClick={handleSetPassword} disabled={pwSaving} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: pwSaving ? '#9ca3af' : accentColor, color: '#fff', fontSize: 14, fontWeight: 700, cursor: pwSaving ? 'default' : 'pointer' }}>
+            <button onClick={handleSetPassword} disabled={pwSaving} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: pwSaving ? 'var(--text-faint)' : accentColor, color: '#fff', fontSize: 14, fontWeight: 700, cursor: pwSaving ? 'default' : 'pointer' }}>
               {pwSaving ? 'Saving...' : pwSaved ? '✓ Saved!' : pwStatus === 'set' ? 'Update Password' : 'Set Password'}
             </button>
             {pwStatus === 'set' && (
@@ -989,7 +989,7 @@ function NotificationsSection({ org, session: authSession }) {
                     <span style={{ fontSize: 14, color: 'var(--text2)', fontWeight: 600 }}>{g.icon} {g.label}{g.locked ? ' (required)' : ''}</span>
                     <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2 }}>{g.description}</div>
                   </div>
-                  <div onClick={() => toggleCategory(g.key, g.locked)} style={{ width: 40, height: 22, borderRadius: 11, background: groupOn ? '#1B9AAA' : '#D1D5DB', position: 'relative', cursor: g.locked ? 'default' : 'pointer', flexShrink: 0, marginLeft: 12 }}>
+                  <div onClick={() => toggleCategory(g.key, g.locked)} style={{ width: 40, height: 22, borderRadius: 11, background: groupOn ? '#1B9AAA' : 'var(--text-faint)', position: 'relative', cursor: g.locked ? 'default' : 'pointer', flexShrink: 0, marginLeft: 12 }}>
                     <div style={{ position: 'absolute', top: 2, left: groupOn ? 20 : 2, width: 18, height: 18, borderRadius: '50%', background: 'var(--surface)', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
                   </div>
                 </div>
@@ -1005,7 +1005,7 @@ function NotificationsSection({ org, session: authSession }) {
                     return (
                       <div key={ev.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', opacity: g.locked ? 0.75 : 1 }}>
                         <span style={{ fontSize: 12.5, color: 'var(--text3)' }}>{ev.label}</span>
-                        <div onClick={() => toggleEventOverride(g, ev.key)} style={{ width: 32, height: 18, borderRadius: 9, background: on ? '#1B9AAA' : '#D1D5DB', position: 'relative', cursor: g.locked ? 'default' : 'pointer', flexShrink: 0, marginLeft: 12 }}>
+                        <div onClick={() => toggleEventOverride(g, ev.key)} style={{ width: 32, height: 18, borderRadius: 9, background: on ? '#1B9AAA' : 'var(--text-faint)', position: 'relative', cursor: g.locked ? 'default' : 'pointer', flexShrink: 0, marginLeft: 12 }}>
                           <div style={{ position: 'absolute', top: 2, left: on ? 16 : 2, width: 14, height: 14, borderRadius: '50%', background: 'var(--surface)', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
                         </div>
                       </div>
@@ -1116,7 +1116,7 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
 
   const currentPlan = org?.plan || 'trial'
   const status = org?.subscription_status
-  const statusStyle = STATUS_STYLE[status] || { bg: 'var(--surface-hover)', color: '#475569', label: status ? `● ${status}` : '● No active subscription' }
+  const statusStyle = STATUS_STYLE[status] || { bg: 'var(--surface-hover)', color: 'var(--text2)', label: status ? `● ${status}` : '● No active subscription' }
   const daysLeft = trialDaysRemaining(org)
   const planEnded = isPlanEnded(org)
 
@@ -1296,7 +1296,7 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
                         <div style={{ textAlign: 'center', padding: '12px 0', borderRadius: 8, background: 'var(--ok-bg)', color: 'var(--ok-text)', fontWeight: 700, fontSize: 13 }}>Current Plan</div>
                       ) : (
                         <button onClick={() => handleChoose(p.plan)} disabled={loadingPlan === p.plan}
-                          style={{ width: '100%', minHeight: 44, borderRadius: 8, border: 'none', background: loadingPlan === p.plan ? '#9ca3af' : '#1B9AAA', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
+                          style={{ width: '100%', minHeight: 44, borderRadius: 8, border: 'none', background: loadingPlan === p.plan ? 'var(--text-faint)' : '#1B9AAA', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
                           {loadingPlan === p.plan ? 'Redirecting...' : org?.stripe_subscription_id ? `Switch to ${p.label}` : `Choose ${p.label}`}
                         </button>
                       )}
@@ -1330,7 +1330,7 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
           }
           const pct = Math.min(100, Math.round((used / cap) * 100))
           const full = used >= cap
-          const tone = full ? '#DC2626' : pct >= 80 ? '#B45309' : '#1B9AAA'
+          const tone = full ? '#DC2626' : pct >= 80 ? 'var(--warn-text)' : '#1B9AAA'
           return (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
@@ -1443,7 +1443,7 @@ function HelpSection() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {links.map(l => (
           <a key={l.title} href={l.href} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', border: '1px solid var(--border)', borderRadius: 10, textDecoration: 'none', transition: 'background 0.15s' }}
-            onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
             onMouseLeave={e => e.currentTarget.style.background = '#fff'}>
             <span style={{ fontSize: 22 }}><Icon name={l.icon} /></span>
             <div>
@@ -1522,7 +1522,7 @@ function SafeguardingSection({ org }) {
         <Field label="DSL Email Address">
           <input style={inp} type="email" value={form.dsl_email} onChange={e => set('dsl_email', e.target.value)} placeholder="dsl@yourorg.org.uk" />
         </Field>
-        <button onClick={handleSave} disabled={saving} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: saving ? '#9ca3af' : '#DC2626', color: '#fff', fontSize: 14, fontWeight: 700, cursor: saving ? 'default' : 'pointer' }}>
+        <button onClick={handleSave} disabled={saving} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: saving ? 'var(--text-faint)' : '#DC2626', color: '#fff', fontSize: 14, fontWeight: 700, cursor: saving ? 'default' : 'pointer' }}>
           {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save DSL Details'}
         </button>
       </SettingCard>
@@ -1675,7 +1675,7 @@ function GroupsSection({ org, refreshOrg }) {
           </div>
         </Field>
 
-        <button onClick={handleSaveRegisterOptions} disabled={saving} style={{ marginTop: 4, padding: '10px 20px', borderRadius: 10, border: 'none', background: saving ? '#9CA3AF' : '#1B9AAA', color: '#fff', fontSize: 13, fontWeight: 700, cursor: saving ? 'default' : 'pointer' }}>
+        <button onClick={handleSaveRegisterOptions} disabled={saving} style={{ marginTop: 4, padding: '10px 20px', borderRadius: 10, border: 'none', background: saving ? 'var(--text-faint)' : '#1B9AAA', color: '#fff', fontSize: 13, fontWeight: 700, cursor: saving ? 'default' : 'pointer' }}>
           {saving ? 'Saving...' : saved ? '✓ Saved' : 'Save Register Options'}
         </button>
       </SettingCard>
@@ -1711,7 +1711,7 @@ function GroupsSection({ org, refreshOrg }) {
           </div>
         )}
 
-        <button onClick={handleSaveRetention} disabled={retentionSaving} style={{ marginTop: 4, padding: '10px 20px', borderRadius: 10, border: 'none', background: retentionSaving ? '#9CA3AF' : '#1B9AAA', color: '#fff', fontSize: 13, fontWeight: 700, cursor: retentionSaving ? 'default' : 'pointer' }}>
+        <button onClick={handleSaveRetention} disabled={retentionSaving} style={{ marginTop: 4, padding: '10px 20px', borderRadius: 10, border: 'none', background: retentionSaving ? 'var(--text-faint)' : '#1B9AAA', color: '#fff', fontSize: 13, fontWeight: 700, cursor: retentionSaving ? 'default' : 'pointer' }}>
           {retentionSaving ? 'Saving...' : retentionSaved ? '✓ Saved' : 'Save Data Retention'}
         </button>
       </SettingCard>
@@ -2122,7 +2122,7 @@ function InviteUserModal({ org, session, onClose, onInvited }) {
 
         <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
           <button onClick={onClose} style={{ flex: 1, padding: 11, borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-          <button onClick={handleInvite} disabled={sending} style={{ flex: 1, padding: 11, borderRadius: 10, border: 'none', background: sending ? '#9CA3AF' : primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
+          <button onClick={handleInvite} disabled={sending} style={{ flex: 1, padding: 11, borderRadius: 10, border: 'none', background: sending ? 'var(--text-faint)' : primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
             {sending ? 'Sending...' : 'Send Invite'}
           </button>
         </div>
@@ -2238,8 +2238,8 @@ export default function Settings({ org, session, userProfile, initialSection }) 
               <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1, padding: '8px 10px 4px' }}>{group}</div>
               {items.map(n => (
                 <button key={n.key} onClick={() => { setActive(n.key); if (isMobile) setShowSidebar(false) }}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: 'none', background: active === n.key ? `${org?.primary_color || '#1B9AAA'}12` : 'transparent', color: active === n.key ? (org?.primary_color || '#1B9AAA') : '#374151', fontSize: 13, fontWeight: active === n.key ? 700 : 500, cursor: 'pointer', textAlign: 'left', marginBottom: 1, transition: 'all 0.1s' }}
-                  onMouseEnter={e => { if (active !== n.key) e.currentTarget.style.background = '#F9FAFB' }}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: 'none', background: active === n.key ? `${org?.primary_color || '#1B9AAA'}12` : 'transparent', color: active === n.key ? (org?.primary_color || '#1B9AAA') : 'var(--text2)', fontSize: 13, fontWeight: active === n.key ? 700 : 500, cursor: 'pointer', textAlign: 'left', marginBottom: 1, transition: 'all 0.1s' }}
+                  onMouseEnter={e => { if (active !== n.key) e.currentTarget.style.background = 'var(--surface2)' }}
                   onMouseLeave={e => { if (active !== n.key) e.currentTarget.style.background = 'transparent' }}>
                   <span style={{ fontSize: 15 }}><Icon name={n.icon} /></span>
                   <span style={{ flex: 1, minWidth: 0 }}>{n.label}</span>

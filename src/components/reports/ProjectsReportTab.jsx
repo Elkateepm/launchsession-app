@@ -164,7 +164,7 @@ export default function ProjectsReportTab({ org }) {
         </select>
         <div style={{ flex: 1 }} />
         <button onClick={copyReport} disabled={!report}
-          style={{ padding: '9px 16px', borderRadius: 10, border: 'none', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: report ? 'pointer' : 'default', background: report ? `linear-gradient(135deg, ${PURPLE}, #5B8DEF)` : '#CBD5E1' }}>
+          style={{ padding: '9px 16px', borderRadius: 10, border: 'none', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: report ? 'pointer' : 'default', background: report ? `linear-gradient(135deg, ${PURPLE}, #5B8DEF)` : 'var(--text-faint)' }}>
           Copy report summary
         </button>
       </div>
@@ -248,10 +248,10 @@ export default function ProjectsReportTab({ org }) {
                   <Para label="What worked well" color="#16A34A" text={report.projectReflection.what_worked_well} />
                 )}
                 {report.projectReflection.what_to_change && (
-                  <Para label="What to change" color="#B45309" text={report.projectReflection.what_to_change} />
+                  <Para label="What to change" color="var(--warn-text)" text={report.projectReflection.what_to_change} />
                 )}
                 {report.projectReflection.recurring_barriers && (
-                  <Para label="Recurring barriers" color="#64748B" text={report.projectReflection.recurring_barriers} />
+                  <Para label="Recurring barriers" color="var(--text3)" text={report.projectReflection.recurring_barriers} />
                 )}
               </div>
             )}

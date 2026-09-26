@@ -56,7 +56,7 @@ export default function VolunteerDirectory({ org, volunteers, sessionStaff, sess
         {FILTERS.map(f => (
           <button key={f.key} onClick={() => setFilter(f.key)} style={{
             padding: '7px 14px', borderRadius: 99, border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 700,
-            background: filter === f.key ? primary : '#fff', color: filter === f.key ? '#fff' : '#475569',
+            background: filter === f.key ? primary : '#fff', color: filter === f.key ? '#fff' : 'var(--text2)',
             boxShadow: filter === f.key ? 'none' : '0 1px 3px rgba(15,23,42,0.08)',
           }}>{f.label}</button>
         ))}

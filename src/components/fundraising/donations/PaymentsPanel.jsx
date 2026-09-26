@@ -95,7 +95,7 @@ export default function PaymentsPanel({ org, isAdmin, campaigns = [] }) {
                 <div style={{ fontSize: 15.5, fontWeight: 800, color: LS.text }}>Online payments</div>
                 <span style={{
                   padding: '3px 10px', borderRadius: 999, fontSize: 11.5, fontWeight: 700,
-                  background: connected ? '#E7F8ED' : '#F3F2F7',
+                  background: connected ? 'var(--ok-bg)' : 'var(--surface2)',
                   color: connected ? LS.success : LS.muted,
                 }}>{connected ? 'Connected' : 'Not connected'}</span>
               </div>
@@ -175,7 +175,7 @@ export default function PaymentsPanel({ org, isAdmin, campaigns = [] }) {
                 </div>
                 <span style={{
                   padding: '3px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700,
-                  background: disabled ? '#F3F2F7' : (link.status === 'active' ? '#E7F8ED' : '#FEF6E7'),
+                  background: disabled ? 'var(--surface2)' : (link.status === 'active' ? 'var(--ok-bg)' : 'var(--warn-bg)'),
                   color: disabled ? LS.muted : (link.status === 'active' ? LS.success : LS.warning),
                   flexShrink: 0,
                 }}>

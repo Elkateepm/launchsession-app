@@ -53,7 +53,7 @@ function computeRegisterState(session, attendanceRows) {
 }
 
 const STATE_LABEL = { upcoming: 'Upcoming', register_open: 'Register open', live: 'Live', ending: 'Ending', closed: 'Closed' }
-const STATE_COLOR = { upcoming: '#6B7280', register_open: '#2563EB', live: '#16A34A', ending: '#D97706', closed: '#6B7280' }
+const STATE_COLOR = { upcoming: 'var(--text3)', register_open: '#2563EB', live: '#16A34A', ending: '#D97706', closed: 'var(--text3)' }
 
 function fmtTime(d) {
   if (!d) return ''
@@ -377,15 +377,15 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
           <span>{new Date(session.session_date).toLocaleDateString('en-GB', isMobile
             ? { day: 'numeric', month: 'short' }
             : { weekday: 'long', day: 'numeric', month: 'long' })}</span>
-          <span style={{ color: '#CBD5E1' }}>•</span>
+          <span style={{ color: 'var(--text-faint)' }}>•</span>
           <span>{session.start_time}–{session.end_time}</span>
-          {session.location && <><span style={{ color: '#CBD5E1' }}>•</span><span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.location}</span></>}
+          {session.location && <><span style={{ color: 'var(--text-faint)' }}>•</span><span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.location}</span></>}
         </div>
         {/* Four pills wrapped onto two rows at phone width. A fixed four-column
             grid keeps them on one line and keeps the numbers comparable. */}
         <div style={{ display: isMobile ? 'grid' : 'flex', gridTemplateColumns: isMobile ? 'repeat(4, minmax(0,1fr))' : undefined, gap: isMobile ? 6 : 8, flexWrap: 'wrap' }}>
           <MiniStat icon="👥" label="On site" value={signedInCount} color="#16A34A" />
-          <MiniStat icon="⏳" label="Expected" value={grouped.expected.length} color="#64748B" />
+          <MiniStat icon="⏳" label="Expected" value={grouped.expected.length} color="var(--text3)" />
           <MiniStat icon="✕" label="Absent" value={grouped.absent.length} color="#DC2626" />
           <MiniStat icon="✓" label="Signed out" value={grouped.signed_out.length} color="#2563EB" />
         </div>
@@ -434,10 +434,10 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
               position: 'relative', flex: '1 0 auto', minHeight: 44, padding: '9px 8px', border: 'none', borderRadius: 9,
               background: tab === t.key ? '#fff' : 'transparent',
               boxShadow: tab === t.key ? '0 1px 4px rgba(15,23,42,0.12)' : 'none',
-              color: tab === t.key ? '#111827' : '#64748B', fontSize: 12.5, fontWeight: 700,
+              color: tab === t.key ? 'var(--text)' : 'var(--text3)', fontSize: 12.5, fontWeight: 700,
               cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s ease',
             }}>
-              {t.label} <span style={{ color: tab === t.key ? '#7C3AED' : '#94A3B8', fontWeight: 800 }}>{t.count}</span>
+              {t.label} <span style={{ color: tab === t.key ? '#7C3AED' : 'var(--text-faint)', fontWeight: 800 }}>{t.count}</span>
             </button>
           ))}
         </div>
@@ -447,7 +447,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
       <div style={{ padding: '0 14px 12px', background: 'var(--surface)', borderBottom: '1px solid var(--border-soft)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flex: '1 1 160px' }}>
           <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--text-faint)', pointerEvents: 'none' }}><Icon name="🔍" /></span>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${terms.people}...`} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px 10px 32px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 13, background: 'var(--surface2)', outline: 'none', transition: 'border-color 0.15s ease' }} onFocus={e => e.target.style.borderColor = '#A78BFA'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${terms.people}...`} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px 10px 32px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 13, background: 'var(--surface2)', outline: 'none', transition: 'border-color 0.15s ease' }} onFocus={e => e.target.style.borderColor = '#A78BFA'} onBlur={e => e.target.style.borderColor = 'var(--border)'} />
         </div>
         {registerGroups.length > 1 && <select aria-label="Filter register by group" value={groupFilter} onChange={e => setGroupFilter(e.target.value)} style={{ ...ghostBtn, maxWidth: '100%' }}>
           <option value="all">All groups</option>{registerGroups.map(name => <option key={name} value={name}>{name}</option>)}
@@ -681,10 +681,10 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
         </div>
         <div style={{ display: 'flex', gap: 5, marginTop: 5, flexWrap: 'wrap' }}>
           {(child.has_epipen || child.has_asthma || child.has_diabetes || child.takes_medication || child.has_medication || child.medical_notes) && (
-            <span style={alertPill('#DC2626', '#FEE2E2')}>⚕ Medical</span>
+            <span style={alertPill('#DC2626', 'var(--danger-bg)')}>⚕ Medical</span>
           )}
-          {child.allergies && <span style={alertPill('#D97706', '#FEF3C7')}><Icon name="⚠" /> Allergy</span>}
-          {child.collection_restricted && <span style={alertPill('#D97706', '#FEF3C7')}><Icon name="⚠" /> Collection restriction</span>}
+          {child.allergies && <span style={alertPill('#D97706', 'var(--warn-bg)')}><Icon name="⚠" /> Allergy</span>}
+          {child.collection_restricted && <span style={alertPill('#D97706', 'var(--warn-bg)')}><Icon name="⚠" /> Collection restriction</span>}
         </div>
       </div>
       <div style={{
@@ -701,7 +701,7 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
         ) : (
           <>
             <button onClick={onSignIn} style={actionBtn('#16A34A', isMobile)}>Sign in</button>
-            <button onClick={onMarkAbsent} style={{ ...actionBtn('#6B7280', isMobile), background: 'var(--surface)', color: 'var(--text3)', border: '1.5px solid var(--border)', boxShadow: 'none' }}>Absent</button>
+            <button onClick={onMarkAbsent} style={{ ...actionBtn('var(--text3)', isMobile), background: 'var(--surface)', color: 'var(--text3)', border: '1.5px solid var(--border)', boxShadow: 'none' }}>Absent</button>
           </>
         )}
       </div>
@@ -749,18 +749,18 @@ function SignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
             {contacts.map((c, i) => (
               <button key={i} onClick={() => { setCollectionType('approved_adult'); setCollectedByName(`${c.name}${c.relationship ? ' · ' + c.relationship : ''}`) }}
-                style={{ padding: '8px 14px', borderRadius: 10, border: collectedByName.startsWith(c.name) ? '2px solid #7C3AED' : '1.5px solid #E5E7EB', background: collectedByName.startsWith(c.name) ? '#F5F3FF' : '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+                style={{ padding: '8px 14px', borderRadius: 10, border: collectedByName.startsWith(c.name) ? '2px solid #7C3AED' : '1.5px solid #E5E7EB', background: collectedByName.startsWith(c.name) ? 'var(--violet-bg)' : '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
                 {c.name}{c.relationship ? ` · ${c.relationship}` : ''}
               </button>
             ))}
             <button onClick={() => { setCollectionType('independent'); setCollectedByName('') }}
-              style={{ padding: '8px 14px', borderRadius: 10, border: collectionType === 'independent' ? '2px solid #7C3AED' : '1.5px solid #E5E7EB', background: collectionType === 'independent' ? '#F5F3FF' : '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Leaving independently</button>
+              style={{ padding: '8px 14px', borderRadius: 10, border: collectionType === 'independent' ? '2px solid #7C3AED' : '1.5px solid #E5E7EB', background: collectionType === 'independent' ? 'var(--violet-bg)' : '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Leaving independently</button>
           </div>
         )}
         <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text3)', marginBottom: 8 }}>Or choose:</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
           {COLLECTION_TYPES.map(t => (
-            <button key={t.key} onClick={() => setCollectionType(t.key)} style={{ padding: '8px 14px', borderRadius: 10, border: collectionType === t.key ? '2px solid #7C3AED' : '1.5px solid #E5E7EB', background: collectionType === t.key ? '#F5F3FF' : '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>{t.label}</button>
+            <button key={t.key} onClick={() => setCollectionType(t.key)} style={{ padding: '8px 14px', borderRadius: 10, border: collectionType === t.key ? '2px solid #7C3AED' : '1.5px solid #E5E7EB', background: collectionType === t.key ? 'var(--violet-bg)' : '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>{t.label}</button>
           ))}
         </div>
         {collectionType && collectionType !== 'independent' && (
@@ -771,7 +771,7 @@ function SignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
           <input type="checkbox" checked={identityChecked} onChange={e => setIdentityChecked(e.target.checked)} /> Identity checked{identityCheckRequired && ' *'}
         </label>
         <button onClick={confirm}
-          disabled={cannotConfirm} style={{ width: '100%', padding: 13, borderRadius: 10, border: 'none', background: (cannotConfirm) ? '#D1D5DB' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: (cannotConfirm) ? 'not-allowed' : 'pointer' }}>
+          disabled={cannotConfirm} style={{ width: '100%', padding: 13, borderRadius: 10, border: 'none', background: (cannotConfirm) ? 'var(--text-faint)' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: (cannotConfirm) ? 'not-allowed' : 'pointer' }}>
           {saving ? 'Saving…' : 'Confirm Sign Out'}
         </button>
       </div>
@@ -852,7 +852,7 @@ function WalkInModal({ org, session, allChildren, onClose, onDone, onSignIn }) {
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, fontSize: 12.5 }}>
             <input type="checkbox" checked={form.consent} onChange={e => setForm({ ...form, consent: e.target.checked })} /> Consent confirmed for today's session
           </label>
-          <button onClick={handleCreateWalkIn} disabled={!form.first_name.trim() || !form.consent || saving} style={{ width: '100%', padding: 12, borderRadius: 10, border: 'none', background: (!form.first_name.trim() || !form.consent) ? '#D1D5DB' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          <button onClick={handleCreateWalkIn} disabled={!form.first_name.trim() || !form.consent || saving} style={{ width: '100%', padding: 12, borderRadius: 10, border: 'none', background: (!form.first_name.trim() || !form.consent) ? 'var(--text-faint)' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             {saving ? 'Adding...' : 'Create & Sign In'}
           </button>
         </div>
@@ -894,7 +894,7 @@ function NotesPanel({ notes, onClose, onAdd, onRaiseSafeguarding, children }) {
           {children.map(c => <option key={c.id} value={c.id}>{c.first_name} {c.last_name}</option>)}
         </select>
         <textarea value={content} onChange={e => setContent(e.target.value)} placeholder="Note..." style={{ ...inp, width: '100%', minHeight: 60, marginBottom: 10 }} />
-        <button onClick={handleAdd} disabled={!content.trim()} style={{ width: '100%', padding: 11, borderRadius: 9, border: 'none', background: !content.trim() ? '#D1D5DB' : '#7C3AED', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 18 }}>Add Note</button>
+        <button onClick={handleAdd} disabled={!content.trim()} style={{ width: '100%', padding: 11, borderRadius: 9, border: 'none', background: !content.trim() ? 'var(--text-faint)' : '#7C3AED', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 18 }}>Add Note</button>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {notes.map(n => {

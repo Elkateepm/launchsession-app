@@ -132,7 +132,7 @@ function SectionHeader({ icon, title, subtitle, color = ACCENT }) {
 }
 
 function Toggle({ value, onChange, label: text }) {
-  return <button type="button" role="switch" aria-checked={!!value} onClick={() => onChange(!value)} style={{ display: 'flex', width: '100%', minHeight: 52, alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '10px 0', border: 0, borderBottom: '1px solid var(--border)', background: 'none', cursor: 'pointer', textAlign: 'left' }}><span style={{ fontSize: 14, color: 'var(--text2)' }}>{text}</span><span style={{ width: 42, height: 24, borderRadius: 12, background: value ? 'var(--org-primary, #1B9AAA)' : '#CBD5E1', position: 'relative', flexShrink: 0 }}><span style={{ position: 'absolute', top: 3, left: value ? 21 : 3, width: 18, height: 18, borderRadius: '50%', background: 'var(--surface)' }} /></span></button>
+  return <button type="button" role="switch" aria-checked={!!value} onClick={() => onChange(!value)} style={{ display: 'flex', width: '100%', minHeight: 52, alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '10px 0', border: 0, borderBottom: '1px solid var(--border)', background: 'none', cursor: 'pointer', textAlign: 'left' }}><span style={{ fontSize: 14, color: 'var(--text2)' }}>{text}</span><span style={{ width: 42, height: 24, borderRadius: 12, background: value ? 'var(--org-primary, #1B9AAA)' : 'var(--text-faint)', position: 'relative', flexShrink: 0 }}><span style={{ position: 'absolute', top: 3, left: value ? 21 : 3, width: 18, height: 18, borderRadius: '50%', background: 'var(--surface)' }} /></span></button>
 }
 
 function StepDot({ n, active, done, label: text, onClick, compact, color = ACCENT }) {
@@ -444,7 +444,7 @@ function StepDetails({ form, setForm, staff, org }) {
       </div>
 
       <div style={card}>
-        <SectionHeader icon="🧭" title="Purpose & plan" subtitle="Give delivery staff a clear intention to reflect against afterwards" color="#64748B" />
+        <SectionHeader icon="🧭" title="Purpose & plan" subtitle="Give delivery staff a clear intention to reflect against afterwards" color="var(--text3)" />
         <div style={{ marginBottom: 14 }}>
           <label style={label}>What is this session trying to achieve?</label>
           <textarea style={{ ...inp, minHeight: 80, resize: 'vertical' }} value={form.description} onChange={e => set('description', e.target.value)} placeholder="Describe the purpose, planned approach and what a successful session should look like." />
@@ -618,7 +618,7 @@ function StepRequirements({ form, setForm, orgForms, org, onFormCreated, expecte
     <>
       {REQUIREMENT_TOGGLES.map(group => (
         <div key={group.group} style={card}>
-          <SectionHeader icon={group.group === 'Safeguarding' ? '🛡️' : '⚙️'} title={group.group} color={group.group === 'Safeguarding' ? '#DC2626' : '#6B7280'} />
+          <SectionHeader icon={group.group === 'Safeguarding' ? '🛡️' : '⚙️'} title={group.group} color={group.group === 'Safeguarding' ? '#DC2626' : 'var(--text3)'} />
           {group.items.map(item => (
             <Toggle key={item.key} value={form[item.key]} onChange={v => set(item.key, v)} label={item.label} />
           ))}
@@ -822,7 +822,7 @@ function RiskAssessmentPicker({ form, setForm, org, riskAssessments, onCreated, 
   return (
     <>
       {standaloneHeader}
-    <div style={{ ...card, borderColor: attached ? '#BBF7D0' : '#FCA5A5' }}>
+    <div style={{ ...card, borderColor: attached ? 'var(--ok-border)' : 'var(--danger-border)' }}>
       <SectionHeader icon="🛡️" title="Risk assessment"
         subtitle={attached ? 'Attached to this session on creation.' : 'This session needs one. Attach an existing assessment or create one now.'}
         color="#DC2626" />
@@ -1018,7 +1018,7 @@ function StepReview({ form, staff, expectedCount, primary, riskAssessments = [],
             {outstanding.length === 0 ? (
               <span style={{ fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.6, color: 'var(--ok-text)', background: 'var(--ok-bg)', border: '1px solid var(--ok-border)', borderRadius: 99, padding: '3px 10px' }}>Ready to publish</span>
             ) : (
-              <span style={{ fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.6, color: blockers ? '#B91C1C' : '#B45309', background: blockers ? '#FEF2F2' : '#FFFBEB', border: `1px solid ${blockers ? '#FECACA' : '#FDE68A'}`, borderRadius: 99, padding: '3px 10px' }}>
+              <span style={{ fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.6, color: blockers ? 'var(--danger-text)' : 'var(--warn-text)', background: blockers ? 'var(--danger-bg)' : 'var(--warn-bg)', border: `1px solid ${blockers ? 'var(--danger-border)' : 'var(--warn-border)'}`, borderRadius: 99, padding: '3px 10px' }}>
                 {outstanding.length} outstanding
               </span>
             )}
@@ -1080,7 +1080,7 @@ function StepReview({ form, staff, expectedCount, primary, riskAssessments = [],
         </div>
       )}
 
-      <div style={{ ...card, borderColor: outstanding.length === 0 ? '#BBF7D0' : (blockers ? '#FECACA' : '#FDE68A') }}>
+      <div style={{ ...card, borderColor: outstanding.length === 0 ? 'var(--ok-border)' : (blockers ? 'var(--danger-border)' : 'var(--warn-border)') }}>
         <SectionHeader icon={outstanding.length === 0 ? '✅' : '⚠️'} title="Readiness"
           subtitle={outstanding.length === 0 ? 'Everything checks out.' : `${outstanding.length} item${outstanding.length === 1 ? '' : 's'} to resolve — you can still publish and finish these later.`}
           color={outstanding.length === 0 ? '#16A34A' : (blockers ? '#DC2626' : '#D97706')} />
@@ -1547,7 +1547,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
       {error && <div role="alert" style={{ color: 'var(--danger-text)', fontSize: 13, marginBottom: 10 }}>{error}</div>}
       {missingDetails.length > 0 && <div role="status" style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10 }}>Still needed: {missingDetails.join(', ')}</div>}
       {isLastStep && (!isEditing || editingDraft) && <label style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Save as<select aria-label="Save as" disabled={saving} value={saveAs} onChange={e => setSaveAs(e.target.value)} style={{ ...inp, flex: 1 }}><option value="ready">Published — ready to run</option><option value="scheduled">Scheduled</option><option value="draft">Draft — finish later</option></select></label>}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}><button onClick={() => step === 1 ? closeWizard() : setStep(s => s - 1)} disabled={saving} style={flowButton}>{step === 1 ? 'Cancel' : '← Back'}</button>{!compact && !isEditing && lastSaved && <span style={{ color: 'var(--text3)', fontSize: 12 }}>Draft saved on this device</span>}<button onClick={() => isLastStep ? publish(isEditing && !editingDraft ? null : saveAs) : canContinue() && setStep(s => s + 1)} disabled={saving || !canContinue()} style={{ ...flowButton, background: !canContinue() || saving ? '#94A3B8' : primary, borderColor: 'transparent', color: '#fff', flex: compact ? 1 : undefined }}>{saving ? 'Saving…' : isLastStep ? isEditing && !editingDraft ? 'Save changes' : saveAs === 'draft' ? 'Save draft' : saveAs === 'scheduled' ? `Schedule ${terms.session}` : `Publish ${terms.session}` : 'Continue →'}</button></div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}><button onClick={() => step === 1 ? closeWizard() : setStep(s => s - 1)} disabled={saving} style={flowButton}>{step === 1 ? 'Cancel' : '← Back'}</button>{!compact && !isEditing && lastSaved && <span style={{ color: 'var(--text3)', fontSize: 12 }}>Draft saved on this device</span>}<button onClick={() => isLastStep ? publish(isEditing && !editingDraft ? null : saveAs) : canContinue() && setStep(s => s + 1)} disabled={saving || !canContinue()} style={{ ...flowButton, background: !canContinue() || saving ? 'var(--text-faint)' : primary, borderColor: 'transparent', color: '#fff', flex: compact ? 1 : undefined }}>{saving ? 'Saving…' : isLastStep ? isEditing && !editingDraft ? 'Save changes' : saveAs === 'draft' ? 'Save draft' : saveAs === 'scheduled' ? `Schedule ${terms.session}` : `Publish ${terms.session}` : 'Continue →'}</button></div>
     </footer>
   </div>)
 }

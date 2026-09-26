@@ -141,7 +141,7 @@ export default function Onboarding({ session, org, onComplete }) {
       <ProgressHeader stepNumber={step + 1} totalSteps={TOTAL_STEPS} title={STEP_TITLES[step]} showBack onBack={back} />
 
       {error && (
-        <div role="alert" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#FCA5A5', borderRadius: 12, padding: '12px 16px', marginBottom: 20, fontSize: 13, fontWeight: 600 }}>
+        <div role="alert" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger-text)', borderRadius: 12, padding: '12px 16px', marginBottom: 20, fontSize: 13, fontWeight: 600 }}>
           ⚠️ {error}
         </div>
       )}

@@ -28,8 +28,8 @@ export const COMPLIANCE_TONES = {
   complete:     { label: 'Complete',     tone: 'var(--ok-text)', bg: 'var(--ok-bg)' },
   due_soon:     { label: 'Due soon',     tone: 'var(--warn-text)', bg: 'var(--warn-bg)' },
   overdue:      { label: 'Overdue',      tone: 'var(--danger-text)', bg: 'var(--danger-bg)' },
-  missing:      { label: 'Missing',      tone: '#5A5772', bg: 'var(--surface2)' },
-  not_required: { label: 'Not required', tone: '#5A5772', bg: 'var(--surface2)' },
+  missing:      { label: 'Missing',      tone: 'var(--text2)', bg: 'var(--surface2)' },
+  not_required: { label: 'Not required', tone: 'var(--text2)', bg: 'var(--surface2)' },
 }
 
 function Tone({ status }) {
@@ -332,8 +332,8 @@ export function TrainingTab({ org, staff, primary, canEdit }) {
             </div>
             <span style={{
               display: 'inline-block', padding: '3px 10px', borderRadius: 99,
-              background: t.status === 'completed' ? '#E7F8ED' : '#F3F2F7',
-              color: t.status === 'completed' ? '#04713C' : '#5A5772',
+              background: t.status === 'completed' ? 'var(--ok-bg)' : 'var(--surface2)',
+              color: t.status === 'completed' ? 'var(--ok-text)' : 'var(--text2)',
               fontSize: 11.5, fontWeight: 800, whiteSpace: 'nowrap', textTransform: 'capitalize',
             }}>{t.status}</span>
           </div>

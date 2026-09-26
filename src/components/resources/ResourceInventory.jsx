@@ -78,8 +78,8 @@ export default function ResourceInventory({ resources, bookings, venues, onBook,
           <option value="status">Sort: Status</option>
         </select>
         <div style={{ display: 'flex', border: '1.5px solid var(--border)', borderRadius: 9, overflow: 'hidden' }}>
-          <button onClick={() => setView('grid')} style={{ padding: '8px 12px', border: 'none', background: view === 'grid' ? '#7C3AED' : '#fff', color: view === 'grid' ? '#fff' : '#6B7280', cursor: 'pointer' }}>▦</button>
-          <button onClick={() => setView('list')} style={{ padding: '8px 12px', border: 'none', background: view === 'list' ? '#7C3AED' : '#fff', color: view === 'list' ? '#fff' : '#6B7280', cursor: 'pointer' }}><Icon name="☰" /></button>
+          <button onClick={() => setView('grid')} style={{ padding: '8px 12px', border: 'none', background: view === 'grid' ? '#7C3AED' : '#fff', color: view === 'grid' ? '#fff' : 'var(--text3)', cursor: 'pointer' }}>▦</button>
+          <button onClick={() => setView('list')} style={{ padding: '8px 12px', border: 'none', background: view === 'list' ? '#7C3AED' : '#fff', color: view === 'list' ? '#fff' : 'var(--text3)', cursor: 'pointer' }}><Icon name="☰" /></button>
         </div>
       </div>
 

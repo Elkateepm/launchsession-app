@@ -50,13 +50,13 @@ function chunkFields(fields, multiStep) {
 function FieldInput({ field, value, onChange, invalid, accent, id }) {
   const base = {
     width: '100%', boxSizing: 'border-box', padding: '14px 15px', borderRadius: 12,
-    border: `1.5px solid ${invalid ? '#DC2626' : '#E2E8F0'}`,
+    border: `1.5px solid ${invalid ? '#DC2626' : 'var(--border)'}`,
     // 16px keeps iOS Safari from zooming the viewport on focus.
     fontSize: 16, fontFamily: 'inherit', outline: 'none', background: 'var(--surface)',
     color: 'var(--text)', transition: 'border-color 150ms ease, box-shadow 150ms ease',
   }
   const onFocus = e => { e.target.style.borderColor = accent; e.target.style.boxShadow = `0 0 0 3px ${accent}22` }
-  const onBlur = e => { e.target.style.borderColor = invalid ? '#DC2626' : '#E2E8F0'; e.target.style.boxShadow = 'none' }
+  const onBlur = e => { e.target.style.borderColor = invalid ? '#DC2626' : 'var(--border)'; e.target.style.boxShadow = 'none' }
   const common = { id, onFocus, onBlur, 'aria-invalid': invalid || undefined }
 
   switch (field.type) {
@@ -69,7 +69,7 @@ function FieldInput({ field, value, onChange, invalid, accent, id }) {
         <label htmlFor={id} style={{
           display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer',
           padding: '14px 15px', borderRadius: 12, background: value ? `${accent}0F` : '#fff',
-          border: `1.5px solid ${value ? accent : invalid ? '#DC2626' : '#E2E8F0'}`,
+          border: `1.5px solid ${value ? accent : invalid ? '#DC2626' : 'var(--border)'}`,
           transition: 'background 150ms ease, border-color 150ms ease',
         }}>
           <input {...common} type="checkbox" checked={!!value} onChange={e => onChange(e.target.checked)}
@@ -96,7 +96,7 @@ function FieldInput({ field, value, onChange, invalid, accent, id }) {
                   onClick={() => onChange(o)}
                   style={{
                     textAlign: 'left', padding: '14px 15px', borderRadius: 12, cursor: 'pointer',
-                    border: `1.5px solid ${active ? accent : invalid ? '#DC2626' : '#E2E8F0'}`,
+                    border: `1.5px solid ${active ? accent : invalid ? '#DC2626' : 'var(--border)'}`,
                     background: active ? `${accent}0F` : '#fff',
                     color: 'var(--text)', fontSize: 15.5, fontWeight: active ? 700 : 500,
                     fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 11,
@@ -104,7 +104,7 @@ function FieldInput({ field, value, onChange, invalid, accent, id }) {
                   }}>
                   <span style={{
                     width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
-                    border: `2px solid ${active ? accent : '#CBD5E1'}`,
+                    border: `2px solid ${active ? accent : 'var(--text-faint)'}`,
                     background: active ? accent : '#fff',
                     boxShadow: active ? 'inset 0 0 0 3.5px #fff' : 'none',
                   }} />
@@ -151,7 +151,7 @@ function Shell({ org, primary, secondary, children }) {
           </div>
           <div style={{
             fontSize: 19, fontWeight: 900, letterSpacing: -0.3, minWidth: 0,
-            color: isLightHex(primary) && isLightHex(secondary) ? '#0F172A' : '#fff',
+            color: isLightHex(primary) && isLightHex(secondary) ? 'var(--text)' : '#fff',
           }}>{org?.name}</div>
         </div>
       </div>
@@ -332,7 +332,7 @@ export default function PublicForm() {
             </div>
             <div style={{
               display: 'inline-block', padding: '10px 16px', borderRadius: 12,
-              background: 'var(--surface2)', fontSize: 13.5, color: '#475569', fontWeight: 600,
+              background: 'var(--surface2)', fontSize: 13.5, color: 'var(--text2)', fontWeight: 600,
             }}>{form.name}</div>
             <div style={{ fontSize: 13, color: 'var(--text-faint)', marginTop: 18 }}>You can close this page.</div>
           </div>
@@ -358,7 +358,7 @@ export default function PublicForm() {
             <span style={{ padding: '6px 12px', borderRadius: 99, background: 'var(--org-a05)', color: primary, fontSize: 12.5, fontWeight: 700 }}>
               {fields.length} question{fields.length === 1 ? '' : 's'}
             </span>
-            <span style={{ padding: '6px 12px', borderRadius: 99, background: 'var(--surface-hover)', color: '#475569', fontSize: 12.5, fontWeight: 700 }}>
+            <span style={{ padding: '6px 12px', borderRadius: 99, background: 'var(--surface-hover)', color: 'var(--text2)', fontSize: 12.5, fontWeight: 700 }}>
               About {mins} minute{mins === 1 ? '' : 's'}
             </span>
           </div>
@@ -447,7 +447,7 @@ export default function PublicForm() {
           {step > 0 && (
             <button onClick={back} style={{
               padding: '15px 20px', borderRadius: 14, border: '1.5px solid var(--border)',
-              background: 'var(--surface)', color: '#475569', fontSize: 15.5, fontWeight: 700,
+              background: 'var(--surface)', color: 'var(--text2)', fontSize: 15.5, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
             }}>Back</button>
           )}
@@ -456,7 +456,7 @@ export default function PublicForm() {
             disabled={status === 'submitting'}
             style={{
               flex: 1, padding: '16px', borderRadius: 14, border: 'none',
-              background: status === 'submitting' ? '#CBD5E1' : `linear-gradient(135deg, ${primary}, ${secondary})`,
+              background: status === 'submitting' ? 'var(--text-faint)' : `linear-gradient(135deg, ${primary}, ${secondary})`,
               color: '#fff', fontSize: 16.5, fontWeight: 800,
               cursor: status === 'submitting' ? 'wait' : 'pointer', fontFamily: 'inherit',
               boxShadow: status === 'submitting' ? 'none' : `0 10px 26px -12px ${primary}`,

@@ -449,7 +449,7 @@ function WellbeingQuickLog({ child, orgId, userId, onClose, onLogged }) {
 
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={onClose} style={{ flex: 1, padding: 11, borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-          <button onClick={submit} disabled={!mood || saving} style={{ flex: 1, padding: 11, borderRadius: 10, border: 'none', background: !mood || saving ? '#E5E7EB' : PRIMARY, color: !mood || saving ? '#9CA3AF' : '#fff', fontWeight: 800, cursor: !mood || saving ? 'default' : 'pointer' }}>
+          <button onClick={submit} disabled={!mood || saving} style={{ flex: 1, padding: 11, borderRadius: 10, border: 'none', background: !mood || saving ? 'var(--border)' : PRIMARY, color: !mood || saving ? 'var(--text-faint)' : '#fff', fontWeight: 800, cursor: !mood || saving ? 'default' : 'pointer' }}>
             {saving ? 'Saving...' : 'Log Check-in'}
           </button>
         </div>
@@ -908,8 +908,8 @@ const ATTENTION_TONE = [
   { bg: 'rgba(239,68,68,0.07)', border: 'rgba(239,68,68,0.3)', color: 'var(--danger-text)', icon: '⏰' },
   { bg: 'rgba(245,158,11,0.07)', border: 'rgba(245,158,11,0.3)', color: 'var(--warn-text)', icon: '⚠️' },
   { bg: 'rgba(245,158,11,0.07)', border: 'rgba(245,158,11,0.3)', color: 'var(--warn-text)', icon: '⚠️' },
-  { bg: 'rgba(100,116,139,0.07)', border: 'rgba(100,116,139,0.28)', color: '#475569', icon: '👤' },
-  { bg: 'rgba(100,116,139,0.07)', border: 'rgba(100,116,139,0.28)', color: '#475569', icon: '🕐' },
+  { bg: 'rgba(100,116,139,0.07)', border: 'rgba(100,116,139,0.28)', color: 'var(--text2)', icon: '👤' },
+  { bg: 'rgba(100,116,139,0.07)', border: 'rgba(100,116,139,0.28)', color: 'var(--text2)', icon: '🕐' },
 ]
 
 function NeedsAttentionCard({ items, onSelect }) {

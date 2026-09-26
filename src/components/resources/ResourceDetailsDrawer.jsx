@@ -49,7 +49,7 @@ export default function ResourceDetailsDrawer({ resource, staff, org, onClose, o
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--text3)' }}>×</button>
         </div>
 
-        <div style={{ width: '100%', height: 120, borderRadius: 14, background: resource.image_url ? `url(${resource.image_url}) center/cover` : '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44, marginBottom: 16 }}>
+        <div style={{ width: '100%', height: 120, borderRadius: 14, background: resource.image_url ? `url(${resource.image_url}) center/cover` : 'var(--border-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44, marginBottom: 16 }}>
           {!resource.image_url && cat.icon}
         </div>
 

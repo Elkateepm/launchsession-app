@@ -131,8 +131,8 @@ export default function StaffAbsence({ org, staff, primary, canEdit }) {
               {a.rtw_required && (
                 <span style={{
                   display: 'inline-block', padding: '3px 10px', borderRadius: 99,
-                  background: a.rtw_completed ? '#E7F8ED' : '#FEF6E7',
-                  color: a.rtw_completed ? '#04713C' : '#93500A',
+                  background: a.rtw_completed ? 'var(--ok-bg)' : 'var(--warn-bg)',
+                  color: a.rtw_completed ? 'var(--ok-text)' : 'var(--warn-text)',
                   fontSize: 11.5, fontWeight: 800, whiteSpace: 'nowrap',
                 }}>{a.rtw_completed ? 'RTW done' : 'RTW due'}</span>
               )}

@@ -194,7 +194,7 @@ function SessionModal({ session, org, onClose, onDelete, project, onOpenProject,
   return <SessionSheet title={session.title} subtitle={phase === 'live' ? 'Live now' : phase.charAt(0).toUpperCase() + phase.slice(1)} onClose={onClose} busy={deleting}
     footer={<div style={{ display: 'flex', gap: 8 }}><button onClick={() => { onClose(); onNavigate && onNavigate('planner', { editSessionId: session.id }) }} style={{ ...flowButton, flex: 1 }}>{phase === 'draft' ? 'Continue planning' : 'Edit plan'}</button>{!['draft', 'cancelled'].includes(phase) && <button onClick={() => { onClose(); onNavigate && onNavigate('registers', { sessionId: session.id, returnTo: 'calendar' }) }} style={{ ...flowButton, flex: 1, background: primary, borderColor: primary, color: '#fff' }}>Open register →</button>}</div>}>
     <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12, marginBottom: 20 }}>{[['Date', session.session_date ? format(parseISO(session.session_date), 'EEE d MMM yyyy') : 'To be confirmed'], ['Time', timeRange(session.start_time, session.end_time) || 'To be confirmed'], ['Location', session.location || 'To be confirmed'], ['Capacity', session.max_capacity || 'Not set']].map(([label, value]) => <div key={label} style={{ padding: 14, borderRadius: 12, background: 'var(--surface2)', overflowWrap: 'anywhere' }}><div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 8 }}>{label}</div><strong style={{ fontSize: 14 }}>{value}</strong></div>)}</div>
-    {project && <button onClick={() => onOpenProject(project)} style={{ ...flowButton, width: '100%', textAlign: 'left', marginBottom: 16 }}>Project: {project.name} →</button>}{session.description && <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.7 }}>{session.description}</p>}{error && <p role="alert" style={{ color: 'var(--danger-text)' }}>{error}</p>}{phase !== 'live' && <button onClick={handleDelete} disabled={deleting} style={{ ...flowButton, marginTop: 24, color: 'var(--danger-text)' }}>{deleting ? 'Deleting…' : 'Delete plan'}</button>}
+    {project && <button onClick={() => onOpenProject(project)} style={{ ...flowButton, width: '100%', textAlign: 'left', marginBottom: 16 }}>Project: {project.name} →</button>}{session.description && <p style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.7 }}>{session.description}</p>}{error && <p role="alert" style={{ color: 'var(--danger-text)' }}>{error}</p>}{phase !== 'live' && <button onClick={handleDelete} disabled={deleting} style={{ ...flowButton, marginTop: 24, color: 'var(--danger-text)' }}>{deleting ? 'Deleting…' : 'Delete plan'}</button>}
   </SessionSheet>
 }
 
@@ -410,7 +410,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
                 {['month','week','day','list'].map(v => (
-                  <button key={v} onClick={() => { setNavDirection('right'); gridKey.current += 1; setViewMode(v) }} style={{ padding: '7px 12px', border: 'none', background: viewMode === v ? primary : 'transparent', color: viewMode === v ? '#fff' : '#6B7280', fontWeight: 700, fontSize: 12, cursor: 'pointer', textTransform: 'capitalize', transition: 'all 0.15s' }}>
+                  <button key={v} onClick={() => { setNavDirection('right'); gridKey.current += 1; setViewMode(v) }} style={{ padding: '7px 12px', border: 'none', background: viewMode === v ? primary : 'transparent', color: viewMode === v ? '#fff' : 'var(--text3)', fontWeight: 700, fontSize: 12, cursor: 'pointer', textTransform: 'capitalize', transition: 'all 0.15s' }}>
                     {v === 'month' ? '📅 Month' : v === 'week' ? '📋 Week' : v === 'day' ? '☀️ Day' : '📃 List'}
                   </button>
                 ))}
@@ -429,7 +429,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                       ['⬇ Export Calendar (.ics)', exportCalendarIcs],
                     ].map(([label, fn]) => (
                       <button key={label} onClick={() => { fn(); setShowNewMenu(false) }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: 8, border: 'none', background: 'none', fontSize: 12.5, fontWeight: 600, color: 'var(--text2)', cursor: 'pointer' }}
-                        onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>{label}</button>
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>{label}</button>
                     ))}
                   </div>
                 )}
@@ -448,7 +448,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
             ))}
             {venues.length > 0 && (
               <select value={filterVenue} onChange={e => setFilterVenue(e.target.value)}
-                style={{ padding: '4px 10px', borderRadius: 99, border: `1.5px solid ${filterVenue !== 'all' ? primary : '#e5e7eb'}`, background: filterVenue !== 'all' ? primary + '15' : '#fff', color: filterVenue !== 'all' ? primary : '#6B7280', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                style={{ padding: '4px 10px', borderRadius: 99, border: `1.5px solid ${filterVenue !== 'all' ? primary : 'var(--border)'}`, background: filterVenue !== 'all' ? primary + '15' : '#fff', color: filterVenue !== 'all' ? primary : 'var(--text3)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                 <option value="all"><Icon name="📍" /> All venues</option>
                 {venues.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
               </select>
@@ -461,7 +461,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
             <button onClick={() => navigate(-1)} disabled={viewMode === 'list'}
               style={{ width: 36, height: 36, borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface2)', cursor: viewMode === 'list' ? 'default' : 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text2)', transition: 'all 0.15s', opacity: viewMode === 'list' ? 0.35 : 1 }}
               onMouseEnter={e => { if (viewMode !== 'list') { e.currentTarget.style.background = primary + '12'; e.currentTarget.style.borderColor = primary + '40' } }}
-              onMouseLeave={e => { e.currentTarget.style.background = '#F9FAFB'; e.currentTarget.style.borderColor = '#e5e7eb' }}>‹</button>
+              onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface2)'; e.currentTarget.style.borderColor = 'var(--border)' }}>‹</button>
             <div key={gridKey.current + '-label'} style={{ textAlign: 'center', animation: `${slideAnim} 0.25s ease` }}>
               <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.5 }}>
                 {viewMode === 'month'
@@ -477,7 +477,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
             <button onClick={() => navigate(1)} disabled={viewMode === 'list'}
               style={{ width: 36, height: 36, borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface2)', cursor: viewMode === 'list' ? 'default' : 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text2)', transition: 'all 0.15s', opacity: viewMode === 'list' ? 0.35 : 1 }}
               onMouseEnter={e => { if (viewMode !== 'list') { e.currentTarget.style.background = primary + '12'; e.currentTarget.style.borderColor = primary + '40' } }}
-              onMouseLeave={e => { e.currentTarget.style.background = '#F9FAFB'; e.currentTarget.style.borderColor = '#e5e7eb' }}>›</button>
+              onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface2)'; e.currentTarget.style.borderColor = 'var(--border)' }}>›</button>
           </div>
 
           {viewMode !== 'day' && viewMode !== 'list' && (
@@ -509,9 +509,9 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                 const specialBg = bankHoliday ? '#FEF3C799' : schoolHoliday ? 'var(--org-a05)' : 'transparent'
                 return (
                   <div key={key} onClick={() => daySessions.length === 0 && inMonth && !isPastEmpty ? handlePlanForDate(key) : null}
-                    style={{ minHeight: 110, minWidth: 0, overflow: 'hidden', borderRight: '1px solid var(--border-soft)', borderBottom: '1px solid var(--border-soft)', padding: '8px 6px', background: today ? 'var(--org-a05)' : inMonth ? '#fff' : '#FAFAFA', position: 'relative', transition: 'background 0.15s', cursor: inMonth && daySessions.length === 0 && !isPastEmpty ? 'pointer' : 'default', '--pulse-color': primary + '26', animation: today ? 'cal-today-pulse 2.5s ease-in-out infinite' : 'none' }}
-                    onMouseEnter={e => { if (inMonth) e.currentTarget.style.background = today ? 'var(--org-a10)' : '#FAFBFC' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = today ? 'var(--org-a05)' : inMonth ? '#fff' : '#FAFAFA' }}>
+                    style={{ minHeight: 110, minWidth: 0, overflow: 'hidden', borderRight: '1px solid var(--border-soft)', borderBottom: '1px solid var(--border-soft)', padding: '8px 6px', background: today ? 'var(--org-a05)' : inMonth ? '#fff' : 'var(--surface2)', position: 'relative', transition: 'background 0.15s', cursor: inMonth && daySessions.length === 0 && !isPastEmpty ? 'pointer' : 'default', '--pulse-color': primary + '26', animation: today ? 'cal-today-pulse 2.5s ease-in-out infinite' : 'none' }}
+                    onMouseEnter={e => { if (inMonth) e.currentTarget.style.background = today ? 'var(--org-a10)' : 'var(--surface2)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = today ? 'var(--org-a05)' : inMonth ? '#fff' : 'var(--surface2)' }}>
                     {inMonth && specialBg !== 'transparent' && (
                       <div style={{ position: 'absolute', inset: 0, background: specialBg, pointerEvents: 'none' }} />
                     )}
@@ -525,7 +525,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                           <span title={novelty.title} style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-faint)', opacity: 0.65, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>{novelty.title}</span>
                         )}
                       </div>
-                      <div style={{ width: 26, height: 26, borderRadius: '50%', background: today ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: today ? 900 : 600, color: today ? '#fff' : inMonth ? '#374151' : '#D1D5DB', boxShadow: today ? `0 2px 8px var(--org-a35)` : 'none', flexShrink: 0 }}>
+                      <div style={{ width: 26, height: 26, borderRadius: '50%', background: today ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: today ? 900 : 600, color: today ? '#fff' : inMonth ? 'var(--text2)' : 'var(--text-faint)', boxShadow: today ? `0 2px 8px var(--org-a35)` : 'none', flexShrink: 0 }}>
                         {format(day, 'd')}
                       </div>
                     </div>
@@ -546,7 +546,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                         <button onClick={(e) => { e.stopPropagation(); setNavDirection('right'); gridKey.current += 1; setCurrentDate(day); setViewMode('day') }}
                           style={{ fontSize: 10, color: 'var(--text-faint)', fontWeight: 700, paddingLeft: 4, background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', width: '100%' }}
                           onMouseEnter={e => e.currentTarget.style.color = primary}
-                          onMouseLeave={e => e.currentTarget.style.color = '#9CA3AF'}>
+                          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-faint)'}>
                           +{daySessions.length - 3} more
                         </button>
                       )}
@@ -564,7 +564,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                 return (
                   <div key={key} style={{ minHeight: 300, minWidth: 0, overflow: 'hidden', borderRight: '1px solid var(--border-soft)', padding: '10px 8px', background: today ? 'var(--org-a05)' : '#fff', position: 'relative' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: today ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: today ? 900 : 700, color: today ? '#fff' : '#374151', boxShadow: today ? `0 2px 8px var(--org-a35)` : 'none' }}>
+                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: today ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: today ? 900 : 700, color: today ? '#fff' : 'var(--text2)', boxShadow: today ? `0 2px 8px var(--org-a35)` : 'none' }}>
                         {format(day, 'd')}
                       </div>
                     </div>
@@ -583,9 +583,9 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                         )
                       })}
                       {daySessions.length === 0 && (
-                        <div onClick={() => handlePlanForDate(key)} style={{ fontSize: 20, color: '#E5E7EB', textAlign: 'center', marginTop: 20, cursor: 'pointer', transition: 'all 0.15s' }}
+                        <div onClick={() => handlePlanForDate(key)} style={{ fontSize: 20, color: 'var(--text-faint)', textAlign: 'center', marginTop: 20, cursor: 'pointer', transition: 'all 0.15s' }}
                           onMouseEnter={e => { e.currentTarget.style.color = primary + '80'; e.currentTarget.style.transform = 'scale(1.15)' }}
-                          onMouseLeave={e => { e.currentTarget.style.color = '#E5E7EB'; e.currentTarget.style.transform = 'scale(1)' }}>+</div>
+                          onMouseLeave={e => { e.currentTarget.style.color = 'var(--border)'; e.currentTarget.style.transform = 'scale(1)' }}>+</div>
                       )}
                     </div>
                     {showConfettiFor === key && <ConfettiBurst color={primary} secondary={org?.secondary_color} />}
@@ -661,7 +661,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                 })
                 return grouped.map((group, gi) => (
                   <div key={group.date} style={{ marginBottom: 22, animation: `cal-pop-in 0.25s ease ${Math.min(gi * 0.04, 0.3)}s both` }}>
-                    <div style={{ fontSize: 12, fontWeight: 800, color: group.date === today ? primary : '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: group.date === today ? primary : 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
                       {group.date === today && '🔴 '}{format(parseISO(group.date), 'EEEE, d MMMM')}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -729,9 +729,9 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                 const isSessionToday = s.session_date === todayStr
                 return (
                   <button key={s.id} onClick={() => setSelectedSession(s)}
-                    style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 12px', borderRadius: 12, border: `1.5px solid ${isSessionToday ? cfg.color + '50' : '#F3F4F6'}`, background: isSessionToday ? cfg.bg : '#FAFAFA', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s' }}
+                    style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 12px', borderRadius: 12, border: `1.5px solid ${isSessionToday ? cfg.color + '50' : 'var(--border-soft)'}`, background: isSessionToday ? cfg.bg : 'var(--surface2)', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s' }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = cfg.color; e.currentTarget.style.background = cfg.bg }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = isSessionToday ? cfg.color + '50' : '#F3F4F6'; e.currentTarget.style.background = isSessionToday ? cfg.bg : '#FAFAFA' }}>
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = isSessionToday ? cfg.color + '50' : 'var(--border-soft)'; e.currentTarget.style.background = isSessionToday ? cfg.bg : 'var(--surface2)' }}>
                     <div style={{ width: 32, height: 32, borderRadius: 8, background: cfg.color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}><Icon name={cfg.icon} /></div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 12, fontWeight: 800, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>

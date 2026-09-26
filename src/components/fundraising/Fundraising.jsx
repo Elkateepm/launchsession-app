@@ -46,7 +46,7 @@ const CAMPAIGN_TEMPLATES = [
   { label: 'Trip fund', name: 'Trip Fund', type: 'trips', description: 'Helping cover the cost of an upcoming trip or outing for our young people.' },
 ]
 
-const GOLD = '#BA7517'
+const GOLD = 'var(--warn-text)'
 const DAY_MS = 1000 * 60 * 60 * 24
 
 const TABS = [
@@ -124,8 +124,8 @@ function buildFundraisingInsights(campaigns, latestDonationByCampaign) {
   return bullets.slice(0, 6)
 }
 
-const TONE_COLOR = { success: '#16A34A', warning: '#B45309' }
-const TONE_BG = { success: '#DCFCE7', warning: '#FEF3C7', accent: '#F3EFFF' }
+const TONE_COLOR = { success: '#16A34A', warning: 'var(--warn-text)' }
+const TONE_BG = { success: 'var(--ok-bg)', warning: 'var(--warn-bg)', accent: '#F3EFFF' }
 
 const bulletListVariants = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } }
 const bulletItemVariants = {
@@ -306,8 +306,8 @@ function CampaignDetail({ campaign, org, onBack, onUpdate, isAdmin }) {
   const pct = target > 0 ? Math.min((raised / target) * 100, 100) : null
   const giftAidTotal = donations.filter(d => d.gift_aid).reduce((s, d) => s + d.amount * 0.25, 0)
   const inp = { width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'inherit', outline: 'none' }
-  const statusBg = { active: '#E7F6EC', planning: '#F3F2EE', completed: '#F3F2EE' }[status.key]
-  const statusColor = { active: '#16803C', planning: '#6B7280', completed: '#6B7280' }[status.key]
+  const statusBg = { active: 'var(--ok-bg)', planning: '#F3F2EE', completed: '#F3F2EE' }[status.key]
+  const statusColor = { active: 'var(--ok-text)', planning: 'var(--text3)', completed: 'var(--text3)' }[status.key]
 
   return (
     <div>
@@ -357,7 +357,7 @@ function CampaignDetail({ campaign, org, onBack, onUpdate, isAdmin }) {
             { label: 'Days left', value: daysLeftLabel(campaign, status) },
           ].map((s, i) => (
             <React.Fragment key={s.label}>
-              {i > 0 && <div style={{ width: '0.5px', background: '#e5e7eb' }} />}
+              {i > 0 && <div style={{ width: '0.5px', background: 'var(--border)' }} />}
               <div style={{ flex: 1, paddingLeft: i > 0 ? 16 : 0, paddingRight: 16 }}>
                 <div style={{ fontSize: 18, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
                 <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>{s.label}</div>
@@ -407,7 +407,7 @@ function CampaignDetail({ campaign, org, onBack, onUpdate, isAdmin }) {
             </div>
           )}
           <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={addDonation} disabled={saving || !newDonation.amount} style={{ padding: '9px 22px', borderRadius: 10, border: 'none', background: saving || !newDonation.amount ? '#9CA3AF' : primary, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{saving ? 'Saving...' : 'Record donation'}</button>
+            <button onClick={addDonation} disabled={saving || !newDonation.amount} style={{ padding: '9px 22px', borderRadius: 10, border: 'none', background: saving || !newDonation.amount ? 'var(--text-faint)' : primary, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{saving ? 'Saving...' : 'Record donation'}</button>
             <button onClick={() => setShowAdd(false)} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           </div>
           {donationError && <div style={{ marginTop: 10, fontSize: 12, color: 'var(--danger-text)' }}>Couldn't record donation: {donationError}</div>}
@@ -717,7 +717,7 @@ export default function Fundraising({ org, isAdmin }) {
                 <div style={{ gridColumn: '1/-1' }}><label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Description</label><textarea value={newCampaign.description} onChange={e => setNewCampaign(n => ({ ...n, description: e.target.value }))} rows={2} placeholder="What are you raising money for?" style={{ ...inp, resize: 'none' }} /></div>
               </div>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <button onClick={createCampaign} disabled={creating || !newCampaign.name} style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: creating || !newCampaign.name ? '#9CA3AF' : LS.purple, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{creating ? 'Creating...' : 'Launch campaign'}</button>
+                <button onClick={createCampaign} disabled={creating || !newCampaign.name} style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: creating || !newCampaign.name ? 'var(--text-faint)' : LS.purple, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{creating ? 'Creating...' : 'Launch campaign'}</button>
                 <button onClick={() => setShowCreate(false)} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
               </div>
               {createError && <div style={{ marginTop: 10, fontSize: 12, color: 'var(--danger-text)' }}>Couldn't create the campaign: {createError}</div>}

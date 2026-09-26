@@ -69,8 +69,8 @@ export function PeopleSummary({ stats, terms, primary, value, onChange, loading 
       {[
         [null, `All ${terms.people}`, stats.total, 'Active records', '👥', primary],
         ['active', mobile ? 'Active · 30 days' : 'Active in last 30 days', stats.activeThisMonth, 'With recorded activity', '📈', '#047857'],
-        ['medical', 'Medical alerts', stats.medical, 'Care information to know', '❤️', '#B91C1C'],
-        ['attention', 'Needs attention', stats.attention, 'Consents or profile details', '⚠️', '#B45309'],
+        ['medical', 'Medical alerts', stats.medical, 'Care information to know', '❤️', 'var(--danger-text)'],
+        ['attention', 'Needs attention', stats.attention, 'Consents or profile details', '⚠️', 'var(--warn-text)'],
       ].map(([key, label, count, detail, icon, tone]) => (
         <button key={label} aria-pressed={value === key} onClick={() => onChange(key)} style={{ ...panel, textAlign: 'left', padding: mobile ? 12 : 20, font: 'inherit', cursor: 'pointer', boxShadow: value === key ? `inset 0 0 0 1px ${primary}` : 'none', borderColor: value === key ? primary : UI.border }}>
           <div style={{ color: UI.muted, fontSize: 12, fontWeight: 700, minHeight: mobile ? 16 : 20 }}>{label}</div>
@@ -87,8 +87,8 @@ export function PeopleSummary({ stats, terms, primary, value, onChange, loading 
 
 function Chip({ children, tone = 'neutral' }) {
   const colors = {
-    neutral: [UI.soft, UI.muted], amber: ['#FEF3C7', '#92400E'],
-    red: ['#FEF2F2', '#B91C1C'], green: ['#DCFCE7', '#166534'],
+    neutral: [UI.soft, UI.muted], amber: ['var(--warn-bg)', 'var(--warn-text)'],
+    red: ['var(--danger-bg)', 'var(--danger-text)'], green: ['var(--ok-bg)', 'var(--ok-text)'],
   }
   const [background, color] = colors[tone]
   return <span style={{ display: 'inline-block', padding: '4px 7px', borderRadius: 6, background, color, fontSize: 10.5, fontWeight: 700, lineHeight: 1.3 }}>{children}</span>

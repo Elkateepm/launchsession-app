@@ -163,8 +163,8 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
           <div style={{ display: 'flex', gap: 6 }}>
             {STEPS.map((s, i) => (
               <div key={s} style={{ flex: 1 }}>
-                <div style={{ height: 4, borderRadius: 99, background: i <= step ? 'linear-gradient(90deg,#6D5DF6,#5B8DEF)' : '#E2E8F0' }} />
-                <div style={{ fontSize: 10.5, fontWeight: 700, color: i === step ? '#6D5DF6' : '#94A3B8', marginTop: 5 }}>{s}</div>
+                <div style={{ height: 4, borderRadius: 99, background: i <= step ? 'linear-gradient(90deg,#6D5DF6,#5B8DEF)' : 'var(--border)' }} />
+                <div style={{ fontSize: 10.5, fontWeight: 700, color: i === step ? '#6D5DF6' : 'var(--text-faint)', marginTop: 5 }}>{s}</div>
               </div>
             ))}
           </div>
@@ -214,7 +214,7 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
                   <button key={o.key} onClick={() => set('schedule_mode', o.key)} style={{
                     textAlign: 'left', padding: '12px 14px', borderRadius: 12, cursor: 'pointer',
                     border: form.schedule_mode === o.key ? '2px solid #6D5DF6' : '1.5px solid #E2E8F0',
-                    background: form.schedule_mode === o.key ? '#F5F3FF' : '#fff',
+                    background: form.schedule_mode === o.key ? 'var(--violet-bg)' : '#fff',
                   }}>
                     <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{o.t}</div>
                     <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2 }}>{o.d}</div>
@@ -232,7 +232,7 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
                   <button key={d.idx} onClick={() => toggleWeekday(d.idx)} style={{
                     padding: '7px 12px', borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: 'pointer',
                     border: form.weekdays.includes(d.idx) ? '2px solid #6D5DF6' : '1.5px solid #E2E8F0',
-                    background: form.weekdays.includes(d.idx) ? '#F5F3FF' : '#fff', color: 'var(--text2)',
+                    background: form.weekdays.includes(d.idx) ? 'var(--violet-bg)' : '#fff', color: 'var(--text2)',
                   }}>{isMobile ? d.short : d.label}</button>
                 ))}
               </div>
@@ -256,8 +256,8 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
                         <button key={iso} onClick={() => toggleExcluded(iso)} style={{
                           padding: '6px 10px', borderRadius: 9, fontSize: 11.5, fontWeight: 700, cursor: 'pointer',
                           border: off ? '1.5px dashed #CBD5E1' : '1.5px solid #E2E8F0',
-                          background: off ? '#F8FAFC' : '#fff',
-                          color: off ? '#94A3B8' : '#0F172A',
+                          background: off ? 'var(--surface2)' : '#fff',
+                          color: off ? 'var(--text-faint)' : 'var(--text)',
                           textDecoration: off ? 'line-through' : 'none',
                         }}>{fmtNice(iso)}</button>
                       )
@@ -372,13 +372,13 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
           {step < 2 ? (
             <button onClick={() => canNext() && setStep(s => s + 1)} disabled={!canNext()} style={{
               minHeight: 44, padding: '11px 22px', borderRadius: 11, border: 'none', fontSize: 13, fontWeight: 800, color: '#fff',
-              background: canNext() ? primary : '#CBD5E1',
+              background: canNext() ? primary : 'var(--text-faint)',
               cursor: canNext() ? 'pointer' : 'default',
             }}>Continue</button>
           ) : (
             <button onClick={handleCreate} disabled={saving} style={{
               minHeight: 44, padding: '11px 22px', borderRadius: 11, border: 'none', fontSize: 13, fontWeight: 800, color: '#fff',
-              background: saving ? '#CBD5E1' : primary,
+              background: saving ? 'var(--text-faint)' : primary,
               cursor: saving ? 'default' : 'pointer',
             }}>{saving ? 'Creating…' : `Create project & ${dates.length} days`}</button>
           )}

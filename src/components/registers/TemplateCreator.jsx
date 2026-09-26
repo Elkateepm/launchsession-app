@@ -162,7 +162,7 @@ export function TemplateCreatorModal({ org, existingTemplate, onClose, onSaved }
             return (
               <div key={fieldDef.key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 8px', borderRadius: 12, background: included ? primary + '08' : 'transparent', marginBottom: 4, opacity: included ? 1 : 0.55 }}>
                 <button onClick={() => toggleField(fieldDef)} disabled={locked}
-                  style={{ width: 22, height: 22, borderRadius: 7, border: `2px solid ${included ? primary : '#D1D5DB'}`, background: included ? primary : '#fff', cursor: locked ? 'default' : 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 900 }}>
+                  style={{ width: 22, height: 22, borderRadius: 7, border: `2px solid ${included ? primary : 'var(--text-faint)'}`, background: included ? primary : '#fff', cursor: locked ? 'default' : 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 900 }}>
                   {included ? '✓' : ''}
                 </button>
                 <span style={{ fontSize: 15, flexShrink: 0 }}><Icon name={fieldDef.icon} /></span>
@@ -172,7 +172,7 @@ export function TemplateCreatorModal({ org, existingTemplate, onClose, onSaved }
                 </div>
                 {included && !locked && (
                   <button onClick={() => toggleRequired(fieldDef.key)}
-                    style={{ fontSize: 10, fontWeight: 800, padding: '3px 10px', borderRadius: 99, border: `1px solid ${cfg?.required ? '#DC2626' : '#D1D5DB'}`, background: cfg?.required ? '#FEE2E2' : '#fff', color: cfg?.required ? '#DC2626' : '#9CA3AF', cursor: 'pointer', flexShrink: 0 }}>
+                    style={{ fontSize: 10, fontWeight: 800, padding: '3px 10px', borderRadius: 99, border: `1px solid ${cfg?.required ? '#DC2626' : 'var(--text-faint)'}`, background: cfg?.required ? 'var(--danger-bg)' : '#fff', color: cfg?.required ? '#DC2626' : 'var(--text-faint)', cursor: 'pointer', flexShrink: 0 }}>
                     {cfg?.required ? 'Required' : 'Optional'}
                   </button>
                 )}
@@ -194,7 +194,7 @@ export function TemplateCreatorModal({ org, existingTemplate, onClose, onSaved }
         {/* Footer */}
         <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-soft)', display: 'flex', gap: 10, flexShrink: 0 }}>
           <button onClick={onClose} style={{ padding: '12px 18px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-          <button onClick={handleSave} disabled={saving} style={{ flex: 1, padding: '12px', borderRadius: 12, border: 'none', background: saving ? '#9CA3AF' : primary, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
+          <button onClick={handleSave} disabled={saving} style={{ flex: 1, padding: '12px', borderRadius: 12, border: 'none', background: saving ? 'var(--text-faint)' : primary, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
             {saving ? 'Saving...' : isEditing ? 'Save Changes' : '💾 Save Template'}
           </button>
         </div>

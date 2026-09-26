@@ -414,8 +414,8 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
                       {unreadSubs.map(sub => (
                         <button key={sub.id} onClick={() => { setShowNotifs(false); onNavigate('forms') }}
                           style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 10px', borderRadius: 10, border: 'none', background: 'var(--surface2)', textAlign: 'left', cursor: 'pointer' }}
-                          onMouseEnter={e => e.currentTarget.style.background = '#F1F5F9'}
-                          onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}>
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--border-soft)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'var(--surface2)'}>
                           <span style={{ fontSize: 14, flexShrink: 0 }}><Icon name="📬" /></span>
                           <div style={{ minWidth: 0 }}>
                             <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>

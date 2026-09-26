@@ -53,7 +53,7 @@ function Donut({ segments, size = 150, thickness = 20 }) {
   let offset = 0
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#F3F4F6" strokeWidth={thickness} />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--border-soft)" strokeWidth={thickness} />
       {segments.map((seg, i) => {
         const frac = seg.value / total
         const dash = frac * circumference
@@ -87,14 +87,14 @@ function KpiCard({ icon, label: lbl, value, color, sub, onClick, active }) {
       whileHover={{ y: -3, boxShadow: '0 8px 20px rgba(0,0,0,0.08)' }}
       style={{
         background: 'var(--surface)', borderRadius: 16, padding: '16px 18px',
-        border: `1.5px solid ${active ? (color || '#8B5CF6') : '#e5e7eb'}`,
+        border: `1.5px solid ${active ? (color || '#8B5CF6') : 'var(--border)'}`,
         cursor: onClick ? 'pointer' : 'default', minWidth: 0,
       }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <span style={{ fontSize: 18 }}>{icon}</span>
         <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.3 }}>{lbl}</span>
       </div>
-      <div style={{ fontSize: 26, fontWeight: 900, color: color || '#111827', lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: 26, fontWeight: 900, color: color || 'var(--text)', lineHeight: 1 }}>{value}</div>
       {sub && <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 4 }}>{sub}</div>}
     </motion.div>
   )
@@ -267,7 +267,7 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
 
         <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--border)', marginBottom: 20 }}>
           {[['profile', '📋 Profile'], ['leave', '🏖️ Leave'], ['account', '🔐 Account'], ['access', '🔑 Access']].map(([key, lbl]) => (
-            <button key={key} onClick={() => setActiveTab(key)} style={{ padding: '10px 16px', border: 'none', borderBottom: `2.5px solid ${activeTab === key ? primary : 'transparent'}`, background: 'transparent', color: activeTab === key ? primary : '#6B7280', fontWeight: activeTab === key ? 800 : 500, fontSize: 13, cursor: 'pointer' }}>
+            <button key={key} onClick={() => setActiveTab(key)} style={{ padding: '10px 16px', border: 'none', borderBottom: `2.5px solid ${activeTab === key ? primary : 'transparent'}`, background: 'transparent', color: activeTab === key ? primary : 'var(--text3)', fontWeight: activeTab === key ? 800 : 500, fontSize: 13, cursor: 'pointer' }}>
               {lbl}
             </button>
           ))}
@@ -397,7 +397,7 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
                       {ACCOUNT_ROLES.map(r => <option key={r} value={r}>{r === 'admin' ? 'Admin (full access)' : 'Staff'}</option>)}
                     </select>
                   </div>
-                  <button onClick={sendInvite} disabled={inviting || !staff.email} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: !staff.email ? '#9CA3AF' : primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: staff.email ? 'pointer' : 'not-allowed' }}>
+                  <button onClick={sendInvite} disabled={inviting || !staff.email} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: !staff.email ? 'var(--text-faint)' : primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: staff.email ? 'pointer' : 'not-allowed' }}>
                     {inviting ? 'Sending…' : accountStatus === 'pending' ? '↻ Resend Invite' : '✉️ Send Invite'}
                   </button>
                   {!staff.email && <div style={{ fontSize: 12, color: 'var(--danger-text)', marginTop: 8 }}>Add an email address above to invite this person.</div>}
@@ -506,7 +506,7 @@ function AddStaffModal({ org, onClose, onAdded, showToast }) {
         </div>
 
         <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={submit} disabled={saving || !form.full_name} style={{ padding: '11px 24px', borderRadius: 10, border: 'none', background: saving || !form.full_name ? '#9CA3AF' : primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>{saving ? 'Adding…' : '+ Add Staff'}</button>
+          <button onClick={submit} disabled={saving || !form.full_name} style={{ padding: '11px 24px', borderRadius: 10, border: 'none', background: saving || !form.full_name ? 'var(--text-faint)' : primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>{saving ? 'Adding…' : '+ Add Staff'}</button>
           <button onClick={onClose} style={{ padding: '11px 18px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
         </div>
       </motion.div>
@@ -651,7 +651,7 @@ export default function HR({ org, session, userProfile }) {
     { label: 'Active', value: activeCount - onLeaveTodayIds.size, color: primary },
     { label: 'On Leave', value: [...onLeaveTodayIds].filter(id => staff.find(s => s.id === id)?.is_active !== false).length, color: '#F59E0B' },
     { label: 'DBS Expiring', value: dbsExpiringCount, color: 'var(--danger-text)' },
-    { label: 'Inactive', value: staff.length - activeCount, color: '#D1D5DB' },
+    { label: 'Inactive', value: staff.length - activeCount, color: 'var(--text-faint)' },
   ].filter(s => s.value > 0)
 
   const filterChips = [
@@ -667,9 +667,9 @@ export default function HR({ org, session, userProfile }) {
           <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
             style={{
               position: 'fixed', top: 18, right: 18, zIndex: 90, maxWidth: 360,
-              background: toast.type === 'error' ? '#FEF2F2' : '#F0FDF4',
-              border: `1.5px solid ${toast.type === 'error' ? '#FCA5A5' : '#86EFAC'}`,
-              color: toast.type === 'error' ? '#991B1B' : '#166534',
+              background: toast.type === 'error' ? 'var(--danger-bg)' : 'var(--ok-bg)',
+              border: `1.5px solid ${toast.type === 'error' ? 'var(--danger-border)' : 'var(--ok-border)'}`,
+              color: toast.type === 'error' ? 'var(--danger-text)' : 'var(--ok-text)',
               borderRadius: 12, padding: '12px 16px', fontSize: 13, fontWeight: 700, boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
             }}>
             {toast.message}
@@ -696,9 +696,9 @@ export default function HR({ org, session, userProfile }) {
         <KpiCard icon="👥" label="Total Staff" value={staff.length} onClick={() => setFilter('all')} active={filter === 'all'} />
         <KpiCard icon="✅" label="Active" value={activeCount} color="#16A34A" onClick={() => setFilter('active')} active={filter === 'active'} />
         <KpiCard icon="🔍" label="DBS Clear" value={dbsClearCount} color="#3B82F6" />
-        <KpiCard icon="⚠️" label="DBS Expiring" value={dbsExpiringCount} color={dbsExpiringCount > 0 ? '#DC2626' : '#9CA3AF'} onClick={() => setFilter('dbs_expiring')} active={filter === 'dbs_expiring'} />
+        <KpiCard icon="⚠️" label="DBS Expiring" value={dbsExpiringCount} color={dbsExpiringCount > 0 ? '#DC2626' : 'var(--text-faint)'} onClick={() => setFilter('dbs_expiring')} active={filter === 'dbs_expiring'} />
         <KpiCard icon="🏖️" label="On Leave Today" value={onLeaveTodayIds.size} color="#F59E0B" onClick={() => setFilter('on_leave')} active={filter === 'on_leave'} />
-        <KpiCard icon="✉️" label="Pending Invites" value={pendingInvites.length} color={pendingInvites.length > 0 ? '#D97706' : '#9CA3AF'} onClick={() => setFilter('pending_invite')} active={filter === 'pending_invite'} />
+        <KpiCard icon="✉️" label="Pending Invites" value={pendingInvites.length} color={pendingInvites.length > 0 ? '#D97706' : 'var(--text-faint)'} onClick={() => setFilter('pending_invite')} active={filter === 'pending_invite'} />
       </div>
 
       {/* Overview + Quick actions + Upcoming */}
@@ -773,7 +773,7 @@ export default function HR({ org, session, userProfile }) {
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search staff..." style={{ flex: 1, minWidth: 180, padding: '8px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 13, fontFamily: 'inherit', outline: 'none' }} />
         {filterChips.map(([k, l]) => (
-          <button key={k} onClick={() => setFilter(k)} style={{ padding: '8px 14px', borderRadius: 99, border: `1.5px solid ${filter === k ? primary : '#e5e7eb'}`, background: filter === k ? primary + '12' : '#fff', color: filter === k ? primary : '#6B7280', fontSize: 12, fontWeight: filter === k ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{l}</button>
+          <button key={k} onClick={() => setFilter(k)} style={{ padding: '8px 14px', borderRadius: 99, border: `1.5px solid ${filter === k ? primary : 'var(--border)'}`, background: filter === k ? primary + '12' : '#fff', color: filter === k ? primary : 'var(--text3)', fontSize: 12, fontWeight: filter === k ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{l}</button>
         ))}
       </div>
 
@@ -793,7 +793,7 @@ export default function HR({ org, session, userProfile }) {
             const dbs = DBS_STATUS[member.dbs_status || 'none']
             const dbsExpiring = member.dbs_expiry && differenceInDays(new Date(member.dbs_expiry), today) < 90 && differenceInDays(new Date(member.dbs_expiry), today) >= 0
             return (
-              <div key={member.id} onClick={() => setSelected(member)} style={{ background: 'var(--surface)', border: `1px solid ${dbsExpiring ? '#FDE68A' : '#e5e7eb'}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div key={member.id} onClick={() => setSelected(member)} style={{ background: 'var(--surface)', border: `1px solid ${dbsExpiring ? 'var(--warn-border)' : 'var(--border)'}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 40, height: 40, borderRadius: 10, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: primary, flexShrink: 0 }}>{initials(member.full_name)}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 800 }}>{member.full_name}</div>

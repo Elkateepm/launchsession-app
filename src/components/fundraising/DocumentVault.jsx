@@ -99,7 +99,7 @@ export default function DocumentVault({ org, isAdmin }) {
               ) : (
                 <span style={{ fontSize: 11.5, fontWeight: 700, color: meta.color, background: meta.bg, borderRadius: 20, padding: '5px 12px' }}>{meta.label}</span>
               )}
-              {isAdmin && <button onClick={() => removeDoc(d.id)} title="Remove" style={{ background: 'none', border: 'none', color: '#D1D5DB', cursor: 'pointer', fontSize: 14, width: 32, height: 32, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: -6 }}><Icon name="✕" /></button>}
+              {isAdmin && <button onClick={() => removeDoc(d.id)} title="Remove" style={{ background: 'none', border: 'none', color: 'var(--text-faint)', cursor: 'pointer', fontSize: 14, width: 32, height: 32, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: -6 }}><Icon name="✕" /></button>}
             </div>
           )
         })}

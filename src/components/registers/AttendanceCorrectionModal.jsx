@@ -173,7 +173,7 @@ export default function AttendanceCorrectionModal({
         <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
           <button onClick={onClose} style={{ flex: 1, padding: 12, borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           <button onClick={handleConfirm} disabled={!childId || !newStatus || !reason.trim() || saving}
-            style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: (!childId || !newStatus || !reason.trim() || saving) ? '#D1D5DB' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: (!childId || !newStatus || !reason.trim() || saving) ? 'not-allowed' : 'pointer' }}>
+            style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: (!childId || !newStatus || !reason.trim() || saving) ? 'var(--text-faint)' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: (!childId || !newStatus || !reason.trim() || saving) ? 'not-allowed' : 'pointer' }}>
             {saving ? 'Saving...' : 'Confirm correction'}
           </button>
         </div>

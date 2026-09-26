@@ -27,7 +27,7 @@ const TONES = {
   green:  { bg: 'var(--ok-bg)', bd: 'var(--ok-border)', fg: 'var(--ok-text)' },
   amber:  { bg: 'var(--warn-bg)', bd: 'var(--warn-border)', fg: 'var(--warn-text)' },
   red:    { bg: 'var(--danger-bg)', bd: 'var(--danger-border)', fg: 'var(--danger-text)' },
-  slate:  { bg: 'var(--surface2)', bd: '#E2E8F0', fg: '#334155' },
+  slate:  { bg: 'var(--surface2)', bd: 'var(--border)', fg: 'var(--text2)' },
 }
 
 const CATEGORY_TONE = {
@@ -139,7 +139,7 @@ export default function Reports({ org, session, userProfile, onNavigate }) {
             <button key={v.key} onClick={() => setView(v.key)} style={{
               padding: '8px 16px', border: 'none', borderRadius: 9, cursor: 'pointer',
               fontSize: 12.5, fontWeight: 800, whiteSpace: 'nowrap',
-              background: on ? '#fff' : 'transparent', color: on ? '#4F46E5' : '#64748B',
+              background: on ? '#fff' : 'transparent', color: on ? '#4F46E5' : 'var(--text3)',
               boxShadow: on ? '0 1px 3px rgba(15,23,42,0.12)' : 'none',
             }}>{v.label}</button>
           )
@@ -290,7 +290,7 @@ function OverviewView({ loading, metrics, learning, insights, isMobile, savedRep
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
               <div style={{ maxWidth: 520 }}>
                 <div style={{ fontSize: 15, fontWeight: 900, color: '#312E81' }}>From delivery to evidence</div>
-                <div style={{ fontSize: 12.5, color: '#475569', lineHeight: 1.5, marginTop: 4 }}>See whether planned outcomes were observed, where evidence is strong and which improvements still need action.</div>
+                <div style={{ fontSize: 12.5, color: 'var(--text2)', lineHeight: 1.5, marginTop: 4 }}>See whether planned outcomes were observed, where evidence is strong and which improvements still need action.</div>
               </div>
               <button onClick={onOpenLearning} style={{ minHeight: 44, padding: '10px 15px', border: 'none', borderRadius: 10, background: '#4338CA', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}>Open learning report</button>
             </div>
@@ -318,7 +318,7 @@ function OverviewView({ loading, metrics, learning, insights, isMobile, savedRep
               return (
                 <div key={i.key} style={card({ padding: 16, borderColor: tone.bd, background: tone.bg })}>
                   <div style={{ fontSize: 13.5, fontWeight: 800, color: tone.fg }}>{i.title}</div>
-                  <div style={{ fontSize: 12.5, color: '#475569', marginTop: 4, lineHeight: 1.5 }}>{i.body}</div>
+                  <div style={{ fontSize: 12.5, color: 'var(--text2)', marginTop: 4, lineHeight: 1.5 }}>{i.body}</div>
                   <button onClick={() => onGoto(i.target)} style={{
                     marginTop: 10, padding: 0, border: 'none', background: 'none',
                     fontSize: 12.5, fontWeight: 800, color: tone.fg, cursor: 'pointer',
@@ -400,7 +400,7 @@ function LibraryView({ role, isMobile, onRun }) {
           <button key={c} onClick={() => setCat(c)} style={{
             padding: '7px 13px', borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: 'pointer',
             border: cat === c ? '1.5px solid #4F46E5' : '1px solid #E2E8F0',
-            background: cat === c ? '#EEF2FF' : '#fff', color: cat === c ? '#4F46E5' : '#334155',
+            background: cat === c ? 'var(--info-bg)' : '#fff', color: cat === c ? '#4F46E5' : 'var(--text2)',
           }}>{c}</button>
         ))}
       </div>
@@ -428,8 +428,8 @@ function LibraryView({ role, isMobile, onRun }) {
               <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 5, lineHeight: 1.5 }}>{r.desc}</div>
               <button onClick={() => allowed && onRun(r.key)} disabled={!allowed} style={{
                 marginTop: 14, padding: '9px 16px', borderRadius: 10, border: 'none',
-                background: allowed ? 'linear-gradient(135deg,#4F46E5,#3B82F6)' : '#E2E8F0',
-                color: allowed ? '#fff' : '#94A3B8', fontSize: 12.5, fontWeight: 800,
+                background: allowed ? 'linear-gradient(135deg,#4F46E5,#3B82F6)' : 'var(--border)',
+                color: allowed ? '#fff' : 'var(--text-faint)', fontSize: 12.5, fontWeight: 800,
                 cursor: allowed ? 'pointer' : 'not-allowed',
               }}>{allowed ? 'Run report' : 'No permission'}</button>
             </div>
@@ -529,7 +529,7 @@ function MenuItem({ children, onClick, danger, disabled }) {
     <button onClick={onClick} disabled={disabled} style={{
       display: 'block', width: '100%', textAlign: 'left', padding: '10px 13px', border: 'none',
       background: 'transparent', fontSize: 12.5, fontWeight: 700, cursor: disabled ? 'default' : 'pointer',
-      color: danger ? '#B91C1C' : '#334155', opacity: disabled ? 0.5 : 1,
+      color: danger ? 'var(--danger-text)' : 'var(--text2)', opacity: disabled ? 0.5 : 1,
     }}>{children}</button>
   )
 }

@@ -300,9 +300,9 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
               style={{
                 padding: '8px 15px', borderRadius: 999, fontSize: 13, fontWeight: 700,
                 cursor: 'pointer', fontFamily: 'inherit',
-                border: `1px solid ${view === key ? 'transparent' : '#ECE9F5'}`,
+                border: `1px solid ${view === key ? 'transparent' : 'var(--border)'}`,
                 background: view === key ? primary : '#fff',
-                color: view === key ? '#fff' : '#64748B',
+                color: view === key ? '#fff' : 'var(--text3)',
               }}
             >{label}</button>
           ))}
@@ -402,13 +402,13 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                   return (
                     <motion.div key={a.id} layout onClick={() => { setSelected(a); setTab('overview'); logAudit(a.id, 'viewed', null) }}
                       style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 16px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: isSel ? 'var(--org-a05)' : 'transparent', borderLeft: `3px solid ${isSel ? primary : 'transparent'}` }}
-                      onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = '#F8FAFC' }}
+                      onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = 'var(--surface2)' }}
                       onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = 'transparent' }}>
                       <div style={{ width: 38, height: 38, borderRadius: 11, background: 'var(--org-a05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{ACTIVITY_ICON[a.activity_type] || '📋'}</div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</div>
                         <div style={{ fontSize: 11, color: 'var(--text-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.activity_type || '—'}{a.location ? ` · ${a.location}` : ''}</div>
-                        {a.next_review_date && <div style={{ fontSize: 10.5, color: reviewDays != null && reviewDays < 0 ? '#DC2626' : reviewDays != null && reviewDays <= 14 ? '#B45309' : '#94A3B8', fontWeight: 700, marginTop: 1 }}>Review {reviewDays != null && reviewDays < 0 ? `overdue ${Math.abs(reviewDays)}d` : `in ${reviewDays}d`}</div>}
+                        {a.next_review_date && <div style={{ fontSize: 10.5, color: reviewDays != null && reviewDays < 0 ? '#DC2626' : reviewDays != null && reviewDays <= 14 ? 'var(--warn-text)' : 'var(--text-faint)', fontWeight: 700, marginTop: 1 }}>Review {reviewDays != null && reviewDays < 0 ? `overdue ${Math.abs(reviewDays)}d` : `in ${reviewDays}d`}</div>}
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
                         {a.risk_rating && <RatingBadge rating={a.risk_rating} size="sm" />}
@@ -472,7 +472,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
             {/* Tabs */}
             <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: 'var(--surface-hover)', borderRadius: 12, padding: 4, flexWrap: 'wrap' }}>
               {[['overview', 'Overview'], ['hazards', `Hazards${selectedHazards.length ? ` (${selectedHazards.length})` : ''}`], ['matrix', 'Matrix'], ['emergency', 'Emergency'], ['attachments', 'Attachments'], ['sessions', 'Linked'], ['live', 'Live updates'], ['reviews', 'History']].map(([key, label]) => (
-                <button key={key} onClick={() => setTab(key)} style={{ flex: '1 1 auto', padding: '8px 10px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: tab === key ? '#fff' : 'transparent', color: tab === key ? '#0F172A' : '#64748B', whiteSpace: 'nowrap' }}>{label}</button>
+                <button key={key} onClick={() => setTab(key)} style={{ flex: '1 1 auto', padding: '8px 10px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: tab === key ? '#fff' : 'transparent', color: tab === key ? '#0F172A' : 'var(--text3)', whiteSpace: 'nowrap' }}>{label}</button>
               ))}
             </div>
 
@@ -630,7 +630,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                     <RiskDonut segments={ratingDonut} total={assessments.filter(a => !a.archived).length} />
                     <div style={{ flex: 1 }}>
                       {ratingDonut.map(s => (
-                        <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#475569', marginBottom: 5 }}>
+                        <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text2)', marginBottom: 5 }}>
                           <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.color }} />
                           {s.label} <span style={{ marginLeft: 'auto', fontWeight: 700 }}>{s.value} ({s.pct}%)</span>
                         </div>
@@ -659,7 +659,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                         <span style={{ fontSize: 15 }}>{ACTIVITY_ICON[a.activity_type] || '📋'}</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</div>
-                          <div style={{ fontSize: 10.5, color: d != null && d < 0 ? '#DC2626' : '#94A3B8' }}>Review {d != null && d < 0 ? `overdue ${Math.abs(d)}d` : `in ${d}d`}</div>
+                          <div style={{ fontSize: 10.5, color: d != null && d < 0 ? '#DC2626' : 'var(--text-faint)' }}>Review {d != null && d < 0 ? `overdue ${Math.abs(d)}d` : `in ${d}d`}</div>
                         </div>
                         {a.risk_rating && <RatingBadge rating={a.risk_rating} size="sm" />}
                       </div>
@@ -675,7 +675,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                     <button key={t.key} onClick={() => setShowTemplates(true)} style={{ display: 'flex', width: '100%', alignItems: 'center', gap: 8, padding: '8px 0', borderTop: '1px solid rgba(15,23,42,0.05)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
                       <span style={{ fontSize: 15 }}><Icon name={t.icon} /></span>
                       <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text2)', flex: 1 }}>{t.name}</span>
-                      <span style={{ color: '#CBD5E1' }}>›</span>
+                      <span style={{ color: 'var(--text-faint)' }}>›</span>
                     </button>
                   ))}
                 </div>
@@ -770,7 +770,7 @@ function RiskDonut({ segments, total }) {
   const t = total || 1
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <circle cx={c} cy={c} r={r} fill="none" stroke="#F1F5F9" strokeWidth={thickness} />
+      <circle cx={c} cy={c} r={r} fill="none" stroke="var(--border-soft)" strokeWidth={thickness} />
       {segments.filter(s => s.value > 0).map((s, i) => {
         const dash = (s.value / t) * circ
         const el = <circle key={s.label} cx={c} cy={c} r={r} fill="none" stroke={s.color} strokeWidth={thickness} strokeDasharray={`${dash} ${circ - dash}`} strokeDashoffset={-offset} transform={`rotate(-90 ${c} ${c})`} />
@@ -778,7 +778,7 @@ function RiskDonut({ segments, total }) {
         return el
       })}
       <text x={c} y={c - 2} textAnchor="middle" fontSize="20" fontWeight="900" fill="#0F172A">{total}</text>
-      <text x={c} y={c + 13} textAnchor="middle" fontSize="9" fontWeight="700" fill="#94A3B8">Total</text>
+      <text x={c} y={c + 13} textAnchor="middle" fontSize="9" fontWeight="700" fill="var(--text-faint)">Total</text>
     </svg>
   )
 }

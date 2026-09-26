@@ -13,7 +13,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 const OUTCOMES = [
   { key: 'safe_to_continue', label: 'Safe to continue', dot: '#12B76A', bg: 'var(--ok-bg)', text: 'var(--ok-text)' },
   { key: 'activity_modified', label: 'Activity modified', dot: '#F79009', bg: 'var(--warn-bg)', text: 'var(--warn-text)' },
-  { key: 'activity_stopped', label: 'Activity stopped', dot: '#E5484D', bg: 'var(--danger-bg)', text: 'var(--danger-text)' },
+  { key: 'activity_stopped', label: 'Activity stopped', dot: 'var(--danger-text)', bg: 'var(--danger-bg)', text: 'var(--danger-text)' },
 ]
 
 const OUTCOME_BY_KEY = Object.fromEntries(OUTCOMES.map(o => [o.key, o]))
@@ -87,13 +87,13 @@ export function DynamicUpdateDrawer({ open, onClose, assessment, org, authSessio
             <div style={{ padding: '16px 20px 14px', borderBottom: '1px solid #ECE9F5', flexShrink: 0 }}>
               {isMobile && <div style={{ width: 38, height: 4, borderRadius: 4, background: '#E4DFF5', margin: '0 auto 12px' }} />}
               <div style={{ fontSize: 16.5, fontWeight: 800, color: 'var(--text)' }}>Dynamic risk update</div>
-              <div style={{ fontSize: 12.5, color: '#8B87A3', marginTop: 3 }}>
+              <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 3 }}>
                 Record a change in conditions and what you did about it.
               </div>
             </div>
 
             <div style={{ padding: 20, overflowY: 'auto', flex: 1 }}>
-              <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: '#8B87A3', marginBottom: 7 }}>
+              <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: 'var(--text3)', marginBottom: 7 }}>
                 WHAT CHANGED?
               </label>
               <textarea
@@ -106,7 +106,7 @@ export function DynamicUpdateDrawer({ open, onClose, assessment, org, authSessio
               />
 
               <div style={{ height: 16 }} />
-              <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: '#8B87A3', marginBottom: 7 }}>
+              <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: 'var(--text3)', marginBottom: 7 }}>
                 WHAT DID YOU DO?
               </label>
               <textarea
@@ -118,7 +118,7 @@ export function DynamicUpdateDrawer({ open, onClose, assessment, org, authSessio
               />
 
               <div style={{ height: 16 }} />
-              <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: '#8B87A3', marginBottom: 7 }}>
+              <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: 'var(--text3)', marginBottom: 7 }}>
                 OUTCOME
               </label>
               <div style={{ display: 'grid', gap: 7 }}>
@@ -131,14 +131,14 @@ export function DynamicUpdateDrawer({ open, onClose, assessment, org, authSessio
                       style={{
                         display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
                         padding: '13px 14px', borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit',
-                        border: `1px solid ${active ? o.dot : '#ECE9F5'}`,
+                        border: `1px solid ${active ? o.dot : 'var(--border)'}`,
                         background: active ? o.bg : '#fff',
                       }}
                     >
                       <span style={{ width: 9, height: 9, borderRadius: 9, background: o.dot, flexShrink: 0 }} />
                       <span style={{
                         fontSize: 14.5, fontWeight: 700,
-                        color: active ? o.text : '#1C1B2E',
+                        color: active ? o.text : 'var(--text)',
                       }}>{o.label}</span>
                     </button>
                   )
@@ -159,7 +159,7 @@ export function DynamicUpdateDrawer({ open, onClose, assessment, org, authSessio
             }}>
               <button onClick={onClose} style={{
                 padding: '13px 18px', borderRadius: 12, border: '1px solid #ECE9F5',
-                background: 'var(--surface)', color: '#8B87A3', fontSize: 15, fontWeight: 700,
+                background: 'var(--surface)', color: 'var(--text3)', fontSize: 15, fontWeight: 700,
                 cursor: 'pointer', fontFamily: 'inherit',
               }}>Cancel</button>
               <button
@@ -199,7 +199,7 @@ export function DynamicUpdateList({ assessment, org, staff = [], refreshKey }) {
 
   const nameOf = id => staff.find(s => s.id === id)?.full_name || 'Staff member'
 
-  if (loading) return <div style={{ padding: 20, color: '#8B87A3', fontSize: 13.5 }}>Loading…</div>
+  if (loading) return <div style={{ padding: 20, color: 'var(--text3)', fontSize: 13.5 }}>Loading…</div>
 
   if (!updates.length) {
     return (
@@ -207,7 +207,7 @@ export function DynamicUpdateList({ assessment, org, staff = [], refreshKey }) {
         padding: '22px 18px', borderRadius: 14, border: '1px solid #ECE9F5',
         background: 'var(--surface)', textAlign: 'center',
       }}>
-        <div style={{ fontSize: 13.5, color: '#8B87A3', lineHeight: 1.5 }}>
+        <div style={{ fontSize: 13.5, color: 'var(--text3)', lineHeight: 1.5 }}>
           No dynamic updates recorded. These are added during a session when conditions change.
         </div>
       </div>
@@ -231,7 +231,7 @@ export function DynamicUpdateList({ assessment, org, staff = [], refreshKey }) {
                 <span style={{ width: 6, height: 6, borderRadius: 6, background: o.dot }} />
                 {o.label}
               </span>
-              <span style={{ fontSize: 12, color: '#8B87A3', marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+              <span style={{ fontSize: 12, color: 'var(--text3)', marginLeft: 'auto', whiteSpace: 'nowrap' }}>
                 {fmtDate(u.created_at)} · {fmtTime(u.created_at)}
               </span>
             </div>
@@ -239,7 +239,7 @@ export function DynamicUpdateList({ assessment, org, staff = [], refreshKey }) {
             {u.action_taken && (
               <div style={{
                 marginTop: 8, paddingLeft: 11, borderLeft: '2px solid #E4DFF5',
-                fontSize: 13.5, color: '#5A5772', lineHeight: 1.5,
+                fontSize: 13.5, color: 'var(--text2)', lineHeight: 1.5,
               }}>{u.action_taken}</div>
             )}
             <div style={{ fontSize: 11.5, color: '#B4B0C6', marginTop: 9 }}>
@@ -282,7 +282,7 @@ export function EmergencyView({ open, onClose, assessment, org, venue }) {
       overflowY: 'auto', WebkitOverflowScrolling: 'touch',
     }}>
       <div style={{
-        position: 'sticky', top: 0, background: '#B42318', color: '#fff',
+        position: 'sticky', top: 0, background: '#E5484D', color: '#fff',
         padding: isMobile ? '16px 18px' : '18px 24px',
         display: 'flex', alignItems: 'center', gap: 12,
       }}>
@@ -304,14 +304,14 @@ export function EmergencyView({ open, onClose, assessment, org, venue }) {
           href="tel:999"
           style={{
             display: 'block', textAlign: 'center', padding: '16px', borderRadius: 14,
-            background: '#B42318', color: '#fff', fontSize: 17, fontWeight: 800,
+            background: '#E5484D', color: '#fff', fontSize: 17, fontWeight: 800,
             textDecoration: 'none', marginBottom: 16,
           }}
         >Call 999</a>
 
         {contacts.length > 0 && (
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#8B87A3', marginBottom: 8, letterSpacing: 0.3 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', marginBottom: 8, letterSpacing: 0.3 }}>
               EMERGENCY CONTACTS
             </div>
             <div style={{ display: 'grid', gap: 7 }}>
@@ -340,7 +340,7 @@ export function EmergencyView({ open, onClose, assessment, org, venue }) {
         {rows.length === 0 && contacts.length === 0 && (
           <div style={{
             padding: '24px 18px', borderRadius: 14, border: '1px solid #ECE9F5',
-            textAlign: 'center', color: '#8B87A3', fontSize: 13.5, lineHeight: 1.55,
+            textAlign: 'center', color: 'var(--text3)', fontSize: 13.5, lineHeight: 1.55,
           }}>
             No emergency information has been added to this assessment yet.
             Add it under Emergency so it's here when it's needed.
@@ -352,7 +352,7 @@ export function EmergencyView({ open, onClose, assessment, org, venue }) {
             <div key={label} style={{
               border: '1px solid #ECE9F5', borderRadius: 12, padding: '14px 15px',
             }}>
-              <div style={{ fontSize: 11.5, fontWeight: 700, color: '#8B87A3', letterSpacing: 0.3, marginBottom: 5 }}>
+              <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text3)', letterSpacing: 0.3, marginBottom: 5 }}>
                 {label.toUpperCase()}
               </div>
               <div style={{ fontSize: 14.5, color: 'var(--text)', lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>

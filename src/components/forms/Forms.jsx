@@ -58,7 +58,7 @@ const TAG_OPTIONS = [CHILD_TAG, 'Registration', 'Consent', 'Application', 'Surve
 const TAG_COLOR = {
   [CHILD_TAG]: 'var(--org-primary)',
   Registration: '#2563EB', Consent: '#0EA5E9', Application: '#D97706',
-  Survey: '#7C3AED', Report: '#DC2626', Request: '#059669', Other: '#64748B',
+  Survey: '#7C3AED', Report: '#DC2626', Request: '#059669', Other: 'var(--text3)',
 }
 
 // Section order. A tag we do not recognise -- an imported form, or one left
@@ -72,7 +72,7 @@ function GroupHeading({ tag, count }) {
   return (
     // gridColumn spans the card grid; it is simply ignored in the flex list.
     <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 9, padding: '8px 2px 0' }}>
-      <span style={{ width: 7, height: 7, borderRadius: '50%', background: TAG_COLOR[tag] || '#64748B', flexShrink: 0 }} />
+      <span style={{ width: 7, height: 7, borderRadius: '50%', background: TAG_COLOR[tag] || 'var(--text3)', flexShrink: 0 }} />
       <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--text)' }}>{tag}</span>
       <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)' }}>{count}</span>
     </div>
@@ -81,7 +81,7 @@ function GroupHeading({ tag, count }) {
 const STATUS_STYLE = {
   active:   { label: 'Active',   bg: 'var(--ok-bg)', color: 'var(--ok-text)', dot: '#16A34A' },
   draft:    { label: 'Draft',    bg: 'var(--warn-bg)', color: 'var(--warn-text)', dot: '#D97706' },
-  archived: { label: 'Archived', bg: 'var(--surface-hover)', color: 'var(--text3)', dot: '#94A3B8' },
+  archived: { label: 'Archived', bg: 'var(--surface-hover)', color: 'var(--text3)', dot: 'var(--text-faint)' },
 }
 
 const BASE_TEMPLATES = [
@@ -476,7 +476,7 @@ export function EmailFormModal({ form, primary, onClose, recipients }) {
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
           <button onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2, #475569)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Close</button>
           <button onClick={handleSend} disabled={sending || !input.trim()}
-            style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: sending || !input.trim() ? '#9CA3AF' : primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: sending || !input.trim() ? 'default' : 'pointer' }}>
+            style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: sending || !input.trim() ? 'var(--text-faint)' : primary, color: '#fff', fontWeight: 800, fontSize: 13, cursor: sending || !input.trim() ? 'default' : 'pointer' }}>
             {sending ? 'Sending...' : 'Send'}
           </button>
         </div>
@@ -511,14 +511,14 @@ function AccessModal({ form, staff, currentUserId, primary, onClose, onSave }) {
         <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 18 }}>{form.name}</div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${mode === 'admins' ? primary : '#E2E8F0'}`, cursor: 'pointer', background: mode === 'admins' ? 'var(--org-a05)' : '#fff' }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${mode === 'admins' ? primary : 'var(--border)'}`, cursor: 'pointer', background: mode === 'admins' ? 'var(--org-a05)' : '#fff' }}>
             <input type="radio" checked={mode === 'admins'} onChange={() => setMode('admins')} style={{ marginTop: 3 }} />
             <div>
               <div style={{ fontWeight: 800, fontSize: 13.5, color: 'var(--text)' }}>Admins only</div>
               <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>The safest default. Only people with the Admin role can see who filled this in.</div>
             </div>
           </label>
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${mode === 'custom' ? primary : '#E2E8F0'}`, cursor: 'pointer', background: mode === 'custom' ? 'var(--org-a05)' : '#fff' }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${mode === 'custom' ? primary : 'var(--border)'}`, cursor: 'pointer', background: mode === 'custom' ? 'var(--org-a05)' : '#fff' }}>
             <input type="radio" checked={mode === 'custom'} onChange={() => setMode('custom')} style={{ marginTop: 3 }} />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: 13.5, color: 'var(--text)' }}>Admins + specific people</div>
@@ -549,7 +549,7 @@ function AccessModal({ form, staff, currentUserId, primary, onClose, onSave }) {
                 <div style={{ fontSize: 12, color: 'var(--text3)', padding: '8px 0' }}>No matching team members</div>
               ) : others.map(person => (
                 <label key={person.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 9, cursor: 'pointer' }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                   <input type="checkbox" checked={selected.has(person.id)} onChange={() => toggle(person.id)} />
                   <span style={{ fontSize: 13, color: 'var(--text)', fontWeight: 600 }}>{person.full_name || 'Unnamed'}</span>
                   {person.role && <span style={{ fontSize: 10.5, color: 'var(--text3)', textTransform: 'capitalize' }}>· {person.role}</span>}
@@ -642,7 +642,7 @@ function ImportFormModal({ onClose, onImport }) {
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
           <button onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2, #475569)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
           <button onClick={handleImport} disabled={saving || !text.trim()}
-            style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: saving || !text.trim() ? '#9CA3AF' : 'var(--org-primary)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: saving || !text.trim() ? 'default' : 'pointer' }}>
+            style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: saving || !text.trim() ? 'var(--text-faint)' : 'var(--org-primary)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: saving || !text.trim() ? 'default' : 'pointer' }}>
             {saving ? 'Importing...' : 'Import as draft'}
           </button>
         </div>
@@ -670,7 +670,7 @@ function DuplicatePickerModal({ forms, onClose, onDuplicate }) {
                 <div style={{ fontSize: 11, color: 'var(--text3)' }}>{(f.fields || []).length} fields</div>
               </div>
               <button onClick={async () => { setBusyId(f.id); await onDuplicate(f); setBusyId(null) }} disabled={busyId === f.id}
-                style={{ padding: '7px 14px', borderRadius: 9, border: 'none', background: busyId === f.id ? '#9CA3AF' : 'var(--org-primary)', color: '#fff', fontSize: 12, fontWeight: 800, cursor: busyId === f.id ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
+                style={{ padding: '7px 14px', borderRadius: 9, border: 'none', background: busyId === f.id ? 'var(--text-faint)' : 'var(--org-primary)', color: '#fff', fontSize: 12, fontWeight: 800, cursor: busyId === f.id ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
                 {busyId === f.id ? 'Copying…' : 'Duplicate'}
               </button>
             </div>
@@ -976,7 +976,7 @@ export default function Forms({ org, session, isAdmin }) {
             <div style={{ width: 36, height: 36, borderRadius: 10, background: `${s.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}><Icon name={s.icon} /></div>
             <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.5, lineHeight: 1 }}><CountUp value={s.value} /></div>
             <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', marginTop: 4 }}>{s.label}</div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: s.subColor || '#94A3B8', marginTop: 6 }}>{s.sub}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: s.subColor || 'var(--text-faint)', marginTop: 6 }}>{s.sub}</div>
           </motion.div>
         ))}
       </div>
@@ -1007,8 +1007,8 @@ export default function Forms({ org, session, isAdmin }) {
               <option value="newest">Sort: Newest</option>
             </select>
             <div style={{ display: 'flex', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', gridColumn: isMobile ? '1 / -1' : undefined }}>
-              <button onClick={() => setListMode('list')} style={{ flex: isMobile ? 1 : undefined, padding: '8px 12px', border: 'none', background: listMode === 'list' ? 'var(--org-primary)' : '#fff', color: listMode === 'list' ? '#fff' : '#64748B', cursor: 'pointer' }}><Icon name="☰" /> List</button>
-              <button onClick={() => setListMode('grid')} style={{ flex: isMobile ? 1 : undefined, padding: '8px 12px', border: 'none', background: listMode === 'grid' ? 'var(--org-primary)' : '#fff', color: listMode === 'grid' ? '#fff' : '#64748B', cursor: 'pointer' }}>▦ Grid</button>
+              <button onClick={() => setListMode('list')} style={{ flex: isMobile ? 1 : undefined, padding: '8px 12px', border: 'none', background: listMode === 'list' ? 'var(--org-primary)' : '#fff', color: listMode === 'list' ? '#fff' : 'var(--text3)', cursor: 'pointer' }}><Icon name="☰" /> List</button>
+              <button onClick={() => setListMode('grid')} style={{ flex: isMobile ? 1 : undefined, padding: '8px 12px', border: 'none', background: listMode === 'grid' ? 'var(--org-primary)' : '#fff', color: listMode === 'grid' ? '#fff' : 'var(--text3)', cursor: 'pointer' }}>▦ Grid</button>
             </div>
           </div>
 
@@ -1019,8 +1019,8 @@ export default function Forms({ org, session, isAdmin }) {
               { key: 'archived', label: 'Archived' }, { key: 'templates', label: 'Templates' },
             ].map(t => (
               <button key={t.key} onClick={() => setTab(t.key)}
-                style={{ padding: '10px 14px', border: 'none', borderBottom: tab === t.key ? '2.5px solid #6D5DF6' : '2.5px solid transparent', background: 'none', color: tab === t.key ? 'var(--org-primary)' : '#64748B', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
-                {t.label} <span style={{ fontSize: 11, fontWeight: 800, color: tab === t.key ? 'var(--org-primary)' : '#94A3B8', background: tab === t.key ? '#6D5DF618' : '#F1F5F9', borderRadius: 99, padding: '1px 7px' }}>{tabCounts[t.key]}</span>
+                style={{ padding: '10px 14px', border: 'none', borderBottom: tab === t.key ? '2.5px solid #6D5DF6' : '2.5px solid transparent', background: 'none', color: tab === t.key ? 'var(--org-primary)' : 'var(--text3)', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
+                {t.label} <span style={{ fontSize: 11, fontWeight: 800, color: tab === t.key ? 'var(--org-primary)' : 'var(--text-faint)', background: tab === t.key ? '#6D5DF618' : 'var(--border-soft)', borderRadius: 99, padding: '1px 7px' }}>{tabCounts[t.key]}</span>
               </button>
             ))}
           </div>
@@ -1035,7 +1035,7 @@ export default function Forms({ org, session, isAdmin }) {
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
                 {CATEGORIES.map(c => (
                   <button key={c.key} onClick={() => setTemplateCategory(c.key)}
-                    style={{ padding: '7px 15px', borderRadius: 99, border: 'none', background: templateCategory === c.key ? 'var(--org-primary)' : '#F1F5F9', color: templateCategory === c.key ? '#fff' : '#64748B', fontSize: 12.5, fontWeight: templateCategory === c.key ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    style={{ padding: '7px 15px', borderRadius: 99, border: 'none', background: templateCategory === c.key ? 'var(--org-primary)' : 'var(--border-soft)', color: templateCategory === c.key ? '#fff' : 'var(--text3)', fontSize: 12.5, fontWeight: templateCategory === c.key ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                     {c.icon} {c.label}
                   </button>
                 ))}
@@ -1086,7 +1086,7 @@ export default function Forms({ org, session, isAdmin }) {
                     </div>
                     <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>{form.name}</div>
                     <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{form.description || 'No description'}</div>
-                    <div style={{ display: 'flex', gap: 10, fontSize: 11.5, fontWeight: 700, color: '#475569', marginBottom: isAdmin ? 10 : 0 }}>
+                    <div style={{ display: 'flex', gap: 10, fontSize: 11.5, fontWeight: 700, color: 'var(--text2)', marginBottom: isAdmin ? 10 : 0 }}>
                       <span><Icon name="📋" /> {(form.fields || []).length} fields</span>
                       <span><Icon name="📬" /> {subCount} submissions</span>
                     </div>
@@ -1172,10 +1172,10 @@ export default function Forms({ org, session, isAdmin }) {
                       )}
                       <button onClick={() => window.open(`/forms/${org?.slug}/${form.id}`, '_blank')} title="Preview" style={iconBtn}><Icon name="👁" /></button>
                       <button onClick={() => copyFormLink(form)} disabled={!form.is_active} title={form.is_active ? 'Copy public link' : 'Activate to get a link'}
-                        style={{ ...iconBtn, color: !form.is_active ? '#D1D5DB' : copiedId === form.id ? '#16A34A' : '#64748B', borderColor: copiedId === form.id ? '#16A34A40' : '#E2E8F0', cursor: form.is_active ? 'pointer' : 'default' }}>
+                        style={{ ...iconBtn, color: !form.is_active ? 'var(--text-faint)' : copiedId === form.id ? '#16A34A' : 'var(--text3)', borderColor: copiedId === form.id ? '#16A34A40' : 'var(--border)', cursor: form.is_active ? 'pointer' : 'default' }}>
                         {copiedId === form.id ? '✅' : '🔗'}
                       </button>
-                      <button onClick={() => setEmailModalFor(form)} disabled={!form.is_active} title={form.is_active ? 'Email this form' : 'Activate to email it'} style={{ ...iconBtn, color: !form.is_active ? '#D1D5DB' : '#64748B', cursor: form.is_active ? 'pointer' : 'default' }}><Icon name="✉️" /></button>
+                      <button onClick={() => setEmailModalFor(form)} disabled={!form.is_active} title={form.is_active ? 'Email this form' : 'Activate to email it'} style={{ ...iconBtn, color: !form.is_active ? 'var(--text-faint)' : 'var(--text3)', cursor: form.is_active ? 'pointer' : 'default' }}><Icon name="✉️" /></button>
                       {isAdmin && (
                         <div style={{ position: 'relative' }}>
                           <button onClick={() => setRowMenuFor(id => id === form.id ? null : form.id)} style={iconBtn}>⋯</button>
@@ -1239,7 +1239,7 @@ export default function Forms({ org, session, isAdmin }) {
                   ['📚 View all templates', () => setTab('templates')],
                 ].map(([label, fn]) => (
                   <button key={label} onClick={fn} style={{ display: 'flex', alignItems: 'center', width: '100%', textAlign: 'left', padding: '9px 2px', border: 'none', borderTop: '1px solid var(--border-soft)', background: 'none', fontSize: 12.5, fontWeight: 700, color: 'var(--text2, #475569)', cursor: 'pointer' }}>
-                    <span style={{ flex: 1 }}>{label}</span><span style={{ color: '#CBD5E1' }}>›</span>
+                    <span style={{ flex: 1 }}>{label}</span><span style={{ color: 'var(--text-faint)' }}>›</span>
                   </button>
                 ))}
               </div>

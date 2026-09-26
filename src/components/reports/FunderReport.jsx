@@ -16,8 +16,8 @@ import Icon from '../../lib/icons'
 // report types and offered window.print(), which printed the app around it.
 
 const INK = '#111827'
-const MUTED = '#6B7280'
-const RULE = '#E5E7EB'
+const MUTED = 'var(--text3)'
+const RULE = 'var(--border)'
 
 // One signed number format for the whole document. A typographic minus, not a
 // hyphen: the table and the headline figure sat on the same page using
@@ -151,7 +151,7 @@ export default function FunderReport({ org, range, onClose }) {
         <input type="date" value={to} onChange={e => setTo(e.target.value)} style={ctl} aria-label="Period end" />
         <button onClick={() => window.print()} disabled={!m} style={{
           ...ctl, cursor: m ? 'pointer' : 'default', fontWeight: 800, border: 'none',
-          background: m ? INK : '#CBD5E1', color: '#fff',
+          background: m ? INK : 'var(--text-faint)', color: '#fff',
         }}>Print or save as PDF</button>
       </div>
 

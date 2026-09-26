@@ -188,7 +188,7 @@ export default function PastSessionRegister({
         )}
         {(!isMobile || summaryOpen) && (
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, minmax(0,1fr))' : 'repeat(auto-fit,minmax(90px,1fr))', gap: 8, marginTop: isMobile ? 10 : 14 }}>
-          <Stat label="Expected" value={totalExpected} color="#6B7280" />
+          <Stat label="Expected" value={totalExpected} color="var(--text3)" />
           <Stat label="Attended" value={attendedTotal} color="#16A34A" />
           <Stat label="Absent" value={grouped.absent.length} color="#DC2626" />
           <Stat label="Signed out" value={grouped.signed_out.length} color="#2563EB" />
@@ -207,7 +207,7 @@ export default function PastSessionRegister({
             <span>Final register — {processedCount} of {totalExpected} processed</span>
             <span>{completionPct}% complete</span>
           </div>
-          <div style={{ height: 6, borderRadius: 99, background: '#E5E7EB', overflow: 'hidden' }}>
+          <div style={{ height: 6, borderRadius: 99, background: 'var(--border)', overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${completionPct}%`, background: `linear-gradient(90deg, ${primary}, ${secondary})` }} />
           </div>
           {hasUnresolved && (
@@ -220,7 +220,7 @@ export default function PastSessionRegister({
       {/* TABS */}
       <div className="no-print" style={{ display: 'flex', background: 'var(--surface)', borderBottom: '1px solid var(--border)', overflowX: 'auto' }}>
         {TABS.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{ flex: '1 0 auto', padding: '11px 14px', border: 'none', borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent', background: 'none', color: tab === t.key ? primary : '#6B7280', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          <button key={t.key} onClick={() => setTab(t.key)} style={{ flex: '1 0 auto', padding: '11px 14px', border: 'none', borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent', background: 'none', color: tab === t.key ? primary : 'var(--text3)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
             {t.label} {t.count}
           </button>
         ))}
@@ -335,10 +335,10 @@ function HistoricalRow({ child, att, groupLabel, peopleProfiles, isCorrected, on
         </div>
         {recordedBy && <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginTop: 2 }}>Recorded by {recordedBy}</div>}
         <div style={{ display: 'flex', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
-          {(child.has_epipen || child.has_asthma || child.has_diabetes || child.takes_medication || child.medical_notes) && <span style={alertPill('#DC2626', '#FEE2E2')}>⚕ Medical</span>}
-          {child.allergies && <span style={alertPill('#D97706', '#FEF3C7')}><Icon name="⚠" /> Allergy</span>}
+          {(child.has_epipen || child.has_asthma || child.has_diabetes || child.takes_medication || child.medical_notes) && <span style={alertPill('#DC2626', 'var(--danger-bg)')}>⚕ Medical</span>}
+          {child.allergies && <span style={alertPill('#D97706', 'var(--warn-bg)')}><Icon name="⚠" /> Allergy</span>}
           {isCorrected && (
-            <span onClick={onViewAudit} style={{ ...alertPill('#B45309', '#FEF3C7'), cursor: 'pointer', textDecoration: 'underline' }}>Corrected — view audit history</span>
+            <span onClick={onViewAudit} style={{ ...alertPill('var(--warn-text)', 'var(--warn-bg)'), cursor: 'pointer', textDecoration: 'underline' }}>Corrected — view audit history</span>
           )}
         </div>
       </div>
@@ -354,7 +354,7 @@ const ghostBtn = { padding: '8px 12px', borderRadius: 9, border: '1.5px solid va
 
 function MenuItem({ children, onClick, danger }) {
   return (
-    <button onClick={onClick} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '11px 16px', border: 'none', borderBottom: '1px solid var(--border-soft)', background: 'var(--surface)', fontSize: 13, fontWeight: 600, color: danger ? '#DC2626' : '#374151', cursor: 'pointer' }}>
+    <button onClick={onClick} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '11px 16px', border: 'none', borderBottom: '1px solid var(--border-soft)', background: 'var(--surface)', fontSize: 13, fontWeight: 600, color: danger ? '#DC2626' : 'var(--text2)', cursor: 'pointer' }}>
       {children}
     </button>
   )
@@ -380,11 +380,11 @@ function SessionTeamCard({ staffRows, peopleProfiles, canEdit, onSignIn, onSignO
               {canEdit && (
                 <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                   {!s.signed_in_at ? (
-                    <button onClick={() => onSignIn(s)} style={teamPillBtn('#16A34A', '#DCFCE7')}>Sign in</button>
+                    <button onClick={() => onSignIn(s)} style={teamPillBtn('#16A34A', 'var(--ok-bg)')}>Sign in</button>
                   ) : !s.signed_out_at ? (
-                    <button onClick={() => onSignOut(s)} style={teamPillBtn('#2563EB', '#DBEAFE')}>Sign out</button>
+                    <button onClick={() => onSignOut(s)} style={teamPillBtn('#2563EB', 'var(--info-bg)')}>Sign out</button>
                   ) : (
-                    <button onClick={() => onSignIn(s)} style={teamPillBtn('#6B7280', '#F3F4F6')}>Re-sign in</button>
+                    <button onClick={() => onSignIn(s)} style={teamPillBtn('var(--text3)', 'var(--border-soft)')}>Re-sign in</button>
                   )}
                 </div>
               )}
@@ -425,7 +425,7 @@ function ReopenRegisterModal({ session, authUserId, onClose, onDone }) {
         <textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Reason for reopening (required)" style={{ ...sel, minHeight: 70, marginBottom: 14 }} />
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={onClose} style={{ flex: 1, padding: 12, borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-          <button onClick={handleReopen} disabled={!reason.trim() || saving} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: !reason.trim() ? '#D1D5DB' : '#DC2626', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          <button onClick={handleReopen} disabled={!reason.trim() || saving} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: !reason.trim() ? 'var(--text-faint)' : '#DC2626', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             {saving ? 'Reopening...' : 'Confirm reopen'}
           </button>
         </div>
