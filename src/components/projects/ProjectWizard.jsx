@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import Icon from '../../lib/icons'
+import SessionSheet from '../sessions/SessionSheet'
 
 export const PROJECT_TYPES = [
   { key: 'holiday_project', label: 'Holiday Project' },
@@ -24,7 +25,7 @@ const WEEKDAYS = [
 
 const fi = {
   width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10,
-  border: '1.5px solid #E2E8F0', fontSize: 13, outline: 'none', background: '#fff', color: '#0F172A',
+  border: '1.5px solid #E2E8F0', fontSize: 16, minHeight: 44, background: '#fff', color: '#0F172A',
 }
 const lbl = { fontSize: 11, fontWeight: 800, color: '#64748B', display: 'block', marginBottom: 6 }
 
@@ -65,6 +66,7 @@ export function computeProjectDates(input) {
 
 export default function ProjectWizard({ org, session, onClose, onCreated }) {
   const isMobile = useIsMobile()
+  const primary = org?.primary_color || '#1B9AAA'
   const [step, setStep] = useState(0)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -157,20 +159,7 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
   const previewDates = useMemo(() => computeProjectDates({ ...form, excluded: [] }), [form])
 
   return (
-    <>
-      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 10400, backdropFilter: 'blur(2px)' }} />
-      <div onClick={e => e.stopPropagation()} style={{
-        position: 'fixed', zIndex: 10401, background: '#fff', display: 'flex', flexDirection: 'column',
-        ...(isMobile
-          ? { inset: 0 }
-          : { top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(760px, 92vw)', maxHeight: '88vh', borderRadius: 20, boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }),
-      }}>
-        {/* Header */}
-        <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>New Project</div>
-            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: '#94A3B8', cursor: 'pointer' }}><Icon name="✕" /></button>
-          </div>
+    <SessionSheet title="New project" subtitle="Plan a programme and prepare its daily registers." onClose={onClose} busy={saving} width={760} bodyStyle={{ padding: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}><div style={{ padding: '16px 20px', borderBottom: '1px solid #E2E8F0' }}>
           <div style={{ display: 'flex', gap: 6 }}>
             {STEPS.map((s, i) => (
               <div key={s} style={{ flex: 1 }}>
@@ -193,7 +182,7 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
                 <label style={lbl}>Description (optional)</label>
                 <textarea value={form.description} onChange={e => set('description', e.target.value)} style={{ ...fi, minHeight: 56, resize: 'vertical', fontFamily: 'inherit' }} />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12, marginBottom: 14 }}>
                 <div>
                   <label style={lbl}>Start date</label>
                   <input type="date" value={form.start_date} onChange={e => set('start_date', e.target.value)} style={fi} />
@@ -203,7 +192,7 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
                   <input type="date" value={form.end_date} onChange={e => set('end_date', e.target.value)} style={fi} />
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 18 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12, marginBottom: 18 }}>
                 <div>
                   <label style={lbl}>Project type</label>
                   <select value={form.project_type} onChange={e => set('project_type', e.target.value)} style={fi}>
@@ -304,7 +293,7 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
                 Every project day starts with these. You can change any individual day afterwards without affecting the rest.
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12, marginBottom: 14 }}>
                 <div>
                   <label style={lbl}>Default start time</label>
                   <input type="time" value={form.default_start_time} onChange={e => set('default_start_time', e.target.value)} style={fi} />
@@ -337,7 +326,7 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
                 <input value={form.default_location} onChange={e => set('default_location', e.target.value)} style={fi} placeholder="e.g. Community Centre" />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12, marginBottom: 14 }}>
                 <div>
                   <label style={lbl}>Default session type</label>
                   <select value={form.default_session_type} onChange={e => set('default_session_type', e.target.value)} style={fi}>
@@ -375,26 +364,25 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
         </div>
 
         {/* Footer */}
-        <div style={{ padding: 16, borderTop: '1px solid #F1F5F9', display: 'flex', gap: 8, flexShrink: 0 }}>
+        <div style={{ padding: '16px 16px calc(16px + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid #F1F5F9', display: 'flex', gap: 8, flexShrink: 0 }}>
           {step > 0 && (
-            <button onClick={() => setStep(s => s - 1)} style={{ padding: '11px 18px', borderRadius: 11, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Back</button>
+            <button onClick={() => setStep(s => s - 1)} style={{ minHeight: 44, padding: '11px 18px', borderRadius: 11, border: '1.5px solid #E2E8F0', background: '#fff', color: '#334155', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Back</button>
           )}
           <div style={{ flex: 1 }} />
           {step < 2 ? (
             <button onClick={() => canNext() && setStep(s => s + 1)} disabled={!canNext()} style={{
-              padding: '11px 22px', borderRadius: 11, border: 'none', fontSize: 13, fontWeight: 800, color: '#fff',
-              background: canNext() ? 'linear-gradient(135deg,#6D5DF6,#5B8DEF)' : '#CBD5E1',
+              minHeight: 44, padding: '11px 22px', borderRadius: 11, border: 'none', fontSize: 13, fontWeight: 800, color: '#fff',
+              background: canNext() ? primary : '#CBD5E1',
               cursor: canNext() ? 'pointer' : 'default',
             }}>Continue</button>
           ) : (
             <button onClick={handleCreate} disabled={saving} style={{
-              padding: '11px 22px', borderRadius: 11, border: 'none', fontSize: 13, fontWeight: 800, color: '#fff',
-              background: saving ? '#CBD5E1' : 'linear-gradient(135deg,#6D5DF6,#5B8DEF)',
+              minHeight: 44, padding: '11px 22px', borderRadius: 11, border: 'none', fontSize: 13, fontWeight: 800, color: '#fff',
+              background: saving ? '#CBD5E1' : primary,
               cursor: saving ? 'default' : 'pointer',
             }}>{saving ? 'Creating…' : `Create project & ${dates.length} days`}</button>
           )}
         </div>
-      </div>
-    </>
+    </SessionSheet>
   )
 }

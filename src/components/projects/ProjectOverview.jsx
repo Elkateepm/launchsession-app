@@ -4,6 +4,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { PROJECT_TYPES } from './ProjectWizard'
 import { TripReadiness, ProjectReflectionModal, AddParticipantsModal, AddTeamModal, EditProjectModal, DuplicateProjectModal } from './ProjectExtras'
 import Icon from '../../lib/icons'
+import { sessionPhase } from '../../lib/sessionPhase'
 
 const todayISO = () => {
   const d = new Date()
@@ -305,7 +306,7 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
           </div>
 
           {todayDay && (
-            <button onClick={() => onNavigate && onNavigate('registers', { sessionId: todayDay.id })}
+            <button onClick={() => onNavigate && onNavigate('registers', { sessionId: todayDay.id, returnTo: 'projects', projectId })}
               style={{
                 padding: '12px 22px', borderRadius: 12, border: 'none', background: '#fff', color: '#5B21B6',
                 fontSize: 13.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
@@ -365,7 +366,7 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
                 {todayDay.start_time}{todayDay.end_time ? `–${todayDay.end_time}` : ''}{todayDay.location ? ` · ${todayDay.location}` : ''}
               </div>
               <DayCounts counts={countsFor(todayDay.id)} />
-              <button onClick={() => onNavigate && onNavigate('registers', { sessionId: todayDay.id })} style={{ ...btnPrimary, marginTop: 12, background: 'linear-gradient(135deg,#16A34A,#22C55E)' }}>
+              <button onClick={() => onNavigate && onNavigate('registers', { sessionId: todayDay.id, returnTo: 'projects', projectId })} style={{ ...btnPrimary, marginTop: 12, background: 'linear-gradient(135deg,#16A34A,#22C55E)' }}>
                 Open Live Register
               </button>
             </div>
@@ -566,7 +567,7 @@ function ScheduleTab({ days, countsFor, reflections, raLinked, isMobile, onNavig
                       {st === 'today' && <span style={{ fontSize: 10, fontWeight: 800, color: '#15803D', background: '#DCFCE7', borderRadius: 99, padding: '2px 8px' }}>Today</span>}
                     </div>
                     <div style={{ fontSize: 12, color: '#64748B', fontWeight: 600, marginTop: 2 }}>
-                      {d.start_time}{d.end_time ? `–${d.end_time}` : ''}{d.location ? ` · ${d.location}` : ''} · {c.total} expected
+                      {(d.start_time || '').slice(0, 5)}{d.end_time ? `–${d.end_time.slice(0, 5)}` : ''}{d.location ? ` · ${d.location}` : ''} · {c.total} expected
                     </div>
                     {issues.length > 0 && (
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
@@ -576,7 +577,7 @@ function ScheduleTab({ days, countsFor, reflections, raLinked, isMobile, onNavig
                       </div>
                     )}
                   </div>
-                  <button onClick={() => onNavigate && onNavigate('planner', { editSessionId: d.id })} style={{ ...btnGhost, padding: '7px 14px', fontSize: 12 }}>Edit</button>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}><button onClick={() => onNavigate && onNavigate('planner', { editSessionId: d.id })} style={{ ...btnGhost, minHeight: 44, padding: '7px 14px', fontSize: 12 }}>Edit</button>{!['draft', 'cancelled'].includes(sessionPhase(d)) && <button onClick={() => onNavigate && onNavigate('registers', { sessionId: d.id, returnTo: 'projects', projectId: d.project_id })} style={{ ...btnGhost, minHeight: 44, fontSize: 12 }}>Open register →</button>}</div>
                 </div>
               )
             })}

@@ -28,7 +28,7 @@ function downloadText(filename, text, mime = 'text/csv') {
 export default function PastSessionRegister({
   session, org, grouped, rows, staffRows, peopleProfiles, notes, auditLog,
   userRole, authUserId, groupLabel, safeguardingCount,
-  onClose, onOpenNotes, onOpenChild, onReload,
+  onClose, onOpenNotes, onOpenChild, onReload, backLabel = 'Back to registers',
 }) {
   const isMobile = useIsMobile()
   // Collapsed by default on a phone, where the summary was occupying the
@@ -126,7 +126,7 @@ export default function PastSessionRegister({
 
       {/* HEADER */}
       <div className="no-print" style={{ background: '#fff', borderBottom: '1px solid #E5E7EB', padding: isMobile ? '10px 14px 12px' : '14px 18px' }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 13, fontWeight: 700, color: '#6B7280', cursor: 'pointer', marginBottom: 10 }}><Icon name="←" /> Back to sessions</button>
+        <button onClick={onClose} style={{ minHeight: 44, background: 'none', border: 'none', fontSize: 13, fontWeight: 700, color: '#6B7280', cursor: 'pointer', marginBottom: 10 }}><Icon name="←" /> {backLabel}</button>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {/* The org logo is dropped on a phone. It is the one thing on this
