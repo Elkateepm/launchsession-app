@@ -487,7 +487,7 @@ function NotesTab({ child }) {
         value={notes}
         onChange={handleChange}
         placeholder={`Add notes about ${child.first_name} — behaviour, progress, parent conversations, anything relevant...`}
-        style={{ width: '100%', minHeight: 200, padding: '12px 14px', borderRadius: 14, border: '1.5px solid var(--border)', fontSize: 13, lineHeight: 1.7, color: 'var(--text)', outline: 'none', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', background: '#FAFBFC' }}
+        style={{ width: '100%', minHeight: 200, padding: '12px 14px', borderRadius: 14, border: '1.5px solid var(--border)', fontSize: 13, lineHeight: 1.7, color: 'var(--text)', outline: 'none', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', background: 'var(--surface2)' }}
       />
       <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>Auto-saves as you type. Visible to admins and staff only.</div>
     </div>
@@ -2049,7 +2049,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               { icon: '📜', label: 'Past Registers', sub: 'View closed sessions', action: () => setShowPastRegisters(true) },
             ].map(t => (
               <button key={t.label} onClick={t.action}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 10px', borderRadius: 14, border: '1px solid var(--border-soft)', background: '#FAFBFC', cursor: t.action ? 'pointer' : 'default', textAlign: 'left', marginBottom: 6, transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease' }}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 10px', borderRadius: 14, border: '1px solid var(--border-soft)', background: 'var(--surface2)', cursor: t.action ? 'pointer' : 'default', textAlign: 'left', marginBottom: 6, transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease' }}
                 onMouseEnter={e => {
                   if (!t.action) return
                   e.currentTarget.style.transform = 'translateY(-2px)'
@@ -2144,7 +2144,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '80vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '8px 16px calc(24px + env(safe-area-inset-bottom))', boxShadow: '0 -20px 50px rgba(0,0,0,0.25)' }}>
             <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 8, paddingBottom: 10 }}><div style={{ width: 40, height: 4, borderRadius: 99, background: 'rgba(0,0,0,0.12)' }} /></div>
             <div style={{ fontSize: 13, fontWeight: 800, color: '#111', marginBottom: 10 }}>Register Options</div>
-            <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 10px', borderRadius: 14, border: '1px solid var(--border-soft)', background: '#FAFBFC', marginBottom: 8 }}>
+            <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 10px', borderRadius: 14, border: '1px solid var(--border-soft)', background: 'var(--surface2)', marginBottom: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--surface3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>{darkMode ? '🌙' : '☀️'}</div>
                 <div>
@@ -2166,7 +2166,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               { icon: '📜', label: 'Past Registers', sub: 'View closed sessions', action: () => { setShowPastRegisters(true); setShowMobileTools(false) } },
             ].map(t => (
               <button key={t.label} onClick={t.action}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 10px', borderRadius: 14, border: '1px solid var(--border-soft)', background: '#FAFBFC', cursor: 'pointer', textAlign: 'left', marginBottom: 8 }}>
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 10px', borderRadius: 14, border: '1px solid var(--border-soft)', background: 'var(--surface2)', cursor: 'pointer', textAlign: 'left', marginBottom: 8 }}>
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--surface3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}><Icon name={t.icon} /></div>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{t.label}</div>

@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { useOrg, useTerms } from '../../context/OrgContext'
 import { HIDEABLE_ITEMS } from '../dashboard/sidebar/navConfig'
 import { makeHasModule, trialDaysRemaining, isPlanEnded, ACCESS_MODULES } from '../../lib/moduleAccess'
+import { getThemeChoice, setThemeChoice, resolveTheme } from '../../lib/theme'
 import OrgSettingsPanel from './OrgSettingsPanel'
 import AccessSection from './AccessSection'
 import {
@@ -31,6 +32,9 @@ const NAV = [
   { key: 'sessions',     icon: '📍', label: 'Venues', group: 'Operations' },
   { key: 'notifications',icon: '🔔', label: 'Notifications', group: 'Communications' },
   { key: 'communications',icon: '📢', label: 'Communications', group: 'Communications' },
+  // Account, not Platform: this is a personal choice, and Display is
+  // admin-only because the sidebar it governs is shared.
+  { key: 'appearance',   icon: '🌗', label: 'Appearance', group: 'Account' },
   { key: 'security',     icon: '🔒', label: 'Security', group: 'Account' },
   { key: 'integrations', icon: '🔌', label: 'Integrations', group: 'Account' },
   { key: 'billing',      icon: '💳', label: 'Billing', group: 'Account' },
@@ -1367,6 +1371,65 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
   )
 }
 
+const THEME_OPTIONS = [
+  { key: 'system', label: 'Match my device', desc: 'Follows your phone or computer, including when it changes at sunset' },
+  { key: 'light',  label: 'Light',           desc: 'Always light, whatever the device is set to' },
+  { key: 'dark',   label: 'Dark',            desc: 'Always dark, whatever the device is set to' },
+]
+
+function AppearanceSection() {
+  const [choice, setChoice] = useState(getThemeChoice)
+  const resolved = resolveTheme(choice)
+
+  const pick = (key) => { setChoice(setThemeChoice(key)) }
+
+  return (
+    <div>
+      <SettingCard
+        title="Theme"
+        description="This is yours alone — it does not change what anyone else in the organisation sees."
+      >
+        <div role="radiogroup" aria-label="Theme" style={{ display: 'grid', gap: 10 }}>
+          {THEME_OPTIONS.map(opt => {
+            const active = choice === opt.key
+            return (
+              <button
+                key={opt.key}
+                role="radio"
+                aria-checked={active}
+                onClick={() => pick(opt.key)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 13, textAlign: 'left',
+                  padding: '14px 15px', borderRadius: 13, cursor: 'pointer', minHeight: 44,
+                  fontFamily: 'inherit', width: '100%',
+                  border: `1.5px solid ${active ? 'var(--org-primary)' : 'var(--border)'}`,
+                  background: active ? 'var(--org-a10)' : 'var(--surface)',
+                }}
+              >
+                <span style={{
+                  width: 18, height: 18, borderRadius: 99, flexShrink: 0,
+                  border: `2px solid ${active ? 'var(--org-primary)' : 'var(--border2, #D1D5DB)'}`,
+                  background: active ? 'var(--org-primary)' : 'transparent',
+                  boxShadow: active ? 'inset 0 0 0 3px var(--surface)' : 'none',
+                }} />
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: 'block', fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>{opt.label}</span>
+                  <span style={{ display: 'block', fontSize: 12.5, color: 'var(--text3)', marginTop: 2, lineHeight: 1.5 }}>{opt.desc}</span>
+                </span>
+              </button>
+            )
+          })}
+        </div>
+        {choice === 'system' && (
+          <p style={{ margin: '14px 0 0', fontSize: 12.5, color: 'var(--text3)' }}>
+            Your device is currently set to <strong style={{ color: 'var(--text2)' }}>{resolved}</strong>.
+          </p>
+        )}
+      </SettingCard>
+    </div>
+  )
+}
+
 function HelpSection() {
   const links = [
     { icon: '📖', title: 'Knowledge Base', desc: 'Guides and how-to articles', href: '#' },
@@ -2128,6 +2191,7 @@ export default function Settings({ org, session, userProfile, initialSection }) 
           <div style={{ fontSize: 14, color: 'var(--text3)' }}>The sidebar is shared by everyone in the organisation, so only an admin can change what appears in it.</div>
         </div>
       )
+      case 'appearance':     return <AppearanceSection />
       case 'users':           return <UsersSection org={org} session={session} isAdmin={isAdmin} currentUserId={session?.user?.id} />
       case 'access':         return <AccessSection org={org} isAdmin={isAdmin} />
       case 'security':       return <SecuritySection />

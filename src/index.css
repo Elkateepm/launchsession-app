@@ -60,6 +60,11 @@ body {
      hardcoded colours could be migrated, or ~700 sites had nowhere to go. */
   --text-faint:  #9CA3AF;
   --border-soft: #F1F5F9;
+  /* Stays white in both themes. Organisation logos are uploaded artwork drawn
+     for a light background -- the Branding Centre has a "Light & dark check"
+     precisely because they vary -- so the plate behind one cannot follow the
+     theme without making somebody's dark logo vanish. */
+  --logo-backdrop: #FFFFFF;
   --border2:  #D1D5DB;
   --card-bg:     #ffffff;
   --card-border: #E5E7EB;
@@ -215,6 +220,7 @@ body {
 
   --text-faint:  #7C7C96;
   --border-soft: #24243A;
+  --logo-backdrop: #FFFFFF;   /* deliberately unchanged -- see the light block */
 
   --border:   #2D2D3F;
   --border2:  #3D3D5F;

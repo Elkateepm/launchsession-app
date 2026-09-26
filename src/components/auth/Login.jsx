@@ -236,7 +236,7 @@ export default function Login({ org }) {
         {/* Brand */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           {org?.logo_url ? (
-            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface)', borderRadius: 18, padding: '12px 16px', boxShadow: '0 10px 30px -18px rgba(0,0,0,0.9)', maxWidth: '100%', marginBottom: 12 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--logo-backdrop)', borderRadius: 18, padding: '12px 16px', boxShadow: '0 10px 30px -18px rgba(0,0,0,0.9)', maxWidth: '100%', marginBottom: 12 }}>
               <img src={org.logo_url} alt={orgName} style={{ height: 76, maxWidth: '100%', objectFit: 'contain', display: 'block' }} />
             </span>
           ) : (

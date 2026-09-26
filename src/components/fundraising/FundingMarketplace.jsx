@@ -362,8 +362,8 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 20, background: meta.bg, color: meta.color, fontSize: 11, fontWeight: 600 }}>
                       <CategoryIcon category={g.category} color={meta.color} />{meta.label}
                     </span>
-                    <span style={{ padding: '3px 10px', borderRadius: 20, background: '#F3F2EE', color: 'var(--text3)', fontSize: 11, fontWeight: 600 }}>{g.scope === 'local' ? 'Local' : 'National'}</span>
-                    <span style={{ padding: '3px 10px', borderRadius: 20, background: '#F3F2EE', color: 'var(--text3)', fontSize: 11, fontWeight: 600 }}>{FUNDING_TYPE_META[g.funding_type] || g.funding_type}</span>
+                    <span style={{ padding: '3px 10px', borderRadius: 20, background: 'var(--surface2)', color: 'var(--text3)', fontSize: 11, fontWeight: 600 }}>{g.scope === 'local' ? 'Local' : 'National'}</span>
+                    <span style={{ padding: '3px 10px', borderRadius: 20, background: 'var(--surface2)', color: 'var(--text3)', fontSize: 11, fontWeight: 600 }}>{FUNDING_TYPE_META[g.funding_type] || g.funding_type}</span>
                   </div>
 
                   <div style={{ fontSize: 13, color: '#4B5563', lineHeight: 1.5, marginBottom: 16, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{g.description}</div>

@@ -20,6 +20,25 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
     <script>
+      // Theme first, and synchronously: React mounting before data-theme is on
+      // <html> means a white flash on every load for anyone using dark.
+      (function () {
+        try {
+          var c = localStorage.getItem('ls_theme');
+          // Only 'system' follows the device, and it has to be chosen. An
+          // unset preference is light -- see DEFAULT_CHOICE in lib/theme.js.
+          if (c === 'system') {
+            c = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          } else if (c !== 'dark') {
+            c = 'light';
+          }
+          document.documentElement.setAttribute('data-theme', c);
+          var m = document.querySelector('meta[name="theme-color"]');
+          if (m) m.setAttribute('content', c === 'dark' ? '#0F0F1A' : '#FFFFFF');
+        } catch (e) { /* storage blocked; light is the safe default */ }
+      })();
+    </script>
+    <script>
       // Resolve the org the same way OrgContext.js does (query param, then
       // subdomain, then a remembered slug), purely from the URL/localStorage
       // — no network round-trip — so the manifest link points at this org's

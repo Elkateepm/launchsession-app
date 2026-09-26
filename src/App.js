@@ -7,6 +7,7 @@ import { isEnrolledFor, isLocked, setLocked, getLockAfterMs, isAppLockPlatform }
 import BiometricLockScreen from './components/auth/BiometricLockScreen'
 import { redirectToSignIn } from './lib/authRedirect'
 import { ModuleAccessProvider } from './context/ModuleAccessContext'
+import { applyTheme, watchSystemTheme } from './lib/theme'
 
 // Route-level code splitting: each of these becomes its own JS chunk, only
 // downloaded when that route is actually visited, instead of all being
@@ -33,6 +34,16 @@ const VerifyVolunteerApplication = lazy(() => import('./components/volunteers/Ve
 // Minimal fallback shown while a lazy chunk downloads. Kept intentionally
 // tiny/inline (no imports) since it needs to render before other chunks
 // have loaded.
+// index.html has already put the theme on <html> synchronously; this keeps it
+// following the machine afterwards, so a laptop flipping to dark at sunset
+// does not leave the app light until the next reload.
+function useSystemTheme() {
+  useEffect(() => {
+    applyTheme()
+    return watchSystemTheme()
+  }, [])
+}
+
 function RouteLoading() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0A0A1A' }}>
@@ -569,6 +580,9 @@ function AppContent() {
 }
 
 export default function App() {
+  // Before the path branches: every return below is a render of this
+  // component, so the hook has to run unconditionally.
+  useSystemTheme()
   const pathname = window.location.pathname
   if (pathname === '/volunteer/accept-invite') return <Suspense fallback={<RouteLoading />}><VolunteerAcceptInvite /></Suspense>
   if (pathname.startsWith('/volunteer')) return <Suspense fallback={<RouteLoading />}><VolunteerPortal /></Suspense>

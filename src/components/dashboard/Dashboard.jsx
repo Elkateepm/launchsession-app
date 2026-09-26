@@ -340,7 +340,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
       {/* LEFT — org card */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flexShrink: 0 }}>
         <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }} style={{ flexShrink: 0 }}>
-          <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: isMobile ? 34 : 40, height: isMobile ? 34 : 40, borderRadius: 12, objectFit: 'contain', background: 'var(--surface)', padding: 3, border: `1.5px solid var(--org-a20)` }} />
+          <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: isMobile ? 34 : 40, height: isMobile ? 34 : 40, borderRadius: 12, objectFit: 'contain', background: 'var(--logo-backdrop)', padding: 3, border: `1.5px solid var(--org-a20)` }} />
         </motion.div>
         <div style={{ minWidth: 0, display: isMobile ? 'none' : 'block' }} className="ls-header-org-text">
           <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 180 }}>{orgName}</div>

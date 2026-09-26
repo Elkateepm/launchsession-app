@@ -3096,7 +3096,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           {/* Org identity */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0, padding: '4px 0' }}>
             <div style={{ position: 'relative' }}>
-              <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: 48, height: 48, borderRadius: 13, objectFit: 'contain', border: `1.5px solid var(--org-a20)`, background: 'var(--surface)', padding: 3, boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 20px -6px var(--org-a20)` }} />
+              <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: 48, height: 48, borderRadius: 13, objectFit: 'contain', border: `1.5px solid var(--org-a20)`, background: 'var(--logo-backdrop)', padding: 3, boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 20px -6px var(--org-a20)` }} />
               <div style={{ position: 'absolute', bottom: -2, right: -2, width: 12, height: 12, borderRadius: '50%', background: '#22C55E', border: '2px solid #fff' }} />
             </div>
             {!isMobile ? (
