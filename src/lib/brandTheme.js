@@ -97,7 +97,17 @@ export function loadBrandFont(key) {
  * Branding screen while previewing, so what an admin sees while choosing is
  * the real thing rather than an approximation.
  */
+// Remembered so a theme change can recompute these without the caller having
+// to hold on to the org. The theme can change long after the org loaded.
+let lastOrg = null
+
+/** Recompute the brand theme for the theme the document is now in. */
+export function reapplyBrandTheme() {
+  if (lastOrg) applyBrandTheme(lastOrg)
+}
+
 export function applyBrandTheme(org) {
+  lastOrg = org
   if (typeof document === 'undefined') return
   const root = document.documentElement.style
   const primary = brandPalette(org?.primary_color)

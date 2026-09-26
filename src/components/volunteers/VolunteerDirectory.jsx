@@ -78,7 +78,7 @@ export default function VolunteerDirectory({ org, volunteers, sessionStaff, sess
               <motion.div key={v.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
                 whileHover={{ y: -3, boxShadow: '0 12px 30px rgba(15,23,42,0.1)' }}
                 onClick={() => setSelected(v)}
-                style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(15,23,42,0.06)', borderRadius: 20, padding: 16, cursor: 'pointer' }}>
+                style={{ background: 'var(--surface)', backdropFilter: 'blur(20px)', border: '1px solid rgba(15,23,42,0.06)', borderRadius: 20, padding: 16, cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                   <Avatar name={v.full_name} photoUrl={v.photo_url} color={primary} />
                   <div style={{ minWidth: 0, flex: 1 }}>

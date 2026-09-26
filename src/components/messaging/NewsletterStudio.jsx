@@ -264,7 +264,7 @@ function Preview({ subject, preheader, blocks, org, compact }) {
   const fill = (t) => String(t || '').replaceAll('{{first_name}}', 'Sam')
 
   return (
-    <div style={{ background: '#EEF1F6', padding: compact ? 14 : 20, borderRadius: 16 }}>
+    <div style={{ background: 'var(--border)', padding: compact ? 14 : 20, borderRadius: 16 }}>
       <div style={{
         display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12,
         fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6,

@@ -1008,7 +1008,7 @@ const TEMPLATE_ICONS = ['📋', '⚽', '🏀', '🎨', '🏊', '🚌', '🎭', '
 function TemplateCard({ t, primary, onUse, onEdit, onDelete }) {
   const type = SESSION_TYPES.find(x => x.key === t.session_type) || SESSION_TYPES[0]
   return (
-    <div style={{ background: 'var(--surface)', border: '1px solid #EEF1F6', borderRadius: 20, padding: 18, boxShadow: '0 8px 24px -14px rgba(30,41,59,0.15)' }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: 18, boxShadow: '0 8px 24px -14px rgba(30,41,59,0.15)' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
         <div style={{ width: 44, height: 44, borderRadius: 13, background: type.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>{t.icon || '📋'}</div>
         <div style={{ display: 'flex', gap: 4 }}>
@@ -1411,7 +1411,7 @@ function InsightsStrip({ completed, attendancePct, noShows, reached }) {
     { v: reached, l: 'Attendances' },
   ]
   return (
-    <div style={{ background: 'var(--surface)', border: '1px solid #EEF1F6', borderRadius: 16, padding: '14px 18px', marginTop: 20 }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '14px 18px', marginTop: 20 }}>
       <div style={{ fontSize: 10.5, fontWeight: 900, letterSpacing: 0.8, color: 'var(--text-faint)', textTransform: 'uppercase', marginBottom: 10 }}>
         {terms.Session} summary · last 7 days
       </div>
@@ -2053,7 +2053,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
         {loading ? (
           <div>
             {[...Array(3)].map((_, i) => (
-              <div key={i} style={{ background: 'var(--surface)', border: '1px solid #EEF1F6', borderRadius: 16, padding: 18, marginBottom: 10 }}>
+              <div key={i} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 18, marginBottom: 10 }}>
                 <div style={{ display: 'flex', gap: 12 }}>
                   <div style={{ width: 40, height: 40, borderRadius: 11, background: 'var(--surface-hover)' }} />
                   <div style={{ flex: 1 }}>
@@ -2065,7 +2065,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
             ))}
           </div>
         ) : displayed.length === 0 && view === 'list' ? (
-          <div style={{ textAlign: 'center', padding: '52px 20px', background: 'var(--surface)', borderRadius: 20, border: '1px solid #EEF1F6' }}>
+          <div style={{ textAlign: 'center', padding: '52px 20px', background: 'var(--surface)', borderRadius: 20, border: '1px solid var(--border)' }}>
             <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}>
               {EMPTY_COPY.icon
                 ? <span style={{ fontSize: 40 }}><Icon name={EMPTY_COPY.icon} /></span>
@@ -2176,7 +2176,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
 
         {/* ═══ ATTENDANCE ATTENTION (compact) ═══ */}
         {!loading && frequentAbsentees.length > 0 && (
-          <div style={{ background: 'var(--surface)', border: '1px solid #EEF1F6', borderRadius: 16, padding: '16px 18px', marginTop: 20 }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 18px', marginTop: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>Attendance attention</div>

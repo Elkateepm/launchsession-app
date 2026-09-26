@@ -1640,12 +1640,12 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   const t = {
     pageBg: darkMode ? 'linear-gradient(180deg, #0A0D1C 0%, #12152A 100%)' : 'var(--surface2)',
     headerBg: darkMode ? 'linear-gradient(165deg, #171B33 0%, rgba(16,19,36,0) 60%)' : `linear-gradient(165deg, var(--org-a05) 0%, #fff 55%)`,
-    headerBorder: darkMode ? 'rgba(255,255,255,0.08)' : '#EEF1F6',
+    headerBorder: darkMode ? 'rgba(255,255,255,0.08)' : 'var(--border)',
     text: darkMode ? 'var(--border-soft)' : '#0B1220',
     textSub: darkMode ? 'var(--text-faint)' : 'var(--text3)',
     textMuted: darkMode ? 'var(--text3)' : 'var(--text-faint)',
     miniChipBg: darkMode ? 'rgba(255,255,255,0.06)' : 'var(--surface2)',
-    miniChipBorder: darkMode ? 'rgba(255,255,255,0.1)' : '#EEF1F6',
+    miniChipBorder: darkMode ? 'rgba(255,255,255,0.1)' : 'var(--border)',
     btnBg: darkMode ? null : '#fff',
     btnBorder: darkMode ? null : 'var(--border)',
     btnShadow: darkMode ? null : '0 1px 4px -1px rgba(0,0,0,0.06)',
@@ -2400,7 +2400,7 @@ function ChildrenFieldListModal({ title, icon, color, items, getFieldText, onClo
       }} onClick={e => e.stopPropagation()}>
 
         {/* Header */}
-        <div style={{ background: `linear-gradient(165deg, ${color}12 0%, #fff 60%)`, borderBottom: '1px solid #EEF1F6', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
+        <div style={{ background: `linear-gradient(165deg, ${color}12 0%, #fff 60%)`, borderBottom: '1px solid var(--border)', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
           <button onClick={onClose} aria-label="Close" style={{
             position: 'absolute', top: isMobile ? 14 : 16, right: isMobile ? 14 : 16,
             width: 32, height: 32, borderRadius: '50%', border: '1.5px solid var(--border)', background: 'var(--surface)',
@@ -2430,7 +2430,7 @@ function ChildrenFieldListModal({ title, icon, color, items, getFieldText, onClo
               {sorted.map(c => (
                 <button key={c.id} onClick={() => onSelectChild(c)} style={{
                   display: 'flex', alignItems: 'flex-start', gap: 10, textAlign: 'left', width: '100%',
-                  background: 'var(--surface)', border: '1.5px solid #EEF1F6', borderRadius: 14, padding: '11px 13px',
+                  background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, padding: '11px 13px',
                   cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
                 }}>
                   <span style={{ width: 34, height: 34, borderRadius: '50%', background: color + '18', color, fontSize: 12, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -2497,7 +2497,7 @@ function PastRegistersListModal({ sessions, loading, primary, onClose, onSelect 
       }} onClick={e => e.stopPropagation()}>
 
         {/* Header */}
-        <div style={{ background: `linear-gradient(165deg, var(--org-a05) 0%, #fff 60%)`, borderBottom: '1px solid #EEF1F6', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
+        <div style={{ background: `linear-gradient(165deg, var(--org-a05) 0%, #fff 60%)`, borderBottom: '1px solid var(--border)', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
           <button onClick={onClose} aria-label="Close" style={{
             position: 'absolute', top: isMobile ? 14 : 16, right: isMobile ? 14 : 16,
             width: 32, height: 32, borderRadius: '50%', border: '1.5px solid var(--border)', background: 'var(--surface)',
@@ -2531,7 +2531,7 @@ function PastRegistersListModal({ sessions, loading, primary, onClose, onSelect 
                     {g.items.map(s => (
                       <button key={s.id} onClick={() => onSelect(s)} style={{
                         display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', width: '100%',
-                        background: 'var(--surface)', border: '1.5px solid #EEF1F6', borderRadius: 14, padding: '11px 13px',
+                        background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, padding: '11px 13px',
                         cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
                       }}>
                         <span style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}><Icon name="🔒" /></span>
@@ -2614,7 +2614,7 @@ function ArchiveListModal({ sessions, loading, primary, org, onClose, onSelect, 
       }} onClick={e => e.stopPropagation()}>
 
         {/* Header */}
-        <div style={{ background: `linear-gradient(165deg, var(--org-a05) 0%, #fff 60%)`, borderBottom: '1px solid #EEF1F6', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
+        <div style={{ background: `linear-gradient(165deg, var(--org-a05) 0%, #fff 60%)`, borderBottom: '1px solid var(--border)', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
           <button onClick={onClose} aria-label="Close" style={{
             position: 'absolute', top: isMobile ? 14 : 16, right: isMobile ? 14 : 16,
             width: 32, height: 32, borderRadius: '50%', border: '1.5px solid var(--border)', background: 'var(--surface)',
@@ -2655,7 +2655,7 @@ function ArchiveListModal({ sessions, loading, primary, org, onClose, onSelect, 
                       return (
                         <div key={s.id} onClick={() => onSelect(s)} style={{
                           display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', width: '100%', boxSizing: 'border-box',
-                          background: 'var(--surface)', border: '1.5px solid #EEF1F6', borderRadius: 14, padding: '11px 13px',
+                          background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, padding: '11px 13px',
                           cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
                         }}>
                           <span style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>🗄️</span>

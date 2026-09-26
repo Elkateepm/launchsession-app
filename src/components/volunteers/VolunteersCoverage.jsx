@@ -35,7 +35,7 @@ export default function VolunteersCoverage({ org, sessions, sessionStaff, volunt
               .slice(0, 3)
             return (
               <motion.div key={s.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(20px)', border: '1px solid rgba(15,23,42,0.06)', borderRadius: 20, padding: 18 }}>
+                style={{ background: 'var(--surface)', backdropFilter: 'blur(20px)', border: '1px solid rgba(15,23,42,0.06)', borderRadius: 20, padding: 18 }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
                   <div>
                     <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>{s.title}</div>

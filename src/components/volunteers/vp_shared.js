@@ -53,7 +53,7 @@ export function computeAchievements(data) {
 // Glass card style shared across the portal
 export function glassCard(extra = {}) {
   return {
-    background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+    background: 'var(--surface)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
     borderRadius: 22, border: '1px solid rgba(255,255,255,0.7)', boxShadow: '0 8px 32px -14px rgba(30,41,59,0.15)',
     ...extra,
   }
