@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import Icon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
 // Public form experience.
 //
@@ -55,7 +56,7 @@ function FieldInput({ field, value, onChange, invalid, accent, id }) {
     fontSize: 16, fontFamily: 'inherit', outline: 'none', background: 'var(--surface)',
     color: 'var(--text)', transition: 'border-color 150ms ease, box-shadow 150ms ease',
   }
-  const onFocus = e => { e.target.style.borderColor = accent; e.target.style.boxShadow = `0 0 0 3px ${accent}22` }
+  const onFocus = e => { e.target.style.borderColor = accent; e.target.style.boxShadow = `0 0 0 3px ${withAlpha(accent, '22')}` }
   const onBlur = e => { e.target.style.borderColor = invalid ? '#DC2626' : 'var(--border)'; e.target.style.boxShadow = 'none' }
   const common = { id, onFocus, onBlur, 'aria-invalid': invalid || undefined }
 
@@ -68,7 +69,7 @@ function FieldInput({ field, value, onChange, invalid, accent, id }) {
       return (
         <label htmlFor={id} style={{
           display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer',
-          padding: '14px 15px', borderRadius: 12, background: value ? `${accent}0F` : '#fff',
+          padding: '14px 15px', borderRadius: 12, background: value ? `${withAlpha(accent, '0F')}` : '#fff',
           border: `1.5px solid ${value ? accent : invalid ? '#DC2626' : 'var(--border)'}`,
           transition: 'background 150ms ease, border-color 150ms ease',
         }}>
@@ -97,7 +98,7 @@ function FieldInput({ field, value, onChange, invalid, accent, id }) {
                   style={{
                     textAlign: 'left', padding: '14px 15px', borderRadius: 12, cursor: 'pointer',
                     border: `1.5px solid ${active ? accent : invalid ? '#DC2626' : 'var(--border)'}`,
-                    background: active ? `${accent}0F` : '#fff',
+                    background: active ? `${withAlpha(accent, '0F')}` : '#fff',
                     color: 'var(--text)', fontSize: 15.5, fontWeight: active ? 700 : 500,
                     fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 11,
                     transition: 'background 150ms ease, border-color 150ms ease',

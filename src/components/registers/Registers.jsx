@@ -15,6 +15,7 @@ import { useTerms } from '../../context/OrgContext'
 import SignedImg from '../shared/SignedImg'
 import shrinkImage from '../../lib/shrinkImage'
 import Icon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
 const DEFAULT_BUBBLES = [
   { key: 'red',    label: 'Red',    color: '#E53935', dark: '#B71C1C' },
@@ -155,7 +156,7 @@ export function GroupsQuickSetupModal({ org, initialGroups, onClose, onSaved }) 
 // ─── EDIT FORM HELPERS (must be outside EditChildForm to avoid remount on every keystroke) ───
 function FormSection({ icon, title, color, children }) {
   return (
-    <div style={{ background: color + '08', border: `1px solid ${color}25`, borderRadius: 14, padding: '14px 16px', marginBottom: 10 }}>
+    <div style={{ background: color + '08', border: `1px solid ${withAlpha(color, '25')}`, borderRadius: 14, padding: '14px 16px', marginBottom: 10 }}>
       <div style={{ fontSize: 11, fontWeight: 800, color, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
         <span>{icon}</span>{title}
       </div>
@@ -1276,14 +1277,14 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
         overflow: 'hidden',
         background: dark
           ? (selected ? 'var(--org-a10)' : hovered ? 'rgba(255,255,255,0.06)' : '#161A30')
-          : (selected ? 'var(--org-a10)' : hovered ? `${bColor}14` : `${bColor}08`),
+          : (selected ? 'var(--org-a10)' : hovered ? `${withAlpha(bColor, '14')}` : `${withAlpha(bColor, '08')}`),
         border: dark
           ? `1px solid ${selected ? primary + '55' : 'rgba(255,255,255,0.08)'}`
           : `1.5px solid ${selected ? primary + '45' : hovered ? bColor + '38' : bColor + '20'}`,
         borderRadius: 16,
         cursor: 'pointer',
         transition: 'background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s',
-        boxShadow: hovered ? `0 6px 16px -8px ${bColor}55` : (dark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)'),
+        boxShadow: hovered ? `0 6px 16px -8px ${withAlpha(bColor, '55')}` : (dark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)'),
         transform: hovered ? 'translateY(-1px)' : 'none',
       }}
     >
@@ -1300,7 +1301,7 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
 
       {/* Avatar + name */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-        <div style={{ width: 42, height: 42, borderRadius: 14, background: `linear-gradient(135deg, ${bColor}, ${bColor}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden', boxShadow: `0 3px 10px -4px ${bColor}90`, transition: 'transform 0.15s', transform: hovered ? 'scale(1.06)' : 'none' }}>
+        <div style={{ width: 42, height: 42, borderRadius: 14, background: `linear-gradient(135deg, ${bColor}, ${withAlpha(bColor, 'CC')})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden', boxShadow: `0 3px 10px -4px ${withAlpha(bColor, '90')}`, transition: 'transform 0.15s', transform: hovered ? 'scale(1.06)' : 'none' }}>
           {child.photo_url ? <SignedImg bucket="gallery" src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
         </div>
         <div style={{ minWidth: 0 }}>
@@ -1785,7 +1786,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                   const ac = actionColors[a.key]
                   return (
                     <button key={a.key} onClick={a.onClick} aria-label={a.label}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '1 1 0', minWidth: 0, height: 48, boxSizing: 'border-box', padding: '3px 1px', borderRadius: 12, border: darkMode ? `1px solid ${ac}3A` : '1.5px solid #E2E8F0', background: darkMode ? `linear-gradient(160deg, ${ac}30, ${ac}12)` : '#fff', cursor: 'pointer', boxShadow: darkMode ? `0 4px 14px -8px ${ac}80` : '0 1px 4px -1px rgba(0,0,0,0.06)' }}>
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '1 1 0', minWidth: 0, height: 48, boxSizing: 'border-box', padding: '3px 1px', borderRadius: 12, border: darkMode ? `1px solid ${withAlpha(ac, '3A')}` : '1.5px solid #E2E8F0', background: darkMode ? `linear-gradient(160deg, ${withAlpha(ac, '30')}, ${withAlpha(ac, '12')})` : '#fff', cursor: 'pointer', boxShadow: darkMode ? `0 4px 14px -8px ${withAlpha(ac, '80')}` : '0 1px 4px -1px rgba(0,0,0,0.06)' }}>
                       {a.icon.startsWith('/') ? (
                         <img src={a.icon} alt="" style={{ width: 30, height: 30, objectFit: 'contain', flexShrink: 0 }} />
                       ) : (
@@ -1814,22 +1815,22 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 { icon: '✚', value: children.filter(c => c.medical_notes).length, label: 'Medical Alerts', color: '#DC2626', onClick: () => setStatListModal('medical') },
               ]).map(s => (
                 <motion.button key={s.label} onClick={s.onClick} disabled={!s.onClick}
-                  whileHover={s.onClick ? { y: -2, boxShadow: `0 10px 22px -8px ${s.color}45` } : {}}
+                  whileHover={s.onClick ? { y: -2, boxShadow: `0 10px 22px -8px ${withAlpha(s.color, '45')}` } : {}}
                   whileTap={s.onClick ? { scale: 0.97 } : {}}
                   style={{
                     display: 'flex', alignItems: 'center', gap: isMobile ? 7 : 10, minWidth: 0,
                     padding: isMobile ? '10px 8px' : '13px 14px', borderRadius: 16,
-                    background: darkMode ? `linear-gradient(160deg, ${s.color}22, ${s.color}0C)` : `linear-gradient(160deg, ${s.color}${s.live ? '1E' : '12'}, #fff)`,
+                    background: darkMode ? `linear-gradient(160deg, ${withAlpha(s.color, '22')}, ${withAlpha(s.color, '0C')})` : `linear-gradient(160deg, ${s.color}${s.live ? '1E' : '12'}, #fff)`,
                     border: `${s.live ? 2 : 1.5}px solid ${s.live ? s.color + (darkMode ? '66' : '55') : (darkMode ? s.color + '30' : s.color + '22')}`,
                     boxShadow: s.live
-                      ? `0 6px 20px -8px ${s.color}70`
+                      ? `0 6px 20px -8px ${withAlpha(s.color, '70')}`
                       : (darkMode ? 'none' : '0 1px 3px rgba(15,23,42,0.04)'),
                     cursor: s.onClick ? 'pointer' : 'default', font: 'inherit', textAlign: 'left',
                     position: 'relative',
                   }}>
                   <span style={{
                     width: isMobile ? 28 : 38, height: isMobile ? 28 : 38, borderRadius: isMobile ? 9 : 11, flexShrink: 0,
-                    background: `linear-gradient(135deg, ${s.color}, ${s.color}CC)`, boxShadow: `0 4px 10px -3px ${s.color}70`,
+                    background: `linear-gradient(135deg, ${s.color}, ${withAlpha(s.color, 'CC')})`, boxShadow: `0 4px 10px -3px ${withAlpha(s.color, '70')}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 13 : 16, color: '#fff',
                   }}><Icon name={s.icon} /></span>
                   <div style={{ minWidth: 0 }}>
@@ -1898,11 +1899,11 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               return (
                 <button key={g} onClick={() => setActiveGroup(g)} style={{
                   padding: '6px 14px', borderRadius: 99, border: `1.5px solid ${isActive ? chipColor : (darkMode ? 'rgba(255,255,255,0.1)' : 'var(--border)')}`,
-                  background: isActive ? `linear-gradient(135deg, ${chipColor}, ${chipColor}CC)` : (darkMode ? '#161A30' : '#fff'),
+                  background: isActive ? `linear-gradient(135deg, ${chipColor}, ${withAlpha(chipColor, 'CC')})` : (darkMode ? '#161A30' : '#fff'),
                   color: isActive ? '#fff' : t.textSub,
                   fontSize: 12, fontWeight: isActive ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
                   display: 'flex', alignItems: 'center', gap: 5,
-                  boxShadow: isActive ? `0 3px 10px -4px ${chipColor}90` : 'none',
+                  boxShadow: isActive ? `0 3px 10px -4px ${withAlpha(chipColor, '90')}` : 'none',
                   transition: 'all 0.15s ease',
                 }}>
                   {bubble && <span style={{ width: 8, height: 8, borderRadius: '50%', background: isActive ? 'var(--surface)' : bubble.color, display: 'inline-block' }} />}
@@ -2408,14 +2409,14 @@ function ChildrenFieldListModal({ title, icon, color, items, getFieldText, onClo
       }} onClick={e => e.stopPropagation()}>
 
         {/* Header */}
-        <div style={{ background: `linear-gradient(165deg, ${color}12 0%, var(--surface) 60%)`, borderBottom: '1px solid var(--border)', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
+        <div style={{ background: `linear-gradient(165deg, ${withAlpha(color, '12')} 0%, var(--surface) 60%)`, borderBottom: '1px solid var(--border)', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
           <button onClick={onClose} aria-label="Close" style={{
             position: 'absolute', top: isMobile ? 14 : 16, right: isMobile ? 14 : 16,
             width: 32, height: 32, borderRadius: '50%', border: '1.5px solid var(--border)', background: 'var(--surface)',
             color: 'var(--text2)', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
           }}><Icon name="✕" /></button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingRight: 40 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${color}, ${color}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{icon}</div>
+            <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${color}, ${withAlpha(color, 'CC')})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{icon}</div>
             <div>
               <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.3 }}>{title}</div>
               <div style={{ fontSize: 11.5, color: 'var(--text-faint)', fontWeight: 600 }}>{items.length} child{items.length !== 1 ? 'ren' : ''} on register</div>

@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import FormQuestionRenderer, { QUESTION_TYPES, SMART_FIELDS, typeLabel } from './FormQuestionRenderer'
 import Icon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
 // Form builder.
 //
@@ -1012,7 +1013,7 @@ function SettingsPanel({ form, setForm, primary }) {
             width: '100%', display: 'flex', alignItems: 'center', gap: 11, padding: '13px 14px',
             borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
             border: `1.5px solid ${form.updates_child ? primary : 'var(--border)'}`,
-            background: form.updates_child ? `${primary}0D` : '#fff',
+            background: form.updates_child ? `${withAlpha(primary, '0D')}` : '#fff',
           }}
         >
           <span style={{
@@ -1046,7 +1047,7 @@ function SettingsPanel({ form, setForm, primary }) {
                     width: '100%', display: 'flex', alignItems: 'flex-start', gap: 11, padding: '12px 13px',
                     borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
                     border: `1.5px solid ${on ? primary : 'var(--border)'}`,
-                    background: on ? `${primary}0D` : '#fff',
+                    background: on ? `${withAlpha(primary, '0D')}` : '#fff',
                   }}
                 >
                   <span style={{

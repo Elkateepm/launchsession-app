@@ -1,6 +1,7 @@
 import React from 'react'
 import { LS, IconGlyph } from '../fundraisingShared'
 import { useIsMobile } from '../../../hooks/useIsMobile'
+import { withAlpha } from '../../../lib/withAlpha'
 
 export default function FundraisingHeader({ onNewCampaign, onOpenAssistant, isAdmin }) {
   const isMobile = useIsMobile()
@@ -9,7 +10,7 @@ export default function FundraisingHeader({ onNewCampaign, onOpenAssistant, isAd
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <div style={{
           width: 46, height: 46, borderRadius: 14, background: LS.gradient, flexShrink: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 6px 16px ${LS.purple}33`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 6px 16px ${withAlpha(LS.purple, '33')}`,
         }}>
           <IconGlyph name="coin" color="#fff" size={22} />
         </div>
@@ -31,7 +32,7 @@ export default function FundraisingHeader({ onNewCampaign, onOpenAssistant, isAd
           <button onClick={onNewCampaign} style={{
             display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 11, border: 'none',
             background: LS.gradient, color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer',
-            boxShadow: `0 6px 16px ${LS.purple}35`,
+            boxShadow: `0 6px 16px ${withAlpha(LS.purple, '35')}`,
           }}>
             <IconGlyph name="plus" color="#fff" size={14} /> New Campaign
           </button>

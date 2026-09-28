@@ -1,3 +1,4 @@
+import { withAlpha } from '../lib/withAlpha'
 // Shared premium "cushioned" card styling used across hero headers and feature cards.
 // Gives a soft, tactile, slightly 3D look via layered shadows and a subtle inner highlight,
 // without relying on any external CSS/animation library.
@@ -13,20 +14,20 @@
 export function premiumHeroStyle(primary, opts = {}) {
   const { tint, radius = 20, padding = '22px 26px' } = opts
   const bg = tint
-    ? `linear-gradient(135deg, ${primary}18, ${tint}12 60%, #ffffff 100%)`
-    : `linear-gradient(135deg, ${primary}16, #ffffff 70%)`
+    ? `linear-gradient(135deg, ${withAlpha(primary, '18')}, ${withAlpha(tint, '12')} 60%, #ffffff 100%)`
+    : `linear-gradient(135deg, ${withAlpha(primary, '16')}, #ffffff 70%)`
 
   return {
     background: bg,
-    border: `1px solid ${primary}22`,
+    border: `1px solid ${withAlpha(primary, '22')}`,
     borderRadius: radius,
     padding,
     position: 'relative',
     overflow: 'hidden',
     boxShadow: [
       `0 1px 0 rgba(255,255,255,0.6) inset`,      // top inner highlight (cushioned edge)
-      `0 -1px 0 ${primary}14 inset`,               // bottom inner shadow (depth)
-      `0 18px 40px -18px ${primary}35`,            // soft ambient drop shadow
+      `0 -1px 0 ${withAlpha(primary, '14')} inset`,               // bottom inner shadow (depth)
+      `0 18px 40px -18px ${withAlpha(primary, '35')}`,            // soft ambient drop shadow
       `0 4px 10px -4px rgba(15,23,42,0.06)`,       // tight contact shadow
     ].join(', '),
   }
@@ -47,7 +48,7 @@ export function premiumSolidHeroStyle(primary, opts = {}) {
     boxShadow: [
       `0 1px 0 rgba(255,255,255,0.25) inset`,
       `0 -2px 0 rgba(0,0,0,0.12) inset`,
-      `0 20px 48px -16px ${primary}55`,
+      `0 20px 48px -16px ${withAlpha(primary, '55')}`,
       `0 6px 14px -6px rgba(15,23,42,0.15)`,
     ].join(', '),
   }

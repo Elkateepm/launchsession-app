@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import SignedImg from '../shared/SignedImg'
 import Icon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
 function fmtTime(d) { if (!d) return ''; return new Date(d).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' }) }
 function fmtDate(dateStr) {
@@ -65,7 +66,7 @@ export default function HistoricalAttendanceModal({ session, attendance, allChil
           position: 'relative', width: '100%', maxWidth: isMobile ? 'none' : 480, maxHeight: isMobile ? 'none' : '88vh',
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
           borderRadius: isMobile ? 0 : 26, flex: isMobile ? 1 : undefined,
-          background: `linear-gradient(160deg, var(--org-a20) 0%, ${(secondary || primary)}22 40%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`,
+          background: `linear-gradient(160deg, var(--org-a20) 0%, ${withAlpha((secondary || primary), '22')} 40%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`,
           boxShadow: isMobile ? 'none' : '0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)',
         }}
         onClick={e => e.stopPropagation()}
@@ -131,7 +132,7 @@ export default function HistoricalAttendanceModal({ session, attendance, allChil
                   <div key={r.att.id} style={{ display: 'flex', alignItems: 'center', gap: 11, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 13, padding: '9px 12px' }}>
                     <div style={{
                       width: 34, height: 34, borderRadius: 11, flexShrink: 0, overflow: 'hidden',
-                      background: r.child.photo_url ? 'transparent' : `linear-gradient(135deg, ${avatarColour(r.child.id)}, ${avatarColour(r.child.id)}CC)`,
+                      background: r.child.photo_url ? 'transparent' : `linear-gradient(135deg, ${avatarColour(r.child.id)}, ${withAlpha(avatarColour(r.child.id), 'CC')})`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 12, fontWeight: 900, color: '#fff',
                     }}>

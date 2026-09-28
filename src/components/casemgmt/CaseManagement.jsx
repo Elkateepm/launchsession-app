@@ -10,6 +10,7 @@ import CaseDocuments from './CaseDocuments'
 import CaseCreationWizard from './CaseCreationWizard'
 import CaseReportModal, { exportCasesToCSV } from './CaseReports'
 import Icon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
 const RISK_SCORE = { low: 1, medium: 2, high: 3, critical: 4 }
 
@@ -249,7 +250,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
         ].map((k, i) => (
           <motion.div key={k.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
             whileHover={{ y: -2 }} style={{ ...glass({ padding: '16px 16px' }) }}>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: `${k.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}><Icon name={k.icon} /></div>
+            <div style={{ width: 34, height: 34, borderRadius: 10, background: `${withAlpha(k.color, '18')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}><Icon name={k.icon} /></div>
             <div style={{ fontSize: 24, fontWeight: 900, color: k.color, lineHeight: 1 }}><CountUp value={k.value} /></div>
             <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 700, marginTop: 4 }}>{k.label}</div>
             {typeof k.trend === 'number' && (
@@ -335,8 +336,8 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                     <button key={a.key} onClick={() => setAttention(on ? null : a.key)} style={{
                       minHeight: 34, padding: '5px 11px', borderRadius: 99, cursor: 'pointer', fontFamily: 'inherit',
                       fontSize: 11.5, fontWeight: 800,
-                      border: `1.5px solid ${on ? a.colour : `${a.colour}44`}`,
-                      background: on ? a.colour : `${a.colour}0F`,
+                      border: `1.5px solid ${on ? a.colour : `${withAlpha(a.colour, '44')}`}`,
+                      background: on ? a.colour : `${withAlpha(a.colour, '0F')}`,
                       color: on ? '#fff' : a.colour,
                     }}>{slipping[a.key].length} {a.label}</button>
                   )

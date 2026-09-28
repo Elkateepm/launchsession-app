@@ -4,6 +4,7 @@ import { format } from 'date-fns'
 import { LS, IconGlyph } from './fundraisingShared'
 import FundraisingEmptyState from './hub/FundraisingEmptyState'
 import Icon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
 const STAGES = [
   { key: 'researching', label: 'Researching', color: 'var(--text3)', bg: 'var(--surface2)' },
@@ -73,7 +74,7 @@ export default function ApplicationTracker({ org, refreshKey }) {
         <button onClick={() => setShowAdd(v => !v)} style={{
           display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 10,
           border: 'none', background: LS.gradient, color: '#fff', fontWeight: 700, fontSize: 12.5, cursor: 'pointer',
-          boxShadow: `0 6px 14px ${LS.purple}30`,
+          boxShadow: `0 6px 14px ${withAlpha(LS.purple, '30')}`,
         }}>
           <IconGlyph name="plus" color="#fff" size={13} /> Add application
         </button>

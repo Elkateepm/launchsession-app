@@ -4,6 +4,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import SignedImg from '../shared/SignedImg'
 import { signOne } from '../../lib/storageUrl'
 import Icon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
 const PRIMARY = '#DC2626' // safeguarding stays red-branded regardless of org colour — deliberate, signals seriousness
 
@@ -355,8 +356,8 @@ function CasesTab({ cases, loading, filter, setFilter, onSelect, isMobile }) {
       <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search by child or concern type..."
         style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', fontSize: 13, outline: 'none', marginBottom: 12 }} />
       <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-        {[['all', 'All'], ['open', 'Open'], ['follow_up', 'Follow-up'], ...(counts.escalated ? [['escalated', 'Now cases']] : []), ['resolved', 'Resolved'], ['closed', 'Closed']].map(([key, label]) => (
-          <button key={key} onClick={() => setFilter(key)} style={{ padding: '7px 14px', borderRadius: 999, border: filter === key ? '1px solid #2563EB' : '1px solid var(--border)', background: filter === key ? 'rgba(37,99,235,0.1)' : 'transparent', color: filter === key ? '#3B82F6' : 'var(--text3)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>{label} ({counts[key]})</button>
+        {[['all', 'All'], ['open', 'Open'], ['follow_up', 'Follow-up'], ...(counts.escalated ? [['escalated', 'Escalated']] : []), ['resolved', 'Resolved'], ['closed', 'Closed']].map(([key, label]) => (
+          <button key={key} onClick={() => setFilter(key)} style={{ padding: '7px 14px', borderRadius: 999, border: `1px solid ${filter === key ? 'var(--info-border)' : 'var(--border)'}`, background: filter === key ? 'var(--info-bg)' : 'transparent', color: filter === key ? 'var(--info-text)' : 'var(--text3)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>{label} ({counts[key]})</button>
         ))}
       </div>
 
@@ -526,7 +527,7 @@ function ChildrenTab({ org, cases, isMobile }) {
             return (
               <div key={c.id} style={{ ...card, padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: PRIMARY + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: PRIMARY, flexShrink: 0, overflow: 'hidden' }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--danger-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: 'var(--danger-text)', flexShrink: 0, overflow: 'hidden' }}>
                     {c.photo_url ? <SignedImg bucket="gallery" src={c.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (c.first_name?.[0] || '?')}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -568,72 +569,12 @@ function ChildrenTab({ org, cases, isMobile }) {
   )
 }
 
-// ── MEDICAL TAB ─────────────────────────────────────────
-function MedicalTab({ org, isMobile }) {
-  const [children, setChildren] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [filterFlag, setFilterFlag] = useState('all')
-
-  useEffect(() => {
-    supabase.from('children').select('*').eq('org_id', org.id).eq('active', true).order('first_name').then(({ data }) => {
-      setChildren(data || [])
-      setLoading(false)
-    })
-  }, [org.id])
-
-  const flags = [
-    ['all', 'All', null],
-    ['allergies', 'Allergies', c => !!c.allergies],
-    ['has_medication', 'Medication', c => c.has_medication],
-    ['has_asthma', 'Asthma', c => c.has_asthma],
-    ['has_epipen', 'EpiPens', c => c.has_epipen],
-    ['has_diabetes', 'Diabetes', c => c.has_diabetes],
-  ]
-
-  const active = flags.find(f => f[0] === filterFlag)
-  const filtered = active && active[2] ? children.filter(active[2]) : children
-  const withMedical = children.filter(c => c.allergies || c.medical_notes || c.has_medication || c.has_asthma || c.has_epipen || c.has_diabetes)
-
-  return (
-    <div>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-        {flags.map(([key, label]) => (
-          <button key={key} onClick={() => setFilterFlag(key)} style={{ padding: '7px 16px', borderRadius: 999, border: filterFlag === key ? '1px solid #DC2626' : '1px solid var(--border)', background: filterFlag === key ? 'rgba(220,38,38,0.08)' : 'transparent', color: filterFlag === key ? '#DC2626' : 'var(--text3)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>{label}</button>
-        ))}
-      </div>
-
-      {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>Loading...</div>
-      ) : (filterFlag === 'all' ? withMedical : filtered).length === 0 ? (
-        <div style={{ padding: '60px 24px', textAlign: 'center', ...card, borderStyle: 'dashed' }}>
-          <div style={{ fontSize: 36, marginBottom: 10 }}><Icon name="❤️" /></div>
-          <div style={{ fontWeight: 800, color: 'var(--text)' }}>No medical records match this filter</div>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {(filterFlag === 'all' ? withMedical : filtered).map(c => (
-            <div key={c.id} style={{ ...card, padding: 16, display: 'flex', gap: 14, alignItems: 'flex-start', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: PRIMARY + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, color: PRIMARY, flexShrink: 0 }}>
-                {c.first_name?.[0] || '?'}
-              </div>
-              <div style={{ flex: 1, minWidth: 200 }}>
-                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>{c.first_name} {c.last_name}</div>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-                  {c.has_epipen && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--danger-text)', background: 'rgba(220,38,38,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="💉" /> EpiPen</span>}
-                  {c.has_asthma && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--info-text)', background: 'rgba(37,99,235,0.1)', padding: '2px 8px', borderRadius: 999 }}>🫁 Asthma</span>}
-                  {c.has_diabetes && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--violet-text)', background: 'rgba(124,58,237,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="💊" /> Diabetes</span>}
-                  {c.has_medication && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--warn-text)', background: 'rgba(217,119,6,0.1)', padding: '2px 8px', borderRadius: 999 }}><Icon name="💊" /> Medication</span>}
-                </div>
-                {c.allergies && <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 4 }}><b>Allergies:</b> {c.allergies}</div>}
-                {c.medical_notes && <div style={{ fontSize: 12, color: 'var(--text2)' }}><b>Notes:</b> {c.medical_notes}</div>}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
+// The Medical tab that stood here listed children carrying an allergy, an
+// EpiPen, asthma, diabetes or medication. Medical Alerts is its own screen in
+// the sidebar, two rows below Safeguarding Hub, reading the same `children`
+// table with the same flags -- plus the review tracking this copy never had.
+// Two places showing the same list is two places to check and one to forget,
+// so this is the one that goes.
 
 // ── DOCUMENTS TAB ─────────────────────────────────────────
 function DocumentsTab({ org, userId, isMobile }) {
@@ -829,18 +770,21 @@ function EmergencyGuidanceModal({ onClose }) {
 // ── STATUS PILLS ─────────────────────────────────────────
 function StatusPills({ stats }) {
   const pills = [
-    { icon: '🔴', value: stats.open, label: 'Open', color: '#EF4444' },
-    { icon: '🟠', value: stats.followUp, label: 'Follow-ups', color: '#F59E0B' },
+    { value: stats.open, label: 'Open', tone: 'danger' },
+    { value: stats.followUp, label: 'Follow-ups', tone: 'warn' },
     // Shown only once something has been handed over, so the row does not
     // carry a zero for a thing this organisation has never done.
-    ...(stats.escalated ? [{ icon: '📋', value: stats.escalated, label: 'Now cases', color: 'var(--info-text)' }] : []),
-    { icon: '✅', value: stats.resolvedThisMonth, label: 'Resolved', color: '#22C55E' },
+    // Labelled "Escalated", not "Now cases": the list badge already reads
+    // "Now a case" for a single row, and pluralising that into a counter
+    // produced a phrase nobody would say out loud.
+    ...(stats.escalated ? [{ value: stats.escalated, label: 'Escalated', tone: 'info' }] : []),
+    { value: stats.resolvedThisMonth, label: 'Resolved', tone: 'ok' },
   ]
   return (
     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
       {pills.map(p => (
-        <span key={p.label} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 800, color: p.color, background: `${p.color}12`, border: `1px solid ${p.color}28`, borderRadius: 999, padding: '6px 12px' }}>
-          {p.icon} {p.value} {p.label}
+        <span key={p.label} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 800, color: `var(--${p.tone}-text)`, background: `var(--${p.tone}-bg)`, border: `1px solid var(--${p.tone}-border)`, borderRadius: 999, padding: '6px 12px' }}>
+          <b style={{ fontWeight: 900 }}>{p.value}</b> {p.label}
         </span>
       ))}
     </div>
@@ -953,26 +897,13 @@ function NeedsAttentionCard({ items, onSelect }) {
 }
 
 // ── OVERVIEW TAB ─────────────────────────────────────────
-function OverviewTab({ cases, attention, quickActions, onSelect, isMobile }) {
+function OverviewTab({ cases, attention, onSelect }) {
   const recent = cases.slice(0, 5)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
       <div>
         <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>Needs Attention</div>
         <NeedsAttentionCard items={attention} onSelect={onSelect} />
-      </div>
-
-      <div>
-        <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>Quick Actions</div>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 10 }}>
-          {quickActions.map(qa => (
-            <button key={qa.label} onClick={qa.onClick}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 14, border: 'none', background: `linear-gradient(135deg, ${qa.color}, ${qa.color}CC)`, color: '#fff', cursor: 'pointer', textAlign: 'left', boxShadow: `0 6px 16px -10px ${qa.color}80` }}>
-              <span style={{ width: 28, height: 28, borderRadius: 9, background: 'rgba(255,255,255,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}><Icon name={qa.icon} /></span>
-              <span style={{ fontSize: 12.5, fontWeight: 800, lineHeight: 1.2 }}>{qa.label}</span>
-            </button>
-          ))}
-        </div>
       </div>
 
       <div>
@@ -1003,13 +934,12 @@ function OverviewTab({ cases, attention, quickActions, onSelect, isMobile }) {
 }
 
 // ── MAIN DASHBOARD ─────────────────────────────────────────
-export default function SafeguardingDashboard({ org, session, onReportConcern, onNavigate, initialOpenConcernId }) {
+export default function SafeguardingDashboard({ org, session, onReportConcern, onNavigate, initialOpenConcernId, view = 'overview', onView }) {
   const isMobile = useIsMobile()
   const [cases, setCases] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [selected, setSelected] = useState(null)
-  const [tab, setTab] = useState('overview')
   const [showEmergency, setShowEmergency] = useState(false)
 
   const userId = session?.user?.id
@@ -1027,8 +957,8 @@ export default function SafeguardingDashboard({ org, session, onReportConcern, o
   useEffect(() => {
     if (!initialOpenConcernId || cases.length === 0) return
     const match = cases.find(c => c.id === initialOpenConcernId)
-    if (match) { setTab('cases'); setSelected(match) }
-  }, [initialOpenConcernId, cases])
+    if (match) { if (onView) onView('concerns'); setSelected(match) }
+  }, [initialOpenConcernId, cases, onView])
 
   const stats = {
     // Open concerns only, not concerns that became cases. The one open concern
@@ -1046,71 +976,37 @@ export default function SafeguardingDashboard({ org, session, onReportConcern, o
   }
   const attention = attentionItems(cases)
 
-  // Labelled "All concerns", not "Cases". This list is cause_for_concern rows,
-  // and it sat as a Cases tab inside the Concerns tab, one level below a
-  // different Cases tab showing the actual cases table -- two unrelated things
-  // called the same word, nested. The `cases` variable below is the same
-  // misnomer and is left alone deliberately: renaming it touches this whole
-  // file, and the label is what anyone actually reads.
-  const TABS = [
-    ['overview', '🏠 Overview'],
-    ['cases', '📋 All concerns'],
-    ['children', '🧒 Children'],
-    ['medical', '❤️ Medical'],
-    ['documents', '📁 Documents'],
-    ['audit', '🕐 Audit Log'],
-  ]
-
-  const QUICK_ACTIONS = [
-    { icon: '🛡️', label: 'Report Concern', color: 'var(--danger-text)', onClick: () => onReportConcern && onReportConcern() },
-    { icon: '❤️', label: 'Medical Incident', color: 'var(--info-text)', onClick: () => setTab('medical') },
-    { icon: '📞', label: 'Parent Contact', color: 'var(--violet-text)', onClick: () => setTab('cases') },
-    { icon: '📎', label: 'Upload Document', color: 'var(--ok-text)', onClick: () => setTab('documents') },
-  ]
+  // `cases` holds cause_for_concern rows, not rows of the cases table. The
+  // misnomer is left alone deliberately: renaming it touches this whole file,
+  // and the labels people actually read say "Concerns" everywhere now.
 
   return (
     <div>
-      {/* Compact header — stays under ~100px, no oversized hero card */}
-      <div style={{ background: 'var(--surface, #fff)', borderBottom: `2px solid ${PRIMARY}18`, padding: isMobile ? '14px 16px' : '16px 24px', flexShrink: 0, position: 'relative' }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${PRIMARY}, ${PRIMARY}66, transparent)` }} />
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg, ${PRIMARY}, ${PRIMARY}BB)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}><Icon name="🛡️" /></div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text, #111)', lineHeight: 1.2 }}>Safeguarding</div>
-              <div style={{ fontSize: 11.5, color: 'var(--text3, #6B7280)', fontWeight: 600 }}>Protect children and manage concerns · {org?.name}</div>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-            <button onClick={() => onReportConcern && onReportConcern()} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${PRIMARY}, ${PRIMARY}CC)`, color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}><Icon name="🛡️" /> Report Concern</button>
-            <button onClick={() => setShowEmergency(true)} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface, #fff)', color: 'var(--text, #111)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}><Icon name="🚨" /> Emergency</button>
-          </div>
-        </div>
-        <div style={{ marginTop: 12 }}>
-          <StatusPills stats={stats} />
+      {/* One action bar, not a second page header.
+          This used to restate "Safeguarding · Protect children and manage
+          concerns · Solidarity Sports" directly beneath the app header already
+          reading "Safeguarding Hub" above the org's own name -- a title, a
+          subtitle and an org name, all of them already on screen. What was
+          worth keeping is the two actions and the counts, so that is what is
+          left. */}
+      <div style={{ borderBottom: `1px solid var(--border)`, padding: isMobile ? '12px 16px' : '12px 24px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <StatusPills stats={stats} />
+        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+          <button onClick={() => onReportConcern && onReportConcern()} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${PRIMARY}, ${withAlpha(PRIMARY, 'CC')})`, color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}><Icon name="🛡️" /> Report concern</button>
+          <button onClick={() => setShowEmergency(true)} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}><Icon name="🚨" /> Emergency</button>
         </div>
       </div>
 
       <div style={{ padding: isMobile ? 16 : 24 }}>
-        <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '1px solid var(--border)', overflowX: 'auto' }}>
-          {TABS.map(([key, label]) => (
-            <button key={key} onClick={() => setTab(key)}
-              style={{ padding: '10px 16px', border: 'none', borderBottom: tab === key ? `2px solid ${PRIMARY}` : '2px solid transparent', background: 'none', color: tab === key ? PRIMARY : 'var(--text3)', fontWeight: 800, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-              {label}
-            </button>
-          ))}
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile || tab !== 'cases' ? '1fr' : '1fr 280px', gap: 20, alignItems: 'flex-start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile || view !== 'concerns' ? '1fr' : '1fr 280px', gap: 20, alignItems: 'flex-start' }}>
           <div>
-            {tab === 'overview' && <OverviewTab cases={cases} attention={attention} quickActions={QUICK_ACTIONS} onSelect={setSelected} isMobile={isMobile} />}
-            {tab === 'cases' && <CasesTab cases={cases} loading={loading} filter={filter} setFilter={setFilter} onSelect={setSelected} isMobile={isMobile} />}
-            {tab === 'children' && <ChildrenTab org={{ ...org, _sessionUserId: userId }} cases={cases} isMobile={isMobile} />}
-            {tab === 'medical' && <MedicalTab org={org} isMobile={isMobile} />}
-            {tab === 'documents' && <DocumentsTab org={org} userId={userId} isMobile={isMobile} />}
-            {tab === 'audit' && <AuditLogTab org={org} />}
+            {view === 'overview' && <OverviewTab cases={cases} attention={attention} onSelect={setSelected} />}
+            {view === 'concerns' && <CasesTab cases={cases} loading={loading} filter={filter} setFilter={setFilter} onSelect={setSelected} isMobile={isMobile} />}
+            {view === 'children' && <ChildrenTab org={{ ...org, _sessionUserId: userId }} cases={cases} isMobile={isMobile} />}
+            {view === 'documents' && <DocumentsTab org={org} userId={userId} isMobile={isMobile} />}
+            {view === 'audit' && <AuditLogTab org={org} />}
           </div>
-          {!isMobile && tab === 'cases' && <Sidebar org={org} cases={cases} />}
+          {!isMobile && view === 'concerns' && <Sidebar org={org} cases={cases} />}
         </div>
       </div>
 

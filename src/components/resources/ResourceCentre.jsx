@@ -11,6 +11,7 @@ import BookingRequests from './BookingRequests'
 import ResourceCheckout from './ResourceCheckout'
 import InventoryAlerts from './InventoryAlerts'
 import Icon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
 const TABS = [
   { key: 'overview', label: 'Overview' },
@@ -169,7 +170,7 @@ export default function ResourceCentre({ org, session: authSession }) {
 function StatCard({ icon, color, value, label }) {
   return (
     <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
-      <div style={{ width: 40, height: 40, borderRadius: 10, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{icon}</div>
+      <div style={{ width: 40, height: 40, borderRadius: 10, background: `${withAlpha(color, '15')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{icon}</div>
       <div>
         <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', lineHeight: 1 }}>{value}</div>
         <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginTop: 2 }}>{label}</div>

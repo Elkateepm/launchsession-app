@@ -11,6 +11,7 @@ import { useTerms } from '../../context/OrgContext'
 import SignedImg from '../shared/SignedImg'
 import Icon from '../../lib/icons'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { withAlpha } from '../../lib/withAlpha'
 
 const COLLECTION_TYPES = [
   { key: 'approved_adult', label: 'Approved adult' },
@@ -355,8 +356,8 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800,
             letterSpacing: '0.02em', color: STATE_COLOR[registerState],
-            background: `linear-gradient(135deg, ${STATE_COLOR[registerState]}1c, ${STATE_COLOR[registerState]}0c)`,
-            border: `1px solid ${STATE_COLOR[registerState]}30`,
+            background: `linear-gradient(135deg, ${withAlpha(STATE_COLOR[registerState], '1c')}, ${withAlpha(STATE_COLOR[registerState], '0c')})`,
+            border: `1px solid ${withAlpha(STATE_COLOR[registerState], '30')}`,
             borderRadius: 99, padding: '5px 12px 5px 10px', textTransform: 'uppercase',
           }}>
             {registerState === 'live' && (
@@ -587,11 +588,11 @@ function MiniStat({ icon, label, value, color }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 8,
-      background: `linear-gradient(135deg, ${color}14, ${color}08)`,
-      border: `1px solid ${color}22`, borderRadius: 12, padding: '7px 12px 7px 10px',
+      background: `linear-gradient(135deg, ${withAlpha(color, '14')}, ${withAlpha(color, '08')})`,
+      border: `1px solid ${withAlpha(color, '22')}`, borderRadius: 12, padding: '7px 12px 7px 10px',
     }}>
       <span style={{
-        width: 22, height: 22, borderRadius: 7, background: `${color}1c`, color,
+        width: 22, height: 22, borderRadius: 7, background: `${withAlpha(color, '1c')}`, color,
         display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0,
       }}>{icon}</span>
       <span style={{ fontSize: 15.5, fontWeight: 900, color, lineHeight: 1 }}>{value}</span>
@@ -709,7 +710,7 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
   )
 }
 
-function alertPill(color, bg) { return { fontSize: 9.5, fontWeight: 800, color, background: bg, border: `1px solid ${color}30`, borderRadius: 6, padding: '1px 6px' } }
+function alertPill(color, bg) { return { fontSize: 9.5, fontWeight: 800, color, background: bg, border: `1px solid ${withAlpha(color, '30')}`, borderRadius: 6, padding: '1px 6px' } }
 // 9px of vertical padding around 12px text is a 33px target. Anything under
 // ~44px is genuinely hard to hit on a phone, and this is the button somebody
 // presses fifty times in a row with a child waiting in front of them.
@@ -717,7 +718,7 @@ function actionBtn(color, isMobile) {
   return {
     padding: isMobile ? '13px 14px' : '9px 14px', borderRadius: 10, border: 'none',
     background: color, color: '#fff', fontSize: isMobile ? 13.5 : 12, fontWeight: 700,
-    cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: `0 3px 8px -2px ${color}55`,
+    cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: `0 3px 8px -2px ${withAlpha(color, '55')}`,
     ...(isMobile ? { flex: 1, minHeight: 46 } : null),
   }
 }

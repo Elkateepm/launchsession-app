@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { ChevronRightIcon } from './icons'
+import { withAlpha } from '../../../lib/withAlpha'
 
 // One row in the Launch menu.
 //
@@ -24,11 +25,11 @@ export default function QuickActionItem({ icon: Icon, label, hint, color = '#8B5
   const background = isDanger
     ? (pressed ? 'rgba(220,38,38,0.16)' : 'rgba(220,38,38,0.08)')
     : isPrimary
-      ? `linear-gradient(135deg, ${color}3D, ${color}17)`
+      ? `linear-gradient(135deg, ${withAlpha(color, '3D')}, ${withAlpha(color, '17')})`
       : (pressed ? 'rgba(255,255,255,0.09)' : 'rgba(255,255,255,0.04)')
 
   const borderColour = isPrimary
-    ? `${color}55`
+    ? `${withAlpha(color, '55')}`
     : isDanger ? 'rgba(220,38,38,0.28)' : 'rgba(255,255,255,0.07)'
 
   return (
@@ -61,7 +62,7 @@ export default function QuickActionItem({ icon: Icon, label, hint, color = '#8B5
         transition={{ type: 'spring', stiffness: 620, damping: 26 }}
         style={{
           width: isPrimary ? 44 : 38, height: isPrimary ? 44 : 38, borderRadius: 12,
-          background: `${color}26`, border: `1px solid ${color}4D`,
+          background: `${withAlpha(color, '26')}`, border: `1px solid ${withAlpha(color, '4D')}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           color, flexShrink: 0,
         }}

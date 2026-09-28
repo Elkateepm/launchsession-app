@@ -2,12 +2,12 @@ import React, { useState } from 'react'
 import CauseForConcernForm from './CauseForConcernForm'
 import SafeguardingDashboard from './SafeguardingDashboard'
 
-export default function Safeguarding({ org, session, onNavigate, initialOpenConcernId }) {
+export default function Safeguarding({ org, session, onNavigate, initialOpenConcernId, view, onView }) {
   const [showForm, setShowForm] = useState(false)
 
   return (
     <div>
-      <SafeguardingDashboard org={org} session={session} onReportConcern={() => setShowForm(true)} onNavigate={onNavigate} initialOpenConcernId={initialOpenConcernId} />
+      <SafeguardingDashboard org={org} session={session} onReportConcern={() => setShowForm(true)} onNavigate={onNavigate} initialOpenConcernId={initialOpenConcernId} view={view} onView={onView} />
 
       {/* Form modal */}
       {showForm && (

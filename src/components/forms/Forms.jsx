@@ -7,6 +7,7 @@ import { FormsOverview, ResponseInbox } from './FormsOverview'
 import { mergeTemplates } from './formTemplates'
 import NewFormBuilder, { CHILD_TAG } from './FormBuilder'
 import Icon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
 function CountUp({ value, duration = 0.6 }) {
   const [display, setDisplay] = React.useState(value)
@@ -973,7 +974,7 @@ export default function Forms({ org, session, isAdmin }) {
         {statCards.map((s, i) => (
           <motion.div key={s.key} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: i * 0.05 }}
             style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '18px' }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: `${s.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}><Icon name={s.icon} /></div>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: `${withAlpha(s.color, '18')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}><Icon name={s.icon} /></div>
             <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.5, lineHeight: 1 }}><CountUp value={s.value} /></div>
             <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', marginTop: 4 }}>{s.label}</div>
             <div style={{ fontSize: 11, fontWeight: 700, color: s.subColor || 'var(--text-faint)', marginTop: 6 }}>{s.sub}</div>
@@ -1048,8 +1049,8 @@ export default function Forms({ org, session, isAdmin }) {
                     const color = CATEGORY_COLOR[t.category] || primary
                     return (
                       <button key={t.name} onClick={() => applyTemplate(t)}
-                        style={{ padding: 16, borderRadius: 16, border: `1px solid ${color}25`, background: `${color}08`, cursor: 'pointer', textAlign: 'left' }}>
-                        <div style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg, ${color}, ${color}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}><Icon name={t.icon} /></div>
+                        style={{ padding: 16, borderRadius: 16, border: `1px solid ${withAlpha(color, '25')}`, background: `${withAlpha(color, '08')}`, cursor: 'pointer', textAlign: 'left' }}>
+                        <div style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg, ${color}, ${withAlpha(color, 'CC')})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}><Icon name={t.icon} /></div>
                         <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>{t.name}</div>
                         <div style={{ fontSize: 11.5, color: 'var(--text3)', lineHeight: 1.4, marginBottom: 10 }}>{t.desc}</div>
                         <div style={{ fontSize: 10.5, fontWeight: 700, color, background: color + '14', borderRadius: 99, padding: '3px 9px', display: 'inline-block' }}>{t.fields.length} fields</div>
@@ -1081,7 +1082,7 @@ export default function Forms({ org, session, isAdmin }) {
                   <div onClick={() => isAdmin ? openForEdit(form) : (canView && openForSubmissions(form))}
                     style={{ cursor: 'pointer', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 16 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                      <div style={{ width: 36, height: 36, borderRadius: 10, background: `${TAG_COLOR[form.tag] || accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}><Icon name="📝" /></div>
+                      <div style={{ width: 36, height: 36, borderRadius: 10, background: `${withAlpha(TAG_COLOR[form.tag] || accent, '18')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}><Icon name="📝" /></div>
                       <span style={{ fontSize: 10.5, fontWeight: 800, padding: '3px 9px', borderRadius: 99, background: STATUS_STYLE[form.status]?.bg, color: STATUS_STYLE[form.status]?.color }}>● {STATUS_STYLE[form.status]?.label}</span>
                     </div>
                     <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>{form.name}</div>
@@ -1122,13 +1123,13 @@ export default function Forms({ org, session, isAdmin }) {
                   <React.Fragment key={form.id}>
                   {startsGroup && <GroupHeading tag={tg} count={groupCounts[tg]} />}
                   <div style={{ position: 'relative', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-                    <div onClick={rowClick} style={{ width: 42, height: 42, borderRadius: 12, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, cursor: 'pointer' }}><Icon name="📝" /></div>
+                    <div onClick={rowClick} style={{ width: 42, height: 42, borderRadius: 12, background: `${withAlpha(accent, '18')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, cursor: 'pointer' }}><Icon name="📝" /></div>
 
                     <div onClick={rowClick} style={{ flex: '1 1 220px', minWidth: 180, cursor: 'pointer' }}>
                       <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 2 }}>{form.name}</div>
                       <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{form.description || 'No description'}</div>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 10.5, fontWeight: 800, padding: '2px 9px', borderRadius: 99, background: `${accent}15`, color: 'var(--org-ink)' }}>{form.tag || 'Other'}</span>
+                        <span style={{ fontSize: 10.5, fontWeight: 800, padding: '2px 9px', borderRadius: 99, background: `${withAlpha(accent, '15')}`, color: 'var(--org-ink)' }}>{form.tag || 'Other'}</span>
                         <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 9px', borderRadius: 99, background: 'var(--bg)', color: 'var(--text3)' }}>{form.visibility === 'private' ? '🔒 Private' : '🌐 Public'}</span>
                       </div>
                     </div>

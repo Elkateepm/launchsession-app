@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
 import Icon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
 const DAY_MS = 1000 * 60 * 60 * 24
 const RECENT_KEY = 'ls_grant_recent_searches'
@@ -340,9 +341,9 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
                   whileHover={{ y: -6, boxShadow: `0 18px 40px var(--org-a10), 0 4px 14px rgba(28,35,51,0.08)` }}
                   style={{
                     position: 'relative', overflow: 'hidden',
-                    background: `linear-gradient(135deg, ${meta.color}1f, rgba(255,255,255,0.62))`,
+                    background: `linear-gradient(135deg, ${withAlpha(meta.color, '1f')}, rgba(255,255,255,0.62))`,
                     backdropFilter: 'blur(18px) saturate(160%)', WebkitBackdropFilter: 'blur(18px) saturate(160%)',
-                    border: `1px solid ${meta.color}33`, borderRadius: 18, padding: '20px 22px',
+                    border: `1px solid ${withAlpha(meta.color, '33')}`, borderRadius: 18, padding: '20px 22px',
                     transition: 'box-shadow 0.25s', '--sO': 0,
                   }}>
                   <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>

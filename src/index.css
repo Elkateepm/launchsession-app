@@ -60,6 +60,15 @@ body {
      hardcoded colours could be migrated, or ~700 sites had nowhere to go. */
   --text-faint:  #9CA3AF;
   --border-soft: #F1F5F9;
+
+  /* The frosted card used across Volunteers, Cases, Risk Assessments, Medical
+     Alerts and People. It was a literal rgba(255,255,255,0.72) inside glass()
+     in vh_shared.js, so those screens kept a white card in dark mode and any
+     token-coloured text on them -- all of which is light-on-dark by design --
+     landed on near-white. These are the same numbers, now switchable. */
+  --glass-bg:     rgba(255,255,255,0.72);
+  --glass-border: rgba(15,23,42,0.06);
+  --glass-shadow: 0 8px 30px rgba(15,23,42,0.06);
   /* Stays white in both themes. Organisation logos are uploaded artwork drawn
      for a light background -- the Branding Centre has a "Light & dark check"
      precisely because they vary -- so the plate behind one cannot follow the
@@ -231,6 +240,9 @@ body {
 
   --text-faint:  #7C7C96;
   --border-soft: #24243A;
+  --glass-bg:     rgba(36,36,58,0.72);
+  --glass-border: rgba(255,255,255,0.09);
+  --glass-shadow: 0 8px 30px rgba(0,0,0,0.45);
   --logo-backdrop: #FFFFFF;   /* deliberately unchanged -- see the light block */
 
   --danger-bg: rgba(248,113,113,0.13);  --danger-text: #FCA5A5;  --danger-border: rgba(248,113,113,0.32);

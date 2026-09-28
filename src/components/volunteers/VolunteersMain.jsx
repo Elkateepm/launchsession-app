@@ -10,6 +10,7 @@ import VolunteersRecognition from './VolunteersRecognition'
 import VolunteersReports from './VolunteersReports'
 import QRShareSheet from '../shared/QRShareSheet'
 import Icon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one yet
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -333,7 +334,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                         {activityFeed.map(a => (
                           <div key={a.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 4px', borderRadius: 10, transition: 'background 0.15s' }}>
-                            <div style={{ width: 30, height: 30, borderRadius: 9, background: `${a.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}><Icon name={a.icon} /></div>
+                            <div style={{ width: 30, height: 30, borderRadius: 9, background: `${withAlpha(a.color, '18')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}><Icon name={a.icon} /></div>
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{a.title}</div>
                               <div style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>{a.sub}</div>
@@ -366,7 +367,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                                   <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>{s.title}</div>
                                   <div style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>{new Date(s.session_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} · {s.start_time}–{s.end_time}{s.location ? ` · ${s.location}` : ''}</div>
                                 </div>
-                                <Badge bg={`${barColor}18`} color={barColor}>{assigned}/{required}</Badge>
+                                <Badge bg={`${withAlpha(barColor, '18')}`} color={barColor}>{assigned}/{required}</Badge>
                               </div>
                               <div style={{ height: 5, borderRadius: 99, background: 'var(--surface3)', overflow: 'hidden', marginBottom: 8 }}>
                                 <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6 }} style={{ height: '100%', background: barColor, borderRadius: 99 }} />
@@ -396,7 +397,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                           const pct = Math.min(100, (s.assigned / Math.max(1, s.required)) * 100)
                           const barColor = s.covered ? '#16A34A' : '#D97706'
                           return (
-                            <div key={s.id} style={{ padding: 12, borderRadius: 14, background: `${barColor}0c`, border: `1px solid ${barColor}30` }}>
+                            <div key={s.id} style={{ padding: 12, borderRadius: 14, background: `${withAlpha(barColor, '0c')}`, border: `1px solid ${withAlpha(barColor, '30')}` }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                                 <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{s.title}</div>
                                 <span style={{ fontSize: 11, fontWeight: 800, color: barColor }}>{s.covered ? '🟢 Ready' : `🟡 Need ${s.required - s.assigned}`}</span>

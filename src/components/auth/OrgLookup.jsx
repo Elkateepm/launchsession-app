@@ -5,6 +5,7 @@ import SpaceBackground from './SpaceBackground'
 import RocketIllustration from './RocketIllustration'
 import { isNativeApp } from '../../lib/nativeEnv'
 import Icon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
 // Shown wherever an org logo would go, whenever the org hasn't set one yet
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -321,7 +322,7 @@ export default function OrgLookup() {
                               cursor: 'pointer', fontFamily: font,
                             }}
                           >
-                            <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--surface)', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1.5px solid ${o.primary_color || '#3B82F6'}30` }}>
+                            <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--surface)', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1.5px solid ${withAlpha(o.primary_color || '#3B82F6', '30')}` }}>
                               <img src={o.logo_url || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                             </div>
                             <div style={{ minWidth: 0 }}>
@@ -346,7 +347,7 @@ export default function OrgLookup() {
             <div style={{ textAlign: 'center' }}>
               <div style={{
                 width: 88, height: 88, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                margin: '0 auto 18px', border: `2px solid ${org.primary_color || '#8B5CF6'}`, boxShadow: `0 0 24px 2px ${org.primary_color || '#8B5CF6'}40`,
+                margin: '0 auto 18px', border: `2px solid ${org.primary_color || '#8B5CF6'}`, boxShadow: `0 0 24px 2px ${withAlpha(org.primary_color || '#8B5CF6', '40')}`,
                 background: 'var(--surface)', overflow: 'hidden',
               }}>
                 <img src={org.logo_url || FALLBACK_LOGO_URL} alt={org.name} style={{ width: '78%', height: '78%', objectFit: 'contain' }} />
@@ -387,7 +388,7 @@ export default function OrgLookup() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {org.map(o => (
                   <button key={o.id} onClick={() => handleContinue(o)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', fontFamily: font }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden', border: `1.5px solid ${o.primary_color || '#3B82F6'}30` }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden', border: `1.5px solid ${withAlpha(o.primary_color || '#3B82F6', '30')}` }}>
                       <img src={o.logo_url || FALLBACK_LOGO_URL} alt={o.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     </div>
                     <div>

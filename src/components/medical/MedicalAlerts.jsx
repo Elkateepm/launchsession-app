@@ -12,6 +12,7 @@ import {
   TIERS, flagsFor, hasMedicalNeed, tierOf, isReviewDue, compareForTriage, REVIEW_INTERVAL_DAYS,
 } from './medicalShared'
 import MedicalPrintSheet from './MedicalPrintSheet'
+import { withAlpha } from '../../lib/withAlpha'
 
 // ─── MEDICAL ALERTS ──────────────────────────────────────────
 // This page used to open on a sign-off queue: every flagged child, alphabetical,
@@ -182,7 +183,7 @@ export default function MedicalAlerts({ org, session, onNavigate }) {
         {TABS.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
             padding: '8px 14px', borderRadius: 99, minHeight: 40, fontFamily: 'inherit',
-            border: `1.5px solid ${tab === t.key ? (t.tone || primary) : t.tone ? `${t.tone}55` : 'var(--border)'}`,
+            border: `1.5px solid ${tab === t.key ? (t.tone || primary) : t.tone ? `${withAlpha(t.tone, '55')}` : 'var(--border)'}`,
             background: tab === t.key
               ? (t.tone || `linear-gradient(135deg, ${primary}, var(--org-a85))`)
               : 'var(--surface)',

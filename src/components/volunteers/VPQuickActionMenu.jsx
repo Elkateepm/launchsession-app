@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import Icon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
 const ACTIONS = [
   { key: 'concern', icon: '🛡️', label: 'Raise Concern', color: '#EF4444' },
@@ -45,7 +46,7 @@ export default function VPQuickActionMenu({ open, onClose, org, user, todaySessi
                       initial={{ opacity: 0, scale: 0.7, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.035, type: 'spring', stiffness: 400, damping: 22 }}
                       whileTap={{ scale: 0.92 }}
                       style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '14px 6px', borderRadius: 18, border: 'none', background: 'rgba(255,255,255,0.06)', cursor: 'pointer' }}>
-                      <div style={{ width: 46, height: 46, borderRadius: 16, background: `${a.color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 21 }}><Icon name={a.icon} /></div>
+                      <div style={{ width: 46, height: 46, borderRadius: 16, background: `${withAlpha(a.color, '25')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 21 }}><Icon name={a.icon} /></div>
                       <span style={{ fontSize: 10.5, fontWeight: 700, color: '#fff', textAlign: 'center', lineHeight: 1.2 }}>{a.label}</span>
                     </motion.button>
                   ))}
@@ -74,7 +75,7 @@ function ModalShell({ title, icon, color, onClose, children, footer }) {
       <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', stiffness: 320, damping: 32 }}
         onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 480, background: 'var(--surface)', borderRadius: '26px 26px 0 0', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ padding: '18px 20px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 12, background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>{icon}</div>
+          <div style={{ width: 36, height: 36, borderRadius: 12, background: `${withAlpha(color, '18')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>{icon}</div>
           <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)', flex: 1 }}>{title}</div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text-faint)', cursor: 'pointer' }}><Icon name="✕" /></button>
         </div>
