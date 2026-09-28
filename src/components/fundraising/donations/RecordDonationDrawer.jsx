@@ -230,7 +230,7 @@ export default function RecordDonationDrawer({ open, onClose, org, campaigns = [
                         flex: 1, padding: '9px 4px', borderRadius: 10, fontSize: 13, fontWeight: 700,
                         cursor: 'pointer', fontFamily: 'inherit',
                         border: `1px solid ${mode === o.key ? 'transparent' : LS.border}`,
-                        background: mode === o.key ? LS.gradient : '#fff',
+                        background: mode === o.key ? LS.gradient : 'var(--surface)',
                         color: mode === o.key ? '#fff' : LS.muted,
                       }}
                     >{o.label}</button>
@@ -299,14 +299,14 @@ export default function RecordDonationDrawer({ open, onClose, org, campaigns = [
                     padding: '13px 14px', borderRadius: 12, cursor: mode === 'anonymous' ? 'not-allowed' : 'pointer',
                     fontFamily: 'inherit', opacity: mode === 'anonymous' ? 0.5 : 1,
                     border: `1px solid ${giftAid ? LS.purple : LS.border}`,
-                    background: giftAid ? LS.lavender : '#fff',
+                    background: giftAid ? LS.lavender : 'var(--surface)',
                   }}
                 >
                   <div style={{
                     width: 21, height: 21, borderRadius: 6, flexShrink: 0,
                     display: 'grid', placeItems: 'center',
                     border: `1.6px solid ${giftAid ? LS.purpleDark : LS.lavenderBorder}`,
-                    background: giftAid ? LS.purpleDark : '#fff',
+                    background: giftAid ? LS.purpleDark : 'var(--surface)',
                   }}>
                     {giftAid && <IconGlyph name="check" color="#fff" size={13} />}
                   </div>

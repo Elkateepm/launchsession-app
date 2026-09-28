@@ -105,7 +105,7 @@ function FieldInput({ field, value, onChange, invalid, accent, id }) {
                   <span style={{
                     width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
                     border: `2px solid ${active ? accent : 'var(--text-faint)'}`,
-                    background: active ? accent : '#fff',
+                    background: active ? accent : 'var(--surface)',
                     boxShadow: active ? 'inset 0 0 0 3.5px #fff' : 'none',
                   }} />
                   {o}

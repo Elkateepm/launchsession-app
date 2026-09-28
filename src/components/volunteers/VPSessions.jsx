@@ -69,7 +69,7 @@ export default function VPSessions({ sessions, myBookings, todayStr, onOpenSessi
                       </div>
                       {filter !== 'completed' && (
                         <button onClick={e => { e.stopPropagation(); onBook(s) }} disabled={saving === s.id}
-                          style={{ padding: '7px 12px', borderRadius: 10, border: booked ? '1.5px solid #FCA5A5' : 'none', background: booked ? '#fff' : theme.gradient, color: booked ? '#DC2626' : '#fff', fontWeight: 800, fontSize: 11, cursor: 'pointer', flexShrink: 0 }}>
+                          style={{ padding: '7px 12px', borderRadius: 10, border: booked ? '1.5px solid #FCA5A5' : 'none', background: booked ? 'var(--surface)' : theme.gradient, color: booked ? '#DC2626' : '#fff', fontWeight: 800, fontSize: 11, cursor: 'pointer', flexShrink: 0 }}>
                           {saving === s.id ? '…' : booked ? 'Cancel' : 'Book'}
                         </button>
                       )}

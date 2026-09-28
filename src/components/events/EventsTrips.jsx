@@ -433,7 +433,7 @@ export default function EventsTrips({ org, session, onNavigate }) {
             {['all', 'planning', 'confirmed', 'live', 'completed', 'cancelled'].map(k => (
               <button key={k} onClick={() => { setFilterStatus(k); setPage(1) }} style={{
                 padding: '8px 14px', borderRadius: 10, border: filterStatus === k ? 'none' : '1.5px solid #E2E8F0',
-                background: filterStatus === k ? primary : '#fff', color: filterStatus === k ? '#fff' : 'var(--text2)',
+                background: filterStatus === k ? primary : 'var(--surface)', color: filterStatus === k ? '#fff' : 'var(--text2)',
                 fontSize: 12.5, fontWeight: 700, cursor: 'pointer', textTransform: 'capitalize',
               }}>
                 {k === 'all' ? 'All' : STATUS_META[k]?.label.replace(' Now', '') || k} ({counts[k]})

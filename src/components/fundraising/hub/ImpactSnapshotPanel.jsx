@@ -67,7 +67,7 @@ export default function ImpactSnapshotPanel({ org }) {
           {RANGES.map(r => (
             <button key={r.key} onClick={() => setRange(r.key)} style={{
               padding: '5px 10px', borderRadius: 7, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700,
-              background: range === r.key ? '#fff' : 'transparent', color: range === r.key ? LS.purpleDark : LS.muted,
+              background: range === r.key ? 'var(--surface)' : 'transparent', color: range === r.key ? LS.purpleDark : LS.muted,
               boxShadow: range === r.key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
             }}>{r.label}</button>
           ))}

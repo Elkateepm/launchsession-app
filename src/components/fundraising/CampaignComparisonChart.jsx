@@ -26,7 +26,7 @@ export default function CampaignComparisonChart({ campaigns }) {
         {withTargets.map((c, i) => (
           <div key={c.id}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-              <span style={{ fontSize: 13, color: '#1C2333' }}>{c.name}</span>
+              <span style={{ fontSize: 13, color: 'var(--text)' }}>{c.name}</span>
               <span style={{ fontSize: 12, color: 'var(--text3)', fontVariantNumeric: 'tabular-nums' }}>£{c.raised.toLocaleString()} <span style={{ color: '#B0AFA8' }}>of £{c.target.toLocaleString()}</span></span>
             </div>
             <div style={{ height: 8, background: '#F1EFE9', borderRadius: 4, position: 'relative', overflow: 'hidden' }}>

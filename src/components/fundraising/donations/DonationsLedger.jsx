@@ -45,7 +45,7 @@ function Pill({ active, children, onClick }) {
       padding: '7px 13px', borderRadius: 999, fontSize: 12.5, fontWeight: 700,
       whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: 'inherit',
       border: `1px solid ${active ? 'transparent' : LS.border}`,
-      background: active ? LS.gradient : '#fff',
+      background: active ? LS.gradient : 'var(--surface)',
       color: active ? '#fff' : LS.muted,
     }}>{children}</button>
   )

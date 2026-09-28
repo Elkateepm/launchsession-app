@@ -432,7 +432,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
           ].map(t => (
             <button key={t.key} aria-pressed={tab === t.key} onClick={() => setTab(t.key)} style={{
               position: 'relative', flex: '1 0 auto', minHeight: 44, padding: '9px 8px', border: 'none', borderRadius: 9,
-              background: tab === t.key ? '#fff' : 'transparent',
+              background: tab === t.key ? 'var(--surface)' : 'transparent',
               boxShadow: tab === t.key ? '0 1px 4px rgba(15,23,42,0.12)' : 'none',
               color: tab === t.key ? 'var(--text)' : 'var(--text3)', fontSize: 12.5, fontWeight: 700,
               cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s ease',
@@ -749,18 +749,18 @@ function SignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
             {contacts.map((c, i) => (
               <button key={i} onClick={() => { setCollectionType('approved_adult'); setCollectedByName(`${c.name}${c.relationship ? ' · ' + c.relationship : ''}`) }}
-                style={{ padding: '8px 14px', borderRadius: 10, border: collectedByName.startsWith(c.name) ? '2px solid #7C3AED' : '1.5px solid #E5E7EB', background: collectedByName.startsWith(c.name) ? 'var(--violet-bg)' : '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+                style={{ padding: '8px 14px', borderRadius: 10, border: collectedByName.startsWith(c.name) ? '2px solid #7C3AED' : '1.5px solid #E5E7EB', background: collectedByName.startsWith(c.name) ? 'var(--violet-bg)' : 'var(--surface)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
                 {c.name}{c.relationship ? ` · ${c.relationship}` : ''}
               </button>
             ))}
             <button onClick={() => { setCollectionType('independent'); setCollectedByName('') }}
-              style={{ padding: '8px 14px', borderRadius: 10, border: collectionType === 'independent' ? '2px solid #7C3AED' : '1.5px solid #E5E7EB', background: collectionType === 'independent' ? 'var(--violet-bg)' : '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Leaving independently</button>
+              style={{ padding: '8px 14px', borderRadius: 10, border: collectionType === 'independent' ? '2px solid #7C3AED' : '1.5px solid #E5E7EB', background: collectionType === 'independent' ? 'var(--violet-bg)' : 'var(--surface)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Leaving independently</button>
           </div>
         )}
         <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text3)', marginBottom: 8 }}>Or choose:</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
           {COLLECTION_TYPES.map(t => (
-            <button key={t.key} onClick={() => setCollectionType(t.key)} style={{ padding: '8px 14px', borderRadius: 10, border: collectionType === t.key ? '2px solid #7C3AED' : '1.5px solid #E5E7EB', background: collectionType === t.key ? 'var(--violet-bg)' : '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>{t.label}</button>
+            <button key={t.key} onClick={() => setCollectionType(t.key)} style={{ padding: '8px 14px', borderRadius: 10, border: collectionType === t.key ? '2px solid #7C3AED' : '1.5px solid #E5E7EB', background: collectionType === t.key ? 'var(--violet-bg)' : 'var(--surface)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>{t.label}</button>
           ))}
         </div>
         {collectionType && collectionType !== 'independent' && (

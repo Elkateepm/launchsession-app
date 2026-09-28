@@ -94,7 +94,7 @@ export default function ResourceCheckout({ org, resources, checkouts, sessions, 
               const borrower = staff.find(s => s.id === c.checked_out_to)
               const isOverdue = c.expected_return_at && new Date(c.expected_return_at) < new Date()
               return (
-                <div key={c.id} style={{ border: `1px solid ${isOverdue ? 'var(--danger-border)' : 'var(--border)'}`, background: isOverdue ? 'var(--danger-bg)' : '#fff', borderRadius: 10, padding: 12 }}>
+                <div key={c.id} style={{ border: `1px solid ${isOverdue ? 'var(--danger-border)' : 'var(--border)'}`, background: isOverdue ? 'var(--danger-bg)' : 'var(--surface)', borderRadius: 10, padding: 12 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{resource?.name} <span style={{ fontWeight: 500, color: 'var(--text3)' }}>× {c.quantity}</span></div>

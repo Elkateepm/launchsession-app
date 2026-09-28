@@ -124,7 +124,7 @@ export default function ProjectsList({ org, session, onNavigate }) {
             <button key={f.key} onClick={() => setFilter(f.key)} style={{
               padding: '8px 14px', borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: 'pointer',
               border: filter === f.key ? '2px solid #6D5DF6' : '1.5px solid #E2E8F0',
-              background: filter === f.key ? 'var(--violet-bg)' : '#fff', color: filter === f.key ? '#6D5DF6' : 'var(--text2)',
+              background: filter === f.key ? 'var(--violet-bg)' : 'var(--surface)', color: filter === f.key ? '#6D5DF6' : 'var(--text2)',
               whiteSpace: 'nowrap',
             }}>{f.label}</button>
           ))}

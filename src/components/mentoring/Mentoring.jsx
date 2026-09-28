@@ -285,7 +285,7 @@ function ReferralForm({ org, children, session, primary, onCancel, onCreated }) 
         <Panel title="🎯 Desired Outcomes">
           <div style={styles.chipWrap}>
             {OUTCOMES.map(o => (
-              <button key={o} onClick={() => toggle(o)} style={{ ...styles.chip, borderColor: outcomes.includes(o) ? primary : 'var(--border)', background: outcomes.includes(o) ? primary + '18' : '#fff', color: outcomes.includes(o) ? primary : 'var(--text2)' }}>
+              <button key={o} onClick={() => toggle(o)} style={{ ...styles.chip, borderColor: outcomes.includes(o) ? primary : 'var(--border)', background: outcomes.includes(o) ? primary + '18' : 'var(--surface)', color: outcomes.includes(o) ? primary : 'var(--text2)' }}>
                 {outcomes.includes(o) ? '✓ ' : ''}{o}
               </button>
             ))}
@@ -394,7 +394,7 @@ function MatchForm({ org, children, team, referral, session, primary, onCancel, 
           <Field label="Meeting Frequency">
             <div style={styles.frequencyGrid}>
               {['weekly', 'fortnightly', 'monthly'].map(f => (
-                <button key={f} onClick={() => setFrequency(f)} style={{ ...styles.chip, borderColor: frequency === f ? primary : 'var(--border)', background: frequency === f ? primary + '18' : '#fff', color: frequency === f ? primary : 'var(--text2)' }}>
+                <button key={f} onClick={() => setFrequency(f)} style={{ ...styles.chip, borderColor: frequency === f ? primary : 'var(--border)', background: frequency === f ? primary + '18' : 'var(--surface)', color: frequency === f ? primary : 'var(--text2)' }}>
                   {f}
                 </button>
               ))}
@@ -467,7 +467,7 @@ function MatchProfile({ org, match, session, primary, onBack }) {
           <Field label="Mood">
             <div style={styles.moodGrid}>
               {MOODS.map(m => (
-                <button key={m.key} onClick={() => setCheckMood(m.key)} style={{ ...styles.moodButton, borderColor: checkMood === m.key ? primary : 'var(--border)', background: checkMood === m.key ? primary + '18' : '#fff' }}>
+                <button key={m.key} onClick={() => setCheckMood(m.key)} style={{ ...styles.moodButton, borderColor: checkMood === m.key ? primary : 'var(--border)', background: checkMood === m.key ? primary + '18' : 'var(--surface)' }}>
                   <span>{m.emoji}</span>
                   <small>{m.label}</small>
                 </button>

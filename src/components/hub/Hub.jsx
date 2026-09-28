@@ -450,7 +450,7 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
           <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
             {ANNOUNCEMENT_EMOJIS.map(e => (
               <button key={e} onClick={() => setEmoji(e)}
-                style={{ fontSize: 18, width: 34, height: 34, borderRadius: 9, border: `1.5px solid ${emoji === e ? primary : 'var(--border)'}`, background: emoji === e ? primary + '15' : '#fff', cursor: 'pointer' }}>
+                style={{ fontSize: 18, width: 34, height: 34, borderRadius: 9, border: `1.5px solid ${emoji === e ? primary : 'var(--border)'}`, background: emoji === e ? primary + '15' : 'var(--surface)', cursor: 'pointer' }}>
                 {e}
               </button>
             ))}
@@ -1681,7 +1681,7 @@ function KioskPinModal({ mode, onSetupComplete, onUnlockAttempt, onCancel }) {
 
         <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 18 }}>
           {[0, 1, 2, 3].map(i => (
-            <div key={i} style={{ width: 16, height: 16, borderRadius: '50%', border: '1.5px solid rgba(255,255,255,0.35)', background: i < pin.length ? '#fff' : 'transparent' }} />
+            <div key={i} style={{ width: 16, height: 16, borderRadius: '50%', border: '1.5px solid rgba(255,255,255,0.35)', background: i < pin.length ? 'var(--surface)' : 'transparent' }} />
           ))}
         </div>
 
@@ -2475,7 +2475,7 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
     <div ref={ref} style={{ position: 'relative' }}>
       <button
         onClick={() => setOpen(o => !o)}
-        style={{ position: 'relative', width: 40, height: 40, borderRadius: 12, border: `1.5px solid var(--org-a10)`, background: open ? primary + '10' : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, transition: 'all 0.2s', boxShadow: open ? `0 1px 0 rgba(255,255,255,0.7) inset, 0 4px 12px -4px var(--org-a20)` : `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px var(--org-a10)` }}
+        style={{ position: 'relative', width: 40, height: 40, borderRadius: 12, border: `1.5px solid var(--org-a10)`, background: open ? primary + '10' : 'var(--surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, transition: 'all 0.2s', boxShadow: open ? `0 1px 0 rgba(255,255,255,0.7) inset, 0 4px 12px -4px var(--org-a20)` : `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px var(--org-a10)` }}
         onMouseEnter={e => { if (!open) { e.currentTarget.style.borderColor = primary + '50'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 6px 16px -6px var(--org-a20)` } }}
         onMouseLeave={e => { if (!open) { e.currentTarget.style.borderColor = primary + '22'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px var(--org-a10)` } }}
         aria-label="Notifications"
@@ -2526,7 +2526,7 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
                   <div style={{ display: 'flex', gap: 4, background: 'var(--surface-hover)', borderRadius: 10, padding: 3 }}>
                     {[{ key: 'all', label: 'All' }, { key: 'unread', label: `Unread${total ? ` (${total})` : ''}` }].map(f => (
                       <button key={f.key} onClick={() => setFilter(f.key)}
-                        style={{ padding: isMobile ? '8px 15px' : '5px 11px', borderRadius: isMobile ? 9 : 7, border: 'none', background: filter === f.key ? '#fff' : 'transparent', color: filter === f.key ? '#0F172A' : 'var(--text3)', fontSize: isMobile ? 13 : 11, fontWeight: 700, cursor: 'pointer', boxShadow: filter === f.key ? '0 1px 3px rgba(15,23,42,0.12)' : 'none', transition: 'all 0.15s' }}>
+                        style={{ padding: isMobile ? '8px 15px' : '5px 11px', borderRadius: isMobile ? 9 : 7, border: 'none', background: filter === f.key ? 'var(--surface)' : 'transparent', color: filter === f.key ? '#0F172A' : 'var(--text3)', fontSize: isMobile ? 13 : 11, fontWeight: 700, cursor: 'pointer', boxShadow: filter === f.key ? '0 1px 3px rgba(15,23,42,0.12)' : 'none', transition: 'all 0.15s' }}>
                         {f.label}
                       </button>
                     ))}
@@ -3196,7 +3196,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               <button
                 onClick={() => setShowMobileSearch(v => !v)}
                 aria-label={showMobileSearch ? 'Close search' : 'Search'}
-                style={{ width: 34, height: 34, borderRadius: 10, border: `1.5px solid ${primary}${showMobileSearch ? '55' : '22'}`, background: showMobileSearch ? 'var(--org-a05)' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, cursor: 'pointer', flexShrink: 0, color: primary, boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset`, position: 'relative', overflow: 'hidden', transition: 'background 0.2s, border-color 0.2s' }}>
+                style={{ width: 34, height: 34, borderRadius: 10, border: `1.5px solid ${primary}${showMobileSearch ? '55' : '22'}`, background: showMobileSearch ? 'var(--org-a05)' : 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, cursor: 'pointer', flexShrink: 0, color: primary, boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset`, position: 'relative', overflow: 'hidden', transition: 'background 0.2s, border-color 0.2s' }}>
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.span
                     key={showMobileSearch ? 'close' : 'search'}
@@ -4285,7 +4285,7 @@ const railPanel = {
 }
 
 const styles = {
-  page: { height: "100%", background: "var(--bg)", padding: 0, color: "#0F172A", overflow: "hidden", display: "flex", flexDirection: "column", boxSizing: "border-box" },
+  page: { height: "100%", background: "var(--bg)", padding: 0, color: "var(--text)", overflow: "hidden", display: "flex", flexDirection: "column", boxSizing: "border-box" },
   loading: { padding: 50, textAlign: "center", color: "var(--text3)", fontWeight: 800 },
   liveHero: { background: "linear-gradient(135deg, #081226, #12235A)", borderRadius: 22, color: "#fff", padding: 24, marginBottom: 22, boxShadow: "0 18px 38px rgba(15,23,42,0.25)" },
   liveHeroTop: { display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 22 },
@@ -4319,7 +4319,7 @@ const styles = {
   panelTitle: { margin: "0 0 14px", fontSize: 15, fontWeight: 900, color: 'var(--text, #111)' },
   glanceGrid: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 },
   mobileGrid: { gridTemplateColumns: "1fr" },
-  statCard: { background: "#fff", border: "1px solid var(--border)", borderRadius: 16, padding: 16, textAlign: "center", cursor: "pointer", boxShadow: "0 4px 12px rgba(15,23,42,0.05)", width: "100%" },
+  statCard: { background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, padding: 16, textAlign: "center", cursor: "pointer", boxShadow: "0 4px 12px rgba(15,23,42,0.05)", width: "100%" },
   bigIcon: { fontSize: 36, marginBottom: 8 },
   statTitle: { margin: "0 0 4px", fontSize: 14, fontWeight: 900 },
   cardText: { margin: 0, color: "var(--text3)", fontSize: 12, lineHeight: 1.45 },
@@ -4327,11 +4327,11 @@ const styles = {
   actionCard: { border: "1px solid var(--border)", borderRadius: 14, padding: "12px 14px", cursor: "pointer", display: "flex", gap: 10, alignItems: "center", width: "100%" },
   actionIcon: { width: 36, height: 36, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 18, flexShrink: 0 },
   attentionRow: { width: "100%", border: "1px solid var(--border)", background: "var(--surface2)", borderRadius: 12, padding: "10px 12px", display: "flex", alignItems: "center", gap: 12, marginBottom: 8, textAlign: "left", cursor: "pointer" },
-  attentionIcon: { width: 34, height: 34, borderRadius: 10, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" },
+  attentionIcon: { width: 34, height: 34, borderRadius: 10, background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center" },
   dot: { width: 9, height: 9, borderRadius: "50%", flexShrink: 0 },
   miniRow: { display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid #EEF2F7", padding: "10px 0" },
   dueBadge: { background: "var(--warn-bg)", color: "var(--warn-text)", borderRadius: 8, padding: "4px 8px", fontSize: 11, fontWeight: 800 },
-  yellowButton: { width: "100%", border: "none", background: "#FACC15", color: "#111827", borderRadius: 10, padding: 11, marginTop: 12, fontWeight: 900, cursor: "pointer" },
+  yellowButton: { width: "100%", border: "none", background: "#FACC15", color: "var(--text)", borderRadius: 10, padding: 11, marginTop: 12, fontWeight: 900, cursor: "pointer" },
   smallMetric: { background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 12, padding: 12, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", width: "100%" },
   snapshotGrid: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 },
   impactGrid: { display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 },

@@ -131,7 +131,7 @@ export default function PublicDonationPage() {
                 padding: '14px 6px', borderRadius: 12, fontSize: 16, fontWeight: 800,
                 cursor: 'pointer', fontFamily: 'inherit',
                 border: `1.5px solid ${amount === a ? brand : BORDER}`,
-                background: amount === a ? brand : '#fff',
+                background: amount === a ? brand : 'var(--surface)',
                 color: amount === a ? '#fff' : TEXT,
               }}
             >£{a}</button>
@@ -238,7 +238,7 @@ function Input({ value, onChange, placeholder, type = 'text', disabled }) {
       disabled={disabled}
       style={{
         width: '100%', padding: '13px 14px', borderRadius: 12, fontSize: 15,
-        border: `1px solid ${BORDER}`, background: disabled ? '#F7F6FB' : '#fff',
+        border: `1px solid ${BORDER}`, background: disabled ? '#F7F6FB' : 'var(--surface)',
         color: TEXT, outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
       }}
     />
@@ -261,7 +261,7 @@ function Check({ checked, onToggle, children, brand, disabled }) {
         width: 20, height: 20, borderRadius: 6, flexShrink: 0, marginTop: 1,
         display: 'grid', placeItems: 'center',
         border: `1.6px solid ${checked ? brand : BORDER}`,
-        background: checked ? brand : '#fff',
+        background: checked ? brand : 'var(--surface)',
         color: '#fff', fontSize: 13, fontWeight: 800, lineHeight: 1,
       }}>{checked ? '✓' : ''}</div>
       <div style={{ fontSize: 13.5, color: TEXT, lineHeight: 1.45 }}>{children}</div>

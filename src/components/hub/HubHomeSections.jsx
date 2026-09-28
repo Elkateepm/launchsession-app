@@ -301,7 +301,7 @@ export function ActionRow({ items, isMobile }) {
 
 export function AllClear({ label }) {
   return (
-    <div className="ls-rise" style={{ background: '#DFF8EF', border: '1px solid #B8EBD8', borderRadius: 18, padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5, fontWeight: 700, color: '#06614A', lineHeight: 1.4 }}>
+    <div className="ls-rise" style={{ background: 'var(--ok-bg)', border: '1px solid var(--ok-border)', borderRadius: 18, padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5, fontWeight: 700, color: 'var(--ok-text)', lineHeight: 1.4 }}>
       <Icon name="✅" size={16} />{label}
     </div>
   )

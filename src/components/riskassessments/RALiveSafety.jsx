@@ -132,7 +132,7 @@ export function DynamicUpdateDrawer({ open, onClose, assessment, org, authSessio
                         display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
                         padding: '13px 14px', borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit',
                         border: `1px solid ${active ? o.dot : 'var(--border)'}`,
-                        background: active ? o.bg : '#fff',
+                        background: active ? o.bg : 'var(--surface)',
                       }}
                     >
                       <span style={{ width: 9, height: 9, borderRadius: 9, background: o.dot, flexShrink: 0 }} />

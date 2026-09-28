@@ -77,7 +77,7 @@ export default function CaseTasks({ caseId, org, session: authSession, staff = [
             key={task.id}
             layout
             initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }}
-            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, border: `1.5px solid ${overdue(task) ? 'var(--danger-border)' : 'rgba(15,23,42,0.07)'}`, background: overdue(task) ? 'var(--danger-bg)' : '#fff', marginBottom: 8 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, border: `1.5px solid ${overdue(task) ? 'var(--danger-border)' : 'rgba(15,23,42,0.07)'}`, background: overdue(task) ? 'var(--danger-bg)' : 'var(--surface)', marginBottom: 8 }}
           >
             <input type="checkbox" checked={task.completed} onChange={() => toggleComplete(task)} style={{ width: 17, height: 17, accentColor: primary, cursor: 'pointer', flexShrink: 0 }} />
             <div style={{ flex: 1, minWidth: 0 }}>

@@ -388,7 +388,7 @@ export function PeopleList({ impact, children, terms, primary, onOpenChild, area
           {SORTS.map(s => (
             <button key={s.key} onClick={() => setSort(s.key)} style={{
               padding: '7px 12px', borderRadius: 8, border: 'none', minHeight: 36,
-              background: sort === s.key ? '#fff' : 'transparent',
+              background: sort === s.key ? 'var(--surface)' : 'transparent',
               boxShadow: sort === s.key ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
               color: sort === s.key ? primary : 'var(--text-faint)',
               fontWeight: 800, fontSize: 11.5, cursor: 'pointer', fontFamily: 'inherit',

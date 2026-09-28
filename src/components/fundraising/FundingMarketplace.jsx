@@ -106,7 +106,7 @@ function eligibilityBullets(text) {
 
 function DeadlineBadge({ grant }) {
   if (grant.deadline_type !== 'fixed' || !grant.deadline_date) {
-    return <span style={{ fontSize: 13, color: '#1C2333', fontWeight: 500 }}>Rolling</span>
+    return <span style={{ fontSize: 13, color: 'var(--text)', fontWeight: 500 }}>Rolling</span>
   }
   const daysLeft = Math.ceil((new Date(grant.deadline_date) - new Date()) / DAY_MS)
   if (daysLeft < 0) return <span style={{ fontSize: 13, color: 'var(--text-faint)', fontWeight: 500 }}>Closed</span>
@@ -259,7 +259,7 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
       {/* Header strip */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, flexWrap: 'wrap', marginBottom: 16 }}>
         <span style={{ fontSize: 13, color: 'var(--text3)' }}>
-          <strong style={{ color: '#1C2333', fontVariantNumeric: 'tabular-nums' }}>{grants.length}</strong> funder{grants.length === 1 ? '' : 's'}
+          <strong style={{ color: 'var(--text)', fontVariantNumeric: 'tabular-nums' }}>{grants.length}</strong> funder{grants.length === 1 ? '' : 's'}
         </span>
         {mostRecentUpdate && <span style={{ fontSize: 12, color: 'var(--text-faint)' }}>Last added {mostRecentUpdate}</span>}
       </div>
@@ -301,14 +301,14 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           {CATEGORIES.map(c => (
             <button key={c.key} onClick={() => setCategory(c.key)}
-              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 14px', borderRadius: 20, border: category === c.key ? `1.5px solid ${primary}` : '1.5px solid #E5E3DC', background: category === c.key ? 'var(--org-a05)' : '#fff', color: category === c.key ? primary : 'var(--text3)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s' }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 14px', borderRadius: 20, border: category === c.key ? `1.5px solid ${primary}` : '1.5px solid #E5E3DC', background: category === c.key ? 'var(--org-a05)' : 'var(--surface)', color: category === c.key ? primary : 'var(--text3)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s' }}>
               {c.icon && <CategoryIcon category={c.icon} color={category === c.key ? primary : 'var(--text-faint)'} />}
               {c.label}
               <span style={{ opacity: 0.55, fontWeight: 500 }}>({categoryCounts[c.key] || 0})</span>
             </button>
           ))}
           <button onClick={() => setSavedOnly(v => !v)}
-            style={{ padding: '6px 14px', borderRadius: 20, border: savedOnly ? '1.5px solid #BA7517' : '1.5px solid #E5E3DC', background: savedOnly ? '#FDF6E8' : '#fff', color: savedOnly ? '#92640C' : 'var(--text3)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', marginLeft: 'auto' }}>
+            style={{ padding: '6px 14px', borderRadius: 20, border: savedOnly ? '1.5px solid #BA7517' : '1.5px solid #E5E3DC', background: savedOnly ? '#FDF6E8' : 'var(--surface)', color: savedOnly ? '#92640C' : 'var(--text3)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', marginLeft: 'auto' }}>
             {savedOnly ? '★ Saved only' : '☆ Saved only'}
           </button>
         </div>
@@ -348,7 +348,7 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
                   <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
                     <FunderAvatar name={g.funder_name} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 15, fontWeight: 600, color: '#1C2333', lineHeight: 1.25 }}>{g.name}</div>
+                      <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)', lineHeight: 1.25 }}>{g.name}</div>
                       <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>{g.funder_name}</div>
                     </div>
                     <motion.button onClick={() => toggleSave(g.id)} disabled={busyId === g.id} title={saves[g.id] ? 'Unsave' : 'Save'}
@@ -366,7 +366,7 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
                     <span style={{ padding: '3px 10px', borderRadius: 20, background: 'var(--surface2)', color: 'var(--text3)', fontSize: 11, fontWeight: 600 }}>{FUNDING_TYPE_META[g.funding_type] || g.funding_type}</span>
                   </div>
 
-                  <div style={{ fontSize: 13, color: '#4B5563', lineHeight: 1.5, marginBottom: 16, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{g.description}</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5, marginBottom: 16, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{g.description}</div>
 
                   <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginBottom: 14, paddingTop: 14, paddingBottom: 14, borderTop: '0.5px solid #ECEAE4', borderBottom: '0.5px solid #ECEAE4' }}>
                     <div>
@@ -386,7 +386,7 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
                       <div style={{ fontSize: 10.5, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Eligibility</div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                         {bullets.map((b, i) => (
-                          <div key={i} style={{ display: 'flex', gap: 7, fontSize: 12, color: '#4B5563', lineHeight: 1.4 }}>
+                          <div key={i} style={{ display: 'flex', gap: 7, fontSize: 12, color: 'var(--text2)', lineHeight: 1.4 }}>
                             <CheckIcon color="#16A34A" /><span>{b}</span>
                           </div>
                         ))}

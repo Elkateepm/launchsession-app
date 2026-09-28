@@ -183,7 +183,7 @@ export function ProjectReflectionModal({ org, session, project, summary, existin
                 <button key={n} onClick={() => set('overall_rating', n)} style={{
                   flex: 1, padding: '10px 0', borderRadius: 10, fontSize: 15, fontWeight: 800, cursor: 'pointer',
                   border: form.overall_rating === n ? `2px solid ${PURPLE}` : '1.5px solid #E2E8F0',
-                  background: form.overall_rating === n ? 'var(--violet-bg)' : '#fff',
+                  background: form.overall_rating === n ? 'var(--violet-bg)' : 'var(--surface)',
                   color: form.overall_rating === n ? PURPLE : 'var(--text3)',
                 }}>{n}</button>
               ))}
@@ -300,7 +300,7 @@ export function AddParticipantsModal({ org, projectId, existingChildIds, onClose
                 return (
                   <button key={c.id} onClick={() => toggle(c.id)} style={{
                     display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 11, width: '100%', textAlign: 'left', cursor: 'pointer',
-                    border: on ? `2px solid ${PURPLE}` : '1px solid #F1F5F9', background: on ? 'var(--violet-bg)' : '#fff',
+                    border: on ? `2px solid ${PURPLE}` : '1px solid #F1F5F9', background: on ? 'var(--violet-bg)' : 'var(--surface)',
                   }}>
                     <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--violet-bg)', color: 'var(--violet-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0, overflow: 'hidden' }}>
                       {c.photo_url ? <SignedImg bucket="gallery" src={c.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : `${c.first_name?.[0] || ''}${c.last_name?.[0] || ''}`.toUpperCase()}
@@ -507,7 +507,7 @@ function Choice({ label, value, onChange, options }) {
           <button key={k} onClick={() => onChange(k)} style={{
             padding: '8px 14px', borderRadius: 10, fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
             border: value === k ? `2px solid ${PURPLE}` : '1.5px solid #E2E8F0',
-            background: value === k ? 'var(--violet-bg)' : '#fff', color: value === k ? PURPLE : 'var(--text2)',
+            background: value === k ? 'var(--violet-bg)' : 'var(--surface)', color: value === k ? PURPLE : 'var(--text2)',
           }}>{t}</button>
         ))}
       </div>

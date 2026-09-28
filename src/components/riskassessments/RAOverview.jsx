@@ -54,7 +54,7 @@ function SafetyStrip({ counts, activeFilter, onFilter }) {
                 padding: '11px 12px', borderRadius: 12, cursor: 'pointer',
                 fontFamily: 'inherit', minWidth: 0,
                 border: `1px solid ${active ? meta.dot : 'var(--border)'}`,
-                background: active ? meta.bg : '#fff',
+                background: active ? meta.bg : 'var(--surface)',
               }}
             >
               <span style={{
@@ -206,7 +206,7 @@ function UpcomingActivities({ sessions, coverage, outstandingByAssessment = {}, 
                   display: 'block', width: '100%', marginTop: 11,
                   padding: '9px 12px', borderRadius: 10,
                   border: `1px solid ${cover ? 'var(--border)' : primary}`,
-                  background: cover ? '#fff' : primary,
+                  background: cover ? 'var(--surface)' : primary,
                   color: cover ? 'var(--text)' : '#fff',
                   fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                 }}

@@ -168,7 +168,7 @@ function FilterPills({ options, value, onChange }) {
         <button key={o.value} onClick={() => onChange(o.value)} style={{
           padding: '7px 13px', borderRadius: 99, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
           border: value === o.value ? '1.5px solid transparent' : '1.5px solid #E2E8F0',
-          background: value === o.value ? PB.blue : '#fff',
+          background: value === o.value ? PB.blue : 'var(--surface)',
           color: value === o.value ? '#fff' : 'var(--text2)',
         }}>{o.label}</button>
       ))}
