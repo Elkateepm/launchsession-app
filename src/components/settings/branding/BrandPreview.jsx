@@ -3,6 +3,7 @@ import { LayoutDashboard, CalendarDays, Users, Check, ArrowRight, Mail, ShieldCh
 import { fontByKey, densityByKey } from '../../../lib/brandTheme'
 import { brandPalette } from '../../../lib/brandColors'
 import { readableInk } from './brandingModel'
+import { withAlpha } from '../../../lib/withAlpha'
 
 export function BrandMark({ src, name, size = 42, dark = false }) {
   return <div style={{ width: size, height: size, flexShrink: 0, borderRadius: size * 0.24, display: 'grid', placeItems: 'center', background: dark ? 'rgba(255,255,255,.08)' : '#fff', border: '1px solid rgba(128,128,128,.14)', overflow: 'hidden' }}>
@@ -43,7 +44,7 @@ export default function BrandPreview({ draft, surface, device, terms = {} }) {
         </div>
       </div>
     </div>}
-    {surface === 'login' && <div style={{ minHeight: mobile ? 450 : 398, padding: mobile ? '35px 24px' : '37px 45px', boxSizing: 'border-box', color: '#fff', textAlign: 'center', backgroundColor: '#090F21', backgroundImage: draft.login_background_url && draft.login_background_style !== 'tint' ? `linear-gradient(rgba(6,9,26,${draft.login_background_style === 'muted' ? '.86' : '.62'}),rgba(6,9,26,.85)), url(${JSON.stringify(draft.login_background_url)})` : `radial-gradient(ellipse at 15% 0%, ${primary}55, transparent 70%)`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+    {surface === 'login' && <div style={{ minHeight: mobile ? 450 : 398, padding: mobile ? '35px 24px' : '37px 45px', boxSizing: 'border-box', color: '#fff', textAlign: 'center', backgroundColor: '#090F21', backgroundImage: draft.login_background_url && draft.login_background_style !== 'tint' ? `linear-gradient(rgba(6,9,26,${draft.login_background_style === 'muted' ? '.86' : '.62'}),rgba(6,9,26,.85)), url(${JSON.stringify(draft.login_background_url)})` : `radial-gradient(ellipse at 15% 0%, ${withAlpha(primary, '55')}, transparent 70%)`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><BrandMark src={draft.logo_url} name={name} size={58} /></div>
       <strong style={{ fontFamily: font.display, fontSize: 18, overflowWrap: 'anywhere' }}>{name}</strong>
       <div style={{ textAlign: 'left', margin: '23px auto 0', maxWidth: 290, background: 'rgba(255,255,255,.045)', border: '1px solid rgba(255,255,255,.13)', borderRadius: radius + 4, padding: 20 }}>
@@ -60,6 +61,6 @@ export default function BrandPreview({ draft, surface, device, terms = {} }) {
         <div style={{ padding: '15px 20px', borderTop: '1px solid #EEF1EF', textAlign: 'center', fontSize: 9, lineHeight: 1.6, color: '#738076' }}>{draft.email_footer_text || `${name} · Powered by LaunchSession`}</div>
       </div>
     </div>}
-    {surface === 'icon' && <div style={{ minHeight: mobile ? 450 : 398, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 16, padding: 25, background: `radial-gradient(circle at 30% 20%,${primary}35,transparent 70%),#EEF1EB` }}><BrandMark src={draft.icon_url || draft.logo_url} name={name} size={90} /><strong style={{ fontSize: 13 }}>{name}</strong><span style={{ fontSize: 11, color: '#64746A', textAlign: 'center', maxWidth: 240, lineHeight: 1.7 }}>Your organisation, right on your team's home screen.</span><div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 26, padding: '10px 15px', borderRadius: 10, border: '1px solid #D6DFD7', background: 'var(--surface)', fontSize: 10 }}><BrandMark src={draft.icon_url || draft.logo_url} name={name} size={17} />{name}<span style={{ color: '#809087', marginLeft: 10 }}>×</span></div><span style={{ fontSize: 9, color: '#718077' }}>Browser tab preview</span></div>}
+    {surface === 'icon' && <div style={{ minHeight: mobile ? 450 : 398, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 16, padding: 25, background: `radial-gradient(circle at 30% 20%,${withAlpha(primary, '35')},transparent 70%),#EEF1EB` }}><BrandMark src={draft.icon_url || draft.logo_url} name={name} size={90} /><strong style={{ fontSize: 13 }}>{name}</strong><span style={{ fontSize: 11, color: '#64746A', textAlign: 'center', maxWidth: 240, lineHeight: 1.7 }}>Your organisation, right on your team's home screen.</span><div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 26, padding: '10px 15px', borderRadius: 10, border: '1px solid #D6DFD7', background: 'var(--surface)', fontSize: 10 }}><BrandMark src={draft.icon_url || draft.logo_url} name={name} size={17} />{name}<span style={{ color: '#809087', marginLeft: 10 }}>×</span></div><span style={{ fontSize: 9, color: '#718077' }}>Browser tab preview</span></div>}
   </div>
 }

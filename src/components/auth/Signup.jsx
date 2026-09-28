@@ -10,6 +10,7 @@ import { Icon } from './onboarding/icons'
 // Aliased: this file already imports an Icon from ./onboarding/icons,
 // and that one takes a `name` prop too, so the names genuinely collide.
 import LSIcon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
 const DRAFT_KEY = 'ls_signup_draft_v2'
 
@@ -486,13 +487,13 @@ export default function Signup() {
                       animation: reducedMotion ? 'none' : `ls-stagger-up 420ms ${120 + gi * 70}ms cubic-bezier(0.16,1,0.3,1) forwards`,
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
-                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: g.color, flexShrink: 0, boxShadow: `0 0 8px ${g.color}88` }} />
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: g.color, flexShrink: 0, boxShadow: `0 0 8px ${withAlpha(g.color, '88')}` }} />
                         <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 0.7, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)' }}>{g.title}</span>
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 8 }}>
                         {g.items.map(m => (
                           <div key={m.label} className="ls-feature-item" style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 11, padding: '9px 10px', minWidth: 0 }}>
-                            <span style={{ width: 26, height: 26, borderRadius: 8, background: `${g.color}22`, color: g.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <span style={{ width: 26, height: 26, borderRadius: 8, background: `${withAlpha(g.color, '22')}`, color: g.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                               <Icon name={m.icon} width={14} height={14} strokeWidth={2} />
                             </span>
                             <span style={{ fontSize: 11.5, fontWeight: 700, color: 'rgba(255,255,255,0.85)', lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.label}</span>

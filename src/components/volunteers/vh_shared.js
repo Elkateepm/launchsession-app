@@ -8,14 +8,18 @@ import SignedImg from '../shared/SignedImg'
 export const PURPLE = '#7C5CFC'
 export const PAGE_BG = 'var(--surface2)'
 
+// Twenty files build their cards from this, so the white it used to hardcode
+// was a white card on every one of them in dark mode -- Cases, Risk
+// Assessments, Medical Alerts, People and the whole Volunteers hub. The light
+// values are unchanged; dark now gets a card instead of a light island.
 export function glass(extra = {}) {
   return {
-    background: 'rgba(255,255,255,0.72)',
+    background: 'var(--glass-bg)',
     backdropFilter: 'blur(24px)',
     WebkitBackdropFilter: 'blur(24px)',
-    border: '1px solid rgba(15,23,42,0.06)',
+    border: '1px solid var(--glass-border)',
     borderRadius: 24,
-    boxShadow: '0 8px 30px rgba(15,23,42,0.06)',
+    boxShadow: 'var(--glass-shadow)',
     ...extra,
   }
 }

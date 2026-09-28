@@ -24,6 +24,7 @@ import { useTerms } from '../../context/OrgContext'
 import SignedImg from '../shared/SignedImg'
 import OverlayPortal from '../shared/OverlayPortal'
 import Icon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -948,11 +949,11 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
 
   return (
     <div ref={kioskContainerRef} style={{ position: 'relative' }}>
-    <div style={{ background: `linear-gradient(160deg, var(--org-a35) 0%, ${secondary}33 45%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, borderRadius: sessionPhase === 'ending' ? '22px 22px 0 0' : 22, overflow: 'hidden', position: 'relative', boxShadow: `0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)`, marginBottom: 0 }}>
+    <div style={{ background: `linear-gradient(160deg, var(--org-a35) 0%, ${withAlpha(secondary, '33')} 45%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, borderRadius: sessionPhase === 'ending' ? '22px 22px 0 0' : 22, overflow: 'hidden', position: 'relative', boxShadow: `0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)`, marginBottom: 0 }}>
 
       {/* Ambient brand glow */}
       <div style={{ position: 'absolute', top: -60, right: -40, width: 260, height: 200, borderRadius: '50%', background: `radial-gradient(circle, var(--org-a10), transparent 70%)`, pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: -50, left: -30, width: 220, height: 180, borderRadius: '50%', background: `radial-gradient(circle, ${secondary}18, transparent 70%)`, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: -50, left: -30, width: 220, height: 180, borderRadius: '50%', background: `radial-gradient(circle, ${withAlpha(secondary, '18')}, transparent 70%)`, pointerEvents: 'none' }} />
 
       {/* ═══ HEADER — same shape in every state: logo, actions, title, time/location, status chip ═══ */}
       <div style={{ padding: '20px 22px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'relative' }}>
@@ -1389,7 +1390,7 @@ function RegisterAndStaffContent({
             const gColor = getBubbleColor(child.group_name)
             return (
               <div key={child.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 10 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: gColor + '30', border: `1.5px solid ${gColor}60`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: gColor + '30', border: `1.5px solid ${withAlpha(gColor, '60')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
                   {child.photo_url ? <SignedImg bucket="gallery" src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -1553,7 +1554,7 @@ function KioskModeOverlay({ session, org, primary, secondary, regTab, setRegTab,
   ]
   return (
     <OverlayPortal>
-    <div style={{ position: 'fixed', inset: 0, zIndex: 10500, background: `linear-gradient(160deg, var(--org-a20) 0%, ${secondary}22 45%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, display: 'flex', flexDirection: 'column', WebkitUserSelect: 'none', userSelect: 'none' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 10500, background: `linear-gradient(160deg, var(--org-a20) 0%, ${withAlpha(secondary, '22')} 45%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`, display: 'flex', flexDirection: 'column', WebkitUserSelect: 'none', userSelect: 'none' }}>
       {/* Discreet staff-only exit — small, corner-placed, not obviously a button to a child */}
       <button onClick={onRequestExit} title="Staff exit (PIN required)"
         style={{ position: 'absolute', top: 14, right: 14, width: 38, height: 38, borderRadius: 12, border: '1px solid rgba(255,255,255,0.16)', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.55)', fontSize: 15, cursor: 'pointer', zIndex: 2 }}>
@@ -1572,7 +1573,7 @@ function KioskModeOverlay({ session, org, primary, secondary, regTab, setRegTab,
               const isActive = bubbleFilter === g
               return (
                 <button key={g} onClick={() => setBubbleFilter(isActive ? 'all' : g)}
-                  style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.6, color: '#fff', background: isActive ? gColor : gColor + '30', border: `1px solid ${gColor}90`, borderRadius: 99, padding: '7px 16px', cursor: 'pointer' }}>
+                  style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.6, color: '#fff', background: isActive ? gColor : gColor + '30', border: `1px solid ${withAlpha(gColor, '90')}`, borderRadius: 99, padding: '7px 16px', cursor: 'pointer' }}>
                   {g}
                 </button>
               )
@@ -1603,7 +1604,7 @@ function KioskModeOverlay({ session, org, primary, secondary, regTab, setRegTab,
           const gColor = getBubbleColor(child.group_name)
           return (
             <div key={child.id} style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 14 }}>
-              <div style={{ width: 46, height: 46, borderRadius: 13, background: gColor + '30', border: `1.5px solid ${gColor}60`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
+              <div style={{ width: 46, height: 46, borderRadius: 13, background: gColor + '30', border: `1.5px solid ${withAlpha(gColor, '60')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
                 {child.photo_url ? <SignedImg bucket="gallery" src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -2087,7 +2088,7 @@ function SessionInfoModal({ session, attendance, allChildren, primary, secondary
           position: 'relative', width: '100%', maxWidth: isMobile ? 'none' : 480, maxHeight: isMobile ? 'none' : '88vh',
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
           borderRadius: isMobile ? 0 : 26, flex: isMobile ? 1 : undefined,
-          background: `linear-gradient(160deg, var(--org-a20) 0%, ${(secondary || primary)}22 40%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`,
+          background: `linear-gradient(160deg, var(--org-a20) 0%, ${withAlpha((secondary || primary), '22')} 40%, transparent 100%), linear-gradient(160deg, #0B1023 0%, #131B33 55%, #0F1729 100%)`,
           boxShadow: isMobile ? 'none' : '0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)',
         }}
         onClick={e => e.stopPropagation()}
@@ -2149,7 +2150,7 @@ function SessionInfoModal({ session, attendance, allChildren, primary, secondary
                       <div key={r.att.id} style={{ display: 'flex', alignItems: 'center', gap: 11, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 13, padding: '9px 12px' }}>
                         <div style={{
                           width: 34, height: 34, borderRadius: 11, flexShrink: 0, overflow: 'hidden',
-                          background: r.child.photo_url ? 'transparent' : `linear-gradient(135deg, ${avatarColour(r.child.id)}, ${avatarColour(r.child.id)}CC)`,
+                          background: r.child.photo_url ? 'transparent' : `linear-gradient(135deg, ${avatarColour(r.child.id)}, ${withAlpha(avatarColour(r.child.id), 'CC')})`,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           fontSize: 12, fontWeight: 900, color: '#fff',
                         }}>
@@ -2558,7 +2559,7 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
                               onMouseEnter={e => e.currentTarget.style.background = isCritical ? 'var(--danger-bg)' : color + '14'}
                               onMouseLeave={e => e.currentTarget.style.background = n.read_at ? 'transparent' : color + '0A'}>
                               {!n.read_at && <span style={{ position: 'absolute', left: 3, top: 12, bottom: 12, width: 3, borderRadius: 2, background: color }} />}
-                              <div style={{ position: 'relative', width: isMobile ? 40 : 34, height: isMobile ? 40 : 34, borderRadius: isMobile ? 13 : 10, background: color + '18', border: `1px solid ${color}2A`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 18 : 15, flexShrink: 0 }}>
+                              <div style={{ position: 'relative', width: isMobile ? 40 : 34, height: isMobile ? 40 : 34, borderRadius: isMobile ? 13 : 10, background: color + '18', border: `1px solid ${withAlpha(color, '2A')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 18 : 15, flexShrink: 0 }}>
                                 {NOTIF_ICONS[n.category] || '🔔'}
                                 {repeats > 1 && (
                                   <span style={{ position: 'absolute', top: -6, right: -6, minWidth: 18, height: 18, padding: '0 4px', borderRadius: 99, background: color, color: '#fff', fontSize: 10.5, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff' }}>{repeats}</span>
@@ -3082,13 +3083,13 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
 
       {/* ── HEADER ── */}
-      <header style={{ background: `linear-gradient(120deg, var(--org-a10) 0%, ${secondary}10 55%, var(--surface, #fff) 100%)`, borderBottom: `2px solid var(--org-a10)`, padding: `0 ${pad}px`, flexShrink: 0, position: 'relative', overflow: 'visible', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 12px 28px -20px var(--org-a35)` }}>
+      <header style={{ background: `linear-gradient(120deg, var(--org-a10) 0%, ${withAlpha(secondary, '10')} 55%, var(--surface, #fff) 100%)`, borderBottom: `2px solid var(--org-a10)`, padding: `0 ${pad}px`, flexShrink: 0, position: 'relative', overflow: 'visible', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 12px 28px -20px var(--org-a35)` }}>
 
         {/* Brand gradient top strip — two-tone */}
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, ${secondary}, var(--org-a10), transparent)` }} />
 
         {/* Ambient brand glow */}
-        <div style={{ position: 'absolute', top: -40, right: '15%', width: 260, height: 140, borderRadius: '50%', background: `radial-gradient(circle, ${secondary}14, transparent 70%)`, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: -40, right: '15%', width: 260, height: 140, borderRadius: '50%', background: `radial-gradient(circle, ${withAlpha(secondary, '14')}, transparent 70%)`, pointerEvents: 'none' }} />
 
         {/* Top bar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: isMobile ? '12px 0 10px' : '18px 0 14px', borderBottom: `1px solid var(--org-a10)`, position: 'relative' }}>
@@ -3425,7 +3426,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         <div style={{ padding: `${pad}px ${pad}px 0` }}>
           <div style={{
             display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
-            background: `linear-gradient(135deg, var(--org-a05), ${secondary}0A)`, border: `1.5px solid var(--org-a20)`,
+            background: `linear-gradient(135deg, var(--org-a05), ${withAlpha(secondary, '0A')})`, border: `1.5px solid var(--org-a20)`,
             borderRadius: 18, padding: '14px 18px',
           }}>
             <span style={{ fontSize: 24, flexShrink: 0 }}><Icon name="🔔" /></span>
@@ -3565,7 +3566,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   <div style={{ height: 3, width: '100%', position: 'relative', overflow: 'hidden', background: primary }}>
                     <div style={{ position: 'absolute', inset: 0, background: secondary, opacity: 0, animation: 'lsBrandFade 6s ease-in-out infinite' }} />
                   </div>
-                  <div style={{ position: 'absolute', top: -40, right: -30, width: 140, height: 140, borderRadius: '50%', background: `radial-gradient(circle, ${secondary}26 0%, transparent 70%)`, pointerEvents: 'none', animation: 'lsOrbDrift 7s ease-in-out infinite' }} />
+                  <div style={{ position: 'absolute', top: -40, right: -30, width: 140, height: 140, borderRadius: '50%', background: `radial-gradient(circle, ${withAlpha(secondary, '26')} 0%, transparent 70%)`, pointerEvents: 'none', animation: 'lsOrbDrift 7s ease-in-out infinite' }} />
 
                   <div style={{ padding: '16px 18px', position: 'relative' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14 }}>

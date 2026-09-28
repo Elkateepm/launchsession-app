@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { format, parseISO, isSameDay, startOfWeek, addDays, isToday } from 'date-fns'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import Icon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
 const RESOURCE_TYPES = [
   { key: 'room',       label: 'Room',          icon: '🚪' },
@@ -142,7 +143,7 @@ export default function ResourceBooking({ org, session: authSession }) {
         {resources.length > 0 && (
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {resources.map((r, i) => (
-              <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--surface)', border: `1.5px solid ${COLORS[i % COLORS.length]}40`, borderRadius: 8, padding: '4px 10px', fontSize: 12, fontWeight: 700 }}>
+              <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--surface)', border: `1.5px solid ${withAlpha(COLORS[i % COLORS.length], '40')}`, borderRadius: 8, padding: '4px 10px', fontSize: 12, fontWeight: 700 }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: COLORS[i % COLORS.length], flexShrink: 0 }} />
                 {r.icon} {r.name}
                 {r.capacity && <span style={{ color: 'var(--text-faint)', fontWeight: 500 }}>({r.capacity})</span>}

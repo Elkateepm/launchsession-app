@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { useTerms } from '../../context/OrgContext'
 import Icon from '../../lib/icons'
 import BodyMap from './BodyMap'
+import { withAlpha } from '../../lib/withAlpha'
 
 // ─── INJURY LOG ──────────────────────────────────────────────
 // The accident book, ported from the Solidarity Sports hub.
@@ -57,7 +58,7 @@ function Chips({ options, value, onChange, accent = ALERT }) {
         <button key={o} type="button" onClick={() => onChange(value === o ? '' : o)} style={{
           minHeight: 36, padding: '7px 12px', borderRadius: 99, cursor: 'pointer', fontFamily: 'inherit',
           border: `1.5px solid ${value === o ? accent : 'var(--border)'}`,
-          background: value === o ? `${accent}12` : '#fff',
+          background: value === o ? `${withAlpha(accent, '12')}` : '#fff',
           color: value === o ? 'var(--org-ink)' : 'var(--text3)',
           fontSize: 12.5, fontWeight: 800,
         }}>{o}</button>
@@ -71,7 +72,7 @@ function Toggle({ on, onClick, colour, children }) {
     <button type="button" onClick={onClick} style={{
       width: '100%', minHeight: 44, borderRadius: 10, cursor: 'pointer', textAlign: 'left',
       border: `1.5px solid ${on ? colour : 'var(--border)'}`,
-      background: on ? `${colour}12` : '#fff', padding: '10px 12px',
+      background: on ? `${withAlpha(colour, '12')}` : '#fff', padding: '10px 12px',
       fontSize: 13, fontWeight: 800, fontFamily: 'inherit',
       color: on ? colour : 'var(--text3)',
       display: 'flex', alignItems: 'center', gap: 8,

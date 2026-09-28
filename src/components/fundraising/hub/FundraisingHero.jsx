@@ -2,6 +2,7 @@ import React, { useMemo, useState, useRef, useEffect } from 'react'
 import { LS, IconGlyph, AnimatedNumber, PurpleProgress } from '../fundraisingShared'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import Icon from '../../../lib/icons'
+import { withAlpha } from '../../../lib/withAlpha'
 
 const PERIODS = [
   { key: 'year', label: 'This Year' },
@@ -126,7 +127,7 @@ export default function FundraisingHero({ campaigns, donationHistory, totalTarge
         <button onClick={onReviewFocus} style={{
           position: 'relative', padding: '9px 18px', borderRadius: 10, border: 'none',
           background: LS.gradient, color: '#fff', fontWeight: 700, fontSize: 12.5, cursor: 'pointer',
-          boxShadow: `0 6px 14px ${LS.purple}35`,
+          boxShadow: `0 6px 14px ${withAlpha(LS.purple, '35')}`,
         }}>
           {focusItems.length === 0 ? 'View Discover Funding' : 'Review Now'}
         </button>

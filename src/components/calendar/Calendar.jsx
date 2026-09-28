@@ -7,6 +7,7 @@ import { allowedModules } from '../../lib/moduleAccess'
 import Icon from '../../lib/icons'
 import { sessionPhase } from '../../lib/sessionPhase'
 import SessionSheet, { flowButton } from '../sessions/SessionSheet'
+import { withAlpha } from '../../lib/withAlpha'
 
 // Postgres returns time columns as HH:MM:SS. Trim to HH:MM everywhere the
 // calendar shows a time -- the raw value was leaking into the month cells,
@@ -123,13 +124,13 @@ function ConfettiBurst({ color, secondary }) {
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       {/* Soft central glow flash */}
-      <div style={{ position: 'absolute', width: 26, height: 26, borderRadius: '50%', background: `radial-gradient(circle, ${color}55, transparent 70%)`, animation: 'cal-sparkle-glow 0.7s ease-out forwards' }} />
+      <div style={{ position: 'absolute', width: 26, height: 26, borderRadius: '50%', background: `radial-gradient(circle, ${withAlpha(color, '55')}, transparent 70%)`, animation: 'cal-sparkle-glow 0.7s ease-out forwards' }} />
       {/* Sparkle particles drifting outward */}
       {particles.map((p, i) => (
         <div key={i}
           style={{
             position: 'absolute', width: p.size, height: p.size, borderRadius: '50%',
-            background: p.tone, boxShadow: `0 0 4px ${p.tone}80`,
+            background: p.tone, boxShadow: `0 0 4px ${withAlpha(p.tone, '80')}`,
             animation: `cal-sparkle-burst ${p.duration}s cubic-bezier(0.16, 1, 0.3, 1) ${p.delay}s forwards`,
             '--tx': `${p.tx}px`, '--ty': `${p.ty}px`,
           }}
@@ -163,7 +164,7 @@ function PlanPickerModal({ date, org, onClose, onNavigate }) {
         <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
           {options.map((o, i) => (
             <button key={o.key} onClick={() => { onClose(); if (onNavigate) onNavigate(o.key) }}
-              style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 14, border: `1.5px solid ${o.colour}25`, background: o.colour + '08', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s', animation: `cal-pop-in 0.25s ease ${i * 0.05}s both` }}
+              style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 14, border: `1.5px solid ${withAlpha(o.colour, '25')}`, background: o.colour + '08', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s', animation: `cal-pop-in 0.25s ease ${i * 0.05}s both` }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = o.colour + '60'; e.currentTarget.style.background = o.colour + '14'; e.currentTarget.style.transform = 'translateX(2px)' }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = o.colour + '25'; e.currentTarget.style.background = o.colour + '08'; e.currentTarget.style.transform = 'none' }}>
               <div style={{ width: 42, height: 42, borderRadius: 12, background: o.colour + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}><Icon name={o.icon} /></div>
@@ -372,7 +373,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
     const toIcsDate = (dateStr, timeStr) => {
       const [y, m, d] = dateStr.split('-')
       const [h, min] = (timeStr || '00:00').split(':')
-      return `${y}${m}${d}T${pad(h)}${pad(min)}00`
+      return `${y}${m}${d}T${pad(h)}${withAlpha(pad(min), '00')}`
     }
     const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//LaunchSession//Calendar//EN']
     filtered.forEach(s => {
@@ -620,7 +621,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                       return (
                         <button key={s.id} onClick={() => setSelectedSession(s)}
                           style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 18px', borderRadius: 16, border: `1.5px solid ${cfg.border}`, background: cfg.bg, cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s', animation: `cal-pop-in 0.3s ease ${si * 0.06}s both` }}
-                          onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(3px)'; e.currentTarget.style.boxShadow = `0 8px 20px ${cfg.color}25` }}
+                          onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(3px)'; e.currentTarget.style.boxShadow = `0 8px 20px ${withAlpha(cfg.color, '25')}` }}
                           onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}>
                           <div style={{ width: 52, height: 52, borderRadius: 14, background: cfg.color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}><Icon name={cfg.icon} /></div>
                           <div style={{ flex: 1, minWidth: 0 }}>
@@ -703,7 +704,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
               { label: 'Types', value: [...new Set(sessions.filter(s => s.session_date?.startsWith(format(currentDate, 'yyyy-MM'))).map(s => s.session_type))].length, color: '#8B5CF6' },
               { label: 'Young People', value: monthYoungPeople, color: 'var(--ok-text)' },
             ].map(s => (
-              <div key={s.label} style={{ background: `${s.color}12`, border: `1px solid ${s.color}25`, borderRadius: 10, padding: '10px 10px' }}>
+              <div key={s.label} style={{ background: `${withAlpha(s.color, '12')}`, border: `1px solid ${withAlpha(s.color, '25')}`, borderRadius: 10, padding: '10px 10px' }}>
                 <div style={{ fontSize: 20, fontWeight: 900, color: s.color }}>{s.value}</div>
                 <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginTop: 2 }}>{s.label}</div>
               </div>

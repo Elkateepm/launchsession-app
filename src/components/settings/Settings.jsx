@@ -17,6 +17,7 @@ import SignedImg from '../shared/SignedImg'
 import { signOne } from '../../lib/storageUrl'
 import Icon from '../../lib/icons'
 import BrandingCentre from './branding/BrandingCentre'
+import { withAlpha } from '../../lib/withAlpha'
 
 // Shown everywhere an org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -497,7 +498,7 @@ function RegisterGroupsManager({ org }) {
       )}
 
       {groups.length > 0 && !adding && (
-        <button onClick={() => setAdding(true)} style={{ padding: '9px 16px', borderRadius: 10, border: `1.5px solid ${org?.primary_color || 'var(--org-primary)'}40`, background: (org?.primary_color || 'var(--org-primary)') + '0c', color: 'var(--org-ink)' || 'var(--org-ink)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+        <button onClick={() => setAdding(true)} style={{ padding: '9px 16px', borderRadius: 10, border: `1.5px solid ${withAlpha(org?.primary_color || 'var(--org-primary)', '40')}`, background: (org?.primary_color || 'var(--org-primary)') + '0c', color: 'var(--org-ink)' || 'var(--org-ink)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
           + Add Group
         </button>
       )}
@@ -600,7 +601,7 @@ function ModulePasswordCard({ moduleKey, label, icon, accentColor }) {
       ) : (
         <>
           {pwStatus === 'set' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: `${accentColor}14`, border: `1px solid ${accentColor}40`, borderRadius: 10, padding: '10px 14px', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: `${withAlpha(accentColor, '14')}`, border: `1px solid ${withAlpha(accentColor, '40')}`, borderRadius: 10, padding: '10px 14px', marginBottom: 16 }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: accentColor, flexShrink: 0 }} />
               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Password protection is currently ON</div>
             </div>
@@ -2160,7 +2161,7 @@ export default function Settings({ org, session, userProfile, initialSection }) 
         </div>
       )) : (
         <div style={{ background: '#07120E', color: '#F7F5EC', borderRadius: 18, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 26px 70px rgba(7,18,14,0.18)' }}>
-          <div style={{ padding: isMobile ? 26 : 34, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0,1.1fr) minmax(260px,.9fr)', gap: 26, alignItems: 'center', background: `radial-gradient(circle at 15% 0%, ${(org?.primary_color || 'var(--org-primary)')}66, transparent 45%), #07120E` }}>
+          <div style={{ padding: isMobile ? 26 : 34, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0,1.1fr) minmax(260px,.9fr)', gap: 26, alignItems: 'center', background: `radial-gradient(circle at 15% 0%, ${withAlpha((org?.primary_color || 'var(--org-primary)'), '66')}, transparent 45%), #07120E` }}>
             <div>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 9px', borderRadius: 999, background: 'rgba(255,255,255,0.09)', border: '1px solid rgba(255,255,255,0.16)', color: '#D9E8DC', fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 16 }}>
                 <Icon name="🎨" /> Premium add-on
@@ -2238,7 +2239,7 @@ export default function Settings({ org, session, userProfile, initialSection }) 
               <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1, padding: '8px 10px 4px' }}>{group}</div>
               {items.map(n => (
                 <button key={n.key} onClick={() => { setActive(n.key); if (isMobile) setShowSidebar(false) }}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: 'none', background: active === n.key ? `${org?.primary_color || 'var(--org-primary)'}12` : 'transparent', color: active === n.key ? (org?.primary_color || 'var(--org-ink)') : 'var(--text2)', fontSize: 13, fontWeight: active === n.key ? 700 : 500, cursor: 'pointer', textAlign: 'left', marginBottom: 1, transition: 'all 0.1s' }}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: 'none', background: active === n.key ? `${withAlpha(org?.primary_color || 'var(--org-primary)', '12')}` : 'transparent', color: active === n.key ? (org?.primary_color || 'var(--org-ink)') : 'var(--text2)', fontSize: 13, fontWeight: active === n.key ? 700 : 500, cursor: 'pointer', textAlign: 'left', marginBottom: 1, transition: 'all 0.1s' }}
                   onMouseEnter={e => { if (active !== n.key) e.currentTarget.style.background = 'var(--surface2)' }}
                   onMouseLeave={e => { if (active !== n.key) e.currentTarget.style.background = 'transparent' }}>
                   <span style={{ fontSize: 15 }}><Icon name={n.icon} /></span>

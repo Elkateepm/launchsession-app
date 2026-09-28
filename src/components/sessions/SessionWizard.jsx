@@ -11,6 +11,7 @@ import { createPortal } from 'react-dom'
 import { useTerms } from '../../context/OrgContext'
 import { londonDate } from '../../lib/sessionPhase'
 import { flowButton } from './SessionSheet'
+import { withAlpha } from '../../lib/withAlpha'
 
 // ─── CONSTANTS ──────────────────────────────────────────────────
 
@@ -122,7 +123,7 @@ function SectionHeader({ icon, title, subtitle, color = ACCENT }) {
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 18 }}>
       <motion.div
         initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 380, damping: 22 }}
-        style={{ width: 38, height: 38, borderRadius: 11, background: `linear-gradient(135deg, ${color}26, ${color}0D)`, boxShadow: `0 2px 8px ${color}22, inset 0 0 0 1px ${color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}><Icon name={icon} /></motion.div>
+        style={{ width: 38, height: 38, borderRadius: 11, background: `linear-gradient(135deg, ${withAlpha(color, '26')}, ${withAlpha(color, '0D')})`, boxShadow: `0 2px 8px ${withAlpha(color, '22')}, inset 0 0 0 1px ${withAlpha(color, '22')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}><Icon name={icon} /></motion.div>
       <div>
         <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>{title}</div>
         {subtitle && <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 1 }}>{subtitle}</div>}
@@ -150,7 +151,7 @@ function StepDot({ n, active, done, label: text, onClick, compact, color = ACCEN
         animate={{
           scale: active ? 1.12 : 1,
           backgroundColor: active ? color : done ? '#16A34A' : 'var(--surface)',
-          boxShadow: active ? `0 0 0 5px ${color}22, 0 4px 10px ${color}40` : '0 0 0 0px transparent',
+          boxShadow: active ? `0 0 0 5px ${withAlpha(color, '22')}, 0 4px 10px ${withAlpha(color, '40')}` : '0 0 0 0px transparent',
         }}
         transition={{ type: 'spring', stiffness: 400, damping: 26 }}
         style={{
@@ -182,7 +183,7 @@ function LiveSummary({ form, leadName, expectedCount }) {
         <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>Live Summary</div>
       </div>
 
-      <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 800, letterSpacing: 0.5, color: ACCENT, background: `${ACCENT}15`, borderRadius: 99, padding: '3px 10px', marginBottom: 10 }}>PREVIEW</span>
+      <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 800, letterSpacing: 0.5, color: ACCENT, background: `${withAlpha(ACCENT, '15')}`, borderRadius: 99, padding: '3px 10px', marginBottom: 10 }}>PREVIEW</span>
 
       <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>
         {form.title || 'Untitled session'}
@@ -216,7 +217,7 @@ function LiveSummary({ form, leadName, expectedCount }) {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 8, background: `${ACCENT}0C`, border: `1px solid ${ACCENT}25`, borderRadius: 12, padding: '10px 12px' }}>
+      <div style={{ display: 'flex', gap: 8, background: `${withAlpha(ACCENT, '0C')}`, border: `1px solid ${withAlpha(ACCENT, '25')}`, borderRadius: 12, padding: '10px 12px' }}>
         <span style={{ fontSize: 13 }}>ℹ️</span>
         <div style={{ fontSize: 11.5, color: 'var(--text2)', lineHeight: 1.5 }}>
           This is a preview of your session. Complete the remaining steps to publish and share.
@@ -246,9 +247,9 @@ function StepType({ form, setForm, templates, appliedTemplateId, onApplyTemplate
                 <motion.button
                   key={t.id}
                   onClick={() => onApplyTemplate(t)}
-                  whileHover={{ y: -2, boxShadow: `0 8px 18px ${ACCENT}25` }}
+                  whileHover={{ y: -2, boxShadow: `0 8px 18px ${withAlpha(ACCENT, '25')}` }}
                   whileTap={{ scale: 0.96 }}
-                  animate={{ borderColor: active ? ACCENT : 'var(--border)', background: active ? `linear-gradient(150deg, ${ACCENT}1C, ${ACCENT}08)` : 'var(--surface)' }}
+                  animate={{ borderColor: active ? ACCENT : 'var(--border)', background: active ? `linear-gradient(150deg, ${withAlpha(ACCENT, '1C')}, ${withAlpha(ACCENT, '08')})` : 'var(--surface)' }}
                   transition={{ duration: 0.18, ease: 'easeOut' }}
                   style={{
                     flexShrink: 0, minWidth: 150, textAlign: 'left', padding: '12px 14px', borderRadius: 12, cursor: 'pointer',
@@ -257,7 +258,7 @@ function StepType({ form, setForm, templates, appliedTemplateId, onApplyTemplate
                   <AnimatePresence>
                     {active && (
                       <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 22 }}
-                        style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, borderRadius: '50%', background: ACCENT, color: '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 6px ${ACCENT}66` }}><Icon name="✓" /></motion.div>
+                        style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, borderRadius: '50%', background: ACCENT, color: '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 6px ${withAlpha(ACCENT, '66')}` }}><Icon name="✓" /></motion.div>
                     )}
                   </AnimatePresence>
                   <div style={{ fontSize: 20, marginBottom: 6 }}>{t.icon || '📋'}</div>
@@ -279,13 +280,13 @@ function StepType({ form, setForm, templates, appliedTemplateId, onApplyTemplate
             <motion.button
               key={t.key}
               onClick={() => choose(t.key)}
-              whileHover={{ y: -3, boxShadow: `0 10px 20px ${t.color}30` }}
+              whileHover={{ y: -3, boxShadow: `0 10px 20px ${withAlpha(t.color, '30')}` }}
               whileTap={{ scale: 0.94 }}
               animate={{
                 borderColor: active ? t.color : 'var(--border)',
-                background: active ? `linear-gradient(150deg, ${t.color}1C, ${t.color}08)` : 'var(--surface)',
+                background: active ? `linear-gradient(150deg, ${withAlpha(t.color, '1C')}, ${withAlpha(t.color, '08')})` : 'var(--surface)',
                 scale: active ? 1.02 : 1,
-                boxShadow: active ? `0 6px 16px ${t.color}30` : '0 0 0 0 transparent',
+                boxShadow: active ? `0 6px 16px ${withAlpha(t.color, '30')}` : '0 0 0 0 transparent',
               }}
               transition={{ duration: 0.18, ease: 'easeOut' }}
               style={{
@@ -295,7 +296,7 @@ function StepType({ form, setForm, templates, appliedTemplateId, onApplyTemplate
               <AnimatePresence>
                 {active && (
                   <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 22 }}
-                    style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: '50%', background: t.color, color: '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 6px ${t.color}66` }}><Icon name="✓" /></motion.div>
+                    style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: '50%', background: t.color, color: '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 6px ${withAlpha(t.color, '66')}` }}><Icon name="✓" /></motion.div>
                 )}
               </AnimatePresence>
               <motion.div animate={{ scale: active ? 1.08 : 1 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }} style={{ fontSize: isMobile ? 22 : 28, marginBottom: isMobile ? 6 : 8 }}><Icon name={t.icon} /></motion.div>
@@ -500,13 +501,13 @@ function StepPeople({ form, setForm, staff, children, expectedCount, bubbleDefs,
                 const active = form.bubbles.includes(b.label)
                 return (
                   <button key={b.key} onClick={() => set('bubbles', active ? form.bubbles.filter(x => x !== b.label) : [...form.bubbles, b.label])}
-                    style={{ minHeight: 44, padding: '7px 14px', borderRadius: 99, border: active ? `2px solid ${b.color}` : '1.5px solid var(--border)', background: active ? `${b.color}18` : 'var(--surface)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', color: 'var(--text)' }}>
+                    style={{ minHeight: 44, padding: '7px 14px', borderRadius: 99, border: active ? `2px solid ${b.color}` : '1.5px solid var(--border)', background: active ? `${withAlpha(b.color, '18')}` : 'var(--surface)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', color: 'var(--text)' }}>
                     {b.label}
                   </button>
                 )
               })}
               <button onClick={() => setShowGroupsModal(true)}
-                style={{ minHeight: 44, padding: '7px 14px', borderRadius: 99, border: `1.5px dashed ${ACCENT}60`, background: `${ACCENT}0A`, fontSize: 12.5, fontWeight: 700, color: ACCENT, cursor: 'pointer' }}>
+                style={{ minHeight: 44, padding: '7px 14px', borderRadius: 99, border: `1.5px dashed ${withAlpha(ACCENT, '60')}`, background: `${withAlpha(ACCENT, '0A')}`, fontSize: 12.5, fontWeight: 700, color: ACCENT, cursor: 'pointer' }}>
                 + Add group
               </button>
             </div>
@@ -660,7 +661,7 @@ function StepRequirements({ form, setForm, orgForms, org, onFormCreated, expecte
           )
         })}
         <button onClick={() => setShowFormBuilder(true)}
-          style={{ marginTop: 12, padding: '9px 16px', borderRadius: 10, border: `1.5px dashed ${ACCENT}60`, background: `${ACCENT}0A`, fontSize: 12.5, fontWeight: 700, color: ACCENT, cursor: 'pointer' }}>
+          style={{ marginTop: 12, padding: '9px 16px', borderRadius: 10, border: `1.5px dashed ${withAlpha(ACCENT, '60')}`, background: `${withAlpha(ACCENT, '0A')}`, fontSize: 12.5, fontWeight: 700, color: ACCENT, cursor: 'pointer' }}>
           + Create new form
         </button>
       </div>
@@ -1005,14 +1006,14 @@ function StepReview({ form, staff, expectedCount, primary, riskAssessments = [],
       {/* Hero summary */}
       <div style={{
         borderRadius: 18, padding: 22, marginBottom: 16, position: 'relative', overflow: 'hidden',
-        background: `linear-gradient(135deg, ${accent}1A, ${accent}08)`,
-        border: `1px solid ${accent}33`,
-        boxShadow: `0 1px 0 rgba(255,255,255,0.5) inset, 0 18px 40px -24px ${accent}66`,
+        background: `linear-gradient(135deg, ${withAlpha(accent, '1A')}, ${withAlpha(accent, '08')})`,
+        border: `1px solid ${withAlpha(accent, '33')}`,
+        boxShadow: `0 1px 0 rgba(255,255,255,0.5) inset, 0 18px 40px -24px ${withAlpha(accent, '66')}`,
       }}>
-        <div style={{ position: 'absolute', top: -50, right: -30, width: 180, height: 180, borderRadius: '50%', background: `radial-gradient(circle, ${accent}22, transparent 70%)`, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: -50, right: -30, width: 180, height: 180, borderRadius: '50%', background: `radial-gradient(circle, ${withAlpha(accent, '22')}, transparent 70%)`, pointerEvents: 'none' }} />
         <div style={{ position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.6, color: 'var(--org-ink)', background: `${accent}1F`, border: `1px solid ${accent}33`, borderRadius: 99, padding: '3px 10px' }}>
+            <span style={{ fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.6, color: 'var(--org-ink)', background: `${withAlpha(accent, '1F')}`, border: `1px solid ${withAlpha(accent, '33')}`, borderRadius: 99, padding: '3px 10px' }}>
               {(form.session_type || 'session').replace(/_/g, ' ')}
             </span>
             {outstanding.length === 0 ? (

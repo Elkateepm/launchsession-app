@@ -12,6 +12,7 @@ import Icon from '../../lib/icons'
 import { useTerms } from '../../context/OrgContext'
 import { londonDate, sessionPhase } from '../../lib/sessionPhase'
 import SessionSheet, { flowButton, flowInput } from './SessionSheet'
+import { withAlpha } from '../../lib/withAlpha'
 
 const SESSION_TYPES = [
   { key: 'activity',  label: 'Activity',  icon: '🏃', color: '#1B9AAA' },
@@ -147,7 +148,7 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, sessi
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
 
       {/* ── HEADER ── */}
-      <div style={{ background: `linear-gradient(135deg, ${type.color}, ${type.color}CC)`, padding: compact ? '16px 18px 14px' : '20px 24px 16px', flexShrink: 0 }}>
+      <div style={{ background: `linear-gradient(135deg, ${type.color}, ${withAlpha(type.color, 'CC')})`, padding: compact ? '16px 18px 14px' : '20px 24px 16px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}><Icon name={type.icon} /></div>
@@ -656,7 +657,7 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
     <SessionSheet title="Reflection" subtitle={session.title} onClose={onClose} busy={saving} bodyStyle={{ padding: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {saved ? (
           /* ── CELEBRATION SCREEN ── */
-          <div style={{ padding: '56px 32px', textAlign: 'center', background: `linear-gradient(160deg, var(--org-a05), ${secondary}08)` }}>
+          <div style={{ padding: '56px 32px', textAlign: 'center', background: `linear-gradient(160deg, var(--org-a05), ${withAlpha(secondary, '08')})` }}>
             <motion.div initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 14 }} style={{ fontSize: 56, marginBottom: 8 }}>
               {RATING_REACTIONS[form.overall_rating]?.emoji || '🎉'}
             </motion.div>
@@ -746,7 +747,7 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
                       </ReflectionField>
                       <ReflectionField i={2}>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-                          {['Strong engagement', 'Inclusive practice', 'Adapt activity', 'Equipment issue', 'Timing issue', 'Staffing insight'].map(tag => <button key={tag} onClick={() => toggleArray('learning_tags', tag)} style={{ minHeight: 40, padding: '7px 11px', borderRadius: 99, border: form.learning_tags.includes(tag) ? `2px solid ${secondary}` : '1px solid var(--border)', background: form.learning_tags.includes(tag) ? `${secondary}12` : 'var(--surface)', color: form.learning_tags.includes(tag) ? secondary : 'var(--text3)', fontSize: 11.5, fontWeight: 800, cursor: 'pointer' }}>{tag}</button>)}
+                          {['Strong engagement', 'Inclusive practice', 'Adapt activity', 'Equipment issue', 'Timing issue', 'Staffing insight'].map(tag => <button key={tag} onClick={() => toggleArray('learning_tags', tag)} style={{ minHeight: 40, padding: '7px 11px', borderRadius: 99, border: form.learning_tags.includes(tag) ? `2px solid ${secondary}` : '1px solid var(--border)', background: form.learning_tags.includes(tag) ? `${withAlpha(secondary, '12')}` : 'var(--surface)', color: form.learning_tags.includes(tag) ? secondary : 'var(--text3)', fontSize: 11.5, fontWeight: 800, cursor: 'pointer' }}>{tag}</button>)}
                         </div>
                       </ReflectionField>
                     </div>
@@ -833,7 +834,7 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
                         <textarea style={ta('free')} onFocus={() => setFocused('free')} onBlur={() => setFocused(null)} value={form.reflection} onChange={e => set('reflection', e.target.value)} placeholder="Any other thoughts for next time..." />
                       </ReflectionField>
                       <ReflectionField i={2}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, background: `linear-gradient(135deg, var(--org-a05), ${secondary}08)`, border: `1px dashed var(--org-a20)` }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, background: `linear-gradient(135deg, var(--org-a05), ${withAlpha(secondary, '08')})`, border: `1px dashed var(--org-a20)` }}>
                           <span style={{ fontSize: 24 }}>{RATING_REACTIONS[form.overall_rating]?.emoji}</span>
                           <div style={{ fontSize: 12, color: 'var(--text3, #6B7280)' }}>You rated this session <strong style={{ color: 'var(--text, #111)' }}>{form.overall_rating}/5</strong>. Ready to save?</div>
                         </div>
@@ -1209,7 +1210,7 @@ function TemplateFormModal({ initial, bubbleDefs, saving, onSave, onCancel, prim
               ].map(opt => {
                 const active = !!form[opt.key]
                 return (
-                  <button key={opt.key} onClick={() => set(opt.key, !active)} style={{ display: 'flex', alignItems: 'center', minHeight: 44, gap: 6, padding: '7px 12px', borderRadius: 99, border: `1.5px solid ${active ? primary : 'var(--border)'}`, background: active ? `${primary}14` : '#fff', color: active ? 'var(--org-ink)' : 'var(--text3)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  <button key={opt.key} onClick={() => set(opt.key, !active)} style={{ display: 'flex', alignItems: 'center', minHeight: 44, gap: 6, padding: '7px 12px', borderRadius: 99, border: `1.5px solid ${active ? primary : 'var(--border)'}`, background: active ? `${withAlpha(primary, '14')}` : '#fff', color: active ? 'var(--org-ink)' : 'var(--text3)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                     <span><Icon name={opt.icon} /></span>{opt.label}
                   </button>
                 )

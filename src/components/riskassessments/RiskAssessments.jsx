@@ -20,6 +20,7 @@ import { assessmentProgress, ProgressStrip, ApprovalPanel } from './RAProgress'
 import ReuseAssessmentDrawer from './ReuseAssessmentDrawer'
 import { buildCoverage } from './ra_safety'
 import Icon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
 const RATING_ORDER = { low: 1, medium: 2, high: 3, critical: 4 }
 const SESSION_WINDOW = 40
@@ -343,7 +344,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
           { label: 'Completion Rate', value: kpis.rate, icon: '✅', color: '#22C55E', suffix: '%' },
         ].map((k, i) => (
           <motion.div key={k.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} whileHover={{ y: -2 }} style={{ ...glass({ padding: '16px' }) }}>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: `${k.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}><Icon name={k.icon} /></div>
+            <div style={{ width: 34, height: 34, borderRadius: 10, background: `${withAlpha(k.color, '18')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}><Icon name={k.icon} /></div>
             <div style={{ fontSize: 24, fontWeight: 900, color: k.color, lineHeight: 1 }}><CountUp value={k.value} />{k.suffix}</div>
             <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 700, marginTop: 4 }}>{k.label}</div>
           </motion.div>

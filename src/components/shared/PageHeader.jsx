@@ -1,6 +1,7 @@
 import React from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import Icon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
 /**
  * PageHeader — premium animated header for every module page
@@ -56,7 +57,7 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
                 <h1 className="ls-header-title" style={{ fontSize: 'clamp(15px, 2.4vw, 19px)', color: 'var(--text, #111)', margin: 0, lineHeight: 1.15 }}>{title}</h1>
                 {badge && (
-                  <span className="ls-header-badge" style={{ fontSize: 10, fontWeight: 800, padding: '3px 9px', borderRadius: 99, background: (badge.color || primary) + '18', color: badge.color || 'var(--org-ink)', textTransform: 'uppercase', letterSpacing: 0.6, border: `1px solid ${(badge.color || primary)}30`, whiteSpace: 'nowrap' }}>
+                  <span className="ls-header-badge" style={{ fontSize: 10, fontWeight: 800, padding: '3px 9px', borderRadius: 99, background: (badge.color || primary) + '18', color: badge.color || 'var(--org-ink)', textTransform: 'uppercase', letterSpacing: 0.6, border: `1px solid ${withAlpha((badge.color || primary), '30')}`, whiteSpace: 'nowrap' }}>
                     {badge.text}
                   </span>
                 )}
@@ -118,8 +119,8 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
                   style={{
                   gridColumn: isLastOdd ? 'span 2' : undefined,
                   display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 9,
-                  background: s.active ? `${c}22` : `${c}0C`,
-                  border: `1px solid ${s.active ? `${c}88` : `${c}22`}`,
+                  background: s.active ? `${withAlpha(c, '22')}` : `${withAlpha(c, '0C')}`,
+                  border: `1px solid ${s.active ? `${withAlpha(c, '88')}` : `${withAlpha(c, '22')}`}`,
                   borderRadius: 12,
                   padding: isMobile ? '8px 10px' : '9px 12px', minWidth: 0,
                   boxShadow: `0 1px 0 rgba(255,255,255,0.5) inset`,
@@ -131,8 +132,8 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
                   {s.icon && (
                     <span style={{
                       width: isMobile ? 26 : 30, height: isMobile ? 26 : 30, borderRadius: 8, flexShrink: 0,
-                      background: `linear-gradient(135deg, ${c}, ${c}CC)`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: isMobile ? 12 : 13.5, boxShadow: `0 3px 8px -3px ${c}70, inset 0 1px 0 rgba(255,255,255,0.35)`,
+                      background: `linear-gradient(135deg, ${c}, ${withAlpha(c, 'CC')})`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: isMobile ? 12 : 13.5, boxShadow: `0 3px 8px -3px ${withAlpha(c, '70')}, inset 0 1px 0 rgba(255,255,255,0.35)`,
                     }}><Icon name={s.icon} /></span>
                   )}
                   <div style={{ minWidth: 0 }}>

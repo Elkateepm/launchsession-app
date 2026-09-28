@@ -1,5 +1,6 @@
 import React from 'react'
 import Icon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
 // ─── BODY MAP ────────────────────────────────────────────────
 // Ported from the Solidarity Sports hub. The shapes, the regions and the
@@ -100,7 +101,7 @@ export default function BodyMap({ value, onChange }) {
           Tap the nearest area, or choose from the list below.
         </div>
         {value && (
-          <div style={{ marginTop: 9, display: 'inline-flex', alignItems: 'center', gap: 6, background: '#FDEEEC', border: `1.5px solid ${SELECTED}40`, color: SELECTED, borderRadius: 99, padding: '6px 12px', fontSize: 12.5, fontWeight: 800 }}>
+          <div style={{ marginTop: 9, display: 'inline-flex', alignItems: 'center', gap: 6, background: '#FDEEEC', border: `1.5px solid ${withAlpha(SELECTED, '40')}`, color: SELECTED, borderRadius: 99, padding: '6px 12px', fontSize: 12.5, fontWeight: 800 }}>
             <Icon name="📍" />{value}
           </div>
         )}

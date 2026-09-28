@@ -12,6 +12,7 @@ import VPQuickActionMenu from './VPQuickActionMenu'
 import { signOne } from '../../lib/storageUrl'
 import shrinkImage from '../../lib/shrinkImage'
 import Icon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
 const SLUG = window.location.pathname.split('/volunteer/')[1]?.split('/')[0]
 
@@ -25,11 +26,11 @@ const TIMES = ['Morning','Afternoon','Evening']
 const s = {
   wrap: { minHeight:'100dvh', background:'radial-gradient(circle at 15% 10%, #16283d 0%, #0A121D 45%, #060a11 100%)', display:'flex', alignItems:'center', justifyContent:'center', padding:20, fontFamily:'Inter,sans-serif', position:'relative', overflow:'hidden' },
   card: { background: 'var(--surface)', borderRadius:28, width:'100%', maxWidth:480, overflow:'hidden', boxShadow:'0 40px 100px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06)', position:'relative', zIndex:1 },
-  head: (color) => ({ background:`linear-gradient(135deg, ${color||'#1B9AAA'}, ${color||'#1B9AAA'}dd)`, padding:'28px 28px 20px', color:'#fff', position:'relative', overflow:'hidden' }),
+  head: (color) => ({ background:`linear-gradient(135deg, ${color||'#1B9AAA'}, ${withAlpha(color||'#1B9AAA', 'dd')})`, padding:'28px 28px 20px', color:'#fff', position:'relative', overflow:'hidden' }),
   body: { padding:'28px 28px 24px' },
   label: { fontSize:12, fontWeight:700, color: 'var(--text3)', textTransform:'uppercase', letterSpacing:0.6, display:'block', marginBottom:6 },
   inp: { width:'100%', padding:'12px 14px', borderRadius:12, border:'1.5px solid var(--border)', fontSize:15, outline:'none', boxSizing:'border-box', marginBottom:14, fontFamily:'Inter,sans-serif', transition:'border-color 0.15s, box-shadow 0.15s' },
-  btn: (color) => ({ width:'100%', padding:14, borderRadius:14, border:'none', background:`linear-gradient(135deg, ${color||'#1B9AAA'}, ${color||'#1B9AAA'}cc)`, color:'#fff', fontSize:16, fontWeight:800, cursor:'pointer', marginTop:8, boxShadow:`0 8px 24px ${color||'#1B9AAA'}55` }),
+  btn: (color) => ({ width:'100%', padding:14, borderRadius:14, border:'none', background:`linear-gradient(135deg, ${color||'#1B9AAA'}, ${withAlpha(color||'#1B9AAA', 'cc')})`, color:'#fff', fontSize:16, fontWeight:800, cursor:'pointer', marginTop:8, boxShadow:`0 8px 24px ${withAlpha(color||'#1B9AAA', '55')}` }),
   back: { background:'none', border:'none', color:'rgba(255,255,255,0.6)', fontSize:13, cursor:'pointer', padding:0, display:'flex', alignItems:'center', gap:4, marginBottom:12 },
   chip: (active,color) => ({ padding:'8px 14px', borderRadius:99, border:`1.5px solid ${active?(color||'#1B9AAA'):'var(--border)'}`, background:active?(color||'#1B9AAA')+'18':'var(--surface2)', color:active?(color||'#1B9AAA'):'var(--text3)', fontSize:13, fontWeight:700, cursor:'pointer', transition:'all 0.15s' }),
   prog: (pct,color) => ({ height:3, background:'rgba(255,255,255,0.2)', borderRadius:2, marginTop:12, overflow:'hidden', children:null }),
@@ -42,7 +43,7 @@ function AmbientOrbs({ color }) {
       <motion.div
         animate={{ y:[0,-18,0], x:[0,10,0] }}
         transition={{ duration:9, repeat:Infinity, ease:'easeInOut' }}
-        style={{ position:'absolute', top:'8%', left:'8%', width:220, height:220, borderRadius:'50%', background:`${color||'#1B9AAA'}22`, filter:'blur(50px)', pointerEvents:'none' }}
+        style={{ position:'absolute', top:'8%', left:'8%', width:220, height:220, borderRadius:'50%', background:`${withAlpha(color||'#1B9AAA', '22')}`, filter:'blur(50px)', pointerEvents:'none' }}
       />
       <motion.div
         animate={{ y:[0,16,0], x:[0,-12,0] }}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { LS, IconGlyph } from './fundraisingShared'
+import { withAlpha } from '../../lib/withAlpha'
 
 export default function FundraisingGate({ org, session, children }) {
   const [status, setStatus] = useState('checking') // checking | locked | open
@@ -78,7 +79,7 @@ export default function FundraisingGate({ org, session, children }) {
               display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px',
               borderRadius: 99, border: 'none', background: LS.gradient,
               color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer',
-              boxShadow: `0 8px 24px ${LS.purple}40`,
+              boxShadow: `0 8px 24px ${withAlpha(LS.purple, '40')}`,
             }}
           >
             <IconGlyph name="target" color="#fff" size={13} /> Lock Fundraising
@@ -96,7 +97,7 @@ export default function FundraisingGate({ org, session, children }) {
           <div style={{
             width: 64, height: 64, borderRadius: 18, background: LS.gradient,
             display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px',
-            boxShadow: `0 10px 28px ${LS.purple}35`,
+            boxShadow: `0 10px 28px ${withAlpha(LS.purple, '35')}`,
           }}>
             <IconGlyph name="coin" color="#fff" size={28} />
           </div>
@@ -129,7 +130,7 @@ export default function FundraisingGate({ org, session, children }) {
                 padding: '11px 28px', borderRadius: 10, border: 'none',
                 background: verifying || !pw ? '#C4C1D6' : LS.gradient, color: '#fff',
                 fontSize: 14, fontWeight: 700, cursor: verifying || !pw ? 'default' : 'pointer', width: '100%',
-                boxShadow: verifying || !pw ? 'none' : `0 6px 16px ${LS.purple}35`,
+                boxShadow: verifying || !pw ? 'none' : `0 6px 16px ${withAlpha(LS.purple, '35')}`,
               }}
             >
               {verifying ? 'Checking...' : 'Unlock Fundraising Hub'}
