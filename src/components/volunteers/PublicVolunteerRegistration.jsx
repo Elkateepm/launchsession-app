@@ -125,7 +125,7 @@ export default function PublicVolunteerRegistration() {
           {['About You', 'Contact', 'Skills', 'DBS', 'Review'].map((s, i) => (
             <div key={s} style={{ flex: 1, textAlign: 'center' }}>
               <div style={{ height: 4, borderRadius: 99, background: step > i ? primary : 'var(--border)', marginBottom: 5 }} />
-              <div style={{ fontSize: 10, fontWeight: 700, color: step === i + 1 ? primary : 'var(--text-faint)' }}>{s}</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: step === i + 1 ? 'var(--org-ink)' : 'var(--text-faint)' }}>{s}</div>
             </div>
           ))}
         </div>

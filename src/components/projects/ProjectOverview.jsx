@@ -359,7 +359,7 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
 
           {/* Today */}
           {todayDay && (
-            <div style={card({ padding: 18, marginBottom: 14, border: '1.5px solid var(--ok-border)', background: 'linear-gradient(180deg,#F0FDF4,#fff)' })}>
+            <div style={card({ padding: 18, marginBottom: 14, border: '1.5px solid var(--ok-border)', background: 'linear-gradient(180deg,var(--ok-bg),#fff)' })}>
               <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--ok-text)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6 }}>Today</div>
               <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)' }}>{todayDay.title}</div>
               <div style={{ fontSize: 12.5, color: 'var(--text3)', fontWeight: 600, margin: '3px 0 10px' }}>

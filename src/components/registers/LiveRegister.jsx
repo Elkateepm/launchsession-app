@@ -350,7 +350,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <button aria-label={backLabel} onClick={onClose} style={{ minHeight: 44, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', fontSize: 15.5, fontWeight: 800, color: 'var(--text)', cursor: 'pointer', padding: '4px 6px 4px 2px', borderRadius: 8, letterSpacing: '-0.01em' }}>
-            <span style={{ fontSize: 20, color: org?.primary_color || '#1B9AAA' }}>‹</span><span style={{ textAlign: 'left', minWidth: 0 }}><span style={{ display: 'block', color: 'var(--text3)', fontSize: 11, fontWeight: 600, marginBottom: 4 }}>{backLabel}</span><span style={{ display: 'block', overflowWrap: 'anywhere' }}>{session.title}</span></span>
+            <span style={{ fontSize: 20, color: 'var(--org-ink)' || '#1B9AAA' }}>‹</span><span style={{ textAlign: 'left', minWidth: 0 }}><span style={{ display: 'block', color: 'var(--text3)', fontSize: 11, fontWeight: 600, marginBottom: 4 }}>{backLabel}</span><span style={{ display: 'block', overflowWrap: 'anywhere' }}>{session.title}</span></span>
           </button>
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800,
@@ -413,7 +413,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
       </div>
 
       {loadError && <div role="alert" style={{ padding: 12, background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>{loadError} <button onClick={load} style={{ minHeight: 44 }}>Retry</button></div>}
-      <div style={{ padding: '12px 16px', background: 'var(--surface, #fff)', borderBottom: '1px solid var(--border, var(--border))', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+      <div style={{ padding: '12px 16px', background: 'var(--surface, #fff)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
         <div style={{ fontSize: 13, lineHeight: 1.5 }}>
           <strong>{!session.opened_at ? 'Ready for arrivals' : grouped.expected.length ? `${grouped.expected.length} arrivals to resolve` : signedInCount ? 'Delivery in progress' : 'Ready to finish'}</strong>
           <div style={{ color: 'var(--text3)', fontSize: 12 }}>{!session.opened_at ? `Check your team and plan, then start the ${terms.session}.` : 'Record arrivals and departures here. Changes save as you go.'}</div>

@@ -89,7 +89,7 @@ export default function Payments({ org, session, isAdmin }) {
               <button key={t.key} onClick={() => setTab(t.key)} style={{
                 padding: isMobile ? '12px 12px' : '12px 14px', background: 'none', border: 'none', cursor: 'pointer',
                 fontSize: isMobile ? 13 : 13.5, fontWeight: 700, whiteSpace: 'nowrap',
-                color: tab === t.key ? primary : 'var(--text3)',
+                color: tab === t.key ? 'var(--org-ink)' : 'var(--text3)',
                 borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent',
               }}>{isMobile ? (t.shortLabel || t.label) : t.label}</button>
             ))}
@@ -222,7 +222,7 @@ function PickChildThenPay({ children, onClose, onPick, isMobile }) {
               transition: 'background 0.15s, border-color 0.15s',
             }}
               onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface2)'; e.currentTarget.style.borderColor = 'var(--border)' }}
-              onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = 'transparent' }}>
+              onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface)'; e.currentTarget.style.borderColor = 'transparent' }}>
               <ChildAvatar child={c} size={36} />
               <span style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {c.first_name} {c.last_name}

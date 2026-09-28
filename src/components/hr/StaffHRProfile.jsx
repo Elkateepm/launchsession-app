@@ -243,7 +243,7 @@ export default function StaffHRProfile({ org, userProfile, person, onClose, init
       </div>
 
       <nav aria-label="Profile sections" style={{ display: 'flex', gap: 4, overflowX: 'auto', borderBottom: `1px solid ${HR.line}`, marginBottom: 18 }}>
-        {groups.map(([label, tabs]) => <button key={label} aria-current={group?.[0] === label ? 'page' : undefined} onClick={() => changeTab(tabs[0][0])} style={{ ...HR.button, flexShrink: 0, borderRadius: 0, border: 0, borderBottom: `3px solid ${group?.[0] === label ? primary : 'transparent'}`, background: 'transparent', color: group?.[0] === label ? primary : HR.muted }}>{label}</button>)}
+        {groups.map(([label, tabs]) => <button key={label} aria-current={group?.[0] === label ? 'page' : undefined} onClick={() => changeTab(tabs[0][0])} style={{ ...HR.button, flexShrink: 0, borderRadius: 0, border: 0, borderBottom: `3px solid ${group?.[0] === label ? primary : 'transparent'}`, background: 'transparent', color: group?.[0] === label ? 'var(--org-ink)' : HR.muted }}>{label}</button>)}
       </nav>
       {group?.[1].length > 1 && <label style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18, color: HR.muted, fontSize: 12 }}>
         {group[0]}

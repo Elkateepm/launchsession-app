@@ -92,7 +92,7 @@ export function FormsOverview({ forms = [], submissions = [], primary, onOpenFor
             <p style={{ fontSize: 13, color: 'var(--text3, #64748B)', margin: '6px 0 18px' }}>Everything you collect, organised in one place.</p>
             <input aria-label="Search form library" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search by name, description or type…" style={{ width: '100%', minHeight: 46, padding: '12px 14px', border: '1px solid #DCE3EB', borderRadius: 10, background: 'var(--surface2, #F8FAFC)', boxSizing: 'border-box', fontFamily: 'inherit', fontSize: 14 }} />
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 14 }}>
-              {[['all', 'All forms', forms.length], ['active', 'Live', live], ['draft', 'Drafts', drafts], ['archived', 'Archived', forms.filter(f => statusOf(f) === 'archived').length]].map(([key, label, count]) => <button key={key} aria-pressed={status === key} onClick={() => setStatus(key)} style={{ ...button, borderColor: status === key ? primary : 'transparent', color: status === key ? primary : 'var(--text3, #64748B)', background: status === key ? 'var(--org-a05, #F8FAFC)' : '#fff' }}>{label} <span style={{ marginLeft: 5, fontSize: 11 }}>{count}</span></button>)}
+              {[['all', 'All forms', forms.length], ['active', 'Live', live], ['draft', 'Drafts', drafts], ['archived', 'Archived', forms.filter(f => statusOf(f) === 'archived').length]].map(([key, label, count]) => <button key={key} aria-pressed={status === key} onClick={() => setStatus(key)} style={{ ...button, borderColor: status === key ? primary : 'transparent', color: status === key ? 'var(--org-ink)' : 'var(--text3, #64748B)', background: status === key ? 'var(--org-a05, #F8FAFC)' : 'var(--surface)' }}>{label} <span style={{ marginLeft: 5, fontSize: 11 }}>{count}</span></button>)}
             </div>
           </div>
           {visible.map(f => {
@@ -102,7 +102,7 @@ export function FormsOverview({ forms = [], submissions = [], primary, onOpenFor
             const tone = state === 'active' ? '#047857' : state === 'draft' ? 'var(--warn-text)' : 'var(--text3, #64748B)'
             return <article key={f.id} style={{ padding: isMobile ? 16 : 22, borderBottom: '1px solid #EDF0F5' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                {!isMobile && <div style={{ width: 44, height: 50, borderRadius: 10, background: 'var(--surface2, #F1F5F9)', color: primary, display: 'grid', placeItems: 'center', flexShrink: 0 }}><Icon name="📝" /></div>}
+                {!isMobile && <div style={{ width: 44, height: 50, borderRadius: 10, background: 'var(--surface2, #F1F5F9)', color: 'var(--org-ink)', display: 'grid', placeItems: 'center', flexShrink: 0 }}><Icon name="📝" /></div>}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}><h3 style={{ ...heading, fontSize: 15, overflowWrap: 'anywhere' }}>{f.name}</h3><span style={{ color: tone, fontWeight: 700, fontSize: 11, background: 'var(--surface2, #F8FAFC)', borderRadius: 6, padding: '4px 7px' }}>{state === 'active' ? '● Live' : state === 'draft' ? 'Draft' : 'Archived'}</span></div>
                   <p style={{ fontSize: 13, color: 'var(--text3, #64748B)', margin: '7px 0 12px', lineHeight: 1.5 }}>{f.description || `${f.tag || 'General'} form · ${(f.fields || []).length} fields`}</p>
@@ -110,7 +110,7 @@ export function FormsOverview({ forms = [], submissions = [], primary, onOpenFor
                 </div>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16, paddingLeft: isMobile ? 0 : 58 }}>
-                {canViewSubmissions(f) && <button onClick={() => onOpenForm(f)} style={{ ...button, color: primary }}>View responses ↗</button>}
+                {canViewSubmissions(f) && <button onClick={() => onOpenForm(f)} style={{ ...button, color: 'var(--org-ink)' }}>View responses ↗</button>}
                 {state === 'active' && <button onClick={() => onShare(f)} style={button}>{copiedId === f.id ? 'Link copied ✓' : 'Copy link'}</button>}
                 {isAdmin && <button onClick={() => onEdit(f)} style={{ ...button, borderColor: 'transparent' }}>{state === 'draft' ? 'Continue editing' : 'Edit form'}</button>}
               </div>

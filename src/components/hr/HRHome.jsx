@@ -61,7 +61,7 @@ export default function HRHome({ org, session, userProfile, onNavigate, section,
         </div>
       </header>
       <nav aria-label="People and HR sections" style={{ display: 'flex', gap: 4, overflowX: 'auto', borderBottom: `1px solid ${HR.line}`, marginBottom: 24 }}>
-        {TABS.map(([key, label, Icon]) => <button key={key} aria-current={activeTab === key ? 'page' : undefined} onClick={() => navigateTab(key)} style={{ ...HR.button, flexShrink: 0, borderRadius: 0, border: 0, borderBottom: `3px solid ${activeTab === key ? primary : 'transparent'}`, background: 'transparent', padding: '13px 14px', color: activeTab === key ? primary : HR.muted }}><Icon size={16} aria-hidden="true" />{label}</button>)}
+        {TABS.map(([key, label, Icon]) => <button key={key} aria-current={activeTab === key ? 'page' : undefined} onClick={() => navigateTab(key)} style={{ ...HR.button, flexShrink: 0, borderRadius: 0, border: 0, borderBottom: `3px solid ${activeTab === key ? primary : 'transparent'}`, background: 'transparent', padding: '13px 14px', color: activeTab === key ? 'var(--org-ink)' : HR.muted }}><Icon size={16} aria-hidden="true" />{label}</button>)}
       </nav>
       {activeTab === 'overview' && <PeopleOverview data={data} primary={primary} onOpen={onOpen} onTab={navigateTab} />}
       {activeTab === 'people' && <PeopleDirectory key={peopleFilter} initialFilter={peopleFilter} data={data} primary={primary} onOpen={onOpen} onAdd={access.canEditEmployment ? () => setAdding(true) : undefined} onAccounts={() => onNavigate?.('team')} onVolunteers={showVolunteers ? () => onNavigate?.('volunteers') : undefined} />}

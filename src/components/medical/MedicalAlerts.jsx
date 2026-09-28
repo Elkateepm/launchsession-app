@@ -185,7 +185,7 @@ export default function MedicalAlerts({ org, session, onNavigate }) {
             border: `1.5px solid ${tab === t.key ? (t.tone || primary) : t.tone ? `${t.tone}55` : 'var(--border)'}`,
             background: tab === t.key
               ? (t.tone || `linear-gradient(135deg, ${primary}, var(--org-a85))`)
-              : '#fff',
+              : 'var(--surface)',
             color: tab === t.key ? '#fff' : (t.tone || 'var(--text3)'),
             fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
           }}>{t.label} {t.count}</button>

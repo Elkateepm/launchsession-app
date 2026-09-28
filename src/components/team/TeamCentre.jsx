@@ -320,7 +320,7 @@ function PersonDrawer({ person, org, primary, isMobile, isAdmin, canDecide, myRo
         org_name: org?.name,
         org_slug: org?.slug,
         org_logo: org?.logo_url,
-        org_color: org?.primary_color,
+        org_color: 'var(--org-ink)',
         redirect_to: window.location.origin + '/reset-password' + (org?.slug ? '?org=' + org.slug : ''),
       },
     })

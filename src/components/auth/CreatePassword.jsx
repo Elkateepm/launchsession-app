@@ -277,7 +277,7 @@ export default function CreatePassword() {
           <img src="/launchsession-badge.png" alt="LaunchSession" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, boxShadow: `0 6px 18px -4px var(--org-a60)` }} />
           <div>
             <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', letterSpacing: -0.5 }}>LaunchSession</div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: primary, letterSpacing: 1 }}>EMPOWERING YOUTH. EVERY SESSION.</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--org-ink)', letterSpacing: 1 }}>EMPOWERING YOUTH. EVERY SESSION.</div>
           </div>
         </div>
 

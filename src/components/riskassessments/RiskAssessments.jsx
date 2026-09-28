@@ -669,7 +669,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                 <div style={glass({ padding: 18 })}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                     <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>Templates</div>
-                    <button onClick={() => setShowTemplates(true)} style={{ fontSize: 11, fontWeight: 800, color: primary, background: 'none', border: 'none', cursor: 'pointer' }}>Browse <Icon name="→" /></button>
+                    <button onClick={() => setShowTemplates(true)} style={{ fontSize: 11, fontWeight: 800, color: 'var(--org-ink)', background: 'none', border: 'none', cursor: 'pointer' }}>Browse <Icon name="→" /></button>
                   </div>
                   {RA_TEMPLATES.slice(0, 4).map(t => (
                     <button key={t.key} onClick={() => setShowTemplates(true)} style={{ display: 'flex', width: '100%', alignItems: 'center', gap: 8, padding: '8px 0', borderTop: '1px solid rgba(15,23,42,0.05)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
@@ -863,7 +863,7 @@ function CreateModal({ org, staff, venues, onClose, onCreate, primary, prefillSe
                   {activeVenues.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
                 </select>
                 <button type="button" onClick={() => { setUseCustomLocation(true); setForm(f => ({ ...f, venue_id: null })) }}
-                  style={{ background: 'none', border: 'none', padding: '6px 0 0', fontSize: 11.5, fontWeight: 700, color: primary, cursor: 'pointer' }}>
+                  style={{ background: 'none', border: 'none', padding: '6px 0 0', fontSize: 11.5, fontWeight: 700, color: 'var(--org-ink)', cursor: 'pointer' }}>
                   Use a one-off location instead
                 </button>
                 {selectedVenue?.default_hazards?.length > 0 && (
@@ -877,7 +877,7 @@ function CreateModal({ org, staff, venues, onClose, onCreate, primary, prefillSe
                 <input style={inputStyle} value={form.location} onChange={e => set('location', e.target.value)} placeholder="e.g. Watford Leisure Centre" />
                 {activeVenues.length > 0 && (
                   <button type="button" onClick={() => setUseCustomLocation(false)}
-                    style={{ background: 'none', border: 'none', padding: '6px 0 0', fontSize: 11.5, fontWeight: 700, color: primary, cursor: 'pointer' }}>
+                    style={{ background: 'none', border: 'none', padding: '6px 0 0', fontSize: 11.5, fontWeight: 700, color: 'var(--org-ink)', cursor: 'pointer' }}>
                     Choose a saved venue instead
                   </button>
                 )}

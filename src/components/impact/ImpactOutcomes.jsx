@@ -147,7 +147,7 @@ export default function ImpactOutcomes({ org, isAdmin }) {
             padding: '8px 16px', borderRadius: 9, border: 'none',
             background: period === p.key ? 'var(--surface)' : 'transparent',
             boxShadow: period === p.key ? '0 1px 3px rgba(0,0,0,0.09)' : 'none',
-            color: period === p.key ? primary : 'var(--text-faint)',
+            color: period === p.key ? 'var(--org-ink)' : 'var(--text-faint)',
             fontWeight: 800, fontSize: 12.5, cursor: 'pointer', fontFamily: 'inherit',
           }}>{p.label}</button>
         ))}

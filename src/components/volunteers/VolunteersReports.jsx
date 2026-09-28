@@ -118,7 +118,7 @@ export default function VolunteersReports({ org, volunteers, sessionStaff, sessi
             <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0' }}>
               <Avatar name={v.full_name} photoUrl={v.photo_url} size={28} color={primary} />
               <div style={{ flex: 1, fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{v.full_name}</div>
-              <div style={{ fontSize: 12.5, fontWeight: 800, color: primary }}>{count} sessions</div>
+              <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--org-ink)' }}>{count} sessions</div>
             </div>
           ))}
         </div>

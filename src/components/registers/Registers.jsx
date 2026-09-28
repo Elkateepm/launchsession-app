@@ -415,7 +415,7 @@ function InlineChildImport({ org, template, onImported }) {
       </div>
       <textarea value={csvText} onChange={e => setCsvText(e.target.value)} placeholder="or paste CSV here..." rows={3} style={fi} />
       <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-        <button onClick={downloadTemplate} style={{ flex: 1, padding: '7px', borderRadius: 8, border: `1px solid var(--org-a20)`, background: primary + '10', color: primary, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}><Icon name="⬇" /> Template</button>
+        <button onClick={downloadTemplate} style={{ flex: 1, padding: '7px', borderRadius: 8, border: `1px solid var(--org-a20)`, background: primary + '10', color: 'var(--org-ink)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}><Icon name="⬇" /> Template</button>
         <button onClick={() => { const { rows: p, errs } = parseCSV(csvText); setRows(p); setErrors(errs); setStep('preview') }} disabled={!csvText.trim()}
           style={{ flex: 1, padding: '7px', borderRadius: 8, border: 'none', background: csvText.trim() ? primary : 'var(--text-faint)', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Preview <Icon name="→" /></button>
       </div>
@@ -1070,7 +1070,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
                     ))}
                   </div>
                 )}
-                <div style={{ fontSize: 12.5, color: child.medical_notes ? '#78350F' : '#A16207', lineHeight: 1.55 }}>
+                <div style={{ fontSize: 12.5, color: child.medical_notes ? 'var(--warn-text)' : '#A16207', lineHeight: 1.55 }}>
                   {child.medical_notes || 'No additional medical notes'}
                 </div>
               </div>
@@ -1251,8 +1251,8 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
     expected:   { label: 'Expected',    bg: 'rgba(255,255,255,0.06)', color: 'var(--text-faint)', dot: 'var(--text-faint)' },
     unmarked:   { label: 'Not marked',  bg: 'rgba(255,255,255,0.06)', color: 'var(--text-faint)', dot: 'var(--text-faint)' },
   } : {
-    signed_in:  { label: 'In',          bg: 'linear-gradient(135deg,#DCFCE7,#BBF7D0)', color: 'var(--ok-text)', dot: '#16A34A' },
-    signed_out: { label: 'Out',         bg: 'linear-gradient(135deg,#DBEAFE,#BFDBFE)', color: 'var(--info-text)', dot: '#2563EB' },
+    signed_in:  { label: 'In',          bg: 'linear-gradient(135deg,var(--ok-bg),#BBF7D0)', color: 'var(--ok-text)', dot: '#16A34A' },
+    signed_out: { label: 'Out',         bg: 'linear-gradient(135deg,var(--info-bg),#BFDBFE)', color: 'var(--info-text)', dot: '#2563EB' },
     absent:     { label: 'Absent',      bg: 'linear-gradient(135deg,#FEE2E2,#FECACA)', color: 'var(--danger-text)', dot: '#DC2626' },
     expected:   { label: 'Expected',    bg: 'var(--surface-hover)', color: 'var(--text-faint)', dot: 'var(--text-faint)' },
     unmarked:   { label: 'Not marked',  bg: 'var(--surface-hover)', color: 'var(--text-faint)', dot: 'var(--text-faint)' },
@@ -1313,7 +1313,7 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
               {bubble?.label || 'Ungrouped'}
             </span>
             {child.allergies && (
-              <span style={{ fontSize: 10, fontWeight: 800, color: dark ? '#FBBF24' : '#D97706', background: dark ? 'rgba(251,191,36,0.14)' : 'linear-gradient(135deg,#FEF3C7,#FDE68A)', borderRadius: 6, padding: '1px 6px' }}><Icon name="⚠" /> ALLERGY</span>
+              <span style={{ fontSize: 10, fontWeight: 800, color: dark ? '#FBBF24' : '#D97706', background: dark ? 'rgba(251,191,36,0.14)' : 'linear-gradient(135deg,var(--warn-bg),#FDE68A)', borderRadius: 6, padding: '1px 6px' }}><Icon name="⚠" /> ALLERGY</span>
             )}
             {child.medical_notes && (
               <span style={{ fontSize: 10, fontWeight: 800, color: dark ? '#F87171' : '#DC2626', background: dark ? 'rgba(248,113,113,0.14)' : 'linear-gradient(135deg,#FEE2E2,#FECACA)', borderRadius: 6, padding: '1px 6px' }}><Icon name="✚" /> MEDICAL</span>
@@ -1769,7 +1769,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             </div>
             {isMobile && (
               <button onClick={() => setShowMobileTools(true)} aria-label="Register options"
-                style={{ width: 34, height: 34, borderRadius: 10, border: `1.5px solid ${darkMode ? 'rgba(255,255,255,0.12)' : 'var(--border)'}`, background: darkMode ? 'rgba(255,255,255,0.06)' : '#fff', color: t.textSub, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                style={{ width: 34, height: 34, borderRadius: 10, border: `1.5px solid ${darkMode ? 'rgba(255,255,255,0.12)' : 'var(--border)'}`, background: darkMode ? 'rgba(255,255,255,0.06)' : 'var(--surface)', color: t.textSub, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 ⚙️
               </button>
             )}
@@ -1805,11 +1805,11 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                   alpha suffix (`${s.color}22`), which makes a var() invalid CSS
                   and silently drops the chip's background, border and shadow. */}
               {(session ? [
-                { icon: '📋', value: counts.total, label: 'On Register', color: primary },
+                { icon: '📋', value: counts.total, label: 'On Register', color: 'var(--org-ink)' },
                 { icon: '✅', value: counts.signed_in, label: 'Signed In', color: '#16A34A', live: isLiveSession },
                 { icon: '⏳', value: counts.expected, label: 'Yet to Arrive', color: '#D97706' },
               ] : [
-                { icon: '📋', value: counts.total, label: 'On Register', color: primary },
+                { icon: '📋', value: counts.total, label: 'On Register', color: 'var(--org-ink)' },
                 { icon: '⚠️', value: children.filter(c => c.allergies).length, label: 'Allergies', color: '#D97706', onClick: () => setStatListModal('allergies') },
                 { icon: '✚', value: children.filter(c => c.medical_notes).length, label: 'Medical Alerts', color: '#DC2626', onClick: () => setStatListModal('medical') },
               ]).map(s => (
@@ -1868,7 +1868,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 onClick={() => { if (selectMode) clearSelection(); setSelectMode(v => !v) }}
                 style={{
                   padding: '0 14px', height: isMobile ? 38 : 40, borderRadius: 10, border: `1.5px solid ${selectMode ? primary : (darkMode ? 'rgba(255,255,255,0.12)' : 'var(--border)')}`,
-                  background: selectMode ? primary : (darkMode ? 'rgba(255,255,255,0.06)' : '#fff'), color: selectMode ? '#fff' : t.textSub,
+                  background: selectMode ? primary : (darkMode ? 'rgba(255,255,255,0.06)' : 'var(--surface)'), color: selectMode ? '#fff' : t.textSub,
                   fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
                 }}
               >
@@ -2063,7 +2063,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                   e.currentTarget.style.transform = 'translateY(-2px)'
                   e.currentTarget.style.boxShadow = '0 8px 18px -8px rgba(0,0,0,0.14)'
                   e.currentTarget.style.borderColor = primary + '40'
-                  e.currentTarget.style.background = '#fff'
+                  e.currentTarget.style.background = 'var(--surface)'
                   const badge = e.currentTarget.querySelector('.tool-icon')
                   if (badge) { badge.style.transform = 'scale(1.12)'; badge.style.background = primary + '14' }
                 }}
@@ -2083,7 +2083,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               </button>
             ))}
             {onNavigate && (
-              <button onClick={() => onNavigate('settings')} style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: primary, padding: '8px 8px 2px' }}>
+              <button onClick={() => onNavigate('settings')} style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: 'var(--org-ink)', padding: '8px 8px 2px' }}>
                 Full Groups Settings →
               </button>
             )}
@@ -2104,7 +2104,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           {showImport && (
             <div style={{ padding: 14, borderBottom: '1px solid var(--border-soft)' }}>
               {activeImportTemplate && (
-                <div style={{ marginBottom: 10, fontSize: 11, fontWeight: 700, color: primary, background: primary + '0c', border: `1px solid var(--org-a10)`, borderRadius: 8, padding: '6px 10px' }}>
+                <div style={{ marginBottom: 10, fontSize: 11, fontWeight: 700, color: 'var(--org-ink)', background: primary + '0c', border: `1px solid var(--org-a10)`, borderRadius: 8, padding: '6px 10px' }}>
                   🧩 Using "{activeImportTemplate.name}" template
                 </div>
               )}
@@ -2202,7 +2202,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               <button onClick={() => { setShowImport(false); setActiveImportTemplate(null) }} style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--surface-hover)', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 16 }}>×</button>
             </div>
             {activeImportTemplate && (
-              <div style={{ marginBottom: 10, fontSize: 11, fontWeight: 700, color: primary, background: primary + '0c', border: `1px solid var(--org-a10)`, borderRadius: 8, padding: '6px 10px' }}>
+              <div style={{ marginBottom: 10, fontSize: 11, fontWeight: 700, color: 'var(--org-ink)', background: primary + '0c', border: `1px solid var(--org-a10)`, borderRadius: 8, padding: '6px 10px' }}>
                 🧩 Using "{activeImportTemplate.name}" template
               </div>
             )}
@@ -2677,7 +2677,7 @@ function ArchiveListModal({ sessions, loading, primary, org, onClose, onSelect, 
                             )}
                           </div>
                           <button onClick={(e) => { e.stopPropagation(); onRestore(s) }} style={{
-                            flexShrink: 0, fontSize: 10.5, fontWeight: 800, color: primary, background: 'var(--org-a05)',
+                            flexShrink: 0, fontSize: 10.5, fontWeight: 800, color: 'var(--org-ink)', background: 'var(--org-a05)',
                             border: `1px solid var(--org-a20)`, borderRadius: 99, padding: '6px 11px', cursor: 'pointer', whiteSpace: 'nowrap',
                           }}>↩ Restore</button>
                         </div>

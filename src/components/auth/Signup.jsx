@@ -317,7 +317,7 @@ export default function Signup() {
               ...primaryBtn, width: '100%', padding: '12px', fontSize: 14,
               boxShadow: 'none',
               background: resendState === 'sent' ? 'rgba(74,222,128,0.16)' : undefined,
-              color: resendState === 'sent' ? '#4ADE80' : '#fff',
+              color: resendState === 'sent' ? '#4ADE80' : 'var(--surface)',
               opacity: resendState === 'sending' ? 0.7 : 1,
               cursor: resendState === 'idle' ? 'pointer' : 'default',
             }}

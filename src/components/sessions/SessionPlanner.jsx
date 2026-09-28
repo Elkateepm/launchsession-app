@@ -140,7 +140,7 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, sessi
   const canNext0 = !!form.title.trim() && !!form.session_date
   const canSave  = canNext0
 
-  const fi = { width: '100%', padding: compact ? '13px 14px' : '12px 14px', borderRadius: 12, border: '1.5px solid var(--border, var(--border))', fontSize: 15, outline: 'none', background: 'var(--surface, #fff)', boxSizing: 'border-box', color: 'var(--text, #111)', fontFamily: 'inherit' }
+  const fi = { width: '100%', padding: compact ? '13px 14px' : '12px 14px', borderRadius: 12, border: '1.5px solid var(--border)', fontSize: 15, outline: 'none', background: 'var(--surface, #fff)', boxSizing: 'border-box', color: 'var(--text, #111)', fontFamily: 'inherit' }
   const lb = { fontSize: 11, fontWeight: 800, color: 'var(--text3, #6B7280)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6, display: 'block' }
 
   return (
@@ -356,7 +356,7 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, sessi
             />
 
             {/* Summary card */}
-            <div style={{ background: 'var(--surface2, #F9FAFB)', borderRadius: 14, border: '1.5px solid var(--border, var(--border))', padding: '16px' }}>
+            <div style={{ background: 'var(--surface2, #F9FAFB)', borderRadius: 14, border: '1.5px solid var(--border)', padding: '16px' }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3, #6B7280)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 }}>Summary</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {[
@@ -382,16 +382,16 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, sessi
       </div>
 
       {/* ── FOOTER ── */}
-      <div style={{ padding: compact ? '12px 18px' : '16px 24px', borderTop: '1px solid var(--border, var(--border))', flexShrink: 0, display: 'flex', gap: 10, background: 'var(--surface, #fff)' }}>
+      <div style={{ padding: compact ? '12px 18px' : '16px 24px', borderTop: '1px solid var(--border)', flexShrink: 0, display: 'flex', gap: 10, background: 'var(--surface, #fff)' }}>
         {step > 0 && (
           <motion.button onClick={() => setStep(s => s - 1)} whileTap={{ scale: 0.95 }}
-            style={{ padding: compact ? '14px 18px' : '13px 18px', borderRadius: 12, border: '1.5px solid var(--border, var(--border))', background: 'var(--surface, #fff)', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text3, #6B7280)' }}>
+            style={{ padding: compact ? '14px 18px' : '13px 18px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface, #fff)', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text3, #6B7280)' }}>
             ← Back
           </motion.button>
         )}
         {step === 0 && (
           <motion.button onClick={onCancel} whileTap={{ scale: 0.95 }}
-            style={{ padding: compact ? '14px 18px' : '13px 18px', borderRadius: 12, border: '1.5px solid var(--border, var(--border))', background: 'var(--surface, #fff)', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text3, #6B7280)' }}>
+            style={{ padding: compact ? '14px 18px' : '13px 18px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface, #fff)', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text3, #6B7280)' }}>
             Cancel
           </motion.button>
         )}
@@ -473,7 +473,7 @@ function VolunteerPanel({ session, org, onClose }) {
                 ) : assigned.map(a => (
                   <div key={a.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '10px 12px', background: a.status === 'confirmed' ? 'var(--ok-bg)' : 'var(--warn-bg)', borderRadius: 12, border: `1.5px solid ${a.status === 'confirmed' ? 'var(--ok-border)' : 'var(--warn-border)'}`, marginBottom: 8 }}>
                     <div style={{ width: 36, height: 36, borderRadius: 10, background: primary + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                      {a.volunteer?.photo_url ? <SignedImg bucket="staff-photos" src={a.volunteer.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 14, fontWeight: 900, color: primary }}>{(a.volunteer?.full_name || '?')[0]}</span>}
+                      {a.volunteer?.photo_url ? <SignedImg bucket="staff-photos" src={a.volunteer.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 14, fontWeight: 900, color: 'var(--org-ink)' }}>{(a.volunteer?.full_name || '?')[0]}</span>}
                     </div>
                     <div style={{ flex: '1 1 110px', minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.volunteer?.full_name || 'Volunteer'}</div>
@@ -493,7 +493,7 @@ function VolunteerPanel({ session, org, onClose }) {
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)', marginBottom: 12 }}>Add Volunteers ({unassigned.length} available)</div>
                   {unassigned.map(v => (
-                    <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '10px 12px', background: 'var(--surface2, #F9FAFB)', borderRadius: 12, border: '1.5px solid var(--border, var(--border))', marginBottom: 8 }}>
+                    <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '10px 12px', background: 'var(--surface2, #F9FAFB)', borderRadius: 12, border: '1.5px solid var(--border)', marginBottom: 8 }}>
                       <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                         {v.photo_url ? <SignedImg bucket="staff-photos" src={v.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 14, fontWeight: 900, color: 'var(--text3)' }}>{(v.full_name || '?')[0]}</span>}
                       </div>
@@ -641,7 +641,7 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
     <div style={{ marginTop: 18 }}>
       <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)' }}>{title}</div>
       <div style={{ display: 'flex', gap: 7, marginTop: 7 }}>
-        {[1,2,3,4,5].map(n => <button key={n} onClick={() => set(field, n)} style={{ width: 42, height: 42, borderRadius: 11, border: form[field] === n ? `2px solid ${primary}` : '1px solid var(--border)', background: form[field] === n ? 'var(--org-a10)' : 'var(--surface)', color: form[field] === n ? primary : 'var(--text3)', fontWeight: 900, cursor: 'pointer' }}>{n}</button>)}
+        {[1,2,3,4,5].map(n => <button key={n} onClick={() => set(field, n)} style={{ width: 42, height: 42, borderRadius: 11, border: form[field] === n ? `2px solid ${primary}` : '1px solid var(--border)', background: form[field] === n ? 'var(--org-a10)' : 'var(--surface)', color: form[field] === n ? 'var(--org-ink)' : 'var(--text3)', fontWeight: 900, cursor: 'pointer' }}>{n}</button>)}
       </div>
     </div>
   )
@@ -674,7 +674,7 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
                 ))}
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, position: 'relative', zIndex: 1 }}>
-                <span style={{ fontSize: 11, fontWeight: 800, color: primary, textTransform: 'uppercase', letterSpacing: 0.5 }}>{REFLECT_STEPS[step].emoji} {REFLECT_STEPS[step].title}</span>
+                <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--org-ink)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{REFLECT_STEPS[step].emoji} {REFLECT_STEPS[step].title}</span>
                 <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3, #9CA3AF)' }}>Step {step + 1} of {REFLECT_STEPS.length}</span>
               </div>
             </div>
@@ -702,7 +702,7 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
                               whileHover={{ scale: 1.12, y: -3 }} whileTap={{ scale: 0.9 }}
                               onMouseEnter={() => setHoverStar(n)} onMouseLeave={() => setHoverStar(0)}
                               onClick={() => set('overall_rating', n)}
-                              style={{ width: 52, height: 52, borderRadius: 14, border: `1.5px solid ${lit ? '#F59E0B' : 'var(--border, #E5E7EB)'}`, background: lit ? 'linear-gradient(135deg,#FEF3C7,#FDE68A)' : 'var(--surface, #fff)', cursor: 'pointer', fontSize: 22, boxShadow: lit ? '0 6px 16px rgba(245,158,11,0.3)' : 'none', transition: 'background 0.15s, box-shadow 0.15s' }}
+                              style={{ width: 52, height: 52, borderRadius: 14, border: `1.5px solid ${lit ? '#F59E0B' : 'var(--border, #E5E7EB)'}`, background: lit ? 'linear-gradient(135deg,var(--warn-bg),#FDE68A)' : 'var(--surface, #fff)', cursor: 'pointer', fontSize: 22, boxShadow: lit ? '0 6px 16px rgba(245,158,11,0.3)' : 'none', transition: 'background 0.15s, box-shadow 0.15s' }}
                             >
                               ⭐
                             </motion.button>
@@ -722,7 +722,7 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
                       {plannedOutcomes.length ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 18 }}>
                         {plannedOutcomes.map(outcome => {
                           const active = form.outcomes_observed.includes(outcome)
-                          return <button key={outcome} onClick={() => toggleArray('outcomes_observed', outcome)} style={{ minHeight: 44, padding: '8px 13px', borderRadius: 99, border: active ? `2px solid ${primary}` : '1px solid var(--border)', background: active ? 'var(--org-a10)' : 'var(--surface)', color: active ? primary : 'var(--text2)', fontWeight: 800, cursor: 'pointer' }}>{active ? '✓ ' : ''}{outcome}</button>
+                          return <button key={outcome} onClick={() => toggleArray('outcomes_observed', outcome)} style={{ minHeight: 44, padding: '8px 13px', borderRadius: 99, border: active ? `2px solid ${primary}` : '1px solid var(--border)', background: active ? 'var(--org-a10)' : 'var(--surface)', color: active ? 'var(--org-ink)' : 'var(--text2)', fontWeight: 800, cursor: 'pointer' }}>{active ? '✓ ' : ''}{outcome}</button>
                         })}
                       </div> : <div style={{ padding: 12, borderRadius: 11, background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', color: 'var(--warn-text)', fontSize: 12, marginBottom: 16 }}>No outcomes were selected when this session was planned. You can still capture evidence below.</div>}
                       <label style={label}>What tells you change happened?</label>
@@ -785,7 +785,7 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
                             <button onClick={() => setActions(a => a.filter((_, n) => n !== i))} style={{ marginLeft: 'auto', border: 'none', background: 'none', color: 'var(--danger-text)', fontWeight: 800, cursor: 'pointer' }}>Remove</button>
                           </div>
                         </div>)}
-                        <button onClick={addAction} style={{ minHeight: 44, width: '100%', border: `1.5px dashed ${primary}`, borderRadius: 11, background: 'var(--org-a05)', color: primary, fontWeight: 800, cursor: 'pointer' }}>+ Add follow-up action</button>
+                        <button onClick={addAction} style={{ minHeight: 44, width: '100%', border: `1.5px dashed ${primary}`, borderRadius: 11, background: 'var(--org-a05)', color: 'var(--org-ink)', fontWeight: 800, cursor: 'pointer' }}>+ Add follow-up action</button>
                       </ReflectionField>
                       <ReflectionField i={1}>
                         <label style={label}>Would you run this session again as-is?</label>
@@ -848,7 +848,7 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
             {/* Footer */}
             <div style={{ padding: '16px 20px calc(16px + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid var(--border, var(--border-soft))', display: 'flex', gap: 10, flexShrink: 0, background: 'var(--surface, #fff)' }}>
               {step > 0 && (
-                <motion.button whileTap={{ scale: 0.97 }} onClick={goBack} style={{ minHeight: 44, padding: '12px 16px', borderRadius: 12, border: '1.5px solid var(--border, var(--border))', background: 'var(--surface, #fff)', color: 'var(--text3, #6B7280)', fontWeight: 700, cursor: 'pointer' }}><Icon name="←" /> Back</motion.button>
+                <motion.button whileTap={{ scale: 0.97 }} onClick={goBack} style={{ minHeight: 44, padding: '12px 16px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface, #fff)', color: 'var(--text3, #6B7280)', fontWeight: 700, cursor: 'pointer' }}><Icon name="←" /> Back</motion.button>
               )}
               {!isLast ? (
                 <motion.button whileTap={{ scale: 0.97 }} disabled={!canAdvance} onClick={goNext} style={{ minHeight: 44, flex: 1, padding: 12, borderRadius: 12, border: 'none', background: canAdvance ? `linear-gradient(135deg, ${primary}, ${secondary})` : 'var(--text-faint)', color: '#fff', fontWeight: 800, fontSize: 14, cursor: canAdvance ? 'pointer' : 'default', boxShadow: canAdvance ? `0 8px 20px var(--org-a20)` : 'none' }}>
@@ -1209,7 +1209,7 @@ function TemplateFormModal({ initial, bubbleDefs, saving, onSave, onCancel, prim
               ].map(opt => {
                 const active = !!form[opt.key]
                 return (
-                  <button key={opt.key} onClick={() => set(opt.key, !active)} style={{ display: 'flex', alignItems: 'center', minHeight: 44, gap: 6, padding: '7px 12px', borderRadius: 99, border: `1.5px solid ${active ? primary : 'var(--border)'}`, background: active ? `${primary}14` : '#fff', color: active ? primary : 'var(--text3)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  <button key={opt.key} onClick={() => set(opt.key, !active)} style={{ display: 'flex', alignItems: 'center', minHeight: 44, gap: 6, padding: '7px 12px', borderRadius: 99, border: `1.5px solid ${active ? primary : 'var(--border)'}`, background: active ? `${primary}14` : '#fff', color: active ? 'var(--org-ink)' : 'var(--text3)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                     <span><Icon name={opt.icon} /></span>{opt.label}
                   </button>
                 )
@@ -1395,7 +1395,7 @@ function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, pr
         <button onClick={onView} style={{ display: 'block', textAlign: 'left', minHeight: 44, background: 'none', border: 0, padding: 0, fontSize: 17, fontWeight: 800, color: 'var(--text)', cursor: 'pointer', overflowWrap: 'anywhere' }}>{s.title}</button>
         <div style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--text3)' }}>{s.session_date ? fmtDayLabel(s.session_date) : 'Date to be confirmed'}{s.start_time ? ` · ${s.start_time.slice(0, 5)}${s.end_time ? `–${s.end_time.slice(0, 5)}` : ''}` : ''}</div>
         {s.location && <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 3, overflowWrap: 'anywhere' }}><Icon name="📍" /> {s.location}</div>}
-        {project && <button onClick={() => onOpenProject(project)} style={{ ...flowButton, border: 0, background: 'none', color: primary, padding: '6px 0', textAlign: 'left', fontSize: 12 }}>{project.name}{s.project_day_number ? ` · Day ${s.project_day_number}` : ''} →</button>}
+        {project && <button onClick={() => onOpenProject(project)} style={{ ...flowButton, border: 0, background: 'none', color: 'var(--org-ink)', padding: '6px 0', textAlign: 'left', fontSize: 12 }}>{project.name}{s.project_day_number ? ` · Day ${s.project_day_number}` : ''} →</button>}
       </div>
       <div style={{ position: 'relative', flexShrink: 0 }}><button aria-label={`Actions for ${s.title}`} aria-expanded={menuOpen} onClick={() => setMenuOpen(v => !v)} style={{ ...flowButton, width: 44, padding: 0, border: 0, fontSize: 18 }}>•••</button>{menuOpen && <CardMenu status={status} onClose={() => setMenuOpen(false)} onView={onView} onEdit={onEdit} onDuplicate={onDuplicate} onDelete={onDelete} onSaveTemplate={onSaveTemplate} />}</div>
     </div>
@@ -2062,7 +2062,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
           <button onClick={() => setShowFilters(true)} style={flowButton}>Filters{activeFilterChips.length ? ` (${activeFilterChips.length})` : ''}</button>
           <div style={{ display: 'flex', gap: 4 }} aria-label="View style">{[{ key: 'list', label: 'List' }, { key: 'week', label: 'Week' }].map(v => <button key={v.key} aria-pressed={view === v.key} onClick={() => setView(v.key)} style={{ ...flowButton, color: view === v.key ? 'var(--org-ink)' : 'var(--text3)', borderColor: view === v.key ? primary : 'var(--border)', background: view === v.key ? 'var(--org-a10)' : 'var(--surface)' }}>{v.label}</button>)}</div>
         </div>
-        {activeFilterChips.length > 0 && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>{activeFilterChips.map(c => <button key={c.key} onClick={c.clear} aria-label={`Remove ${c.label} filter`} style={{ ...flowButton, fontSize: 12, padding: '8px 12px' }}>{c.label} ×</button>)}<button onClick={clearFilters} style={{ ...flowButton, border: 0, background: 'none', color: primary }}>Clear all</button></div>}
+        {activeFilterChips.length > 0 && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>{activeFilterChips.map(c => <button key={c.key} onClick={c.clear} aria-label={`Remove ${c.label} filter`} style={{ ...flowButton, fontSize: 12, padding: '8px 12px' }}>{c.label} ×</button>)}<button onClick={clearFilters} style={{ ...flowButton, border: 0, background: 'none', color: 'var(--org-ink)' }}>Clear all</button></div>}
         {view === 'week' && <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 16 }}><button aria-label="Previous week" onClick={() => setWeekOffset(n => n - 1)} style={flowButton}>←</button><strong style={{ fontSize: 14, flex: 1 }}>{format(weekStart, 'd MMM')} – {format(addDays(weekStart, 6), 'd MMM yyyy')}</strong><button aria-label="Next week" onClick={() => setWeekOffset(n => n + 1)} style={flowButton}>→</button><button onClick={() => setWeekOffset(0)} style={flowButton}>This week</button></div>}
         {/* ═══ SESSIONS ═══ */}
         {loading ? (
@@ -2180,7 +2180,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
                       <button onClick={() => openNew(dateStr)} style={{ width: '100%', border: '1.5px dashed var(--border)', borderRadius: 12, background: 'none', padding: isMobile ? '13px 0' : '24px 0', minHeight: isMobile ? 44 : 0, cursor: 'pointer', color: 'var(--text-faint)', fontSize: 12, fontWeight: 700 }}>+ Add</button>
                     ) : daySessions.map(s => {
                       const phase = sessionPhase(s, clock)
-                      return <div key={s.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 12, marginBottom: 8 }}><button onClick={() => setViewingSession(s)} style={{ ...flowButton, border: 0, padding: 0, textAlign: 'left', width: '100%', overflowWrap: 'anywhere' }}>{s.title}</button><div style={{ fontSize: 12, color: 'var(--text3)', margin: '6px 0', lineHeight: 1.7 }}>{(s.start_time || '').slice(0, 5)}{s.end_time ? `–${s.end_time.slice(0, 5)}` : ''}<br />{s.location}</div>{phase !== 'cancelled' && <button onClick={() => { if (phase === 'draft') { setEditing(s); setView('wizard') } else if (onNavigate) onNavigate('registers', { sessionId: s.id, returnTo: 'planner' }) }} style={{ ...flowButton, width: '100%', padding: '8px 5px', fontSize: 12, color: primary }}>{phase === 'draft' ? 'Continue plan' : 'Open register'} →</button>}</div>
+                      return <div key={s.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 12, marginBottom: 8 }}><button onClick={() => setViewingSession(s)} style={{ ...flowButton, border: 0, padding: 0, textAlign: 'left', width: '100%', overflowWrap: 'anywhere' }}>{s.title}</button><div style={{ fontSize: 12, color: 'var(--text3)', margin: '6px 0', lineHeight: 1.7 }}>{(s.start_time || '').slice(0, 5)}{s.end_time ? `–${s.end_time.slice(0, 5)}` : ''}<br />{s.location}</div>{phase !== 'cancelled' && <button onClick={() => { if (phase === 'draft') { setEditing(s); setView('wizard') } else if (onNavigate) onNavigate('registers', { sessionId: s.id, returnTo: 'planner' }) }} style={{ ...flowButton, width: '100%', padding: '8px 5px', fontSize: 12, color: 'var(--org-ink)' }}>{phase === 'draft' ? 'Continue plan' : 'Open register'} →</button>}</div>
                     })}
                   </div>
                 )

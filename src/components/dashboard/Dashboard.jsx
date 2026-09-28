@@ -347,7 +347,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
           {isTrial ? (
             <motion.div whileHover={{ scale: 1.05 }} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 2, background: 'var(--org-a10)', borderRadius: 99, padding: '1.5px 8px', border: `1px solid var(--org-a10)` }}>
               <span style={{ fontSize: 10 }}><Icon name="🚀" /></span>
-              <span style={{ fontSize: 10.5, fontWeight: 700, color: primary }}>Trial · {daysLeft}d left</span>
+              <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--org-ink)' }}>Trial · {daysLeft}d left</span>
             </motion.div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
@@ -871,7 +871,7 @@ export default function Dashboard({ session, org }) {
               <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-display, sans-serif)' }}>{orgName}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
                 <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#22C55E', flexShrink: 0, boxShadow: '0 0 4px #22C55E' }} />
-                <span style={{ background: primary + '25', color: primary, borderRadius: 6, padding: '1px 7px', fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.8, border: `1px solid var(--org-a20)` }}>{plan}</span>
+                <span style={{ background: primary + '25', color: 'var(--org-ink)', borderRadius: 6, padding: '1px 7px', fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.8, border: `1px solid var(--org-a20)` }}>{plan}</span>
               </div>
             </div>}
           </div>

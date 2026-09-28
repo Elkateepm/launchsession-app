@@ -559,7 +559,7 @@ function AddQuestionButton({ open, onOpen, onPick, primary, subtle, smartOptions
           width: '100%', padding: subtle ? '7px' : '13px', borderRadius: 11,
           border: `1.5px dashed ${open ? primary : 'var(--border)'}`,
           background: subtle ? 'transparent' : 'var(--surface)',
-          color: open ? primary : 'var(--text3)',
+          color: open ? 'var(--org-ink)' : 'var(--text3)',
           fontSize: subtle ? 12.5 : 14, fontWeight: 700,
           cursor: 'pointer', fontFamily: 'inherit',
         }}
@@ -784,7 +784,7 @@ function EditorBody({ field, primary, onChange, onDuplicate, onDelete, hasRespon
             onClick={() => onChange({ options: [...(field.options || []), `Option ${(field.options?.length || 0) + 1}`] })}
             style={{
               marginTop: 7, padding: '8px 13px', borderRadius: 9, border: '1px dashed var(--border)',
-              background: 'var(--surface)', color: primary, fontSize: 12.5, fontWeight: 700,
+              background: 'var(--surface)', color: 'var(--org-ink)', fontSize: 12.5, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
             }}
           >+ Add option</button>
@@ -1275,7 +1275,7 @@ function RecipientsPanel({ org, formId, form, primary, isMobile }) {
               <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>
                 {completed.length} of {recipients.length} completed
               </span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: primary }}>{pct}%</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--org-ink)' }}>{pct}%</span>
             </div>
             <div style={{ height: 8, background: 'var(--surface-hover)', borderRadius: 8, overflow: 'hidden', marginBottom: 16 }}>
               <div style={{ width: `${pct}%`, height: '100%', background: primary, borderRadius: 8 }} />

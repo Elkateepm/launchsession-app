@@ -48,7 +48,7 @@ export default function VPSessions({ sessions, myBookings, todayStr, onOpenSessi
       ) : (
         grouped.map((group, gi) => (
           <div key={group.date} style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 11.5, fontWeight: 800, color: group.date === todayStr ? primary : 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+            <div style={{ fontSize: 11.5, fontWeight: 800, color: group.date === todayStr ? 'var(--org-ink)' : 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
               {group.date === todayStr ? 'Today' : new Date(group.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -69,7 +69,7 @@ export default function VPSessions({ sessions, myBookings, todayStr, onOpenSessi
                       </div>
                       {filter !== 'completed' && (
                         <button onClick={e => { e.stopPropagation(); onBook(s) }} disabled={saving === s.id}
-                          style={{ padding: '7px 12px', borderRadius: 10, border: booked ? '1.5px solid #FCA5A5' : 'none', background: booked ? 'var(--surface)' : theme.gradient, color: booked ? '#DC2626' : '#fff', fontWeight: 800, fontSize: 11, cursor: 'pointer', flexShrink: 0 }}>
+                          style={{ padding: '7px 12px', borderRadius: 10, border: booked ? '1.5px solid #FCA5A5' : 'none', background: booked ? 'var(--surface)' : theme.gradient, color: booked ? '#DC2626' : 'var(--surface)', fontWeight: 800, fontSize: 11, cursor: 'pointer', flexShrink: 0 }}>
                           {saving === s.id ? '…' : booked ? 'Cancel' : 'Book'}
                         </button>
                       )}

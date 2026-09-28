@@ -148,7 +148,7 @@ function BlockEditor({ block, orgId, primary, open, onOpen, onChange, onRemove, 
           <span aria-hidden="true" style={{
             width: 22, height: 22, borderRadius: 7, flexShrink: 0, display: 'flex',
             alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800,
-            background: 'var(--org-a10)', color: primary,
+            background: 'var(--org-a10)', color: 'var(--org-ink)',
           }}>{meta?.icon}</span>
           <span style={{ minWidth: 0, flex: 1 }}>
             <span style={{
@@ -180,7 +180,7 @@ function BlockEditor({ block, orgId, primary, open, onOpen, onChange, onRemove, 
                 placeholder="Write your paragraph. Leave a blank line to start a new one."
                 onChange={e => set('text', e.target.value)} />
               <button type="button" onClick={() => set('text', `${block.text || ''}{{first_name}}`)}
-                style={{ marginTop: 7, padding: '4px 10px', borderRadius: 99, border: '1.5px solid var(--border)', background: 'transparent', cursor: 'pointer', fontSize: 10.5, fontWeight: 800, color: primary, fontFamily: 'inherit' }}>
+                style={{ marginTop: 7, padding: '4px 10px', borderRadius: 99, border: '1.5px solid var(--border)', background: 'transparent', cursor: 'pointer', fontSize: 10.5, fontWeight: 800, color: 'var(--org-ink)', fontFamily: 'inherit' }}>
                 + Their first name
               </button>
             </>
@@ -208,7 +208,7 @@ function BlockEditor({ block, orgId, primary, open, onOpen, onChange, onRemove, 
                           fontSize: 11.5, fontWeight: 800,
                           border: `1.5px solid ${active ? primary : 'var(--border)'}`,
                           background: active ? 'var(--org-a10)' : 'transparent',
-                          color: active ? primary : 'var(--text3)',
+                          color: active ? 'var(--org-ink)' : 'var(--text3)',
                         }}>{sz.label}</button>
                       )
                     })}
@@ -516,7 +516,7 @@ export default function NewsletterStudio({ org, session }) {
               background: active ? primary : 'var(--border)',
               color: active ? '#fff' : 'var(--text3)',
             }}>{st.n}</span>
-            <span style={{ fontSize: 13, fontWeight: 800, color: active ? primary : 'var(--text3)' }}>{st.label}</span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: active ? 'var(--org-ink)' : 'var(--text3)' }}>{st.label}</span>
             {issue && <span title={issue} aria-label={issue} style={{ fontSize: 11, color: 'var(--warn-text)' }}>•</span>}
           </button>
         )
@@ -569,7 +569,7 @@ export default function NewsletterStudio({ org, session }) {
               border: '1.5px solid var(--border)', background: 'transparent',
               color: 'var(--text3)', fontSize: 11.5, fontWeight: 700,
             }}>
-              <span aria-hidden="true" style={{ fontSize: 14, color: primary }}><Icon name={t.icon} /></span>
+              <span aria-hidden="true" style={{ fontSize: 14, color: 'var(--org-ink)' }}><Icon name={t.icon} /></span>
               {t.label}
             </button>
           ))}

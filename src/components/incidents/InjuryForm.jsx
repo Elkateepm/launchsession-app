@@ -58,7 +58,7 @@ function Chips({ options, value, onChange, accent = ALERT }) {
           minHeight: 36, padding: '7px 12px', borderRadius: 99, cursor: 'pointer', fontFamily: 'inherit',
           border: `1.5px solid ${value === o ? accent : 'var(--border)'}`,
           background: value === o ? `${accent}12` : '#fff',
-          color: value === o ? accent : 'var(--text3)',
+          color: value === o ? 'var(--org-ink)' : 'var(--text3)',
           fontSize: 12.5, fontWeight: 800,
         }}>{o}</button>
       ))}

@@ -207,7 +207,7 @@ function UpcomingActivities({ sessions, coverage, outstandingByAssessment = {}, 
                   padding: '9px 12px', borderRadius: 10,
                   border: `1px solid ${cover ? 'var(--border)' : primary}`,
                   background: cover ? 'var(--surface)' : primary,
-                  color: cover ? 'var(--text)' : '#fff',
+                  color: cover ? 'var(--text)' : 'var(--surface)',
                   fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                 }}
               >{cover ? 'View Assessment' : 'Create Assessment'}</button>

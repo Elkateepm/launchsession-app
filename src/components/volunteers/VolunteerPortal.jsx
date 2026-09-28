@@ -170,7 +170,7 @@ function OnboardingWizard({ user, org, onComplete }) {
         <div style={{ width:56, height:56, borderRadius:16, background:primary+'22', border:`2px solid var(--org-a20)`, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
           {photoUrl ? <img src={photoUrl} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <span style={{ fontSize:22 }}><Icon name="📷" /></span>}
         </div>
-        <button onClick={()=>photoRef.current?.click()} style={{ padding:'8px 16px', borderRadius:10, border:`1.5px solid ${primary}`, background:'transparent', color:primary, fontSize:13, fontWeight:700, cursor:'pointer' }}>{photoUploading?'Uploading...':'Upload photo'}</button>
+        <button onClick={()=>photoRef.current?.click()} style={{ padding:'8px 16px', borderRadius:10, border:`1.5px solid ${primary}`, background:'transparent', color: 'var(--org-ink)', fontSize:13, fontWeight:700, cursor:'pointer' }}>{photoUploading?'Uploading...':'Upload photo'}</button>
         <input ref={photoRef} type="file" accept="image/*" style={{ display:'none' }} onChange={uploadPhoto} />
       </div>
       <button onClick={()=>setStep(2)} disabled={!f.first_name.trim()||!f.last_name.trim()||!f.phone.trim()} style={s.btn(primary)}>Continue <Icon name="→" /></button>
@@ -487,7 +487,7 @@ export default function VolunteerPortal() {
             ) : (
               <div style={{ display:'inline-flex', alignItems:'center', background: 'var(--surface)', borderRadius:12, padding:'7px 14px', boxShadow:'0 4px 14px rgba(0,0,0,0.15)' }}>
                 <img src="/logo.png" alt="LaunchSession" style={{ height:26, width:26, objectFit:'contain', marginRight:8 }} />
-                <span style={{ fontSize:14, fontWeight:900, color:'#111' }}>Launch<span style={{ color:primary }}>Session</span></span>
+                <span style={{ fontSize:14, fontWeight:900, color:'#111' }}>Launch<span style={{ color: 'var(--org-ink)' }}>Session</span></span>
               </div>
             )}
           </div>

@@ -426,7 +426,7 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
                     onClick={() => setControls(list => [...list, { description: '', due_date: '', completed: false }])}
                     style={{
                       marginTop: 9, padding: '9px 14px', borderRadius: 10,
-                      border: '1px dashed #E4DFF5', background: 'var(--surface)', color: primary,
+                      border: '1px dashed #E4DFF5', background: 'var(--surface)', color: 'var(--org-ink)',
                       fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                     }}
                   >+ Add another control</button>

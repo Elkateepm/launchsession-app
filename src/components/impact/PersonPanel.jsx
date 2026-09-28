@@ -107,7 +107,7 @@ export default function PersonPanel({ child, org, scores, onClose, onRecordOutco
           <div style={{ display: 'flex', gap: 2, marginTop: 18, overflowX: 'auto' }}>
             {TABS.map(t => (
               <button key={t.key} onClick={() => setTab(t.key)}
-                style={{ padding: '9px 12px', border: 'none', background: 'none', borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent', color: tab === t.key ? primary : 'var(--text-faint)', fontWeight: 800, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                style={{ padding: '9px 12px', border: 'none', background: 'none', borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent', color: tab === t.key ? 'var(--org-ink)' : 'var(--text-faint)', fontWeight: 800, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                 {t.icon} {t.label}
               </button>
             ))}
@@ -191,7 +191,7 @@ export default function PersonPanel({ child, org, scores, onClose, onRecordOutco
                             <div style={{ fontSize: 13, fontWeight: 800, textDecoration: g.status === 'completed' ? 'line-through' : 'none' }}>{g.status === 'completed' ? '✅ ' : ''}{g.title}</div>
                             <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 3 }}>{a.icon} {a.label}{g.target_date ? ` · Due ${format(new Date(g.target_date), 'd MMM yyyy')}` : ''}</div>
                           </div>
-                          <div style={{ fontSize: 12, fontWeight: 900, color: primary }}>{g.progress_pct}%</div>
+                          <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--org-ink)' }}>{g.progress_pct}%</div>
                         </div>
                         <div style={{ marginTop: 10 }}>
                           <ScoreBar value={g.progress_pct} max={100} color={g.status === 'completed' ? '#16A34A' : primary} />

@@ -471,7 +471,7 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
               <input type="checkbox" checked={pinned} onChange={e => setPinned(e.target.checked)} />
               📌 Pin to top
             </label>
-            <button onClick={post} disabled={posting} style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: posting ? 'var(--border)' : primary, color: posting ? 'var(--text-faint)' : '#fff', fontSize: 13, fontWeight: 800, cursor: posting ? 'default' : 'pointer' }}>
+            <button onClick={post} disabled={posting} style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: posting ? 'var(--border)' : primary, color: posting ? 'var(--text-faint)' : 'var(--surface)', fontSize: 13, fontWeight: 800, cursor: posting ? 'default' : 'pointer' }}>
               {posting ? 'Posting...' : 'Post →'}
             </button>
           </div>
@@ -509,7 +509,7 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
             </div>
           ))}
           {announcements.length > 3 && (
-            <button onClick={() => setExpanded(e => !e)} style={{ fontSize: 12, fontWeight: 700, color: primary, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0', textAlign: 'left' }}>
+            <button onClick={() => setExpanded(e => !e)} style={{ fontSize: 12, fontWeight: 700, color: 'var(--org-ink)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0', textAlign: 'left' }}>
               {expanded ? 'Show less ↑' : `Show ${announcements.length - 3} more →`}
             </button>
           )}
@@ -1246,7 +1246,7 @@ function SessionOverflowMenu({ isClosed, isUpcoming, duplicating, cancelling, on
           <button key={i} onClick={item.onClick} disabled={item.disabled}
             style={{
               display: 'block', width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: 9,
-              border: 'none', background: 'transparent', color: item.danger ? 'var(--danger-border)' : '#fff',
+              border: 'none', background: 'transparent', color: item.danger ? 'var(--danger-border)' : 'var(--surface)',
               fontSize: 12.5, fontWeight: 700, cursor: item.disabled ? 'default' : 'pointer', opacity: item.disabled ? 0.5 : 1,
             }}
             onMouseEnter={e => !item.disabled && (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
@@ -2329,7 +2329,7 @@ function DateTimeInline({ primary }) {
   return (
     <div style={{ textAlign: 'right', lineHeight: 1.3, whiteSpace: 'nowrap' }}>
       <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text, #111)' }}>{dateStr}</div>
-      <div style={{ fontSize: 11, fontWeight: 600, color: primary, letterSpacing: 0.2 }}>{timeStr}</div>
+      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--org-ink)', letterSpacing: 0.2 }}>{timeStr}</div>
     </div>
   )
 }
@@ -2517,7 +2517,7 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: isMobile ? 19 : 15, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.3 }}>Notifications</span>
                     {total > 0 && (
-                      <span style={{ fontSize: isMobile ? 12 : 10.5, fontWeight: 800, color: primary, background: primary + '14', borderRadius: 99, padding: isMobile ? '3px 9px' : '2px 8px' }}>{total} new</span>
+                      <span style={{ fontSize: isMobile ? 12 : 10.5, fontWeight: 800, color: 'var(--org-ink)', background: primary + '14', borderRadius: 99, padding: isMobile ? '3px 9px' : '2px 8px' }}>{total} new</span>
                     )}
                   </div>
                   <button onClick={() => setOpen(false)} style={{ width: isMobile ? 34 : 26, height: isMobile ? 34 : 26, borderRadius: isMobile ? 11 : 8, border: 'none', background: 'var(--surface-hover)', color: 'var(--text3)', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} aria-label="Close"><Icon name="✕" /></button>
@@ -2531,7 +2531,7 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
                       </button>
                     ))}
                   </div>
-                  {total > 0 && <button onClick={markAllRead} style={{ border: 'none', background: 'none', color: primary, fontSize: isMobile ? 13.5 : 11.5, fontWeight: 700, cursor: 'pointer', padding: isMobile ? '8px 4px' : '4px 2px', whiteSpace: 'nowrap' }}>Mark all read</button>}
+                  {total > 0 && <button onClick={markAllRead} style={{ border: 'none', background: 'none', color: 'var(--org-ink)', fontSize: isMobile ? 13.5 : 11.5, fontWeight: 700, cursor: 'pointer', padding: isMobile ? '8px 4px' : '4px 2px', whiteSpace: 'nowrap' }}>Mark all read</button>}
                 </div>
               </div>
 
@@ -3133,7 +3133,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           {!isMobile && (
             <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'center' }}>
               <div style={{ width: '100%', maxWidth: 440, position: 'relative' }}>
-                <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: primary, fontSize: 14, opacity: 0.75, pointerEvents: 'none' }}><Icon name="🔍" /></span>
+                <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: 'var(--org-ink)', fontSize: 14, opacity: 0.75, pointerEvents: 'none' }}><Icon name="🔍" /></span>
                 <input
                   value={search}
                   onChange={e => setSearch(e.target.value)}
@@ -3155,7 +3155,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                           {searchResults.children.map(c => (
                             <button key={c.id} onClick={() => { go('registers'); setSearch('') }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
                               onMouseEnter={e => e.currentTarget.style.background = primary + '08'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                              <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: primary, flexShrink: 0 }}>{c.first_name[0]}</div>
+                              <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: 'var(--org-ink)', flexShrink: 0 }}>{c.first_name[0]}</div>
                               <div>
                                 <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{c.first_name} {c.last_name}</div>
                                 {c.group_name && <div style={{ fontSize: 11, color: 'var(--text3)' }}>{c.group_name}</div>}
@@ -3182,7 +3182,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                     </>
                   )}
                   <div style={{ padding: '8px 14px', borderTop: `1px solid var(--org-a10)` }}>
-                    <button onClick={() => setSearch('')} style={{ fontSize: 11, color: primary, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Press Esc to close</button>
+                    <button onClick={() => setSearch('')} style={{ fontSize: 11, color: 'var(--org-ink)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Press Esc to close</button>
                   </div>
                 </div>
               )}
@@ -3196,7 +3196,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               <button
                 onClick={() => setShowMobileSearch(v => !v)}
                 aria-label={showMobileSearch ? 'Close search' : 'Search'}
-                style={{ width: 34, height: 34, borderRadius: 10, border: `1.5px solid ${primary}${showMobileSearch ? '55' : '22'}`, background: showMobileSearch ? 'var(--org-a05)' : 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, cursor: 'pointer', flexShrink: 0, color: primary, boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset`, position: 'relative', overflow: 'hidden', transition: 'background 0.2s, border-color 0.2s' }}>
+                style={{ width: 34, height: 34, borderRadius: 10, border: `1.5px solid ${primary}${showMobileSearch ? '55' : '22'}`, background: showMobileSearch ? 'var(--org-a05)' : 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, cursor: 'pointer', flexShrink: 0, color: 'var(--org-ink)', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset`, position: 'relative', overflow: 'hidden', transition: 'background 0.2s, border-color 0.2s' }}>
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.span
                     key={showMobileSearch ? 'close' : 'search'}
@@ -3228,7 +3228,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text, #111)', fontFamily: 'var(--font-display, sans-serif)', lineHeight: 1.2 }}>{hubUserName.split(' ')[0]}</div>
                   {userProfile?.role && (
-                    <div style={{ fontSize: 9, fontWeight: 700, color: primary, lineHeight: 1.2, textTransform: 'capitalize' }}>{userProfile.role}</div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--org-ink)', lineHeight: 1.2, textTransform: 'capitalize' }}>{userProfile.role}</div>
                   )}
                 </div>
               )}
@@ -3255,7 +3255,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   transition={{ duration: 0.24, delay: 0.04, ease: [0.16, 1, 0.3, 1] }}
                   style={{ position: 'relative' }}
                 >
-                  <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: primary, fontSize: 14, opacity: 0.75, pointerEvents: 'none' }}><Icon name="🔍" /></span>
+                  <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: 'var(--org-ink)', fontSize: 14, opacity: 0.75, pointerEvents: 'none' }}><Icon name="🔍" /></span>
                   <input
                     autoFocus
                     value={search}
@@ -3286,7 +3286,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                               <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.8, padding: '10px 14px 4px' }}>Young People</div>
                               {searchResults.children.map(c => (
                                 <button key={c.id} onClick={() => { go('registers'); setSearch(''); setShowMobileSearch(false) }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}>
-                                  <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: primary, flexShrink: 0 }}>{c.first_name[0]}</div>
+                                  <div style={{ width: 30, height: 30, borderRadius: 8, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: 'var(--org-ink)', flexShrink: 0 }}>{c.first_name[0]}</div>
                                   <div>
                                     <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{c.first_name} {c.last_name}</div>
                                     {c.group_name && <div style={{ fontSize: 11, color: 'var(--text3)' }}>{c.group_name}</div>}
@@ -4182,10 +4182,10 @@ function WeekAheadCard({ sessions, today, primary, terms, onOpenSession, onPlan,
     <section style={railPanel}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 14 }}>
         <div>
-          <div style={{ fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: primary, fontWeight: 900 }}>Planning</div>
+          <div style={{ fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--org-ink)', fontWeight: 900 }}>Planning</div>
           <h2 style={{ margin: '5px 0 0', fontSize: 17, color: 'var(--text)', letterSpacing: -0.3 }}>Week ahead</h2>
         </div>
-        <button onClick={onCalendar} style={{ border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 10, color: primary, fontSize: 11, fontWeight: 800, minHeight: 44, padding: '0 10px', cursor: 'pointer' }}>Calendar</button>
+        <button onClick={onCalendar} style={{ border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 10, color: 'var(--org-ink)', fontSize: 11, fontWeight: 800, minHeight: 44, padding: '0 10px', cursor: 'pointer' }}>Calendar</button>
       </div>
       {list.length === 0 ? (
         <div style={{ border: '1px dashed var(--org-a20)', borderRadius: 14, padding: 16, background: 'var(--org-a05)' }}>
@@ -4204,7 +4204,7 @@ function WeekAheadCard({ sessions, today, primary, terms, onOpenSession, onPlan,
                 onClick={() => onOpenSession && onOpenSession(s)}
                 style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', border: '1px solid var(--border)', borderRadius: 12, background: 'var(--surface)', padding: '10px 11px', cursor: 'pointer', fontFamily: 'inherit' }}
               >
-                <span style={{ width: 36, height: 36, borderRadius: 10, display: 'grid', placeItems: 'center', background: 'var(--org-a10)', color: primary, fontSize: 16, flexShrink: 0 }}><Icon name="📅" /></span>
+                <span style={{ width: 36, height: 36, borderRadius: 10, display: 'grid', placeItems: 'center', background: 'var(--org-a10)', color: 'var(--org-ink)', fontSize: 16, flexShrink: 0 }}><Icon name="📅" /></span>
                 <span style={{ minWidth: 0, flex: 1 }}>
                   <strong style={{ display: 'block', fontSize: 12.5, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</strong>
                   <span style={{ display: 'block', marginTop: 3, fontSize: 11, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{relativeDay(s.session_date, today)} · {time}{s.location ? ` · ${s.location.split(',')[0]}` : ''}</span>

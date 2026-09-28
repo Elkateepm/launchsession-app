@@ -139,7 +139,7 @@ export default function Reports({ org, session, userProfile, onNavigate }) {
             <button key={v.key} onClick={() => setView(v.key)} style={{
               padding: '8px 16px', border: 'none', borderRadius: 9, cursor: 'pointer',
               fontSize: 12.5, fontWeight: 800, whiteSpace: 'nowrap',
-              background: on ? 'var(--surface)' : 'transparent', color: on ? '#4F46E5' : 'var(--text3)',
+              background: on ? 'var(--surface)' : 'transparent', color: on ? 'var(--org-ink)' : 'var(--text3)',
               boxShadow: on ? '0 1px 3px rgba(15,23,42,0.12)' : 'none',
             }}>{v.label}</button>
           )
@@ -286,7 +286,7 @@ function OverviewView({ loading, metrics, learning, insights, isMobile, savedRep
       {learning && Number(learning.delivered || 0) > 0 && (
         <>
           <SectionLabel>Learning loop</SectionLabel>
-          <div style={{ ...card({ padding: isMobile ? 16 : 20, marginBottom: 22 }), background: 'linear-gradient(135deg,#F5F3FF,#EFF6FF)', borderColor: 'var(--info-border)' }}>
+          <div style={{ ...card({ padding: isMobile ? 16 : 20, marginBottom: 22 }), background: 'linear-gradient(135deg,var(--violet-bg),var(--info-bg))', borderColor: 'var(--info-border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
               <div style={{ maxWidth: 520 }}>
                 <div style={{ fontSize: 15, fontWeight: 900, color: '#312E81' }}>From delivery to evidence</div>
@@ -344,7 +344,7 @@ function OverviewView({ loading, metrics, learning, insights, isMobile, savedRep
             <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 4, lineHeight: 1.5 }}>{r.desc}</div>
             <button onClick={onOpenLibrary} style={{
               marginTop: 12, padding: '8px 14px', borderRadius: 9, border: '1px solid var(--border)',
-              background: 'var(--surface)', fontSize: 12, fontWeight: 800, color: '#4F46E5', cursor: 'pointer',
+              background: 'var(--surface)', fontSize: 12, fontWeight: 800, color: 'var(--org-ink)', cursor: 'pointer',
             }}>Run report</button>
           </div>
         ))}
@@ -354,7 +354,7 @@ function OverviewView({ loading, metrics, learning, insights, isMobile, savedRep
         <>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <SectionLabel>Recent reports</SectionLabel>
-            <button onClick={onOpenSaved} style={{ border: 'none', background: 'none', fontSize: 12, fontWeight: 800, color: '#4F46E5', cursor: 'pointer' }}>View all <Icon name="→" /></button>
+            <button onClick={onOpenSaved} style={{ border: 'none', background: 'none', fontSize: 12, fontWeight: 800, color: 'var(--org-ink)', cursor: 'pointer' }}>View all <Icon name="→" /></button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
             {savedReports.slice(0, 4).map(r => (
@@ -399,8 +399,8 @@ function LibraryView({ role, isMobile, onRun }) {
         {REPORT_CATEGORIES.map(c => (
           <button key={c} onClick={() => setCat(c)} style={{
             padding: '7px 13px', borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-            border: cat === c ? '1.5px solid #4F46E5' : '1px solid #E2E8F0',
-            background: cat === c ? 'var(--info-bg)' : 'var(--surface)', color: cat === c ? '#4F46E5' : 'var(--text2)',
+            border: cat === c ? '1.5px solid var(--org-ink)' : '1px solid var(--border)',
+            background: cat === c ? 'var(--info-bg)' : 'var(--surface)', color: cat === c ? 'var(--org-ink)' : 'var(--text2)',
           }}>{c}</button>
         ))}
       </div>

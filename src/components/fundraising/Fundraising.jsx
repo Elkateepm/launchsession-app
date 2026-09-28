@@ -311,7 +311,7 @@ function CampaignDetail({ campaign, org, onBack, onUpdate, isAdmin }) {
 
   return (
     <div>
-      <button onClick={onBack} style={{ background: 'none', border: 'none', color: primary, fontWeight: 700, fontSize: 13, cursor: 'pointer', marginBottom: 24, padding: 0 }}><Icon name="←" /> Back to fundraising</button>
+      <button onClick={onBack} style={{ background: 'none', border: 'none', color: 'var(--org-ink)', fontWeight: 700, fontSize: 13, cursor: 'pointer', marginBottom: 24, padding: 0 }}><Icon name="←" /> Back to fundraising</button>
 
       {/* Header */}
       <div style={{ paddingBottom: 20, borderBottom: '0.5px solid var(--border)', marginBottom: 20 }}>
@@ -784,7 +784,7 @@ export default function Fundraising({ org, isAdmin }) {
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 12.5, color: 'var(--text3)' }}>Real, researched UK funders for {org?.name} — search, save and track applications</div>
             </div>
-            <span style={{ fontSize: 12, color: primary, flexShrink: 0, fontWeight: 600 }}>View all <Icon name="→" /></span>
+            <span style={{ fontSize: 12, color: 'var(--org-ink)', flexShrink: 0, fontWeight: 600 }}>View all <Icon name="→" /></span>
           </button>
         </>
       )}

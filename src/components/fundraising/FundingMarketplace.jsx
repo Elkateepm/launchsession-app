@@ -301,7 +301,7 @@ export default function FundingMarketplace({ org, primary, onTrack }) {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           {CATEGORIES.map(c => (
             <button key={c.key} onClick={() => setCategory(c.key)}
-              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 14px', borderRadius: 20, border: category === c.key ? `1.5px solid ${primary}` : '1.5px solid #E5E3DC', background: category === c.key ? 'var(--org-a05)' : 'var(--surface)', color: category === c.key ? primary : 'var(--text3)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s' }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 14px', borderRadius: 20, border: category === c.key ? `1.5px solid ${primary}` : '1.5px solid #E5E3DC', background: category === c.key ? 'var(--org-a05)' : 'var(--surface)', color: category === c.key ? 'var(--org-ink)' : 'var(--text3)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s' }}>
               {c.icon && <CategoryIcon category={c.icon} color={category === c.key ? primary : 'var(--text-faint)'} />}
               {c.label}
               <span style={{ opacity: 0.55, fontWeight: 500 }}>({categoryCounts[c.key] || 0})</span>

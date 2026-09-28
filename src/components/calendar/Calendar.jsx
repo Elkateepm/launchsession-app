@@ -415,7 +415,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                   </button>
                 ))}
               </div>
-              <button onClick={jumpToday} style={{ padding: '7px 14px', borderRadius: 10, border: `1.5px solid ${primary}`, background: 'var(--surface)', color: primary, fontWeight: 800, fontSize: 12, cursor: 'pointer', transition: 'transform 0.1s' }}
+              <button onClick={jumpToday} style={{ padding: '7px 14px', borderRadius: 10, border: `1.5px solid ${primary}`, background: 'var(--surface)', color: 'var(--org-ink)', fontWeight: 800, fontSize: 12, cursor: 'pointer', transition: 'transform 0.1s' }}
                 onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'}
                 onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>Today</button>
               <div style={{ position: 'relative', display: 'flex' }}>
@@ -438,7 +438,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
           </div>
 
           <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap' }}>
-            <button onClick={() => setFilterType('all')} style={{ padding: '5px 13px', borderRadius: 99, border: `1.5px solid ${filterType === 'all' ? primary : primary + '35'}`, background: filterType === 'all' ? primary : primary + '12', color: filterType === 'all' ? '#fff' : primary, fontSize: 11.5, fontWeight: 800, cursor: 'pointer', transition: 'all 0.15s' }}>
+            <button onClick={() => setFilterType('all')} style={{ padding: '5px 13px', borderRadius: 99, border: `1.5px solid ${filterType === 'all' ? primary : primary + '35'}`, background: filterType === 'all' ? primary : primary + '12', color: filterType === 'all' ? '#fff' : 'var(--org-ink)', fontSize: 11.5, fontWeight: 800, cursor: 'pointer', transition: 'all 0.15s' }}>
               All
             </button>
             {Object.entries(TYPE_CONFIG).map(([key, cfg]) => (
@@ -448,7 +448,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
             ))}
             {venues.length > 0 && (
               <select value={filterVenue} onChange={e => setFilterVenue(e.target.value)}
-                style={{ padding: '4px 10px', borderRadius: 99, border: `1.5px solid ${filterVenue !== 'all' ? primary : 'var(--border)'}`, background: filterVenue !== 'all' ? primary + '15' : 'var(--surface)', color: filterVenue !== 'all' ? primary : 'var(--text3)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                style={{ padding: '4px 10px', borderRadius: 99, border: `1.5px solid ${filterVenue !== 'all' ? primary : 'var(--border)'}`, background: filterVenue !== 'all' ? primary + '15' : 'var(--surface)', color: filterVenue !== 'all' ? 'var(--org-ink)' : 'var(--text3)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                 <option value="all"><Icon name="📍" /> All venues</option>
                 {venues.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
               </select>
@@ -596,7 +596,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
           ) : viewMode === 'day' ? (
             <div key={gridKey.current} style={{ padding: '24px 28px', flex: 1, animation: `${slideAnim} 0.28s ease`, position: 'relative' }}>
               {isToday(currentDate) && (
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800, color: primary, background: primary + '12', borderRadius: 99, padding: '4px 12px', marginBottom: 16 }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800, color: 'var(--org-ink)', background: primary + '12', borderRadius: 99, padding: '4px 12px', marginBottom: 16 }}>
                   🔴 TODAY
                 </div>
               )}
@@ -661,7 +661,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                 })
                 return grouped.map((group, gi) => (
                   <div key={group.date} style={{ marginBottom: 22, animation: `cal-pop-in 0.25s ease ${Math.min(gi * 0.04, 0.3)}s both` }}>
-                    <div style={{ fontSize: 12, fontWeight: 800, color: group.date === today ? primary : 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: group.date === today ? 'var(--org-ink)' : 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
                       {group.date === today && '🔴 '}{format(parseISO(group.date), 'EEEE, d MMMM')}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -699,7 +699,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
           <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text2)', marginBottom: 12 }}>This Month</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
             {[
-              { label: 'Sessions', value: thisMonthCount, color: primary },
+              { label: 'Sessions', value: thisMonthCount, color: 'var(--org-ink)' },
               { label: 'Types', value: [...new Set(sessions.filter(s => s.session_date?.startsWith(format(currentDate, 'yyyy-MM'))).map(s => s.session_type))].length, color: '#8B5CF6' },
               { label: 'Young People', value: monthYoungPeople, color: 'var(--ok-text)' },
             ].map(s => (
@@ -714,7 +714,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
         <div style={{ background: 'var(--surface)', border: '1px solid #EEF0F3', borderRadius: 16, padding: 16, flex: 1, boxShadow: '0 1px 0 rgba(255,255,255,0.8) inset, 0 10px 20px -14px rgba(15,23,42,0.18)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text2)' }}>Upcoming Sessions</div>
-            <button onClick={() => { setNavDirection('right'); gridKey.current += 1; setViewMode('list') }} style={{ background: 'none', border: 'none', color: primary, fontSize: 11, fontWeight: 800, cursor: 'pointer', padding: 0 }}>View all <Icon name="→" /></button>
+            <button onClick={() => { setNavDirection('right'); gridKey.current += 1; setViewMode('list') }} style={{ background: 'none', border: 'none', color: 'var(--org-ink)', fontSize: 11, fontWeight: 800, cursor: 'pointer', padding: 0 }}>View all <Icon name="→" /></button>
           </div>
           {upcomingSessions.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text-faint)', fontSize: 12 }}>

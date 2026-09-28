@@ -405,15 +405,15 @@ export function LearningBrief({ reflections, sessions, today, primary, terms, on
   const reviewedIds = new Set(reviews.map(r => r.session_id))
   const complete = required.filter(s => reviewedIds.has(s.id)).length
   return <section aria-label="Learning this month" style={{ background: 'var(--surface, #fff)', border: '1px solid var(--border, #E6EAF4)', borderRadius: 18, padding: 20, minWidth: 0 }}>
-    <div style={{ fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: primary, fontWeight: 800 }}>Delivery to impact</div>
+    <div style={{ fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--org-ink)', fontWeight: 800 }}>Delivery to impact</div>
     <h2 style={{ margin: '8px 0', fontSize: 18, letterSpacing: -0.4, color: 'var(--text)' }}>What are we learning?</h2>
     <p style={{ margin: '0 0 16px', fontSize: 12.5, lineHeight: 1.6, color: 'var(--text3)' }}>This month’s reflections turn your {terms.sessions} into evidence for your next report.</p>
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 12, color: 'var(--text2)' }}><span>Required reflections</span><strong>{complete} / {required.length}</strong></div>
     <div role="progressbar" aria-label="Required reflections completed" aria-valuenow={complete} aria-valuemin={0} aria-valuemax={required.length || 1} style={{ height: 6, borderRadius: 8, background: 'var(--border)', margin: '10px 0 16px', overflow: 'hidden' }}><div style={{ width: `${required.length ? complete / required.length * 100 : 0}%`, height: '100%', background: primary }} /></div>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-      {[[withEvidence, 'With evidence'], [withVoice, 'Participant voice']].map(([value, label]) => <div key={label} style={{ background: 'var(--org-a05)', borderRadius: 10, padding: 12 }}><strong style={{ fontSize: 22, color: primary }}>{value}</strong><div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>{label}</div></div>)}
+      {[[withEvidence, 'With evidence'], [withVoice, 'Participant voice']].map(([value, label]) => <div key={label} style={{ background: 'var(--org-a05)', borderRadius: 10, padding: 12 }}><strong style={{ fontSize: 22, color: 'var(--org-ink)' }}>{value}</strong><div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>{label}</div></div>)}
     </div>
-    <button onClick={onOpen} style={{ width: '100%', minHeight: 44, marginTop: 14, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: primary, fontWeight: 800, cursor: 'pointer' }}>Explore reports →</button>
+    <button onClick={onOpen} style={{ width: '100%', minHeight: 44, marginTop: 14, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--org-ink)', fontWeight: 800, cursor: 'pointer' }}>Explore reports →</button>
   </section>
 }
 

@@ -2,18 +2,18 @@ import React, { useEffect, useRef } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 
 export const HR = {
-  ink: '#182238', muted: '#66758B', line: '#E6EAF0', canvas: '#F6F8FB',
-  card: { background: 'var(--surface)', border: '1px solid #E6EAF0', borderRadius: 18, padding: 22, minWidth: 0 },
-  button: { minHeight: 44, padding: '10px 15px', borderRadius: 11, border: '1px solid #E6EAF0', background: 'var(--surface)', color: '#35445B', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  input: { minHeight: 44, padding: '11px 13px', borderRadius: 11, border: '1px solid #DDE3EC', background: 'var(--surface)', color: '#182238', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', width: '100%' },
+  ink: 'var(--text)', muted: 'var(--text3)', line: 'var(--border)', canvas: 'var(--bg)',
+  card: { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: 22, minWidth: 0 },
+  button: { minHeight: 44, padding: '10px 15px', borderRadius: 11, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  input: { minHeight: 44, padding: '11px 13px', borderRadius: 11, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', width: '100%' },
 }
 
 export function Avatar({ name, primary, size = 42 }) {
   const initials = (name || '?').trim().split(/\s+/).map(n => n[0]).slice(0, 2).join('').toUpperCase()
-  return <span aria-hidden="true" style={{ width: size, height: size, flexShrink: 0, borderRadius: 13, background: 'var(--org-a10, #EEF2F7)', color: primary, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: size * 0.32 }}>{initials}</span>
+  return <span aria-hidden="true" style={{ width: size, height: size, flexShrink: 0, borderRadius: 13, background: 'var(--org-a10, #EEF2F7)', color: 'var(--org-ink)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: size * 0.32 }}>{initials}</span>
 }
 
-export function Badge({ children, tone = HR.muted, bg = '#F1F4F8' }) {
+export function Badge({ children, tone = HR.muted, bg = 'var(--surface-hover)' }) {
   return <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 9px', borderRadius: 7, fontSize: 11, fontWeight: 700, color: tone, background: bg, lineHeight: 1.4 }}>{children}</span>
 }
 

@@ -358,7 +358,7 @@ function SubmissionsView({ form, org, onBack }) {
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-        <button onClick={onBack} style={{ background: 'none', border: 'none', color: primary, fontWeight: 800, fontSize: 13, cursor: 'pointer', padding: 0 }}><Icon name="←" /> Back</button>
+        <button onClick={onBack} style={{ background: 'none', border: 'none', color: 'var(--org-ink)', fontWeight: 800, fontSize: 13, cursor: 'pointer', padding: 0 }}><Icon name="←" /> Back</button>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 17, fontWeight: 900 }}>{form.name}</div>
           <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{submissions.length} submission{submissions.length !== 1 ? 's' : ''}</div>
@@ -374,7 +374,7 @@ function SubmissionsView({ form, org, onBack }) {
         </div>
       ) : selected ? (
         <div>
-          <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', color: primary, fontWeight: 700, fontSize: 13, cursor: 'pointer', marginBottom: 16, padding: 0 }}><Icon name="←" /> All Submissions</button>
+          <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', color: 'var(--org-ink)', fontWeight: 700, fontSize: 13, cursor: 'pointer', marginBottom: 16, padding: 0 }}><Icon name="←" /> All Submissions</button>
           <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 20 }}>
             <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 14 }}>Submitted {format(new Date(selected.created_at), 'd MMM yyyy HH:mm')}</div>
             {form.fields.map((field, i) => (
@@ -819,7 +819,7 @@ export default function Forms({ org, session, isAdmin }) {
   const draftPct = totalForms ? Math.round((draftCount / totalForms) * 100) : 0
 
   const statCards = [
-    { key: 'total', label: 'Total Forms', value: totalForms, icon: '📝', color: 'var(--org-primary)', sub: 'All time' },
+    { key: 'total', label: 'Total Forms', value: totalForms, icon: '📝', color: 'var(--org-ink)', sub: 'All time' },
     { key: 'live', label: 'Live Forms', value: liveCount, icon: '✅', color: 'var(--ok-text)', sub: `${livePct}% of total` },
     { key: 'responses', label: `Responses ${period === 'all' ? '(All Time)' : period === 'week' ? 'This Week' : 'This Month'}`, value: responsesThisPeriod, icon: '📈', color: 'var(--info-text)',
       sub: periodChangePct === null ? 'All-time total' : `${periodChangePct >= 0 ? '↑' : '↓'} ${Math.abs(periodChangePct)}% vs last ${period}`, subColor: periodChangePct === null ? undefined : (periodChangePct >= 0 ? '#16A34A' : '#DC2626') },
@@ -924,7 +924,7 @@ export default function Forms({ org, session, isAdmin }) {
 
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 18, marginBottom: 26 }}>
         <div>
-          <div style={{ color: primary, fontSize: 11, fontWeight: 800, letterSpacing: 1.5, marginBottom: 8 }}>OFFICE / FORMS</div>
+          <div style={{ color: 'var(--org-ink)', fontSize: 11, fontWeight: 800, letterSpacing: 1.5, marginBottom: 8 }}>OFFICE / FORMS</div>
           <h1 style={{ fontSize: isMobile ? 28 : 34, fontWeight: 800, color: 'var(--text, #172033)', letterSpacing: -1.2, margin: 0 }}>Forms, without the paperwork.</h1>
           <p style={{ fontSize: 14, color: 'var(--text3, #64748B)', margin: '8px 0 0', lineHeight: 1.6 }}>Create, share and keep every response in one place.</p>
         </div>
@@ -932,7 +932,7 @@ export default function Forms({ org, session, isAdmin }) {
       </div>
       <div style={{ display: 'flex', gap: 18, marginBottom: 24, overflowX: 'auto', borderBottom: '1px solid #DDE3ED' }}>
         {[['overview', 'Workspace'], ['forms', 'Manage forms'], ['responses', 'Response inbox'], ['templates', 'Templates']].map(([key, label]) => (
-          <button key={key} aria-pressed={section === key} onClick={() => { setSection(key); if (key === 'templates') setTab('templates'); else if (key === 'forms') setTab('all') }} style={{ minHeight: 48, padding: '10px 2px', border: 'none', borderBottom: `3px solid ${section === key ? primary : 'transparent'}`, background: 'transparent', color: section === key ? primary : 'var(--text3, #64748B)', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: 'inherit' }}>{label}</button>
+          <button key={key} aria-pressed={section === key} onClick={() => { setSection(key); if (key === 'templates') setTab('templates'); else if (key === 'forms') setTab('all') }} style={{ minHeight: 48, padding: '10px 2px', border: 'none', borderBottom: `3px solid ${section === key ? primary : 'transparent'}`, background: 'transparent', color: section === key ? 'var(--org-ink)' : 'var(--text3, #64748B)', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: 'inherit' }}>{label}</button>
         ))}
       </div>
 
@@ -1019,8 +1019,8 @@ export default function Forms({ org, session, isAdmin }) {
               { key: 'archived', label: 'Archived' }, { key: 'templates', label: 'Templates' },
             ].map(t => (
               <button key={t.key} onClick={() => setTab(t.key)}
-                style={{ padding: '10px 14px', border: 'none', borderBottom: tab === t.key ? '2.5px solid #6D5DF6' : '2.5px solid transparent', background: 'none', color: tab === t.key ? 'var(--org-primary)' : 'var(--text3)', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
-                {t.label} <span style={{ fontSize: 11, fontWeight: 800, color: tab === t.key ? 'var(--org-primary)' : 'var(--text-faint)', background: tab === t.key ? '#6D5DF618' : 'var(--border-soft)', borderRadius: 99, padding: '1px 7px' }}>{tabCounts[t.key]}</span>
+                style={{ padding: '10px 14px', border: 'none', borderBottom: tab === t.key ? '2.5px solid #6D5DF6' : '2.5px solid transparent', background: 'none', color: tab === t.key ? 'var(--org-ink)' : 'var(--text3)', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
+                {t.label} <span style={{ fontSize: 11, fontWeight: 800, color: tab === t.key ? 'var(--org-ink)' : 'var(--text-faint)', background: tab === t.key ? '#6D5DF618' : 'var(--border-soft)', borderRadius: 99, padding: '1px 7px' }}>{tabCounts[t.key]}</span>
               </button>
             ))}
           </div>
@@ -1128,7 +1128,7 @@ export default function Forms({ org, session, isAdmin }) {
                       <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 2 }}>{form.name}</div>
                       <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{form.description || 'No description'}</div>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 10.5, fontWeight: 800, padding: '2px 9px', borderRadius: 99, background: `${accent}15`, color: accent }}>{form.tag || 'Other'}</span>
+                        <span style={{ fontSize: 10.5, fontWeight: 800, padding: '2px 9px', borderRadius: 99, background: `${accent}15`, color: 'var(--org-ink)' }}>{form.tag || 'Other'}</span>
                         <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 9px', borderRadius: 99, background: 'var(--bg)', color: 'var(--text3)' }}>{form.visibility === 'private' ? '🔒 Private' : '🌐 Public'}</span>
                       </div>
                     </div>
@@ -1208,7 +1208,7 @@ export default function Forms({ org, session, isAdmin }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>Recent submissions</div>
                 {recentSubmissions.length > 0 && (
-                  <button onClick={() => openForSubmissions(forms.find(f => f.id === recentSubmissions[0].form_id))} style={{ background: 'none', border: 'none', fontSize: 11.5, fontWeight: 800, color: 'var(--org-primary)', cursor: 'pointer' }}>View all</button>
+                  <button onClick={() => openForSubmissions(forms.find(f => f.id === recentSubmissions[0].form_id))} style={{ background: 'none', border: 'none', fontSize: 11.5, fontWeight: 800, color: 'var(--org-ink)', cursor: 'pointer' }}>View all</button>
                 )}
               </div>
               {recentSubmissions.length === 0 ? (
@@ -1248,7 +1248,7 @@ export default function Forms({ org, session, isAdmin }) {
             <div style={{ background: 'linear-gradient(150deg, #6D5DF6, #5B8DEF)', borderRadius: 16, padding: 20, color: '#fff' }}>
               <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 6 }}>Need inspiration?</div>
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5, marginBottom: 14 }}>Browse our template gallery to get started quickly.</div>
-              <button onClick={() => { setSection('templates'); setTab('templates') }} style={{ width: '100%', padding: '10px', borderRadius: 10, border: 'none', background: 'var(--surface)', color: 'var(--org-primary)', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>Browse Templates</button>
+              <button onClick={() => { setSection('templates'); setTab('templates') }} style={{ width: '100%', padding: '10px', borderRadius: 10, border: 'none', background: 'var(--surface)', color: 'var(--org-ink)', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>Browse Templates</button>
             </div>
           </div>
         )}

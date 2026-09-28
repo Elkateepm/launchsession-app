@@ -303,7 +303,7 @@ export default function ReportBuilder({ org, session, role, initialType, default
 function PreviewBlock({ title, children }) {
   return (
     <div style={{ marginBottom: 20 }}>
-      <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 0.8, color: '#4F46E5', textTransform: 'uppercase', marginBottom: 9 }}>{title}</div>
+      <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 0.8, color: 'var(--org-ink)', textTransform: 'uppercase', marginBottom: 9 }}>{title}</div>
       {children}
     </div>
   )
