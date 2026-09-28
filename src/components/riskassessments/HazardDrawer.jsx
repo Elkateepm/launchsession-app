@@ -51,7 +51,7 @@ function ScorePicker({ value, onChange, labels, primary }) {
             style={{
               padding: '10px 3px', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit',
               border: `1px solid ${active ? 'transparent' : 'var(--border)'}`,
-              background: active ? primary : '#fff',
+              background: active ? primary : 'var(--surface)',
               color: active ? '#fff' : 'var(--text2)',
             }}
           >
@@ -343,14 +343,14 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
                             display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
                             padding: '12px 13px', borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit',
                             border: `1px solid ${active ? primary : 'var(--border)'}`,
-                            background: active ? '#F6F3FF' : '#fff',
+                            background: active ? '#F6F3FF' : 'var(--surface)',
                           }}
                         >
                           <span style={{
                             width: 19, height: 19, borderRadius: 6, flexShrink: 0,
                             display: 'grid', placeItems: 'center', fontSize: 12, color: '#fff',
                             border: `1.6px solid ${active ? primary : '#E4DFF5'}`,
-                            background: active ? primary : '#fff',
+                            background: active ? primary : 'var(--surface)',
                           }}>{active ? '✓' : ''}</span>
                           <span style={{ fontSize: 14, color: 'var(--text)', fontWeight: 600 }}>{w}</span>
                         </button>
@@ -393,7 +393,7 @@ export default function HazardDrawer({ open, onClose, assessment, org, authSessi
                               display: 'flex', alignItems: 'center', gap: 7,
                               padding: '7px 11px', borderRadius: 9, cursor: 'pointer', fontFamily: 'inherit',
                               border: `1px solid ${c.completed ? '#12B76A' : 'var(--border)'}`,
-                              background: c.completed ? 'var(--ok-bg)' : '#fff',
+                              background: c.completed ? 'var(--ok-bg)' : 'var(--surface)',
                               color: c.completed ? 'var(--ok-text)' : 'var(--text3)',
                               fontSize: 12.5, fontWeight: 700,
                             }}

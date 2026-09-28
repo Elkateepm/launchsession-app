@@ -69,7 +69,7 @@ export default function VolunteersTraining({ org, volunteers, training, onDataCh
         {TRAINING_TYPES.map(t => (
           <button key={t.key} onClick={() => setActiveType(t.key)} style={{
             padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6,
-            background: activeType === t.key ? primary : '#fff', color: activeType === t.key ? '#fff' : 'var(--text2)',
+            background: activeType === t.key ? primary : 'var(--surface)', color: activeType === t.key ? '#fff' : 'var(--text2)',
             boxShadow: activeType === t.key ? 'none' : '0 1px 3px rgba(15,23,42,0.08)',
           }}>
             {t.icon} {t.label}

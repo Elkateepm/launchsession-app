@@ -125,7 +125,7 @@ export default function InjuryLog({ org, session, isAdmin }) {
           <button key={k} onClick={() => setFilter(k)} style={{
             minHeight: 38, padding: '7px 12px', borderRadius: 99, cursor: 'pointer', fontFamily: 'inherit',
             border: `1.5px solid ${filter === k ? '#0F172A' : 'var(--border)'}`,
-            background: filter === k ? '#0F172A' : '#fff',
+            background: filter === k ? '#0F172A' : 'var(--surface)',
             color: filter === k ? '#fff' : 'var(--text3)',
             fontSize: 12.5, fontWeight: 800,
           }}>{l}</button>

@@ -248,7 +248,7 @@ export function ResponseInbox({ org, forms = [], primary, initialFilter = 'all',
           <button key={key} onClick={() => setFilter(key)} style={{
             padding: '8px 14px', borderRadius: 99, fontSize: 13, fontWeight: 700,
             border: `1px solid ${filter === key ? 'transparent' : 'var(--border)'}`,
-            background: filter === key ? primary : '#fff',
+            background: filter === key ? primary : 'var(--surface)',
             color: filter === key ? '#fff' : 'var(--text3)',
             cursor: 'pointer', fontFamily: 'inherit',
           }}>

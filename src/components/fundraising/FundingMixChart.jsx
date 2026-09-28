@@ -46,7 +46,7 @@ export default function FundingMixChart({ campaigns }) {
           {segments.map(s => (
             <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ width: 8, height: 8, borderRadius: 999, background: s.color, flexShrink: 0 }} />
-              <span style={{ fontSize: 12.5, color: '#1C2333', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</span>
+              <span style={{ fontSize: 12.5, color: 'var(--text)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</span>
               <span style={{ fontSize: 12, color: 'var(--text-faint)', flexShrink: 0 }}>{Math.round(s.pct * 100)}%</span>
             </div>
           ))}

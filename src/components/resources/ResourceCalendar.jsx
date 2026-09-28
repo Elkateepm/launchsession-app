@@ -135,7 +135,7 @@ export default function ResourceCalendar({ resources, bookings, onSlotClick, onB
             const dayBookings = bookingsForDay(d)
             const inMonth = d.getMonth() === cursor.getMonth()
             return (
-              <div key={d.toISOString()} onClick={() => onSlotClick(d, 9)} style={{ minHeight: 64, border: '1px solid var(--border-soft)', borderRadius: 8, padding: 6, cursor: 'pointer', opacity: inMonth ? 1 : 0.35, background: d.toDateString() === new Date().toDateString() ? 'var(--violet-bg)' : '#fff' }}>
+              <div key={d.toISOString()} onClick={() => onSlotClick(d, 9)} style={{ minHeight: 64, border: '1px solid var(--border-soft)', borderRadius: 8, padding: 6, cursor: 'pointer', opacity: inMonth ? 1 : 0.35, background: d.toDateString() === new Date().toDateString() ? 'var(--violet-bg)' : 'var(--surface)' }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', marginBottom: 3 }}>{d.getDate()}</div>
                 {dayBookings.slice(0, 2).map(b => {
                   const r = resources.find(x => x.id === b.resource_id)

@@ -55,7 +55,7 @@ export function PeopleOverview({ data, primary, onOpen, onTab }) {
       <section style={HR.card}>
         <Title detail="The next step for each person, in priority order." action={<Badge>{data.attention?.length ?? '—'} actions</Badge>}>Needs attention</Title>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-          {[['all', 'All actions'], ['urgent', 'Overdue'], ['checks', 'Checks & training']].map(([key, label]) => <button key={key} aria-pressed={filter === key} onClick={() => { setFilter(key); setLimit(8) }} style={{ ...HR.button, background: filter === key ? '#F0F3F8' : '#fff', borderColor: filter === key ? '#DDE4ED' : 'transparent', fontSize: 12 }}>{label}</button>)}
+          {[['all', 'All actions'], ['urgent', 'Overdue'], ['checks', 'Checks & training']].map(([key, label]) => <button key={key} aria-pressed={filter === key} onClick={() => { setFilter(key); setLimit(8) }} style={{ ...HR.button, background: filter === key ? '#F0F3F8' : 'var(--surface)', borderColor: filter === key ? '#DDE4ED' : 'transparent', fontSize: 12 }}>{label}</button>)}
         </div>
         {data.errors.attention ? <LoadError message="The action list is unavailable." onRetry={data.reload} /> : !data.attention ? <Empty title="Loading actions…" /> : attention.length === 0 ? <Empty title={filter === 'all' ? 'No actions in this queue' : 'No matching actions'} detail="You can review individual checks and onboarding from the tabs above." /> : attention.slice(0, limit).map((item, index) => {
           const [label, tone, bg] = SEVERITY[item.severity] || SEVERITY[3]
@@ -133,7 +133,7 @@ export function OnboardingBoard({ data, primary, onOpen, onApprovals }) {
   const shown = people.filter(p => filter === 'all' || needsOnboarding(p, progress[p.id]))
   return <section style={HR.card}>
     <Title detail="A checklist matched to each person's employment type." action={<button style={HR.button} onClick={onApprovals}>Account approvals{data.pending ? ` (${data.pending})` : ''}<ArrowRight size={15} /></button>}>Onboarding</Title>
-    <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>{[['outstanding', 'Steps to finish'], ['all', 'All current people']].map(([key, label]) => <button key={key} aria-pressed={filter === key} style={{ ...HR.button, background: filter === key ? 'var(--surface2)' : '#fff' }} onClick={() => setFilter(key)}>{label}</button>)}</div>
+    <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>{[['outstanding', 'Steps to finish'], ['all', 'All current people']].map(([key, label]) => <button key={key} aria-pressed={filter === key} style={{ ...HR.button, background: filter === key ? 'var(--surface2)' : 'var(--surface)' }} onClick={() => setFilter(key)}>{label}</button>)}</div>
     {data.errors.people || data.errors.onboarding ? <LoadError onRetry={data.reload} /> : !data.people || !data.onboarding ? <Empty title="Loading onboarding…" /> : shown.length === 0 ? <Empty title="No outstanding onboarding" detail="New starters will appear here once their HR record is created." /> : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 270px), 1fr))', gap: 14 }}>
       {shown.map(p => {
         const s = progress[p.id]

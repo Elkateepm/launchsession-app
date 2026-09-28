@@ -139,7 +139,7 @@ export default function Reports({ org, session, userProfile, onNavigate }) {
             <button key={v.key} onClick={() => setView(v.key)} style={{
               padding: '8px 16px', border: 'none', borderRadius: 9, cursor: 'pointer',
               fontSize: 12.5, fontWeight: 800, whiteSpace: 'nowrap',
-              background: on ? '#fff' : 'transparent', color: on ? '#4F46E5' : 'var(--text3)',
+              background: on ? 'var(--surface)' : 'transparent', color: on ? '#4F46E5' : 'var(--text3)',
               boxShadow: on ? '0 1px 3px rgba(15,23,42,0.12)' : 'none',
             }}>{v.label}</button>
           )
@@ -400,7 +400,7 @@ function LibraryView({ role, isMobile, onRun }) {
           <button key={c} onClick={() => setCat(c)} style={{
             padding: '7px 13px', borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: 'pointer',
             border: cat === c ? '1.5px solid #4F46E5' : '1px solid #E2E8F0',
-            background: cat === c ? 'var(--info-bg)' : '#fff', color: cat === c ? '#4F46E5' : 'var(--text2)',
+            background: cat === c ? 'var(--info-bg)' : 'var(--surface)', color: cat === c ? '#4F46E5' : 'var(--text2)',
           }}>{c}</button>
         ))}
       </div>

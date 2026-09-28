@@ -301,7 +301,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
                 padding: '8px 15px', borderRadius: 999, fontSize: 13, fontWeight: 700,
                 cursor: 'pointer', fontFamily: 'inherit',
                 border: `1px solid ${view === key ? 'transparent' : 'var(--border)'}`,
-                background: view === key ? primary : '#fff',
+                background: view === key ? primary : 'var(--surface)',
                 color: view === key ? '#fff' : 'var(--text3)',
               }}
             >{label}</button>
@@ -472,7 +472,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
             {/* Tabs */}
             <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: 'var(--surface-hover)', borderRadius: 12, padding: 4, flexWrap: 'wrap' }}>
               {[['overview', 'Overview'], ['hazards', `Hazards${selectedHazards.length ? ` (${selectedHazards.length})` : ''}`], ['matrix', 'Matrix'], ['emergency', 'Emergency'], ['attachments', 'Attachments'], ['sessions', 'Linked'], ['live', 'Live updates'], ['reviews', 'History']].map(([key, label]) => (
-                <button key={key} onClick={() => setTab(key)} style={{ flex: '1 1 auto', padding: '8px 10px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: tab === key ? '#fff' : 'transparent', color: tab === key ? '#0F172A' : 'var(--text3)', whiteSpace: 'nowrap' }}>{label}</button>
+                <button key={key} onClick={() => setTab(key)} style={{ flex: '1 1 auto', padding: '8px 10px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: tab === key ? 'var(--surface)' : 'transparent', color: tab === key ? '#0F172A' : 'var(--text3)', whiteSpace: 'nowrap' }}>{label}</button>
               ))}
             </div>
 

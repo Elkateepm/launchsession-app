@@ -89,7 +89,7 @@ export default function OutcomeWizard({ org, children, presetChild, onClose, onS
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 280, overflowY: 'auto' }}>
                     {filteredChildren.map(c => (
                       <div key={c.id} onClick={() => set({ child: c })}
-                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12, cursor: 'pointer', border: `1.5px solid ${form.child?.id === c.id ? primary : 'var(--border-soft)'}`, background: form.child?.id === c.id ? primary + '10' : '#fff' }}>
+                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12, cursor: 'pointer', border: `1.5px solid ${form.child?.id === c.id ? primary : 'var(--border-soft)'}`, background: form.child?.id === c.id ? primary + '10' : 'var(--surface)' }}>
                         <div style={{ width: 34, height: 34, borderRadius: 9, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: primary }}>
                           {c.first_name?.[0]}{c.last_name?.[0]}
                         </div>
@@ -106,7 +106,7 @@ export default function OutcomeWizard({ org, children, presetChild, onClose, onS
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
                   {OUTCOME_AREAS.map(a => (
                     <div key={a.key} onClick={() => set({ area: a.key })}
-                      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 12, cursor: 'pointer', border: `1.5px solid ${form.area === a.key ? a.color : 'var(--border-soft)'}`, background: form.area === a.key ? a.color + '12' : '#fff' }}>
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 12, cursor: 'pointer', border: `1.5px solid ${form.area === a.key ? a.color : 'var(--border-soft)'}`, background: form.area === a.key ? a.color + '12' : 'var(--surface)' }}>
                       <span style={{ fontSize: 17 }}><Icon name={a.icon} /></span>
                       <span style={{ fontSize: 12.5, fontWeight: 700 }}>{a.label}</span>
                     </div>

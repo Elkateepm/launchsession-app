@@ -162,7 +162,7 @@ export function TemplateCreatorModal({ org, existingTemplate, onClose, onSaved }
             return (
               <div key={fieldDef.key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 8px', borderRadius: 12, background: included ? primary + '08' : 'transparent', marginBottom: 4, opacity: included ? 1 : 0.55 }}>
                 <button onClick={() => toggleField(fieldDef)} disabled={locked}
-                  style={{ width: 22, height: 22, borderRadius: 7, border: `2px solid ${included ? primary : 'var(--text-faint)'}`, background: included ? primary : '#fff', cursor: locked ? 'default' : 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 900 }}>
+                  style={{ width: 22, height: 22, borderRadius: 7, border: `2px solid ${included ? primary : 'var(--text-faint)'}`, background: included ? primary : 'var(--surface)', cursor: locked ? 'default' : 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 900 }}>
                   {included ? '✓' : ''}
                 </button>
                 <span style={{ fontSize: 15, flexShrink: 0 }}><Icon name={fieldDef.icon} /></span>
@@ -172,7 +172,7 @@ export function TemplateCreatorModal({ org, existingTemplate, onClose, onSaved }
                 </div>
                 {included && !locked && (
                   <button onClick={() => toggleRequired(fieldDef.key)}
-                    style={{ fontSize: 10, fontWeight: 800, padding: '3px 10px', borderRadius: 99, border: `1px solid ${cfg?.required ? '#DC2626' : 'var(--text-faint)'}`, background: cfg?.required ? 'var(--danger-bg)' : '#fff', color: cfg?.required ? '#DC2626' : 'var(--text-faint)', cursor: 'pointer', flexShrink: 0 }}>
+                    style={{ fontSize: 10, fontWeight: 800, padding: '3px 10px', borderRadius: 99, border: `1px solid ${cfg?.required ? '#DC2626' : 'var(--text-faint)'}`, background: cfg?.required ? 'var(--danger-bg)' : 'var(--surface)', color: cfg?.required ? '#DC2626' : 'var(--text-faint)', cursor: 'pointer', flexShrink: 0 }}>
                     {cfg?.required ? 'Required' : 'Optional'}
                   </button>
                 )}

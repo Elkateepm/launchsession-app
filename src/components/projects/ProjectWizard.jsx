@@ -214,7 +214,7 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
                   <button key={o.key} onClick={() => set('schedule_mode', o.key)} style={{
                     textAlign: 'left', padding: '12px 14px', borderRadius: 12, cursor: 'pointer',
                     border: form.schedule_mode === o.key ? '2px solid #6D5DF6' : '1.5px solid #E2E8F0',
-                    background: form.schedule_mode === o.key ? 'var(--violet-bg)' : '#fff',
+                    background: form.schedule_mode === o.key ? 'var(--violet-bg)' : 'var(--surface)',
                   }}>
                     <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{o.t}</div>
                     <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2 }}>{o.d}</div>
@@ -232,7 +232,7 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
                   <button key={d.idx} onClick={() => toggleWeekday(d.idx)} style={{
                     padding: '7px 12px', borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: 'pointer',
                     border: form.weekdays.includes(d.idx) ? '2px solid #6D5DF6' : '1.5px solid #E2E8F0',
-                    background: form.weekdays.includes(d.idx) ? 'var(--violet-bg)' : '#fff', color: 'var(--text2)',
+                    background: form.weekdays.includes(d.idx) ? 'var(--violet-bg)' : 'var(--surface)', color: 'var(--text2)',
                   }}>{isMobile ? d.short : d.label}</button>
                 ))}
               </div>
@@ -256,7 +256,7 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
                         <button key={iso} onClick={() => toggleExcluded(iso)} style={{
                           padding: '6px 10px', borderRadius: 9, fontSize: 11.5, fontWeight: 700, cursor: 'pointer',
                           border: off ? '1.5px dashed #CBD5E1' : '1.5px solid #E2E8F0',
-                          background: off ? 'var(--surface2)' : '#fff',
+                          background: off ? 'var(--surface2)' : 'var(--surface)',
                           color: off ? 'var(--text-faint)' : 'var(--text)',
                           textDecoration: off ? 'line-through' : 'none',
                         }}>{fmtNice(iso)}</button>

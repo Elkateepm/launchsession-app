@@ -1293,7 +1293,7 @@ function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, 
       {/* Checkbox — only shown once "Select" mode is switched on */}
       {selectMode && (
         <button onClick={e => { e.stopPropagation(); onToggleSelect(child.id) }}
-          style={{ width: 20, height: 20, borderRadius: 7, border: `2px solid ${selected ? primary : (dark ? 'rgba(255,255,255,0.25)' : 'var(--text-faint)')}`, background: selected ? primary : (dark ? 'transparent' : '#fff'), cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 900 }}>
+          style={{ width: 20, height: 20, borderRadius: 7, border: `2px solid ${selected ? primary : (dark ? 'rgba(255,255,255,0.25)' : 'var(--text-faint)')}`, background: selected ? primary : (dark ? 'transparent' : 'var(--surface)'), cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 900 }}>
           {selected ? '✓' : ''}
         </button>
       )}
@@ -1647,14 +1647,14 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
     textMuted: 'var(--text-faint)',
     miniChipBg: darkMode ? 'rgba(255,255,255,0.06)' : 'var(--surface2)',
     miniChipBorder: darkMode ? 'rgba(255,255,255,0.1)' : 'var(--border)',
-    btnBg: darkMode ? null : '#fff',
+    btnBg: darkMode ? null : 'var(--surface)',
     btnBorder: darkMode ? null : 'var(--border)',
     btnShadow: darkMode ? null : '0 1px 4px -1px rgba(0,0,0,0.06)',
-    cardBg: darkMode ? '#161A30' : '#fff',
+    cardBg: darkMode ? '#161A30' : 'var(--surface)',
     cardBorder: darkMode ? 'rgba(255,255,255,0.08)' : 'var(--border)',
     inputBg: darkMode ? '#12152A' : (primary + '06'),
     inputBorder: darkMode ? 'rgba(255,255,255,0.1)' : (primary + '25'),
-    filterBg: darkMode ? 'transparent' : '#fff',
+    filterBg: darkMode ? 'transparent' : 'var(--surface)',
     filterBorder: darkMode ? 'rgba(255,255,255,0.08)' : 'var(--border-soft)',
     // Opaque in both themes: the sticky group headings paint with it, and a
     // transparent heading let the cards scroll visibly through its text.
@@ -1905,7 +1905,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                   boxShadow: isActive ? `0 3px 10px -4px ${chipColor}90` : 'none',
                   transition: 'all 0.15s ease',
                 }}>
-                  {bubble && <span style={{ width: 8, height: 8, borderRadius: '50%', background: isActive ? '#fff' : bubble.color, display: 'inline-block' }} />}
+                  {bubble && <span style={{ width: 8, height: 8, borderRadius: '50%', background: isActive ? 'var(--surface)' : bubble.color, display: 'inline-block' }} />}
                   {g === 'all' ? 'All Groups' : g}
                   <span style={{ fontSize: 10, opacity: isActive ? 0.9 : 0.7 }}>
                     {g === 'all' ? children.length : children.filter(c => (c.group_name || '').toLowerCase() === g.toLowerCase()).length}
@@ -2729,7 +2729,7 @@ function AddChildModal({ orgId, bubbles, onClose, onAdded }) {
             <label style={lb}>Group</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
               {bubbles.map(b => (
-                <button key={b.key} onClick={() => set('group_name', b.label)} style={{ padding: '6px 14px', borderRadius: 20, border: `2px solid ${form.group_name === b.label ? b.color : 'var(--border)'}`, background: form.group_name === b.label ? b.color + '18' : '#fff', color: form.group_name === b.label ? b.color : 'var(--text3)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                <button key={b.key} onClick={() => set('group_name', b.label)} style={{ padding: '6px 14px', borderRadius: 20, border: `2px solid ${form.group_name === b.label ? b.color : 'var(--border)'}`, background: form.group_name === b.label ? b.color + '18' : 'var(--surface)', color: form.group_name === b.label ? b.color : 'var(--text3)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                   {b.label}
                 </button>
               ))}

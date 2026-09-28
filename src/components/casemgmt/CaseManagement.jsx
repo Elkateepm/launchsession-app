@@ -493,7 +493,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
             {/* Tabs */}
             <div style={{ display: 'flex', gap: 4, marginBottom: 14, background: 'var(--surface-hover)', borderRadius: 12, padding: 4 }}>
               {[['timeline', '🕐 Timeline'], ['tasks', '☑️ Tasks'], ['documents', '📎 Documents'], ['actions', '⚡ Safeguarding Actions']].map(([key, label]) => (
-                <button key={key} onClick={() => setTab(key)} style={{ flex: 1, padding: '8px 10px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 700, background: tab === key ? '#fff' : 'transparent', color: tab === key ? '#0F172A' : 'var(--text3)' }}>{label}</button>
+                <button key={key} onClick={() => setTab(key)} style={{ flex: 1, padding: '8px 10px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 700, background: tab === key ? 'var(--surface)' : 'transparent', color: tab === key ? '#0F172A' : 'var(--text3)' }}>{label}</button>
               ))}
             </div>
 

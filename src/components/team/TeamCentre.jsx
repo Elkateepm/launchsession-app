@@ -180,7 +180,7 @@ export default function TeamCentre({ org, session, userProfile, onNavigate }) {
           <button key={key} onClick={() => setTab(key)} style={{
             padding: '9px 14px', borderRadius: 10, cursor: 'pointer', minHeight: 44,
             border: `1px solid ${tab === key ? 'transparent' : 'var(--border)'}`,
-            background: tab === key ? primary : '#fff',
+            background: tab === key ? primary : 'var(--surface)',
             color: tab === key ? '#fff' : 'var(--text3)',
             fontSize: 13.5, fontWeight: 700, fontFamily: 'inherit',
           }}>{label}</button>
@@ -515,7 +515,7 @@ function InternalMail({ org, people, primary, isMobile, onFlash }) {
             <button key={k} onClick={() => setAudience(k)} style={{
               padding: '9px 14px', borderRadius: 10, cursor: 'pointer', minHeight: 44,
               border: `1px solid ${audience === k ? 'transparent' : 'var(--border)'}`,
-              background: audience === k ? primary : '#fff',
+              background: audience === k ? primary : 'var(--surface)',
               color: audience === k ? '#fff' : 'var(--text3)',
               fontSize: 13.5, fontWeight: 700, fontFamily: 'inherit',
             }}>{l}</button>

@@ -78,7 +78,7 @@ function Toggle({ on, onClick, colour, children }) {
     }}>
       <span style={{
         width: 18, height: 18, borderRadius: 5, flexShrink: 0,
-        border: `1.5px solid ${on ? colour : 'var(--text-faint)'}`, background: on ? colour : '#fff',
+        border: `1.5px solid ${on ? colour : 'var(--text-faint)'}`, background: on ? colour : 'var(--surface)',
         color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11,
       }}>{on ? <Icon name="✓" /> : null}</span>
       {children}

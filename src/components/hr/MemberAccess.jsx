@@ -117,7 +117,7 @@ export default function MemberAccess({ member, org, viewerRole }) {
                 style={{
                   width: '100%', padding: '8px 10px', borderRadius: 9,
                   border: `1px solid ${current === 'none' ? 'var(--danger-border)' : 'var(--border)'}`,
-                  background: viewerMayEdit ? '#fff' : 'var(--surface2)',
+                  background: viewerMayEdit ? 'var(--surface)' : 'var(--surface2)',
                   fontSize: 13, fontWeight: 600, color: 'var(--text)',
                   cursor: viewerMayEdit ? 'pointer' : 'not-allowed',
                 }}>

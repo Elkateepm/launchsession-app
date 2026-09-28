@@ -309,7 +309,7 @@ export default function Today({ org, session: authSession, userProfile, onNaviga
               display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
               textAlign: 'left', fontFamily: 'inherit',
               border: `1px solid ${hrAttention.urgent > 0 ? '#FCD9A5' : 'var(--border)'}`,
-              background: hrAttention.urgent > 0 ? 'var(--warn-bg)' : '#fff',
+              background: hrAttention.urgent > 0 ? 'var(--warn-bg)' : 'var(--surface)',
             }}>
               <span style={{ fontSize: 20, flexShrink: 0 }}>🧑‍💼</span>
               <span style={{ minWidth: 0, flex: 1 }}>

@@ -170,7 +170,7 @@ function VPThread({ thread, org, user, primary, onBack }) {
           return (
             <div key={m.id} style={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start', marginBottom: 10 }}>
               <div style={{ maxWidth: '78%' }}>
-                <div style={{ background: mine ? primary : '#fff', color: mine ? '#fff' : '#0F172A', borderRadius: 16, borderBottomRightRadius: mine ? 4 : 16, borderBottomLeftRadius: mine ? 16 : 4, padding: '10px 13px', fontSize: 13.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                <div style={{ background: mine ? primary : 'var(--surface)', color: mine ? '#fff' : '#0F172A', borderRadius: 16, borderBottomRightRadius: mine ? 4 : 16, borderBottomLeftRadius: mine ? 16 : 4, padding: '10px 13px', fontSize: 13.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
                   {m.attachment_url && (m.attachment_type?.startsWith('image/')
                     ? <SignedImg bucket="safeguarding-docs" src={m.attachment_url} alt="" style={{ maxWidth: '100%', borderRadius: 10, marginBottom: m.body ? 6 : 0 }} />
                     : <button type="button" onClick={async () => { const u = await signOne('safeguarding-docs', m.attachment_url, 300); if (u) window.open(u, '_blank', 'noopener,noreferrer') }} style={{ color: 'inherit', background: 'none', border: 'none', padding: 0, font: 'inherit', cursor: 'pointer' }}><Icon name="📎" /> Attachment</button>)}

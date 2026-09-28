@@ -67,7 +67,7 @@ function StepDots({ step, total }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 18 }}>
       {Array.from({ length: total }).map((_, i) => (
-        <div key={i} style={{ width: i === step ? 22 : 7, height: 7, borderRadius: 99, background: i <= step ? '#fff' : 'rgba(255,255,255,0.2)', transition: 'all 0.25s' }} />
+        <div key={i} style={{ width: i === step ? 22 : 7, height: 7, borderRadius: 99, background: i <= step ? 'var(--surface)' : 'rgba(255,255,255,0.2)', transition: 'all 0.25s' }} />
       ))}
     </div>
   )

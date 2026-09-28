@@ -1111,7 +1111,7 @@ function TemplateFormModal({ initial, bubbleDefs, saving, onSave, onCancel, prim
             <label style={lb}>Icon</label>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {TEMPLATE_ICONS.map(ic => (
-                <button key={ic} onClick={() => set('icon', ic)} style={{ width: 44, height: 44, borderRadius: 10, border: form.icon === ic ? '2px solid #6D5DF6' : '1.5px solid #E5E7EB', background: form.icon === ic ? '#6D5DF614' : '#fff', fontSize: 17, cursor: 'pointer' }}>{ic}</button>
+                <button key={ic} onClick={() => set('icon', ic)} style={{ width: 44, height: 44, borderRadius: 10, border: form.icon === ic ? '2px solid #6D5DF6' : '1.5px solid #E5E7EB', background: form.icon === ic ? '#6D5DF614' : 'var(--surface)', fontSize: 17, cursor: 'pointer' }}>{ic}</button>
               ))}
             </div>
           </div>
@@ -1132,7 +1132,7 @@ function TemplateFormModal({ initial, bubbleDefs, saving, onSave, onCancel, prim
                 const active = form.session_type === t.key
                 return (
                   <button key={t.key} onClick={() => set('session_type', t.key)}
-                    style={{ padding: '12px 10px', borderRadius: 12, border: `2px solid ${active ? t.color : 'var(--border)'}`, background: active ? t.color + '15' : '#fff', cursor: 'pointer', textAlign: 'left' }}>
+                    style={{ padding: '12px 10px', borderRadius: 12, border: `2px solid ${active ? t.color : 'var(--border)'}`, background: active ? t.color + '15' : 'var(--surface)', cursor: 'pointer', textAlign: 'left' }}>
                     <div style={{ fontSize: 18, marginBottom: 2 }}><Icon name={t.icon} /></div>
                     <div style={{ fontSize: 12.5, fontWeight: 800, color: active ? t.color : 'var(--text)' }}>{t.label}</div>
                   </button>
@@ -1163,7 +1163,7 @@ function TemplateFormModal({ initial, bubbleDefs, saving, onSave, onCancel, prim
               {bubbleDefs.map(b => {
                 const active = (form.bubbles || []).includes(b.label)
                 return (
-                  <button key={b.key} onClick={() => toggleBubble(b.label)} style={{ minHeight: 44, padding: '6px 12px', borderRadius: 99, border: `1.5px solid ${active ? b.color : 'var(--border)'}`, background: active ? b.color + '18' : '#fff', color: active ? b.color : 'var(--text3)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  <button key={b.key} onClick={() => toggleBubble(b.label)} style={{ minHeight: 44, padding: '6px 12px', borderRadius: 99, border: `1.5px solid ${active ? b.color : 'var(--border)'}`, background: active ? b.color + '18' : 'var(--surface)', color: active ? b.color : 'var(--text3)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                     {b.label}
                   </button>
                 )

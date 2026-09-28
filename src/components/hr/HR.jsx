@@ -773,7 +773,7 @@ export default function HR({ org, session, userProfile }) {
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search staff..." style={{ flex: 1, minWidth: 180, padding: '8px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 13, fontFamily: 'inherit', outline: 'none' }} />
         {filterChips.map(([k, l]) => (
-          <button key={k} onClick={() => setFilter(k)} style={{ padding: '8px 14px', borderRadius: 99, border: `1.5px solid ${filter === k ? primary : 'var(--border)'}`, background: filter === k ? primary + '12' : '#fff', color: filter === k ? primary : 'var(--text3)', fontSize: 12, fontWeight: filter === k ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{l}</button>
+          <button key={k} onClick={() => setFilter(k)} style={{ padding: '8px 14px', borderRadius: 99, border: `1.5px solid ${filter === k ? primary : 'var(--border)'}`, background: filter === k ? primary + '12' : 'var(--surface)', color: filter === k ? primary : 'var(--text3)', fontSize: 12, fontWeight: filter === k ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{l}</button>
         ))}
       </div>
 

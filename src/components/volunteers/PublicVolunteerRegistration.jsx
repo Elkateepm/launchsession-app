@@ -159,7 +159,7 @@ export default function PublicVolunteerRegistration() {
                 const active = form.skills.includes(s)
                 return (
                   <button key={s} type="button" onClick={() => set('skills', toggleInArray(form.skills, s))}
-                    style={{ padding: '7px 13px', borderRadius: 99, border: `1.5px solid ${active ? primary : 'var(--border)'}`, background: active ? primary : '#fff', color: active ? '#fff' : 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+                    style={{ padding: '7px 13px', borderRadius: 99, border: `1.5px solid ${active ? primary : 'var(--border)'}`, background: active ? primary : 'var(--surface)', color: active ? '#fff' : 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
                     {s}
                   </button>
                 )
@@ -171,7 +171,7 @@ export default function PublicVolunteerRegistration() {
                 const active = form.availability.includes(a)
                 return (
                   <button key={a} type="button" onClick={() => set('availability', toggleInArray(form.availability, a))}
-                    style={{ padding: '7px 13px', borderRadius: 99, border: `1.5px solid ${active ? primary : 'var(--border)'}`, background: active ? primary : '#fff', color: active ? '#fff' : 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+                    style={{ padding: '7px 13px', borderRadius: 99, border: `1.5px solid ${active ? primary : 'var(--border)'}`, background: active ? primary : 'var(--surface)', color: active ? '#fff' : 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
                     {a}
                   </button>
                 )

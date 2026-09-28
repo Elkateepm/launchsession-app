@@ -131,7 +131,7 @@ export default function ReportBuilder({ org, session, role, initialType, default
                   <button key={r.key} onClick={() => setType(r.key)} style={{
                     textAlign: 'left', padding: 14, borderRadius: 12, cursor: 'pointer',
                     border: type === r.key ? '2px solid #4F46E5' : '1px solid #E2E8F0',
-                    background: type === r.key ? 'var(--info-bg)' : '#fff',
+                    background: type === r.key ? 'var(--info-bg)' : 'var(--surface)',
                   }}>
                     <div style={{ fontSize: 16, marginBottom: 6 }}><Icon name={r.icon} /></div>
                     <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{r.name}</div>

@@ -79,7 +79,7 @@ export function SupervisionTab({ org, staff, primary, canEdit, sensitiveView }) 
   return (
     <>
       {rows.length > 0 && (
-        <div style={{ ...card, background: overdue ? 'var(--warn-bg)' : '#fff',
+        <div style={{ ...card, background: overdue ? 'var(--warn-bg)' : 'var(--surface)',
           border: `1px solid ${overdue ? '#FCD9A5' : 'var(--border)'}` }}>
           <div style={{ fontSize: 13, color: overdue ? 'var(--warn-text)' : 'var(--text3)', fontWeight: 700 }}>
             {overdue

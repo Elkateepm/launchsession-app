@@ -215,7 +215,7 @@ function InsightsPanel({ bullets: heuristicBullets, org, primary }) {
             <span style={{ width: 26, height: 26, borderRadius: 999, background: TONE_BG[b.tone] || TONE_BG.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <IconGlyph name={b.icon} color={TONE_COLOR[b.tone] || primary} />
             </span>
-            <span style={{ fontSize: 13, color: '#4B5563', lineHeight: 1.5 }}>{b.text}</span>
+            <span style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5 }}>{b.text}</span>
           </motion.div>
         ))}
       </motion.div>
@@ -331,7 +331,7 @@ function CampaignDetail({ campaign, org, onBack, onUpdate, isAdmin }) {
         </div>
 
         <div style={{ fontSize: 13, color: 'var(--text-faint)', marginBottom: 6 }}>Total raised</div>
-        <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 40, lineHeight: 1, color: '#1C2333', marginBottom: 14 }}>£{raised.toLocaleString()}</div>
+        <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 40, lineHeight: 1, color: 'var(--text)', marginBottom: 14 }}>£{raised.toLocaleString()}</div>
         {target > 0 && (
           <>
             <Thermometer raised={raised} target={target} />
@@ -435,7 +435,7 @@ function CampaignDetail({ campaign, org, onBack, onUpdate, isAdmin }) {
                 <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 2 }}>{format(new Date(d.created_at), 'd MMM yyyy')}</div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 16, color: '#1C2333' }}>£{d.amount.toFixed(2)}</div>
+                <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 16, color: 'var(--text)' }}>£{d.amount.toFixed(2)}</div>
                 {d.gift_aid && <div style={{ fontSize: 10, color: 'var(--ok-text)' }}>+£{(d.amount * 0.25).toFixed(2)} GA</div>}
               </div>
             </div>
@@ -756,7 +756,7 @@ export default function Fundraising({ org, isAdmin }) {
                 {recentActivity.map((e, i) => (
                   <motion.div key={i} variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }}
                     style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '0.5px solid var(--border)' }}>
-                    <span style={{ fontSize: 13, color: '#4B5563', flex: 1 }}>{e.text}</span>
+                    <span style={{ fontSize: 13, color: 'var(--text2)', flex: 1 }}>{e.text}</span>
                     <span style={{ fontSize: 11, color: 'var(--text-faint)', flexShrink: 0 }}>{format(new Date(e.date), 'd MMM')}</span>
                   </motion.div>
                 ))}
@@ -772,7 +772,7 @@ export default function Fundraising({ org, isAdmin }) {
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10, marginBottom: 10 }}>
             {previewGrants.map(g => (
               <div key={g.id} onClick={() => setActiveTab('discover')} style={{ border: '1px solid var(--border)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', background: 'var(--surface)' }}>
-                <div style={{ fontSize: 13.5, color: '#1C2333', fontWeight: 500, marginBottom: 2 }}>{g.name}</div>
+                <div style={{ fontSize: 13.5, color: 'var(--text)', fontWeight: 500, marginBottom: 2 }}>{g.name}</div>
                 <div style={{ fontSize: 12, color: 'var(--text-faint)', marginBottom: 8 }}>{g.funder_name}</div>
                 <div style={{ fontSize: 12.5, color: GOLD, fontWeight: 600 }}>
                   {g.amount_min && g.amount_max ? `£${Number(g.amount_min).toLocaleString()} – £${Number(g.amount_max).toLocaleString()}` : g.amount_max ? `Up to £${Number(g.amount_max).toLocaleString()}` : 'Amount varies'}

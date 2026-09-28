@@ -448,7 +448,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
             ))}
             {venues.length > 0 && (
               <select value={filterVenue} onChange={e => setFilterVenue(e.target.value)}
-                style={{ padding: '4px 10px', borderRadius: 99, border: `1.5px solid ${filterVenue !== 'all' ? primary : 'var(--border)'}`, background: filterVenue !== 'all' ? primary + '15' : '#fff', color: filterVenue !== 'all' ? primary : 'var(--text3)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                style={{ padding: '4px 10px', borderRadius: 99, border: `1.5px solid ${filterVenue !== 'all' ? primary : 'var(--border)'}`, background: filterVenue !== 'all' ? primary + '15' : 'var(--surface)', color: filterVenue !== 'all' ? primary : 'var(--text3)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                 <option value="all"><Icon name="📍" /> All venues</option>
                 {venues.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
               </select>
@@ -509,7 +509,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                 const specialBg = bankHoliday ? '#FEF3C799' : schoolHoliday ? 'var(--org-a05)' : 'transparent'
                 return (
                   <div key={key} onClick={() => daySessions.length === 0 && inMonth && !isPastEmpty ? handlePlanForDate(key) : null}
-                    style={{ minHeight: 110, minWidth: 0, overflow: 'hidden', borderRight: '1px solid var(--border-soft)', borderBottom: '1px solid var(--border-soft)', padding: '8px 6px', background: today ? 'var(--org-a05)' : inMonth ? '#fff' : 'var(--surface2)', position: 'relative', transition: 'background 0.15s', cursor: inMonth && daySessions.length === 0 && !isPastEmpty ? 'pointer' : 'default', '--pulse-color': primary + '26', animation: today ? 'cal-today-pulse 2.5s ease-in-out infinite' : 'none' }}
+                    style={{ minHeight: 110, minWidth: 0, overflow: 'hidden', borderRight: '1px solid var(--border-soft)', borderBottom: '1px solid var(--border-soft)', padding: '8px 6px', background: today ? 'var(--org-a05)' : inMonth ? 'var(--surface)' : 'var(--surface2)', position: 'relative', transition: 'background 0.15s', cursor: inMonth && daySessions.length === 0 && !isPastEmpty ? 'pointer' : 'default', '--pulse-color': primary + '26', animation: today ? 'cal-today-pulse 2.5s ease-in-out infinite' : 'none' }}
                     onMouseEnter={e => { if (inMonth) e.currentTarget.style.background = today ? 'var(--org-a10)' : 'var(--surface2)' }}
                     onMouseLeave={e => { e.currentTarget.style.background = today ? 'var(--org-a05)' : inMonth ? '#fff' : 'var(--surface2)' }}>
                     {inMonth && specialBg !== 'transparent' && (
@@ -562,7 +562,7 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
                 const daySessions = sessionsByDate[key] || []
                 const today = isToday(day)
                 return (
-                  <div key={key} style={{ minHeight: 300, minWidth: 0, overflow: 'hidden', borderRight: '1px solid var(--border-soft)', padding: '10px 8px', background: today ? 'var(--org-a05)' : '#fff', position: 'relative' }}>
+                  <div key={key} style={{ minHeight: 300, minWidth: 0, overflow: 'hidden', borderRight: '1px solid var(--border-soft)', padding: '10px 8px', background: today ? 'var(--org-a05)' : 'var(--surface)', position: 'relative' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
                       <div style={{ width: 32, height: 32, borderRadius: '50%', background: today ? primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: today ? 900 : 700, color: today ? '#fff' : 'var(--text2)', boxShadow: today ? `0 2px 8px var(--org-a35)` : 'none' }}>
                         {format(day, 'd')}

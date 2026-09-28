@@ -511,14 +511,14 @@ function AccessModal({ form, staff, currentUserId, primary, onClose, onSave }) {
         <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 18 }}>{form.name}</div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${mode === 'admins' ? primary : 'var(--border)'}`, cursor: 'pointer', background: mode === 'admins' ? 'var(--org-a05)' : '#fff' }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${mode === 'admins' ? primary : 'var(--border)'}`, cursor: 'pointer', background: mode === 'admins' ? 'var(--org-a05)' : 'var(--surface)' }}>
             <input type="radio" checked={mode === 'admins'} onChange={() => setMode('admins')} style={{ marginTop: 3 }} />
             <div>
               <div style={{ fontWeight: 800, fontSize: 13.5, color: 'var(--text)' }}>Admins only</div>
               <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>The safest default. Only people with the Admin role can see who filled this in.</div>
             </div>
           </label>
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${mode === 'custom' ? primary : 'var(--border)'}`, cursor: 'pointer', background: mode === 'custom' ? 'var(--org-a05)' : '#fff' }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${mode === 'custom' ? primary : 'var(--border)'}`, cursor: 'pointer', background: mode === 'custom' ? 'var(--org-a05)' : 'var(--surface)' }}>
             <input type="radio" checked={mode === 'custom'} onChange={() => setMode('custom')} style={{ marginTop: 3 }} />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: 13.5, color: 'var(--text)' }}>Admins + specific people</div>
@@ -1007,8 +1007,8 @@ export default function Forms({ org, session, isAdmin }) {
               <option value="newest">Sort: Newest</option>
             </select>
             <div style={{ display: 'flex', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', gridColumn: isMobile ? '1 / -1' : undefined }}>
-              <button onClick={() => setListMode('list')} style={{ flex: isMobile ? 1 : undefined, padding: '8px 12px', border: 'none', background: listMode === 'list' ? 'var(--org-primary)' : '#fff', color: listMode === 'list' ? '#fff' : 'var(--text3)', cursor: 'pointer' }}><Icon name="☰" /> List</button>
-              <button onClick={() => setListMode('grid')} style={{ flex: isMobile ? 1 : undefined, padding: '8px 12px', border: 'none', background: listMode === 'grid' ? 'var(--org-primary)' : '#fff', color: listMode === 'grid' ? '#fff' : 'var(--text3)', cursor: 'pointer' }}>▦ Grid</button>
+              <button onClick={() => setListMode('list')} style={{ flex: isMobile ? 1 : undefined, padding: '8px 12px', border: 'none', background: listMode === 'list' ? 'var(--org-primary)' : 'var(--surface)', color: listMode === 'list' ? '#fff' : 'var(--text3)', cursor: 'pointer' }}><Icon name="☰" /> List</button>
+              <button onClick={() => setListMode('grid')} style={{ flex: isMobile ? 1 : undefined, padding: '8px 12px', border: 'none', background: listMode === 'grid' ? 'var(--org-primary)' : 'var(--surface)', color: listMode === 'grid' ? '#fff' : 'var(--text3)', cursor: 'pointer' }}>▦ Grid</button>
             </div>
           </div>
 
