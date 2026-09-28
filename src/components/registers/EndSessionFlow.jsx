@@ -8,7 +8,7 @@ export const attendanceToResolve = rows => ({
   unmarked: rows.filter(row => !['signed_in', 'signed_out', 'absent'].includes(row.status)).length,
 })
 
-const button = { minHeight: 44, padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border, var(--border))', background: 'var(--surface, #fff)', color: 'var(--text, #111827)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }
+const button = { minHeight: 44, padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface, #fff)', color: 'var(--text, #111827)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }
 
 // All entry points use the same finish check. Read attendance again at the
 // point of closing; the list that opened this dialog may be stale.
@@ -87,7 +87,7 @@ export default function EndSessionFlow({ session, org, authUserId, canCloseRegis
   return <OverlayPortal><div onClick={dismiss} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.6)', zIndex: 10400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
     <section ref={panel} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="finish-title" aria-busy={busy} onKeyDown={keyDown} onClick={e => e.stopPropagation()}
       style={{ background: 'var(--surface, #fff)', color: 'var(--text, #111827)', borderRadius: 20, padding: 24, width: 460, maxWidth: '100%', boxSizing: 'border-box', maxHeight: '85dvh', overflowY: 'auto' }}>
-      <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--org-primary, #2563EB)', letterSpacing: 1 }}>ATTENDANCE → CLOSE → REFLECT</div>
+      <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--org-ink, #2563EB)', letterSpacing: 1 }}>ATTENDANCE → CLOSE → REFLECT</div>
       <h2 id="finish-title" style={{ fontSize: 21, margin: '10px 0 6px' }}>{closed ? `${terms.Session} closed` : `Finish ${terms.session}`}</h2>
       <p style={{ color: 'var(--text2, #64748B)', marginTop: 0 }}>{session.title}</p>
       {error && <p role="alert" style={{ color: 'var(--danger-text)', background: 'var(--danger-bg)', padding: 12, borderRadius: 10 }}>{error}</p>}

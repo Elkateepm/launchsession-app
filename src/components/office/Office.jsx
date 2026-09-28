@@ -45,7 +45,7 @@ export default function Office({ tabs, subTab, onSelect, badges = {}, children }
                 fontSize: 13.5, fontWeight: 800, fontFamily: 'inherit',
                 border: `1px solid ${active ? 'var(--org-a35)' : 'var(--border)'}`,
                 background: active ? 'var(--org-a10)' : 'transparent',
-                color: active ? 'var(--org-primary, #6D5DF6)' : 'var(--text3)',
+                color: active ? 'var(--org-ink, #6D5DF6)' : 'var(--text3)',
                 transition: 'all 0.15s',
               }}
             >

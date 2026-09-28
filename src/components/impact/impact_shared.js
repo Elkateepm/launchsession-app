@@ -174,7 +174,7 @@ export function ScoreBar({ value, max = 10, color }) {
 // ---------------------------------------------------------------------------
 export function EmptyState({ icon = '🚀', title, subtitle, primaryLabel, onPrimary, secondaryLabel, onSecondary, primary }) {
   return (
-    <div style={{ textAlign: 'center', padding: '48px 24px', background: 'linear-gradient(135deg,#F9FAFB,#F3F4F6)', borderRadius: 20, border: '1px dashed var(--border)' }}>
+    <div style={{ textAlign: 'center', padding: '48px 24px', background: 'linear-gradient(135deg,var(--surface2),var(--surface3))', borderRadius: 20, border: '1px dashed var(--border)' }}>
       <div style={{ fontSize: 44, marginBottom: 14 }}>{icon}</div>
       <div style={{ fontWeight: 900, fontSize: 16, color: 'var(--text)' }}>{title}</div>
       {subtitle && <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 6, maxWidth: 360, marginLeft: 'auto', marginRight: 'auto' }}>{subtitle}</div>}

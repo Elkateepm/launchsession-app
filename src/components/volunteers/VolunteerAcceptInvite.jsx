@@ -210,7 +210,7 @@ export default function VolunteerAcceptInvite() {
               <button
                 type="submit"
                 disabled={saving || !password || !confirm}
-                style={{ width: '100%', padding: 14, borderRadius: 14, border: 'none', background: saving || !password || !confirm ? 'var(--border)' : primary, color: saving || !password || !confirm ? 'var(--text-faint)' : '#fff', fontSize: 16, fontWeight: 800, cursor: saving || !password || !confirm ? 'default' : 'pointer', marginTop: 8 }}
+                style={{ width: '100%', padding: 14, borderRadius: 14, border: 'none', background: saving || !password || !confirm ? 'var(--border)' : primary, color: saving || !password || !confirm ? 'var(--text-faint)' : 'var(--surface)', fontSize: 16, fontWeight: 800, cursor: saving || !password || !confirm ? 'default' : 'pointer', marginTop: 8 }}
               >
                 {saving ? 'Setting up your account...' : 'Confirm & Join →'}
               </button>

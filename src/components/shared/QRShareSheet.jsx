@@ -110,7 +110,7 @@ export default function QRShareSheet({ org, onClose, initial = 'child' }) {
           <div style={{ display: 'flex', background: 'var(--surface-hover)', borderRadius: 11, padding: 4, marginBottom: 20 }}>
             {[{ key: 'child', label: '🧒 Child' }, { key: 'volunteer', label: '🤝 Volunteer' }].map(t => (
               <button key={t.key} onClick={() => setWhich(t.key)}
-                style={{ flex: 1, padding: '9px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 800, transition: 'background 0.15s, color 0.15s', background: which === t.key ? 'var(--surface)' : 'transparent', color: which === t.key ? primary : 'var(--text3)', boxShadow: which === t.key ? '0 1px 4px rgba(15,23,42,0.12)' : 'none' }}>
+                style={{ flex: 1, padding: '9px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 800, transition: 'background 0.15s, color 0.15s', background: which === t.key ? 'var(--surface)' : 'transparent', color: which === t.key ? 'var(--org-ink)' : 'var(--text3)', boxShadow: which === t.key ? '0 1px 4px rgba(15,23,42,0.12)' : 'none' }}>
                 {t.label}
               </button>
             ))}

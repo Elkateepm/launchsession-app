@@ -355,7 +355,7 @@ export default function PublicForm() {
             </p>
           )}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 22 }}>
-            <span style={{ padding: '6px 12px', borderRadius: 99, background: 'var(--org-a05)', color: primary, fontSize: 12.5, fontWeight: 700 }}>
+            <span style={{ padding: '6px 12px', borderRadius: 99, background: 'var(--org-a05)', color: 'var(--org-ink)', fontSize: 12.5, fontWeight: 700 }}>
               {fields.length} question{fields.length === 1 ? '' : 's'}
             </span>
             <span style={{ padding: '6px 12px', borderRadius: 99, background: 'var(--surface-hover)', color: 'var(--text2)', fontSize: 12.5, fontWeight: 700 }}>
@@ -385,7 +385,7 @@ export default function PublicForm() {
               <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text3)' }}>
                 Step {step + 1} of {sections.length}
               </span>
-              <span style={{ fontSize: 12.5, fontWeight: 700, color: primary }}>{Math.round(pct)}%</span>
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--org-ink)' }}>{Math.round(pct)}%</span>
             </div>
             <div style={{ height: 7, background: 'var(--surface-hover)', borderRadius: 7, overflow: 'hidden' }}>
               <div style={{

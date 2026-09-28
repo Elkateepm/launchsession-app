@@ -136,10 +136,10 @@ export default function RASessionCard({ sessionId, sessionTitle, org, session: a
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button onClick={() => onNavigate && onNavigate('risk_assessments')} style={{ fontSize: 11.5, fontWeight: 700, color: primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>View Assessment <Icon name="→" /></button>
+              <button onClick={() => onNavigate && onNavigate('risk_assessments')} style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--org-ink)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>View Assessment <Icon name="→" /></button>
               {sessionId && full && (
                 <>
-                  <button onClick={() => setDynamicOpen(true)} style={{ fontSize: 11.5, fontWeight: 700, color: primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ Dynamic Update</button>
+                  <button onClick={() => setDynamicOpen(true)} style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--org-ink)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ Dynamic Update</button>
                   <button onClick={() => setEmergencyOpen(true)} style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--danger-text)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><Icon name="🚨" /> Emergency</button>
                 </>
               )}

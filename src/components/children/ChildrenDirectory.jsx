@@ -321,7 +321,7 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
             <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)' }}><Icon name="📞" /> Contacts</div>
             {!editingContact && (
-              <button onClick={() => setEditingContact(true)} style={{ background: 'none', border: 'none', color: primary, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}><Icon name="✏️" /> Edit</button>
+              <button onClick={() => setEditingContact(true)} style={{ background: 'none', border: 'none', color: 'var(--org-ink)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}><Icon name="✏️" /> Edit</button>
             )}
           </div>
           {editingContact ? (
@@ -349,7 +349,7 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
               <Row label="Emergency phone" value={child.emergency_contact_phone} />
               {!child.parent_email && <div style={{ fontSize: 11, color: 'var(--warn-text)', marginTop: 4 }}><Icon name="⚠" /> No email on file — add one to enable emailing this parent.</div>}
               {child.parent_phone && (
-                <a href={`tel:${child.parent_phone}`} style={{ display: 'inline-block', marginTop: 8, padding: '7px 14px', borderRadius: 9, border: `1px solid var(--org-a20)`, color: primary, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}><Icon name="📞" /> Call parent</a>
+                <a href={`tel:${child.parent_phone}`} style={{ display: 'inline-block', marginTop: 8, padding: '7px 14px', borderRadius: 9, border: `1px solid var(--org-a20)`, color: 'var(--org-ink)', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}><Icon name="📞" /> Call parent</a>
               )}
             </>
           )}
@@ -480,7 +480,7 @@ function OnSiteTab({ children, latestAttByChild, groupLabel, primary, org, authU
               <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{groupLabel(c.group_name) || 'Ungrouped'} · Signed in {att?.signed_in_at ? new Date(att.signed_in_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : ''}</div>
             </div>
             {hasMedicalAlert(c) && <span style={{ fontSize: 9.5, fontWeight: 800, color: 'var(--danger-text)', background: 'var(--danger-bg)', borderRadius: 99, padding: '2px 8px' }}><Icon name="❤️" /> Alert</span>}
-            <button onClick={() => signOut(c.id)} style={{ padding: '7px 14px', borderRadius: 9, border: `1px solid var(--org-a20)`, background: 'var(--surface)', color: primary, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Sign out</button>
+            <button onClick={() => signOut(c.id)} style={{ padding: '7px 14px', borderRadius: 9, border: `1px solid var(--org-a20)`, background: 'var(--surface)', color: 'var(--org-ink)', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Sign out</button>
           </div>
         )
       })}
@@ -503,7 +503,7 @@ function GroupsTab({ children, orgGroups, latestAttByChild, primary, onSelectGro
               <span style={{ width: 10, height: 10, borderRadius: '50%', background: g.color || primary }} />
               <span style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>{g.label}</span>
             </div>
-            <div style={{ fontSize: 22, fontWeight: 900, color: primary }}>{members.length}</div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--org-ink)' }}>{members.length}</div>
             <div style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>young {members.length === 1 ? 'person' : 'people'}{onSiteCount > 0 ? ` · ${onSiteCount} on site` : ''}</div>
           </div>
         )
@@ -543,7 +543,7 @@ function ConsentsTab({ children, consentsByChild, groupLabel, primary, onOpenChi
             <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 220 }}>
               {missing.map(t => <span key={t.key} style={{ fontSize: 9.5, fontWeight: 800, color: 'var(--violet-text)', background: 'var(--violet-bg)', borderRadius: 99, padding: '2px 8px' }}>{t.label}</span>)}
             </div>
-            <span style={{ color: primary, fontSize: 12, fontWeight: 700 }}>View <Icon name="→" /></span>
+            <span style={{ color: 'var(--org-ink)', fontSize: 12, fontWeight: 700 }}>View <Icon name="→" /></span>
           </div>
         )
       })}
@@ -569,7 +569,7 @@ function MedicalTab({ children, groupLabel, primary, onOpenChild }) {
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 220 }}>
             {medicalAlerts(c).map(ch => <span key={ch.label} style={{ fontSize: 9.5, fontWeight: 800, color: ch.color, background: ch.bg, borderRadius: 99, padding: '2px 8px' }}>{ch.label}</span>)}
           </div>
-          <span style={{ color: primary, fontSize: 12, fontWeight: 700 }}>View <Icon name="→" /></span>
+          <span style={{ color: 'var(--org-ink)', fontSize: 12, fontWeight: 700 }}>View <Icon name="→" /></span>
         </div>
       ))}
     </div>

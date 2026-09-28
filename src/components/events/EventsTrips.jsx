@@ -15,10 +15,10 @@ const STATUS_META = {
 }
 
 const CARD_COLORS = {
-  purple: { bg: 'linear-gradient(135deg,#EDE9FE,#F5F3FF)', icon: '#7C3AED', ring: 'var(--violet-border)' },
-  blue:   { bg: 'linear-gradient(135deg,#DBEAFE,#EFF6FF)', icon: '#2563EB', ring: 'var(--info-border)' },
-  green:  { bg: 'linear-gradient(135deg,#DCFCE7,#F0FDF4)', icon: '#16A34A', ring: 'var(--ok-border)' },
-  orange: { bg: 'linear-gradient(135deg,#FFEDD5,#FFF7ED)', icon: '#EA580C', ring: '#FED7AA' },
+  purple: { bg: 'linear-gradient(135deg,var(--violet-bg),var(--violet-bg))', icon: '#7C3AED', ring: 'var(--violet-border)' },
+  blue:   { bg: 'linear-gradient(135deg,var(--info-bg),var(--info-bg))', icon: '#2563EB', ring: 'var(--info-border)' },
+  green:  { bg: 'linear-gradient(135deg,var(--ok-bg),var(--ok-bg))', icon: '#16A34A', ring: 'var(--ok-border)' },
+  orange: { bg: 'linear-gradient(135deg,var(--warn-bg),#FFF7ED)', icon: '#EA580C', ring: '#FED7AA' },
 }
 
 function toLocalDateStr(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
@@ -219,7 +219,7 @@ function EventDrawer({ event, org, session, onClose, onNavigate, onChanged }) {
 
         <div style={{ display: 'flex', borderBottom: '1px solid var(--border-soft)', padding: '0 24px' }}>
           {TABS.map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '12px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: tab === t.key ? primary : 'var(--text-faint)', borderBottom: tab === t.key ? `2px solid ${primary}` : '2px solid transparent' }}>
+            <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '12px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: tab === t.key ? 'var(--org-ink)' : 'var(--text-faint)', borderBottom: tab === t.key ? `2px solid ${primary}` : '2px solid transparent' }}>
               {t.icon} {t.label}
             </button>
           ))}
@@ -401,9 +401,9 @@ export default function EventsTrips({ org, session, onNavigate }) {
 
       {/* HERO */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
-        style={{ ...cardStyle, background: 'linear-gradient(135deg,#FAF5FF,#EFF6FF)', padding: isMobile ? 20 : '28px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20, marginBottom: 20 }}>
+        style={{ ...cardStyle, background: 'linear-gradient(135deg,var(--surface2),var(--info-bg))', padding: isMobile ? 20 : '28px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20, marginBottom: 20 }}>
         <div style={{ maxWidth: 380 }}>
-          <div style={{ fontSize: isMobile ? 22 : 27, fontWeight: 900, color: '#1E1B4B', marginBottom: 6 }}>Plan amazing adventures! <Icon name="🚀" /></div>
+          <div style={{ fontSize: isMobile ? 22 : 27, fontWeight: 900, color: 'var(--text)', marginBottom: 6 }}>Plan amazing adventures! <Icon name="🚀" /></div>
           <div style={{ fontSize: 13.5, color: 'var(--text3)', marginBottom: 18, lineHeight: 1.5 }}>Create events and trips that inspire, engage and make a difference.</div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => setShowWizard(true)}
@@ -447,7 +447,7 @@ export default function EventsTrips({ org, session, onNavigate }) {
           {/* EVENT LIST */}
           {loading ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {[1, 2, 3].map(i => <div key={i} style={{ ...cardStyle, height: 76, background: 'linear-gradient(90deg,#F8FAFC,#F1F5F9,#F8FAFC)', backgroundSize: '200% 100%', animation: 'lsShimmer 1.4s infinite' }} />)}
+              {[1, 2, 3].map(i => <div key={i} style={{ ...cardStyle, height: 76, background: 'linear-gradient(90deg,#F8FAFC,var(--surface-hover),#F8FAFC)', backgroundSize: '200% 100%', animation: 'lsShimmer 1.4s infinite' }} />)}
               <style>{`@keyframes lsShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }`}</style>
             </div>
           ) : pageItems.length === 0 ? (
@@ -498,7 +498,7 @@ export default function EventsTrips({ org, session, onNavigate }) {
                         </div>
                       </div>
                     )}
-                    <button onClick={ev => { ev.stopPropagation(); act.action() }} style={{ padding: '9px 16px', borderRadius: 10, border: `1.5px solid ${primary}`, background: 'var(--surface)', color: primary, fontWeight: 800, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>{act.label}</button>
+                    <button onClick={ev => { ev.stopPropagation(); act.action() }} style={{ padding: '9px 16px', borderRadius: 10, border: `1.5px solid ${primary}`, background: 'var(--surface)', color: 'var(--org-ink)', fontWeight: 800, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>{act.label}</button>
                     <button onClick={ev => { ev.stopPropagation(); setDrawerEvent(e) }} style={{ border: 'none', background: 'var(--surface2)', borderRadius: 8, width: 30, height: 30, cursor: 'pointer', fontSize: 14, color: 'var(--text-faint)' }}>⋯</button>
                   </motion.div>
                 )
@@ -539,7 +539,7 @@ export default function EventsTrips({ org, session, onNavigate }) {
           <div style={{ ...cardStyle, padding: 18 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}><Icon name="🧭" /> Today at a glance</div>
-              <button onClick={() => onNavigate && onNavigate('calendar')} style={{ border: 'none', background: 'none', color: primary, fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>View Calendar</button>
+              <button onClick={() => onNavigate && onNavigate('calendar')} style={{ border: 'none', background: 'none', color: 'var(--org-ink)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>View Calendar</button>
             </div>
             {[
               { icon: '⚡', bg: 'var(--ok-bg)', title: 'Event live now', sub: todaysLive.map(e => e.title).join(', ') || 'None right now' },
@@ -571,11 +571,11 @@ export default function EventsTrips({ org, session, onNavigate }) {
             ))}
           </div>
 
-          <div style={{ ...cardStyle, padding: 18, background: 'linear-gradient(135deg,#FFFBEB,#FEF3C7)' }}>
-            <div style={{ fontSize: 13.5, fontWeight: 800, color: '#78350F', marginBottom: 12 }}><Icon name="🌟" /> Need help?</div>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: '#78350F', marginBottom: 2 }}>Events & Trips Help Centre</div>
+          <div style={{ ...cardStyle, padding: 18, background: 'linear-gradient(135deg,#FFFBEB,var(--warn-bg))' }}>
+            <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--warn-text)', marginBottom: 12 }}><Icon name="🌟" /> Need help?</div>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--warn-text)', marginBottom: 2 }}>Events & Trips Help Centre</div>
             <div style={{ fontSize: 11, color: 'var(--warn-text)', marginBottom: 10 }}>Step-by-step guides and tips</div>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: '#78350F', marginBottom: 2 }}>Contact Support</div>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--warn-text)', marginBottom: 2 }}>Contact Support</div>
             <div style={{ fontSize: 11, color: 'var(--warn-text)' }}>We're here to help</div>
           </div>
         </div>

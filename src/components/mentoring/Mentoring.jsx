@@ -285,7 +285,7 @@ function ReferralForm({ org, children, session, primary, onCancel, onCreated }) 
         <Panel title="🎯 Desired Outcomes">
           <div style={styles.chipWrap}>
             {OUTCOMES.map(o => (
-              <button key={o} onClick={() => toggle(o)} style={{ ...styles.chip, borderColor: outcomes.includes(o) ? primary : 'var(--border)', background: outcomes.includes(o) ? primary + '18' : 'var(--surface)', color: outcomes.includes(o) ? primary : 'var(--text2)' }}>
+              <button key={o} onClick={() => toggle(o)} style={{ ...styles.chip, borderColor: outcomes.includes(o) ? primary : 'var(--border)', background: outcomes.includes(o) ? primary + '18' : 'var(--surface)', color: outcomes.includes(o) ? 'var(--org-ink)' : 'var(--text2)' }}>
                 {outcomes.includes(o) ? '✓ ' : ''}{o}
               </button>
             ))}
@@ -394,7 +394,7 @@ function MatchForm({ org, children, team, referral, session, primary, onCancel, 
           <Field label="Meeting Frequency">
             <div style={styles.frequencyGrid}>
               {['weekly', 'fortnightly', 'monthly'].map(f => (
-                <button key={f} onClick={() => setFrequency(f)} style={{ ...styles.chip, borderColor: frequency === f ? primary : 'var(--border)', background: frequency === f ? primary + '18' : 'var(--surface)', color: frequency === f ? primary : 'var(--text2)' }}>
+                <button key={f} onClick={() => setFrequency(f)} style={{ ...styles.chip, borderColor: frequency === f ? primary : 'var(--border)', background: frequency === f ? primary + '18' : 'var(--surface)', color: frequency === f ? 'var(--org-ink)' : 'var(--text2)' }}>
                   {f}
                 </button>
               ))}
@@ -600,7 +600,7 @@ const styles = {
   page: {
     minHeight: '100%',
     overflowY: 'auto',
-    background: 'linear-gradient(180deg, #F8FBFF 0%, #EEF4FA 100%)',
+    background: 'linear-gradient(180deg, var(--surface2) 0%, #EEF4FA 100%)',
     color: 'var(--text)',
   },
   hero: {

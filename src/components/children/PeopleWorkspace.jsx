@@ -28,7 +28,7 @@ export function PeopleHeader({ terms, primary, stats, loading, onAdd, onInvite, 
   return (
     <header style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
       <div style={{ width: mobile ? '100%' : undefined }}>
-        {!mobile && <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.6, color: primary, marginBottom: 10 }}>PEOPLE & CONNECTIONS</div>}
+        {!mobile && <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.6, color: 'var(--org-ink)', marginBottom: 10 }}>PEOPLE & CONNECTIONS</div>}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: mobile ? 'space-between' : 'flex-start', gap: 16 }}>
           <h1 style={{ margin: 0, color: UI.text, fontSize: mobile ? 28 : 34, letterSpacing: -1, fontWeight: 800 }}>{terms.People}</h1>
           <button onClick={onOnSite} style={{ ...button, minHeight: 44, padding: '7px 10px', color: 'var(--ok-text)', background: 'var(--ok-bg)', border: '1px solid #DCFCE7', fontSize: 11, whiteSpace: 'nowrap', flexShrink: 0 }}>
@@ -54,7 +54,7 @@ export function PeopleTabs({ terms, stats, value, onChange }) {
         ['consents', 'Consents'], ['medical', 'Medical & support'], ['requests', 'Registration requests', stats.pendingRegs],
       ].map(([key, label, count]) => (
         <button key={key} onClick={() => onChange(key)} aria-current={value === key ? 'page' : undefined}
-          style={{ ...button, padding: '13px 0', borderRadius: 0, border: 'none', borderBottom: `3px solid ${value === key ? 'var(--org-primary, #7C5CFC)' : 'transparent'}`, background: 'transparent', color: value === key ? 'var(--org-primary, #7C5CFC)' : UI.muted, whiteSpace: 'nowrap', flexShrink: 0 }}>
+          style={{ ...button, padding: '13px 0', borderRadius: 0, border: 'none', borderBottom: `3px solid ${value === key ? 'var(--org-primary, #7C5CFC)' : 'transparent'}`, background: 'transparent', color: value === key ? 'var(--org-ink, #7C5CFC)' : UI.muted, whiteSpace: 'nowrap', flexShrink: 0 }}>
           {label}{count > 0 && <span style={{ background: 'var(--warn-bg)', color: 'var(--warn-text)', padding: '2px 7px', borderRadius: 6, fontSize: 11 }}>{count}</span>}
         </button>
       ))}
@@ -141,7 +141,7 @@ export function PeopleRoster({
       <div style={{ padding: compact ? '10px 16px' : '10px 20px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8, background: UI.soft, borderBottom: `1px solid ${UI.border}` }}>
         <div role="status" style={{ fontSize: 12, color: UI.muted }}>
           {loading ? 'Loading records…' : <><strong style={{ color: UI.text }}>{records.length}</strong> of {total} {terms.people}</>}
-          {filtersActive && <button onClick={onClear} style={{ ...button, background: 'transparent', border: 0, color: primary, fontSize: 12, padding: '8px 12px' }}>Clear filters</button>}
+          {filtersActive && <button onClick={onClear} style={{ ...button, background: 'transparent', border: 0, color: 'var(--org-ink)', fontSize: 12, padding: '8px 12px' }}>Clear filters</button>}
         </div>
         <select aria-label="Sort directory" value={sort} onChange={e => onSort(e.target.value)} style={{ ...control, background: 'transparent', borderColor: 'transparent', fontSize: 12, maxWidth: '100%' }}>
           <option value="name">Name A–Z</option>
@@ -155,7 +155,7 @@ export function PeopleRoster({
       </div>}
       {loading ? <div role="status" style={{ padding: 36, textAlign: 'center', color: UI.muted }}>Loading your directory…</div> : records.length === 0 ? (
         <div style={{ padding: '48px 22px', textAlign: 'center' }}>
-          <div style={{ color: primary, fontSize: 28, marginBottom: 12 }}><Icon name="👥" /></div>
+          <div style={{ color: 'var(--org-ink)', fontSize: 28, marginBottom: 12 }}><Icon name="👥" /></div>
           <h3 style={{ margin: '0 0 8px', color: UI.text, fontSize: 18 }}>{total ? 'No matching records' : `Welcome to your ${terms.people} directory`}</h3>
           <p style={{ color: UI.muted, fontSize: 13, lineHeight: 1.6 }}>{total ? 'Try another name or clear your filters to see everyone.' : `Add your first ${terms.person} to keep their details together.`}</p>
           <button style={button} onClick={total ? onClear : onAdd}>{total ? 'Clear filters' : `Add ${terms.person}`}</button>
@@ -177,7 +177,7 @@ export function PeopleRoster({
                 <div style={{ fontSize: 14, fontWeight: 750, color: UI.text, overflowWrap: 'anywhere' }}>{name}</div>
                 <div style={{ fontSize: 11.5, color: UI.muted, marginTop: 5, lineHeight: 1.4 }}>{personAge != null ? `Age ${personAge}` : 'Age not recorded'}{person.school ? ` · ${person.school}` : ''}</div>
               </div>
-              {compact && <span style={{ color: primary, fontSize: 18 }} aria-hidden="true">↗</span>}
+              {compact && <span style={{ color: 'var(--org-ink)', fontSize: 18 }} aria-hidden="true">↗</span>}
             </div>
             <div style={{ fontSize: 12, color: UI.muted }}>{compact && <span style={{ fontWeight: 700 }}>{terms.Group}: </span>}{groupLabel(person.group_name) || 'Unassigned'}</div>
             <div style={{ minWidth: 0, color: UI.muted, fontSize: 12, overflowWrap: 'anywhere' }}>
@@ -193,7 +193,7 @@ export function PeopleRoster({
               {!alerts.length && !person.has_behaviour_plan && !person.collection_restricted && !person.profile_incomplete && !consentDue && <span style={{ fontSize: 12, color: UI.muted }}>No flags recorded</span>}
             </div>
             <div style={{ fontSize: 11.5, color: UI.muted, lineHeight: 1.5 }}>{onSite ? <Chip tone="green">● On site</Chip> : <>{compact && 'Last activity: '}{activityDate(att)}</>}</div>
-            {!compact && <span style={{ color: primary, fontSize: 18 }} aria-hidden="true">↗</span>}
+            {!compact && <span style={{ color: 'var(--org-ink)', fontSize: 18 }} aria-hidden="true">↗</span>}
           </button>
         )
       })}</div>}

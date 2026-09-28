@@ -449,7 +449,7 @@ function WellbeingQuickLog({ child, orgId, userId, onClose, onLogged }) {
 
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={onClose} style={{ flex: 1, padding: 11, borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-          <button onClick={submit} disabled={!mood || saving} style={{ flex: 1, padding: 11, borderRadius: 10, border: 'none', background: !mood || saving ? 'var(--border)' : PRIMARY, color: !mood || saving ? 'var(--text-faint)' : '#fff', fontWeight: 800, cursor: !mood || saving ? 'default' : 'pointer' }}>
+          <button onClick={submit} disabled={!mood || saving} style={{ flex: 1, padding: 11, borderRadius: 10, border: 'none', background: !mood || saving ? 'var(--border)' : PRIMARY, color: !mood || saving ? 'var(--text-faint)' : 'var(--surface)', fontWeight: 800, cursor: !mood || saving ? 'default' : 'pointer' }}>
             {saving ? 'Saving...' : 'Log Check-in'}
           </button>
         </div>
@@ -1083,7 +1083,7 @@ export default function SafeguardingDashboard({ org, session, onReportConcern, o
           </div>
           <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
             <button onClick={() => onReportConcern && onReportConcern()} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${PRIMARY}, ${PRIMARY}CC)`, color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}><Icon name="🛡️" /> Report Concern</button>
-            <button onClick={() => setShowEmergency(true)} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid var(--border, var(--border))', background: 'var(--surface, #fff)', color: 'var(--text, #111)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}><Icon name="🚨" /> Emergency</button>
+            <button onClick={() => setShowEmergency(true)} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface, #fff)', color: 'var(--text, #111)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}><Icon name="🚨" /> Emergency</button>
           </div>
         </div>
         <div style={{ marginTop: 12 }}>

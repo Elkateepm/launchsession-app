@@ -31,7 +31,7 @@ function WeekView({ date, bookings, resources, org, onBook, onDelete }) {
           {days.map(d => (
             <div key={d} style={{ textAlign: 'center', padding: '6px 4px', borderRadius: 8, background: isToday(d) ? primary + '15' : 'transparent' }}>
               <div style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 600 }}>{format(d, 'EEE')}</div>
-              <div style={{ fontSize: 16, fontWeight: isToday(d) ? 900 : 700, color: isToday(d) ? primary : '#111' }}>{format(d, 'd')}</div>
+              <div style={{ fontSize: 16, fontWeight: isToday(d) ? 900 : 700, color: isToday(d) ? 'var(--org-ink)' : '#111' }}>{format(d, 'd')}</div>
             </div>
           ))}
         </div>
@@ -134,7 +134,7 @@ export default function ResourceBooking({ org, session: authSession }) {
             <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 3 }}>{resources.length} resource{resources.length !== 1 ? 's' : ''} · {totalBookingsThisWeek} booking{totalBookingsThisWeek !== 1 ? 's' : ''} this week</div>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={() => setShowAddResource(true)} style={{ padding: '10px 18px', borderRadius: 12, border: `1.5px solid ${primary}`, background: 'var(--surface)', color: primary, fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>+ Resource</button>
+            <button onClick={() => setShowAddResource(true)} style={{ padding: '10px 18px', borderRadius: 12, border: `1.5px solid ${primary}`, background: 'var(--surface)', color: 'var(--org-ink)', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>+ Resource</button>
             <button onClick={() => setShowBook(true)} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>+ Book</button>
           </div>
         </div>
@@ -219,7 +219,7 @@ export default function ResourceBooking({ org, session: authSession }) {
         <div style={{ flex: 1, textAlign: 'center', fontWeight: 800, fontSize: 15 }}>
           {format(startOfWeek(currentWeek, { weekStartsOn: 1 }), 'd MMM')} – {format(addDays(startOfWeek(currentWeek, { weekStartsOn: 1 }), 6), 'd MMM yyyy')}
         </div>
-        <button onClick={() => setCurrentWeek(new Date())} style={{ padding: '7px 14px', borderRadius: 10, border: `1.5px solid ${primary}`, background: primary + '10', color: primary, fontWeight: 700, cursor: 'pointer' }}>Today</button>
+        <button onClick={() => setCurrentWeek(new Date())} style={{ padding: '7px 14px', borderRadius: 10, border: `1.5px solid ${primary}`, background: primary + '10', color: 'var(--org-ink)', fontWeight: 700, cursor: 'pointer' }}>Today</button>
         <button onClick={() => setCurrentWeek(d => addDays(d, 7))} style={{ padding: '7px 14px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', fontWeight: 700, cursor: 'pointer' }}>Next <Icon name="→" /></button>
       </div>
 

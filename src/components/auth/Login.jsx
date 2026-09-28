@@ -145,7 +145,7 @@ export default function Login({ org }) {
         org_name: orgName,
         org_slug: org?.slug,
         org_logo: org?.logo_url,
-        org_color: org?.primary_color,
+        org_color: 'var(--org-ink)',
         redirect_to: window.location.origin + '/reset-password' + (org?.slug ? '?org=' + org.slug : ''),
       },
     })
@@ -188,7 +188,7 @@ export default function Login({ org }) {
       padding: '0 20px calc(28px + env(safe-area-inset-bottom, 0px))',
       position: 'relative', overflow: 'hidden',
     }}>
-      <style>{'@keyframes ls-tw { 0%,100%{opacity:.2} 50%{opacity:.85} } .ls-star{position:absolute;border-radius:50%;background:#fff} .ls-in:focus{border-color:' + primary + ' !important;background:rgba(255,255,255,0.07) !important}'}</style>
+      <style>{'@keyframes ls-tw { 0%,100%{opacity:.2} 50%{opacity:.85} } .ls-star{position:absolute;border-radius:50%;background:#fff} .ls-in:focus{border-color:var(--org-ink) !important;background:rgba(255,255,255,0.07) !important}'}</style>
 
       {showBg && (
         <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 0, overflow: 'hidden' }}>
@@ -370,7 +370,7 @@ export default function Login({ org }) {
               <button onClick={() => { setStep(STEPS.EMAIL); setError(''); setForgotSent(false) }} style={backLink}><Icon name="←" /> Back</button>
               {forgotSent ? (
                 <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                  <div style={{ fontSize: 40, marginBottom: 16, color: primary }}><Icon name="📬" /></div>
+                  <div style={{ fontSize: 40, marginBottom: 16, color: 'var(--org-ink)' }}><Icon name="📬" /></div>
                   <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', marginBottom: 8 }}>Reset link sent</div>
                   <div style={{ fontSize: 14.5, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>Check your email at <strong style={{ color: '#fff' }}>{email}</strong> for a password reset link.</div>
                 </div>

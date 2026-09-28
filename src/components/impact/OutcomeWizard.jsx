@@ -90,11 +90,11 @@ export default function OutcomeWizard({ org, children, presetChild, onClose, onS
                     {filteredChildren.map(c => (
                       <div key={c.id} onClick={() => set({ child: c })}
                         style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12, cursor: 'pointer', border: `1.5px solid ${form.child?.id === c.id ? primary : 'var(--border-soft)'}`, background: form.child?.id === c.id ? primary + '10' : 'var(--surface)' }}>
-                        <div style={{ width: 34, height: 34, borderRadius: 9, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: primary }}>
+                        <div style={{ width: 34, height: 34, borderRadius: 9, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: 'var(--org-ink)' }}>
                           {c.first_name?.[0]}{c.last_name?.[0]}
                         </div>
                         <div style={{ fontSize: 13.5, fontWeight: 700 }}>{c.first_name} {c.last_name}</div>
-                        {form.child?.id === c.id && <div style={{ marginLeft: 'auto', color: primary, fontWeight: 900 }}><Icon name="✓" /></div>}
+                        {form.child?.id === c.id && <div style={{ marginLeft: 'auto', color: 'var(--org-ink)', fontWeight: 900 }}><Icon name="✓" /></div>}
                       </div>
                     ))}
                     {filteredChildren.length === 0 && <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-faint)', fontSize: 13 }}>No young people found</div>}
@@ -154,7 +154,7 @@ export default function OutcomeWizard({ org, children, presetChild, onClose, onS
                 <div>
                   <div style={{ background: 'var(--surface2)', borderRadius: 16, padding: 18, border: '1px solid var(--border-soft)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                      <div style={{ width: 40, height: 40, borderRadius: 10, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: primary }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 10, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: 'var(--org-ink)' }}>
                         {form.child?.first_name?.[0]}{form.child?.last_name?.[0]}
                       </div>
                       <div style={{ fontWeight: 800, fontSize: 14 }}>{form.child?.first_name} {form.child?.last_name}</div>
@@ -164,7 +164,7 @@ export default function OutcomeWizard({ org, children, presetChild, onClose, onS
                       <span style={{ fontWeight: 900, color: scoreColor(form.score) }}>{form.score}/10</span>
                     </div>
                     {form.notes && <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 8, lineHeight: 1.5, borderTop: '1px solid var(--border)', paddingTop: 8 }}>{form.notes}</div>}
-                    {form.addGoal && form.goalTitle && <div style={{ fontSize: 12.5, color: primary, marginTop: 8, fontWeight: 700 }}><Icon name="🎯" /> Goal: {form.goalTitle}</div>}
+                    {form.addGoal && form.goalTitle && <div style={{ fontSize: 12.5, color: 'var(--org-ink)', marginTop: 8, fontWeight: 700 }}><Icon name="🎯" /> Goal: {form.goalTitle}</div>}
                   </div>
                 </div>
               )}

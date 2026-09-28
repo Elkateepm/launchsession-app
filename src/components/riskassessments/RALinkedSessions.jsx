@@ -80,7 +80,7 @@ export default function RALinkedSessions({ assessment, org, session: authSession
                   <div style={{ fontSize: 13, fontWeight: 700 }}>{s.title}</div>
                   <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{s.session_date ? new Date(s.session_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''}{s.location ? ` · ${s.location}` : ''}</div>
                 </div>
-                <span style={{ color: primary, fontWeight: 800, fontSize: 12 }}>+ Attach</span>
+                <span style={{ color: 'var(--org-ink)', fontWeight: 800, fontSize: 12 }}>+ Attach</span>
               </button>
             ))}
           </div>

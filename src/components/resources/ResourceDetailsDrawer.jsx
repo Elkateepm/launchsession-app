@@ -71,7 +71,7 @@ export default function ResourceDetailsDrawer({ resource, staff, org, onClose, o
         {resource.notes && (
           <div style={{ background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 10, padding: 12, marginBottom: 16 }}>
             <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--warn-text)', textTransform: 'uppercase', marginBottom: 4 }}>Maintenance / notes</div>
-            <div style={{ fontSize: 12.5, color: '#78350F' }}>{resource.notes}</div>
+            <div style={{ fontSize: 12.5, color: 'var(--warn-text)' }}>{resource.notes}</div>
           </div>
         )}
 

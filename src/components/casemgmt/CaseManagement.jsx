@@ -311,7 +311,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
         {selectedIds.size > 0 && (
           <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--org-a05)', border: `1.5px solid var(--org-a20)`, borderRadius: 12, padding: '8px 14px', marginBottom: 12 }}>
-            <span style={{ fontSize: 12.5, fontWeight: 800, color: primary }}>{selectedIds.size} selected</span>
+            <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--org-ink)' }}>{selectedIds.size} selected</span>
             <button onClick={bulkArchive} style={{ ...btnGhost, padding: '6px 12px', fontSize: 12 }}>Archive</button>
             <button onClick={bulkClose} style={{ ...btnGhost, padding: '6px 12px', fontSize: 12 }}>Close</button>
             <button onClick={bulkExport} style={{ ...btnGhost, padding: '6px 12px', fontSize: 12 }}>Export</button>
@@ -591,8 +591,8 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                 )}
                 <div style={glass({ padding: 18 })}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Quick Links</div>
-                  <button onClick={() => setReportFor(selectedCase)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 0', border: 'none', background: 'none', fontSize: 12.5, fontWeight: 700, color: primary, cursor: 'pointer' }}><Icon name="📄" /> Generate Report</button>
-                  <button onClick={() => setTab('documents')} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 0', border: 'none', background: 'none', fontSize: 12.5, fontWeight: 700, color: primary, cursor: 'pointer' }}><Icon name="📎" /> View Documents</button>
+                  <button onClick={() => setReportFor(selectedCase)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 0', border: 'none', background: 'none', fontSize: 12.5, fontWeight: 700, color: 'var(--org-ink)', cursor: 'pointer' }}><Icon name="📄" /> Generate Report</button>
+                  <button onClick={() => setTab('documents')} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 0', border: 'none', background: 'none', fontSize: 12.5, fontWeight: 700, color: 'var(--org-ink)', cursor: 'pointer' }}><Icon name="📎" /> View Documents</button>
                 </div>
               </>
             )}

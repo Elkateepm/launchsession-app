@@ -390,7 +390,7 @@ export function PeopleList({ impact, children, terms, primary, onOpenChild, area
               padding: '7px 12px', borderRadius: 8, border: 'none', minHeight: 36,
               background: sort === s.key ? 'var(--surface)' : 'transparent',
               boxShadow: sort === s.key ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
-              color: sort === s.key ? primary : 'var(--text-faint)',
+              color: sort === s.key ? 'var(--org-ink)' : 'var(--text-faint)',
               fontWeight: 800, fontSize: 11.5, cursor: 'pointer', fontFamily: 'inherit',
             }}>{s.label}</button>
           ))}
@@ -422,7 +422,7 @@ export function PeopleList({ impact, children, terms, primary, onOpenChild, area
           }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 11, minWidth: 0 }}>
               <span style={{
-                width: 34, height: 34, borderRadius: 10, background: 'var(--org-a10)', color: primary,
+                width: 34, height: 34, borderRadius: 10, background: 'var(--org-a10)', color: 'var(--org-ink)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 12, fontWeight: 900, flexShrink: 0,
               }}>{child.first_name?.[0]}{child.last_name?.[0]}</span>

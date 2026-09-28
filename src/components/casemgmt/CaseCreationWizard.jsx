@@ -140,7 +140,7 @@ export default function CaseCreationWizard({ org, session: authSession, staff, o
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {CATEGORIES.map(c => (
                       <button key={c} onClick={() => set('category', c)}
-                        style={{ padding: '8px 14px', borderRadius: 99, border: `1.5px solid ${form.category === c ? primary : 'rgba(15,23,42,0.1)'}`, background: form.category === c ? 'var(--org-a10)' : 'var(--surface)', color: form.category === c ? primary : 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+                        style={{ padding: '8px 14px', borderRadius: 99, border: `1.5px solid ${form.category === c ? primary : 'rgba(15,23,42,0.1)'}`, background: form.category === c ? 'var(--org-a10)' : 'var(--surface)', color: form.category === c ? 'var(--org-ink)' : 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
                         {c}
                       </button>
                     ))}

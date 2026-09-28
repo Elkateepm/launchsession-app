@@ -16,7 +16,6 @@ const FIELDS = [
 ]
 
 export default function RAEmergencyPlan({ assessment, org, venues }) {
-  const primary = org?.primary_color || '#7C5CFC'
   const [form, setForm] = useState({})
   const [savingKey, setSavingKey] = useState(null)
   const timers = useRef({})
@@ -57,7 +56,7 @@ export default function RAEmergencyPlan({ assessment, org, venues }) {
         <div key={key}>
           <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>
             <span>{label}</span>
-            {savingKey === key && <span style={{ fontSize: 10.5, color: primary, fontWeight: 700 }}>Saving…</span>}
+            {savingKey === key && <span style={{ fontSize: 10.5, color: 'var(--org-ink)', fontWeight: 700 }}>Saving…</span>}
           </label>
           <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 6 }}>{hint}</div>
           <textarea

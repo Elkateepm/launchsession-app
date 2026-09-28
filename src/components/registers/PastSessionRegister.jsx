@@ -220,7 +220,7 @@ export default function PastSessionRegister({
       {/* TABS */}
       <div className="no-print" style={{ display: 'flex', background: 'var(--surface)', borderBottom: '1px solid var(--border)', overflowX: 'auto' }}>
         {TABS.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{ flex: '1 0 auto', padding: '11px 14px', border: 'none', borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent', background: 'none', color: tab === t.key ? primary : 'var(--text3)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          <button key={t.key} onClick={() => setTab(t.key)} style={{ flex: '1 0 auto', padding: '11px 14px', border: 'none', borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent', background: 'none', color: tab === t.key ? 'var(--org-ink)' : 'var(--text3)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
             {t.label} {t.count}
           </button>
         ))}

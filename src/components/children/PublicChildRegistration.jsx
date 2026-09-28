@@ -61,7 +61,7 @@ function ChildCard({ child, index, total, primary, open, onToggle, onChange, onR
           <span style={{
             width: 26, height: 26, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center',
             justifyContent: 'center', fontSize: 12, fontWeight: 800,
-            background: incomplete ? 'var(--border-soft)' : 'var(--org-a10)', color: incomplete ? 'var(--text-faint)' : primary,
+            background: incomplete ? 'var(--border-soft)' : 'var(--org-a10)', color: incomplete ? 'var(--text-faint)' : 'var(--org-ink)',
           }}>{index + 1}</span>
           <span style={{ flex: 1, minWidth: 0 }}>
             <span style={{ display: 'block', fontSize: 14.5, fontWeight: 800, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
@@ -220,7 +220,7 @@ export default function PublicChildRegistration() {
           {['Your details', 'Young people', 'Review'].map((s, i) => (
             <div key={s} style={{ flex: 1, textAlign: 'center' }}>
               <div style={{ height: 4, borderRadius: 99, background: step > i ? primary : 'var(--border)', marginBottom: 5 }} />
-              <div style={{ fontSize: 10, fontWeight: 700, color: step === i + 1 ? primary : 'var(--text-faint)' }}>{s}</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: step === i + 1 ? 'var(--org-ink)' : 'var(--text-faint)' }}>{s}</div>
             </div>
           ))}
         </div>
@@ -266,7 +266,7 @@ export default function PublicChildRegistration() {
               {children.length < MAX_CHILDREN ? (
                 <button type="button" onClick={addChild} style={{
                   width: '100%', padding: '13px', borderRadius: 11, marginBottom: 14,
-                  border: `1.5px dashed ${primary}`, background: 'transparent', color: primary,
+                  border: `1.5px dashed ${primary}`, background: 'transparent', color: 'var(--org-ink)',
                   fontWeight: 800, fontSize: 13.5, cursor: 'pointer', fontFamily: 'inherit',
                 }}>+ Add another young person</button>
               ) : (

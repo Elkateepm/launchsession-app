@@ -497,7 +497,7 @@ function RegisterGroupsManager({ org }) {
       )}
 
       {groups.length > 0 && !adding && (
-        <button onClick={() => setAdding(true)} style={{ padding: '9px 16px', borderRadius: 10, border: `1.5px solid ${org?.primary_color || 'var(--org-primary)'}40`, background: (org?.primary_color || 'var(--org-primary)') + '0c', color: org?.primary_color || 'var(--org-primary)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+        <button onClick={() => setAdding(true)} style={{ padding: '9px 16px', borderRadius: 10, border: `1.5px solid ${org?.primary_color || 'var(--org-primary)'}40`, background: (org?.primary_color || 'var(--org-primary)') + '0c', color: 'var(--org-ink)' || 'var(--org-ink)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
           + Add Group
         </button>
       )}
@@ -993,7 +993,7 @@ function NotificationsSection({ org, session: authSession }) {
                     <div style={{ position: 'absolute', top: 2, left: groupOn ? 20 : 2, width: 18, height: 18, borderRadius: '50%', background: 'var(--surface)', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
                   </div>
                 </div>
-                <button onClick={() => setExpandedGroups(prev => ({ ...prev, [g.key]: !prev[g.key] }))} style={{ background: 'none', border: 'none', padding: '0 0 10px', color: 'var(--org-primary)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>
+                <button onClick={() => setExpandedGroups(prev => ({ ...prev, [g.key]: !prev[g.key] }))} style={{ background: 'none', border: 'none', padding: '0 0 10px', color: 'var(--org-ink)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>
                   {isExpanded ? '▾ Hide individual alerts' : `▸ Customise ${g.events.length} individual alert${g.events.length > 1 ? 's' : ''}`}
                 </button>
               </div>
@@ -1073,7 +1073,7 @@ function IntegrationsSection() {
             </div>
             <div>
               {i.status === 'connected' && <span style={{ background: 'var(--ok-bg)', color: 'var(--ok-text)', borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>● Connected</span>}
-              {i.status === 'available' && <button style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid var(--org-primary)', background: 'var(--surface)', color: 'var(--org-primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Connect</button>}
+              {i.status === 'available' && <button style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid var(--org-primary)', background: 'var(--surface)', color: 'var(--org-ink)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Connect</button>}
               {i.status === 'coming_soon' && <span style={{ background: 'var(--surface3)', color: 'var(--text-faint)', borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>Coming Soon</span>}
             </div>
           </div>
@@ -1306,8 +1306,8 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
               </div>
 
               <p style={{ fontSize: 12, color: 'var(--text3)', margin: '14px 0 0', lineHeight: 1.6 }}>
-                Registered charity? <a href="mailto:hello@launchsession.co.uk?subject=Charity%20discount" style={{ color: 'var(--org-primary)', fontWeight: 600 }}>Ask about our discount</a>.
-                {' '}Need more than Pro+? <a href="mailto:hello@launchsession.co.uk?subject=Enterprise%20Plan" style={{ color: 'var(--org-primary)', fontWeight: 600 }}>Talk to us</a>.
+                Registered charity? <a href="mailto:hello@launchsession.co.uk?subject=Charity%20discount" style={{ color: 'var(--org-ink)', fontWeight: 600 }}>Ask about our discount</a>.
+                {' '}Need more than Pro+? <a href="mailto:hello@launchsession.co.uk?subject=Enterprise%20Plan" style={{ color: 'var(--org-ink)', fontWeight: 600 }}>Talk to us</a>.
               </p>
             </>
           )}
@@ -1444,7 +1444,7 @@ function HelpSection() {
         {links.map(l => (
           <a key={l.title} href={l.href} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', border: '1px solid var(--border)', borderRadius: 10, textDecoration: 'none', transition: 'background 0.15s' }}
             onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
-            onMouseLeave={e => e.currentTarget.style.background = '#fff'}>
+            onMouseLeave={e => e.currentTarget.style.background = 'var(--surface)'}>
             <span style={{ fontSize: 22 }}><Icon name={l.icon} /></span>
             <div>
               <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{l.title}</div>
@@ -2238,7 +2238,7 @@ export default function Settings({ org, session, userProfile, initialSection }) 
               <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1, padding: '8px 10px 4px' }}>{group}</div>
               {items.map(n => (
                 <button key={n.key} onClick={() => { setActive(n.key); if (isMobile) setShowSidebar(false) }}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: 'none', background: active === n.key ? `${org?.primary_color || 'var(--org-primary)'}12` : 'transparent', color: active === n.key ? (org?.primary_color || 'var(--org-primary)') : 'var(--text2)', fontSize: 13, fontWeight: active === n.key ? 700 : 500, cursor: 'pointer', textAlign: 'left', marginBottom: 1, transition: 'all 0.1s' }}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: 'none', background: active === n.key ? `${org?.primary_color || 'var(--org-primary)'}12` : 'transparent', color: active === n.key ? (org?.primary_color || 'var(--org-ink)') : 'var(--text2)', fontSize: 13, fontWeight: active === n.key ? 700 : 500, cursor: 'pointer', textAlign: 'left', marginBottom: 1, transition: 'all 0.1s' }}
                   onMouseEnter={e => { if (active !== n.key) e.currentTarget.style.background = 'var(--surface2)' }}
                   onMouseLeave={e => { if (active !== n.key) e.currentTarget.style.background = 'transparent' }}>
                   <span style={{ fontSize: 15 }}><Icon name={n.icon} /></span>

@@ -267,7 +267,7 @@ function StaffPanel({ staff, org, accountStatus, accountProfile, onClose, onUpda
 
         <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--border)', marginBottom: 20 }}>
           {[['profile', '📋 Profile'], ['leave', '🏖️ Leave'], ['account', '🔐 Account'], ['access', '🔑 Access']].map(([key, lbl]) => (
-            <button key={key} onClick={() => setActiveTab(key)} style={{ padding: '10px 16px', border: 'none', borderBottom: `2.5px solid ${activeTab === key ? primary : 'transparent'}`, background: 'transparent', color: activeTab === key ? primary : 'var(--text3)', fontWeight: activeTab === key ? 800 : 500, fontSize: 13, cursor: 'pointer' }}>
+            <button key={key} onClick={() => setActiveTab(key)} style={{ padding: '10px 16px', border: 'none', borderBottom: `2.5px solid ${activeTab === key ? primary : 'transparent'}`, background: 'transparent', color: activeTab === key ? 'var(--org-ink)' : 'var(--text3)', fontWeight: activeTab === key ? 800 : 500, fontSize: 13, cursor: 'pointer' }}>
               {lbl}
             </button>
           ))}
@@ -648,7 +648,7 @@ export default function HR({ org, session, userProfile }) {
   }
 
   const donutSegments = [
-    { label: 'Active', value: activeCount - onLeaveTodayIds.size, color: primary },
+    { label: 'Active', value: activeCount - onLeaveTodayIds.size, color: 'var(--org-ink)' },
     { label: 'On Leave', value: [...onLeaveTodayIds].filter(id => staff.find(s => s.id === id)?.is_active !== false).length, color: '#F59E0B' },
     { label: 'DBS Expiring', value: dbsExpiringCount, color: 'var(--danger-text)' },
     { label: 'Inactive', value: staff.length - activeCount, color: 'var(--text-faint)' },
@@ -773,7 +773,7 @@ export default function HR({ org, session, userProfile }) {
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search staff..." style={{ flex: 1, minWidth: 180, padding: '8px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 13, fontFamily: 'inherit', outline: 'none' }} />
         {filterChips.map(([k, l]) => (
-          <button key={k} onClick={() => setFilter(k)} style={{ padding: '8px 14px', borderRadius: 99, border: `1.5px solid ${filter === k ? primary : 'var(--border)'}`, background: filter === k ? primary + '12' : 'var(--surface)', color: filter === k ? primary : 'var(--text3)', fontSize: 12, fontWeight: filter === k ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{l}</button>
+          <button key={k} onClick={() => setFilter(k)} style={{ padding: '8px 14px', borderRadius: 99, border: `1.5px solid ${filter === k ? primary : 'var(--border)'}`, background: filter === k ? primary + '12' : 'var(--surface)', color: filter === k ? 'var(--org-ink)' : 'var(--text3)', fontSize: 12, fontWeight: filter === k ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{l}</button>
         ))}
       </div>
 
@@ -794,7 +794,7 @@ export default function HR({ org, session, userProfile }) {
             const dbsExpiring = member.dbs_expiry && differenceInDays(new Date(member.dbs_expiry), today) < 90 && differenceInDays(new Date(member.dbs_expiry), today) >= 0
             return (
               <div key={member.id} onClick={() => setSelected(member)} style={{ background: 'var(--surface)', border: `1px solid ${dbsExpiring ? 'var(--warn-border)' : 'var(--border)'}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: primary, flexShrink: 0 }}>{initials(member.full_name)}</div>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: 'var(--org-ink)', flexShrink: 0 }}>{initials(member.full_name)}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 800 }}>{member.full_name}</div>
                   <div style={{ fontSize: 11, color: 'var(--text3)' }}>{member.role}</div>
@@ -818,7 +818,7 @@ export default function HR({ org, session, userProfile }) {
               <motion.div key={member.id} onClick={() => setSelected(member)} whileHover={{ backgroundColor: 'var(--surface2)' }}
                 style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr 0.9fr 0.9fr 1.2fr', gap: 8, alignItems: 'center', padding: '12px 18px', borderBottom: '1px solid var(--border-soft)', cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 10, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: primary, flexShrink: 0 }}>{initials(member.full_name)}</div>
+                  <div style={{ width: 38, height: 38, borderRadius: 10, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: 'var(--org-ink)', flexShrink: 0 }}>{initials(member.full_name)}</div>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 13.5, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.full_name}</div>
                     <div style={{ fontSize: 11, color: 'var(--text-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.email || 'No email'}</div>

@@ -224,7 +224,7 @@ export default function VPToday({ org, profile, todaySessions, futureSessions, a
         {/* ACHIEVEMENTS */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>My Badges</div>
-          <button onClick={() => onNavigate('profile', 'badges')} style={{ fontSize: 11, fontWeight: 800, color: primary, background: 'none', border: 'none', cursor: 'pointer' }}>View all <Icon name="→" /></button>
+          <button onClick={() => onNavigate('profile', 'badges')} style={{ fontSize: 11, fontWeight: 800, color: 'var(--org-ink)', background: 'none', border: 'none', cursor: 'pointer' }}>View all <Icon name="→" /></button>
         </div>
         <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4, marginBottom: 18 }}>
           {achievements.map(a => (

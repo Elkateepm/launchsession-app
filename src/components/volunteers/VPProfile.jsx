@@ -161,7 +161,7 @@ function Training({ org, user, primary }) {
             <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.training_type}</div>
             <div style={{ fontSize: 10.5, color: 'var(--text-faint)' }}>{r.expiry_date ? `Expires ${new Date(r.expiry_date).toLocaleDateString('en-GB')}` : r.completed_at ? `Completed ${new Date(r.completed_at).toLocaleDateString('en-GB')}` : ''}</div>
           </div>
-          {r.certificate_url && <a href={r.certificate_url} target="_blank" rel="noreferrer" style={{ fontSize: 11, fontWeight: 700, color: primary }}>View</a>}
+          {r.certificate_url && <a href={r.certificate_url} target="_blank" rel="noreferrer" style={{ fontSize: 11, fontWeight: 700, color: 'var(--org-ink)' }}>View</a>}
         </div>
       ))}
     </div>

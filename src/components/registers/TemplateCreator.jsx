@@ -236,7 +236,7 @@ export function TemplatePicker({ org, onUseTemplate }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <div style={{ fontSize: 13, fontWeight: 800, color: '#111' }}><Icon name="🧩" /> Import Templates</div>
         <button onClick={() => { setEditing(null); setShowCreator(true) }}
-          style={{ fontSize: 11, fontWeight: 800, color: primary, background: primary + '10', border: `1px solid var(--org-a20)`, borderRadius: 8, padding: '5px 10px', cursor: 'pointer' }}>
+          style={{ fontSize: 11, fontWeight: 800, color: 'var(--org-ink)', background: primary + '10', border: `1px solid var(--org-a20)`, borderRadius: 8, padding: '5px 10px', cursor: 'pointer' }}>
           + New
         </button>
       </div>

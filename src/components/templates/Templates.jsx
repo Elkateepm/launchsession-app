@@ -172,7 +172,7 @@ function FileDropZone({ primary, onLoad, showToast }) {
       <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 14 }}>
         or click to browse — accepts .csv files
       </div>
-      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 18px', borderRadius: 10, border: `1.5px solid ${primary}`, background: primary + '10', color: primary, fontSize: 13, fontWeight: 700 }}>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 18px', borderRadius: 10, border: `1.5px solid ${primary}`, background: primary + '10', color: 'var(--org-ink)', fontSize: 13, fontWeight: 700 }}>
         📁 Choose File
       </div>
     </div>
@@ -320,7 +320,7 @@ function ChildImportTool({ org, showToast, onNavigate }) {
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
         {TABS.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '9px 16px', borderRadius: 10, border: `1.5px solid ${tab === t.key ? primary : 'var(--border)'}`, background: tab === t.key ? primary + '12' : 'var(--surface)', color: tab === t.key ? primary : 'var(--text3)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+          <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '9px 16px', borderRadius: 10, border: `1.5px solid ${tab === t.key ? primary : 'var(--border)'}`, background: tab === t.key ? primary + '12' : 'var(--surface)', color: tab === t.key ? 'var(--org-ink)' : 'var(--text3)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
             {t.label}
           </button>
         ))}
@@ -363,7 +363,7 @@ function ChildImportTool({ org, showToast, onNavigate }) {
                 <tbody>
                   {CHILD_COLUMNS.map((col, i) => (
                     <tr key={col.key} style={{ borderBottom: i < CHILD_COLUMNS.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                      <td style={{ padding: '10px 14px', fontFamily: 'monospace', fontSize: 12, color: primary, fontWeight: 700 }}>{col.key}</td>
+                      <td style={{ padding: '10px 14px', fontFamily: 'monospace', fontSize: 12, color: 'var(--org-ink)', fontWeight: 700 }}>{col.key}</td>
                       <td style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text)' }}>{col.label}</td>
                       <td style={{ padding: '10px 14px' }}>
                         {col.required
@@ -410,7 +410,7 @@ function ChildImportTool({ org, showToast, onNavigate }) {
               {importResult.failed > 0 && <div style={{ fontSize: 13, color: 'var(--warn-text)', marginBottom: 8 }}>{importResult.failed} rows skipped — check for missing names.</div>}
               {importResult.error && <div style={{ fontSize: 12, color: '#C00', marginBottom: 12 }}>{importResult.error}</div>}
               <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-                <button onClick={() => setImportResult(null)} style={{ padding: '10px 20px', borderRadius: 10, border: `1.5px solid ${primary}`, background: 'transparent', color: primary, fontWeight: 700, cursor: 'pointer' }}>Import more</button>
+                <button onClick={() => setImportResult(null)} style={{ padding: '10px 20px', borderRadius: 10, border: `1.5px solid ${primary}`, background: 'transparent', color: 'var(--org-ink)', fontWeight: 700, cursor: 'pointer' }}>Import more</button>
                 {onNavigate && <button onClick={() => onNavigate('registers')} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>View in Registers <Icon name="→" /></button>}
                 <button onClick={() => setTab('history')} style={{ padding: '10px 20px', borderRadius: 10, border: `1.5px solid var(--border)`, background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>View history</button>
               </div>
@@ -442,7 +442,7 @@ function ChildImportTool({ org, showToast, onNavigate }) {
                   </div>
                 )}
                 <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
-                  <button onClick={handlePreview} style={{ padding: '10px 20px', borderRadius: 10, border: `1.5px solid ${primary}`, background: primary + '12', color: primary, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                  <button onClick={handlePreview} style={{ padding: '10px 20px', borderRadius: 10, border: `1.5px solid ${primary}`, background: primary + '12', color: 'var(--org-ink)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
                     Preview →
                   </button>
                   {csvText && <button onClick={() => { setCsvText(''); setPreview(null); setErrors([]) }} style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text3)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Clear</button>}
@@ -508,7 +508,7 @@ function ChildImportTool({ org, showToast, onNavigate }) {
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
               {history.map((c, i) => (
                 <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < history.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 8, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: primary, flexShrink: 0 }}>{c.first_name[0]}</div>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: primary + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: 'var(--org-ink)', flexShrink: 0 }}>{c.first_name[0]}</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{c.first_name} {c.last_name}</div>
                     <div style={{ fontSize: 11, color: 'var(--text3)' }}>Added {new Date(c.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>

@@ -56,7 +56,7 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
                 <h1 className="ls-header-title" style={{ fontSize: 'clamp(15px, 2.4vw, 19px)', color: 'var(--text, #111)', margin: 0, lineHeight: 1.15 }}>{title}</h1>
                 {badge && (
-                  <span className="ls-header-badge" style={{ fontSize: 10, fontWeight: 800, padding: '3px 9px', borderRadius: 99, background: (badge.color || primary) + '18', color: badge.color || primary, textTransform: 'uppercase', letterSpacing: 0.6, border: `1px solid ${(badge.color || primary)}30`, whiteSpace: 'nowrap' }}>
+                  <span className="ls-header-badge" style={{ fontSize: 10, fontWeight: 800, padding: '3px 9px', borderRadius: 99, background: (badge.color || primary) + '18', color: badge.color || 'var(--org-ink)', textTransform: 'uppercase', letterSpacing: 0.6, border: `1px solid ${(badge.color || primary)}30`, whiteSpace: 'nowrap' }}>
                     {badge.text}
                   </span>
                 )}
@@ -80,7 +80,7 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
                   fontFamily: 'var(--font-display, sans-serif)',
                   ...(isMobile ? { flex: '1 1 0', minWidth: 0 } : {}),
                   ...(a.variant === 'ghost'
-                    ? { border: `1.5px solid var(--border, var(--border))`, background: 'var(--surface, #fff)', color: 'var(--text, #111)', boxShadow: '0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -2px rgba(15,23,42,0.08)' }
+                    ? { border: `1.5px solid var(--border)`, background: 'var(--surface, #fff)', color: 'var(--text, #111)', boxShadow: '0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -2px rgba(15,23,42,0.08)' }
                     : { border: 'none', background: 'var(--org-primary)', color: 'var(--org-on-primary)', boxShadow: `0 1px 0 rgba(255,255,255,0.3) inset, 0 -1px 0 rgba(0,0,0,0.12) inset, 0 6px 16px -8px var(--org-a35)` }
                   )
                 }}>

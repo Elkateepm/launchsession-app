@@ -143,7 +143,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
     { label: 'Sessions Today', value: todaySessions.length, icon: '📅', color: 'var(--warn-text)', bg: 'rgba(245,158,11,0.14)' },
     { label: 'Need Cover', value: needCoverToday, icon: '⚠️', color: 'var(--danger-text)', bg: 'rgba(220,38,38,0.12)' },
     { label: 'Training Due', value: trainingDueSoon.length, icon: '🎓', color: 'var(--violet-text)', bg: 'rgba(124,58,237,0.12)' },
-    { label: 'Volunteer Hours', value: hoursThisMonth, icon: '⭐', color: '#4F46E5', bg: 'rgba(79,70,229,0.12)' },
+    { label: 'Volunteer Hours', value: hoursThisMonth, icon: '⭐', color: 'var(--org-ink)', bg: 'rgba(79,70,229,0.12)' },
   ]
 
   // Activity feed — merged from real signals, not fake data
@@ -287,7 +287,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
               <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={org?.name || 'Organisation'} style={{ width: '82%', height: '82%', objectFit: 'contain' }} />
             </div>
             {/* sparkle accents */}
-            <motion.span animate={{ opacity: [0.25, 1, 0.25] }} transition={{ duration: 2, repeat: Infinity }} style={{ position: 'absolute', top: 4, right: 0, fontSize: 13, color: primary }}>✦</motion.span>
+            <motion.span animate={{ opacity: [0.25, 1, 0.25] }} transition={{ duration: 2, repeat: Infinity }} style={{ position: 'absolute', top: 4, right: 0, fontSize: 13, color: 'var(--org-ink)' }}>✦</motion.span>
             <motion.span animate={{ opacity: [1, 0.25, 1] }} transition={{ duration: 2.6, repeat: Infinity }} style={{ position: 'absolute', bottom: 14, left: -4, fontSize: 10, color: '#6366F1' }}>✦</motion.span>
           </motion.div>
         </div>
@@ -348,7 +348,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                   </Card>
 
                   <Card>
-                    <SectionTitle icon="📅" title="Upcoming Sessions" right={<button onClick={() => setTab('coverage')} style={{ background: 'none', border: 'none', color: primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View calendar <Icon name="→" /></button>} />
+                    <SectionTitle icon="📅" title="Upcoming Sessions" right={<button onClick={() => setTab('coverage')} style={{ background: 'none', border: 'none', color: 'var(--org-ink)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View calendar <Icon name="→" /></button>} />
                     {upcomingSessionsList.length === 0 ? (
                       <div style={{ fontSize: 12.5, color: 'var(--text-faint)' }}>No upcoming sessions scheduled.</div>
                     ) : (
@@ -387,7 +387,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                 {/* RIGHT: Today's Coverage + Training Due + New Applications */}
                 <div>
                   <Card style={{ marginBottom: 20 }}>
-                    <SectionTitle icon="📍" title="Today's Coverage" right={<button onClick={() => setTab('coverage')} style={{ background: 'none', border: 'none', color: primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View all <Icon name="→" /></button>} />
+                    <SectionTitle icon="📍" title="Today's Coverage" right={<button onClick={() => setTab('coverage')} style={{ background: 'none', border: 'none', color: 'var(--org-ink)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View all <Icon name="→" /></button>} />
                     {todaySessionsWithCoverage.length === 0 ? (
                       <div style={{ fontSize: 12.5, color: 'var(--text-faint)' }}>No sessions running today.</div>
                     ) : (
@@ -417,7 +417,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
 
                   {trainingDueSoon.length > 0 && (
                     <Card style={{ marginBottom: 20 }}>
-                      <SectionTitle icon="🎓" title="Training Due Soon" right={<button onClick={() => setTab('training')} style={{ background: 'none', border: 'none', color: primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View all <Icon name="→" /></button>} />
+                      <SectionTitle icon="🎓" title="Training Due Soon" right={<button onClick={() => setTab('training')} style={{ background: 'none', border: 'none', color: 'var(--org-ink)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View all <Icon name="→" /></button>} />
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                         {trainingDueSoon.slice(0, 4).map(t => {
                           const v = volunteers.find(vv => vv.id === t.volunteer_id)
@@ -457,11 +457,11 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                               <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)' }}>{a.full_name}</div>
                               <div style={{ fontSize: 10.5, color: 'var(--text-faint)' }}>Applied {new Date(a.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                             </div>
-                            <button onClick={() => setTab('applications')} style={{ padding: '5px 10px', borderRadius: 8, border: `1.5px solid ${primary}`, background: 'var(--surface)', fontSize: 11, fontWeight: 700, color: primary, cursor: 'pointer', whiteSpace: 'nowrap' }}>Review <Icon name="→" /></button>
+                            <button onClick={() => setTab('applications')} style={{ padding: '5px 10px', borderRadius: 8, border: `1.5px solid ${primary}`, background: 'var(--surface)', fontSize: 11, fontWeight: 700, color: 'var(--org-ink)', cursor: 'pointer', whiteSpace: 'nowrap' }}>Review <Icon name="→" /></button>
                           </div>
                         ))}
                         {applicants.length === 0 && publicApplications.length > 0 && (
-                          <button onClick={() => setTab('applications')} style={{ padding: '8px 10px', borderRadius: 8, border: `1.5px solid ${primary}`, background: 'var(--surface)', fontSize: 12, fontWeight: 700, color: primary, cursor: 'pointer' }}>Review sign-ups <Icon name="→" /></button>
+                          <button onClick={() => setTab('applications')} style={{ padding: '8px 10px', borderRadius: 8, border: `1.5px solid ${primary}`, background: 'var(--surface)', fontSize: 12, fontWeight: 700, color: 'var(--org-ink)', cursor: 'pointer' }}>Review sign-ups <Icon name="→" /></button>
                         )}
                       </div>
                     )}
@@ -472,7 +472,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
               {/* RECENT VOLUNTEERS */}
               {volunteers.length > 0 && (
                 <Card style={{ marginTop: 20 }}>
-                  <SectionTitle icon="👥" title="Recent Volunteers" right={<button onClick={() => setTab('directory')} style={{ background: 'none', border: 'none', color: primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View all <Icon name="→" /></button>} />
+                  <SectionTitle icon="👥" title="Recent Volunteers" right={<button onClick={() => setTab('directory')} style={{ background: 'none', border: 'none', color: 'var(--org-ink)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>View all <Icon name="→" /></button>} />
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
                     {volunteers.slice(0, 5).map(v => (
                       <div key={v.id} style={{ padding: 14, borderRadius: 16, background: 'var(--surface2)', border: '1px solid var(--border-soft)', textAlign: 'center' }}>

@@ -211,7 +211,7 @@ export default function AudienceBuilder({
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addManual() } }} />
         <button type="button" onClick={addManual} style={{
           padding: '10px 16px', borderRadius: 9, border: `1.5px solid ${primary}`,
-          background: 'transparent', color: primary, fontWeight: 800, fontSize: 12.5,
+          background: 'transparent', color: 'var(--org-ink)', fontWeight: 800, fontSize: 12.5,
           cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
         }}>Add</button>
       </div>
@@ -249,7 +249,7 @@ export default function AudienceBuilder({
               {people.length > 0 && (
                 <button type="button" onClick={() => setExpanded(x => !x)} style={{
                   background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                  color: primary, fontSize: 12.5, fontWeight: 800, fontFamily: 'inherit',
+                  color: 'var(--org-ink)', fontSize: 12.5, fontWeight: 800, fontFamily: 'inherit',
                 }}>{expanded ? 'Hide the list' : 'Show and edit the list'}</button>
               )}
               {excludedEmails.length > 0 && (

@@ -161,7 +161,7 @@ export default function OfficeOverview({ org, tabs, onSelect, newResponses = 0 }
                 <span style={{
                   width: 34, height: 34, borderRadius: 10, flexShrink: 0,
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'var(--org-a10)', color: 'var(--org-primary, #6D5DF6)',
+                  background: 'var(--org-a10)', color: 'var(--org-ink, #6D5DF6)',
                 }} aria-hidden="true"><Icon name={t.icon} /></span>
                 <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>{t.label}</span>
               </div>
