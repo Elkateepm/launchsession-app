@@ -88,7 +88,7 @@ describe('InlineChildImport', () => {
     render(<InlineChildImport org={org} groups={groups} existingChildren={existingChildren} onImported={() => {}} />)
     paste(MESSY)
 
-    fireEvent.click(await screen.findByRole('button', { name: /Import 2 children/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Import 2 young people/i }))
     await waitFor(() => expect(global.fetch).toHaveBeenCalled())
 
     const body = JSON.parse(global.fetch.mock.calls[0][1].body)
@@ -105,7 +105,7 @@ describe('InlineChildImport', () => {
 
     await screen.findByText('2 ready to import')
     fireEvent.click(screen.getByRole('checkbox'))
-    fireEvent.click(screen.getByRole('button', { name: /Import 3 children/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Import 3 young people/i }))
     await waitFor(() => expect(global.fetch).toHaveBeenCalled())
 
     const names = JSON.parse(global.fetch.mock.calls[0][1].body).records.map(r => r.first_name)
@@ -137,7 +137,7 @@ describe('InlineChildImport', () => {
     render(<InlineChildImport org={org} groups={groups} existingChildren={[]} onImported={onImported} />)
     paste('Name,Class\n"Baptiste, Aaliyah",Tigers')
 
-    fireEvent.click(await screen.findByRole('button', { name: /Import 1 child/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Import 1 young person/i }))
     await waitFor(() => expect(onImported).toHaveBeenCalled())
 
     const [record] = JSON.parse(global.fetch.mock.calls[0][1].body).records

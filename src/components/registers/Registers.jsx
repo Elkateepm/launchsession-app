@@ -309,6 +309,8 @@ function EditChildForm({ child, onSaved }) {
 const CSV_COLS = AVAILABLE_FIELDS.map(f => f.key)
 
 export function InlineChildImport({ org, template, existingChildren = [], groups = [], onImported }) {
+  const terms = useTerms()
+  const someone = n => (n === 1 ? terms.person : terms.people)
   const [raw, setRaw] = useState(null)          // { headers, rows, source }
   const [mapping, setMapping] = useState({})
   const [pasted, setPasted] = useState('')
@@ -322,7 +324,7 @@ export function InlineChildImport({ org, template, existingChildren = [], groups
   const load = useCallback((rows, source) => {
     if (!rows.length) { setFileError('That file has no rows in it.'); return }
     const [headers, ...body] = rows
-    if (!body.length) { setFileError('That file has a header row but no children under it.'); return }
+    if (!body.length) { setFileError(`That file has a header row but no ${terms.people} under it.`); return }
     // The import route refuses more than 2000 in one go. Say so now rather than
     // after the columns have been mapped and Import pressed.
     if (body.length > 2000) {
@@ -332,7 +334,7 @@ export function InlineChildImport({ org, template, existingChildren = [], groups
     setFileError('')
     setRaw({ headers, rows: body, source })
     setMapping(detectMapping(headers))
-  }, [])
+  }, [terms])
 
   const handleFile = async (file) => {
     if (!file) return
@@ -467,12 +469,12 @@ export function InlineChildImport({ org, template, existingChildren = [], groups
             <Pill tone="ok" label={`${result.ready.length} ready to import`} />
             {result.duplicates.length > 0 && <Pill tone="warn" label={`${result.duplicates.length} already on the register`} />}
             {hardSkips.length > 0 && <Pill tone="danger" label={`${hardSkips.length} cannot be imported`} />}
-            {result.newGroups.length > 0 && <Pill tone="info" label={`${result.newGroups.length} new group${result.newGroups.length === 1 ? '' : 's'}`} />}
+            {result.newGroups.length > 0 && <Pill tone="info" label={`${result.newGroups.length} new ${result.newGroups.length === 1 ? terms.group : terms.group + 's'}`} />}
           </div>
 
           {result.newGroups.length > 0 && (
             <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 12 }}>
-              New group{result.newGroups.length === 1 ? '' : 's'} in this file: <b style={{ color: 'var(--text2)' }}>{result.newGroups.join(', ')}</b>. They will be created as you go.
+              New {result.newGroups.length === 1 ? terms.group : terms.group + 's'} in this file: <b style={{ color: 'var(--text2)' }}>{result.newGroups.join(', ')}</b>. They will be created as you go.
             </div>
           )}
 
@@ -480,7 +482,7 @@ export function InlineChildImport({ org, template, existingChildren = [], groups
             <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 12px', marginBottom: 12, cursor: 'pointer' }}>
               <input type="checkbox" checked={includeDuplicates} onChange={e => setIncludeDuplicates(e.target.checked)} style={{ marginTop: 2 }} />
               <span style={{ fontSize: 12.5, color: 'var(--text2)', lineHeight: 1.5 }}>
-                Add {result.duplicates.length} child{result.duplicates.length === 1 ? '' : 'ren'} who {result.duplicates.length === 1 ? 'is' : 'are'} already on your register anyway.
+                Add {result.duplicates.length} {someone(result.duplicates.length)} already on your register anyway.
                 <span style={{ display: 'block', color: 'var(--text3)', marginTop: 2 }}>
                   {result.duplicates.slice(0, 6).map(d => d.name).join(', ')}{result.duplicates.length > 6 ? `, +${result.duplicates.length - 6} more` : ''}
                 </span>
@@ -514,7 +516,7 @@ export function InlineChildImport({ org, template, existingChildren = [], groups
           <button onClick={() => setRaw(null)} style={{ padding: '10px 16px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           <button onClick={handleImport} disabled={importing || !hasName || importable === 0}
             style={{ flex: 1, padding: '10px 16px', borderRadius: 10, border: 'none', fontSize: 13, fontWeight: 800, color: '#fff', cursor: importing || !hasName || importable === 0 ? 'not-allowed' : 'pointer', background: importing || !hasName || importable === 0 ? 'var(--text-faint)' : primary }}>
-            {importing ? 'Importing…' : importable === 0 ? 'Nothing to import' : `Import ${importable} child${importable === 1 ? '' : 'ren'}`}
+            {importing ? 'Importing…' : importable === 0 ? 'Nothing to import' : `Import ${importable} ${someone(importable)}`}
           </button>
         </div>
       </div>
