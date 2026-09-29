@@ -1,6 +1,26 @@
 {
   "rewrites": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.launchsession.co.uk"
+        }
+      ],
+      "destination": "/landing.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "launchsession.co.uk"
+        }
+      ],
+      "destination": "/landing.html"
+    },
+    {
       "source": "/((?!static|favicon|manifest|logo|landing|packages).*)",
       "destination": "/index.html"
     }

@@ -1,3 +1,14 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+Allow: /
+
+# Signed-in application routes. They are behind a login and carry an
+# organisation slug, so indexing them surfaces nothing useful and puts
+# customer org names into search results.
+Disallow: /login
+Disallow: /signup
+Disallow: /invite
+Disallow: /reset-password
+Disallow: /create-password
+
+Sitemap: https://www.launchsession.co.uk/sitemap.xml
