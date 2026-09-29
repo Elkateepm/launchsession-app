@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import AttendanceCorrectionModal from './AttendanceCorrectionModal'
 import SignedImg from '../shared/SignedImg'
 import Icon from '../../lib/icons'
+import { orgFilename } from '../../lib/orgExport'
 import { useIsMobile } from '../../hooks/useIsMobile'
 
 function fmtTime(d) {
@@ -97,7 +98,7 @@ export default function PastSessionRegister({
       att?.absence_reason || '',
       att ? (peopleProfiles[att.signed_out_by || att.signed_in_by] || '') : '',
     ])
-    downloadText(`${session.title}-attendance-${session.session_date}.csv`, toCsv([header, ...body]))
+    downloadText(orgFilename(org, `${session.title}-attendance-${session.session_date}`, 'csv', { date: false }), toCsv([header, ...body]))
   }
 
   const handleExportEmergency = () => {
@@ -110,7 +111,7 @@ export default function PastSessionRegister({
       child.emergency_contact_name || '',
       child.emergency_contact_phone || '',
     ])
-    downloadText(`${session.title}-emergency-record-${session.session_date}.csv`, toCsv([header, ...body]))
+    downloadText(orgFilename(org, `${session.title}-emergency-record-${session.session_date}`, 'csv', { date: false }), toCsv([header, ...body]))
   }
 
   return (

@@ -1,4 +1,5 @@
 import React from 'react'
+import { orgFilename, csvPreamble } from '../../lib/orgExport'
 import { Card, SectionTitle, Avatar, sessionHours, PURPLE, btnGhost } from './vh_shared'
 
 function BarChart({ data, color, height = 140 }) {
@@ -65,7 +66,7 @@ export default function VolunteersReports({ org, volunteers, sessionStaff, sessi
   })).sort((a, b) => b.count - a.count).slice(0, 6)
 
   function exportCsv() {
-    const rows = [['Name', 'Email', 'Status', 'Sessions Completed', 'Hours']]
+    const rows = [...csvPreamble(org, 'Volunteer programme report'), ['Name', 'Email', 'Status', 'Sessions Completed', 'Hours']]
     volunteers.forEach(v => {
       const mine = completedStaff.filter(ss => ss.volunteer_id === v.id || ss.user_id === v.id)
       const hrs = Math.round(mine.reduce((sum, ss) => sum + sessionHours(sessionsById[ss.session_id]), 0))
@@ -75,7 +76,7 @@ export default function VolunteersReports({ org, volunteers, sessionStaff, sessi
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = url; a.download = 'volunteer-report.csv'; a.click()
+    a.href = url; a.download = orgFilename(org, 'volunteer-report'); a.click()
     URL.revokeObjectURL(url)
   }
 

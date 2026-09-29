@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { categoryMeta, statusMeta } from '../../lib/resourceHelpers'
+import { orgFilename } from '../../lib/orgExport'
 import Icon from '../../lib/icons'
 
 export default function InventoryTable({ org, resources, staff, authUserId, onChanged, onOpen }) {
@@ -68,7 +69,7 @@ export default function InventoryTable({ org, resources, staff, authUserId, onCh
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = url; a.download = 'resource-inventory.csv'; a.click()
+    a.href = url; a.download = orgFilename(org, 'resource-inventory'); a.click()
     URL.revokeObjectURL(url)
   }
 
