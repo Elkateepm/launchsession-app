@@ -43,7 +43,7 @@ const config: CapacitorConfig = {
     // the JS bundle parses.
     SplashScreen: {
       launchAutoHide: false,
-      backgroundColor: '#0B1B33',
+      backgroundColor: '#150B42',
     },
   },
 };

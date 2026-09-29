@@ -8,11 +8,14 @@ import React, { useEffect, useRef, useState } from 'react'
 // percentage. The old one counted to 92% on a timer and then jumped, which
 // measured nothing.
 //
-// The mark is the same one used for the app icon, so tapping the icon and
-// arriving here reads as one movement rather than two logos in a row.
+// The badge is the same one used for the app icon and both native splashes, so
+// tapping the icon and arriving here reads as one movement rather than two
+// logos in a row.
 //
-// The SVG is referenced from /assets rather than inlined: it is small, and the
-// gradient behind it paints instantly, so the frame is never empty.
+// It is referenced from /assets rather than inlined: the gradient behind it
+// paints instantly, so the frame is never empty while it decodes. The circle is
+// cut with a real alpha channel -- the supplied artwork sits on a solid black
+// square, which would show as a hard edge against the gradient.
 //
 // The brand film plays on the first open of a browser session and not after.
 // Holding every launch for two and a half seconds would fight the paragraph
@@ -171,13 +174,16 @@ export default function SplashScreen({ ready, onExited, minDurationMs = 500 }) {
         />
       ) : (
       <img
-        src="/assets/ls-mark.svg"
+        src="/assets/ls-badge.png"
         alt=""
         fetchPriority="high"
         decoding="sync"
+        width="1140"
+        height="1140"
         style={{
-          width: 'clamp(240px, 62vw, 380px)',
-          maxWidth: '76vw',
+          width: 'clamp(200px, 52vw, 320px)',
+          height: 'auto',
+          maxWidth: '72vw',
           // The breathe is deliberately slow and shallow. It signals the app is
           // working without becoming something to watch.
           animation: reducedMotion
