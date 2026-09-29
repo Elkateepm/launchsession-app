@@ -3,6 +3,7 @@ import { useHrAttention } from '../../lib/hrAccess'
 import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { useTerms } from '../../context/OrgContext'
 
 // "What is happening right now."
 //
@@ -57,6 +58,7 @@ const PHASE = {
 }
 
 export default function Today({ org, session: authSession, userProfile, onNavigate }) {
+  const terms = useTerms()
   const isMobile = useIsMobile()
   const primary = org?.primary_color || '#6D5DF6'
   // Renders nothing at all for anyone without HR access, and nothing when
@@ -155,30 +157,43 @@ export default function Today({ org, session: authSession, userProfile, onNaviga
   const upcoming = perSession.filter(s => s.phase === 'upcoming')
   const finished = perSession.filter(s => s.phase === 'finished' || s.phase === 'scheduled')
 
+  // Held as the sessions themselves, not just counts, so a row about exactly
+  // one session can open that session rather than the list.
+  const notStartedSessions = useMemo(
+    () => perSession.filter(s => s.phase === 'running' && !s.registerStarted), [perSession])
+  const openRegisterSessions = useMemo(
+    () => perSession.filter(s => s.phase === 'finished' && s.present > 0), [perSession])
+
   const totals = useMemo(() => ({
     onSite: perSession.reduce((n, s) => n + s.present, 0),
     staffOnSite: perSession.reduce((n, s) => n + s.staffOnSite, 0),
     // A register left open after a session ends is the thing most worth
     // surfacing: it usually means nobody signed the children out.
-    openRegisters: perSession.filter(s => s.phase === 'finished' && s.present > 0).length,
-    notStarted: perSession.filter(s => s.phase === 'running' && !s.registerStarted).length,
-  }), [perSession])
+    openRegisters: openRegisterSessions.length,
+    notStarted: notStartedSessions.length,
+  }), [perSession, openRegisterSessions, notStartedSessions])
 
   const attention = []
   if (totals.notStarted > 0) {
     attention.push({
       id: 'not-started', tone: 'var(--danger-text)',
       title: `${totals.notStarted} register${totals.notStarted === 1 ? '' : 's'} not started`,
-      detail: 'A session is running with nobody marked in',
-      cta: 'Open registers',
+      detail: totals.notStarted === 1
+        ? `${notStartedSessions[0].title || 'A session'} is running with nobody marked in`
+        : 'Sessions are running with nobody marked in',
+      cta: totals.notStarted === 1 ? 'Open register' : 'Open registers',
+      sessionId: totals.notStarted === 1 ? notStartedSessions[0].id : null,
     })
   }
   if (totals.openRegisters > 0) {
     attention.push({
       id: 'open', tone: '#F79009',
       title: `${totals.openRegisters} register${totals.openRegisters === 1 ? '' : 's'} left open`,
-      detail: 'Session has finished but children are still signed in',
-      cta: 'Open registers',
+      detail: totals.openRegisters === 1
+        ? `${openRegisterSessions[0].title || 'A session'} has finished but ${terms.people} are still signed in`
+        : `Sessions have finished but ${terms.people} are still signed in`,
+      cta: totals.openRegisters === 1 ? 'Open register' : 'Open registers',
+      sessionId: totals.openRegisters === 1 ? openRegisterSessions[0].id : null,
     })
   }
 
@@ -260,7 +275,7 @@ export default function Today({ org, session: authSession, userProfile, onNaviga
         )}
 
         <button
-          onClick={() => onNavigate?.('registers')}
+          onClick={() => onNavigate?.('registers', { sessionId: s.id, returnTo: 'today' })}
           style={{
             width: '100%', padding: '11px', borderRadius: 11, border: 'none',
             background: primary, color: '#fff', fontSize: 13.5, fontWeight: 700,
@@ -356,7 +371,7 @@ export default function Today({ org, session: authSession, userProfile, onNaviga
                     <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{a.title}</div>
                     <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>{a.detail}</div>
                   </div>
-                  <button onClick={() => onNavigate?.('registers')} style={{
+                  <button onClick={() => onNavigate?.('registers', a.sessionId ? { sessionId: a.sessionId, returnTo: 'today' } : undefined)} style={{
                     padding: '8px 14px', borderRadius: 10, border: 'none', background: primary,
                     color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
                     fontFamily: 'inherit', flexShrink: 0,
