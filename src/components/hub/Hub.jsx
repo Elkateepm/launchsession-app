@@ -3995,20 +3995,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         {hasModule('messaging') && ['admin', 'owner', 'manager', 'staff'].includes(userProfile?.role) && <div style={{ gridColumn: '1 / -1' }}><AnnouncementsPanel orgId={orgId} primary={primary} userId={session?.user?.id} /></div>}
       </section>
 
-      {/* Floating Report a Cause for Concern button — always accessible from Home, no password needed */}
-      {hasModule('safeguarding') && <button
-        onClick={() => raiseConcern(null)}
-        title="Report a Cause for Concern"
-        style={{
-          position: 'fixed', bottom: isMobile ? 100 : 24, right: isMobile ? 16 : 24, zIndex: 60,
-          display: 'flex', alignItems: 'center', gap: 8, padding: isMobile ? '14px' : '12px 20px',
-          borderRadius: 99, border: 'none', background: 'linear-gradient(90deg,#DC2626,#B91C1C)',
-          color: '#fff', fontSize: 13.5, fontWeight: 800, cursor: 'pointer',
-          boxShadow: '0 10px 28px rgba(220,38,38,0.4)',
-        }}
-      >
-        🚨{!isMobile && ' Report a Cause for Concern'}
-      </button>}
+      {/* The floating "Report a Cause for Concern" button that sat here is gone.
+          Raising a concern is still one click from Home in the quick actions,
+          and from the session cards where the child is actually in front of
+          you -- which is where it gets used. */}
 
       {showConcernForm && (
         <>
