@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, useDragControls } from 'framer-motion'
 import { format } from 'date-fns'
@@ -10,6 +10,9 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { useIsDarkTheme } from '../../hooks/useIsDarkTheme'
 import { setThemeChoice } from '../../lib/theme'
 import { TemplatePicker, AVAILABLE_FIELDS, SAMPLE_ROW } from './TemplateCreator'
+import OverlayPortal from '../shared/OverlayPortal'
+import { parseDelimited, detectMapping, buildImport } from '../../lib/childImport'
+import { orgFilename } from '../../lib/orgExport'
 import HistoricalAttendanceModal from '../shared/HistoricalAttendanceModal'
 import { useTerms } from '../../context/OrgContext'
 import SignedImg from '../shared/SignedImg'
@@ -305,122 +308,257 @@ function EditChildForm({ child, onSaved }) {
 // up with an empty newsletter audience and no obvious reason why.
 const CSV_COLS = AVAILABLE_FIELDS.map(f => f.key)
 
-function InlineChildImport({ org, template, onImported }) {
-  const [step, setStep] = useState('upload')
-  const [csvText, setCsvText] = useState('')
-  const [rows, setRows] = useState([])
-  const [errors, setErrors] = useState([])
+export function InlineChildImport({ org, template, existingChildren = [], groups = [], onImported }) {
+  const [raw, setRaw] = useState(null)          // { headers, rows, source }
+  const [mapping, setMapping] = useState({})
+  const [pasted, setPasted] = useState('')
+  const [reading, setReading] = useState(false)
   const [importing, setImporting] = useState(false)
+  const [fileError, setFileError] = useState('')
+  const [includeDuplicates, setIncludeDuplicates] = useState(false)
   const inputRef = useRef(null)
   const primary = org?.primary_color || '#1B9AAA'
 
-  const parseCSV = (text) => {
-    const lines = text.trim().split('\n').filter(Boolean)
-    if (lines.length < 2) return { rows: [], errs: ['Need a header row and at least one data row'] }
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/\s+/g,'_'))
-    const errs = [], parsed = []
-    lines.slice(1).forEach((line, i) => {
-      const vals = []; let cur = '', inQ = false
-      for (const ch of line) {
-        if (ch === '"') inQ = !inQ
-        else if (ch === ',' && !inQ) { vals.push(cur.trim()); cur = '' }
-        else cur += ch
+  const load = useCallback((rows, source) => {
+    if (!rows.length) { setFileError('That file has no rows in it.'); return }
+    const [headers, ...body] = rows
+    if (!body.length) { setFileError('That file has a header row but no children under it.'); return }
+    // The import route refuses more than 2000 in one go. Say so now rather than
+    // after the columns have been mapped and Import pressed.
+    if (body.length > 2000) {
+      setFileError(`That file has ${body.length} rows. Imports are limited to 2000 at a time — split it and run it twice.`)
+      return
+    }
+    setFileError('')
+    setRaw({ headers, rows: body, source })
+    setMapping(detectMapping(headers))
+  }, [])
+
+  const handleFile = async (file) => {
+    if (!file) return
+    setFileError('')
+    const isSheet = /\.(xlsx|xlsm|xls)$/i.test(file.name)
+    if (!isSheet && !/\.(csv|txt|tsv)$/i.test(file.name)) {
+      setFileError('Use a .csv or an Excel file (.xlsx).')
+      return
+    }
+    setReading(true)
+    try {
+      if (isSheet) {
+        // Loaded only when someone actually opens a spreadsheet: the parser is
+        // several hundred kilobytes and most imports are CSV.
+        const XLSX = await import('xlsx')
+        const buf = await file.arrayBuffer()
+        const wb = XLSX.read(buf, { cellDates: true })
+        const sheet = wb.Sheets[wb.SheetNames[0]]
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: false, raw: true })
+        load(rows.map(r => r.map(c => (c instanceof Date ? c : String(c ?? '').trim()))), file.name)
+      } else {
+        load(parseDelimited(await file.text()), file.name)
       }
-      vals.push(cur.trim())
-      const row = {}
-      headers.forEach((h, j) => { row[h] = vals[j] || '' })
-      if (!row.first_name) errs.push(`Row ${i+2}: missing first_name`)
-      if (!row.last_name) errs.push(`Row ${i+2}: missing last_name`)
-      parsed.push(row)
-    })
-    return { rows: parsed, errs }
+    } catch {
+      setFileError('Could not read that file. If it opens in Excel, try File → Save As → CSV.')
+    }
+    setReading(false)
   }
 
-  const handleFile = (file) => {
-    if (!file?.name.match(/\.(csv|txt)$/i)) return
-    const reader = new FileReader()
-    reader.onload = e => { const text = e.target.result; setCsvText(text); const { rows: p, errs } = parseCSV(text); setRows(p); setErrors(errs); setStep('preview') }
-    reader.readAsText(file)
-  }
+  const result = useMemo(
+    () => (raw ? buildImport({ rows: raw.rows, mapping, groups, existing: existingChildren }) : null),
+    [raw, mapping, groups, existingChildren]
+  )
+
+  const hasName = Object.values(mapping).some(f => f === 'full_name')
+    || (Object.values(mapping).includes('first_name') && Object.values(mapping).includes('last_name'))
 
   const handleImport = async () => {
+    if (!result) return
     setImporting(true)
+    const records = includeDuplicates
+      ? [...result.ready, ...result.duplicates.map(d => ({ ...d.record, active: true }))]
+      : result.ready
     const { data: { session } } = await supabase.auth.getSession()
-    // Whatever columns the file actually has, filtered to the ones the app
-    // knows about. This used to be a hardcoded list of nine, so a template
-    // including SEN or parent email produced a CSV with those columns and then
-    // silently threw the values away on import.
-    const allowed = new Set(AVAILABLE_FIELDS.map(f => f.key))
-    const records = rows.filter(r => r.first_name && r.last_name).map(r => {
-      const rec = { active: true }
-      Object.entries(r).forEach(([k, v]) => {
-        if (allowed.has(k) && String(v).trim() !== '') rec[k] = String(v).trim()
-      })
-      return rec
-    })
     const res = await fetch('/api/import-children', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
       body: JSON.stringify({ org_id: org.id, records }),
     })
-    const json = await res.json()
+    const json = await res.json().catch(() => ({ error: 'The import did not complete.' }))
     setImporting(false)
-    if (json.error) { setErrors([json.error]); return }
+    if (json.error) { setFileError(json.error); return }
     const { data: all } = await supabase.from('children').select('*').eq('org_id', org.id).eq('active', true).order('last_name')
-    onImported(all || [])
+    setRaw(null); setPasted('')
+    onImported(all || [], records.length)
   }
 
   const downloadTemplate = () => {
     const cols = template?.fields?.length ? template.fields.map(f => f.key) : CSV_COLS
-    // Quote every cell: notes and medication details routinely contain commas,
-    // and one unquoted comma shifts every later column by a place.
     const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`
     const row = cols.map(c => q(SAMPLE_ROW[c] ?? '')).join(',')
     const blob = new Blob([`${cols.join(',')}\n${row}\n`], { type: 'text/csv' })
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${template?.name?.replace(/[^a-z0-9]+/gi,'-').toLowerCase() || 'children'}-import.csv`; a.click()
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = orgFilename(org, `${template?.name || 'children'}-import-template`, 'csv', { date: false })
+    a.click()
   }
 
-  const fi = { width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border)', fontSize: 11, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace', resize: 'vertical' }
+  // ── The drop target stays in the sidebar; the mapping and review happen in a
+  //    dialog, because neither fits in a 250px column.
+  if (raw && result) {
+    const importable = result.ready.length + (includeDuplicates ? result.duplicates.length : 0)
+    const hardSkips = result.skipped.filter(s => !s.soft)
+    const softSkips = result.skipped.filter(s => s.soft)
 
-  if (step === 'preview') return (
-    <div>
-      {errors.length > 0 && <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
-        {errors.map((e,i) => <div key={i} style={{ fontSize: 11, color: '#C00' }}><Icon name="⚠" /> {e}</div>)}
-      </div>}
-      <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 8, fontWeight: 600 }}>{rows.length} records ready</div>
-      <div style={{ background: 'var(--surface2)', borderRadius: 8, border: '1px solid var(--border)', maxHeight: 140, overflowY: 'auto', marginBottom: 10 }}>
-        {rows.slice(0,8).map((r,i) => (
-          <div key={i} style={{ display: 'flex', gap: 8, padding: '5px 10px', borderBottom: '1px solid var(--border-soft)', fontSize: 11 }}>
-            <span style={{ fontWeight: 700, color: r.first_name ? 'var(--text)' : 'var(--danger-text)', minWidth: 80 }}>{r.first_name || '⚠'} {r.last_name}</span>
-            <span style={{ color: 'var(--text-faint)' }}>{r.group_name || 'Ungrouped'}</span>
+    return <OverlayPortal><div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.6)', zIndex: 10400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+      onClick={() => setRaw(null)}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 18, width: '100%', maxWidth: 760, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 15.5, fontWeight: 800, color: 'var(--text)' }}>Check the columns</div>
+            <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {raw.source} · {raw.rows.length} row{raw.rows.length === 1 ? '' : 's'}
+            </div>
           </div>
-        ))}
-        {rows.length > 8 && <div style={{ padding: '5px 10px', fontSize: 11, color: 'var(--text-faint)', fontStyle: 'italic' }}>+{rows.length - 8} more</div>}
+          <button onClick={() => setRaw(null)} style={{ border: 'none', background: 'var(--surface-hover)', color: 'var(--text2)', width: 30, height: 30, borderRadius: 9, cursor: 'pointer', fontSize: 15, fontWeight: 800 }}>×</button>
+        </div>
+
+        <div style={{ padding: '14px 20px', overflowY: 'auto', flex: 1 }}>
+          <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 10 }}>
+            We matched your headings to LaunchSession fields. Change any that look wrong — anything set to “Skip” is ignored.
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 8, marginBottom: 16 }}>
+            {raw.headers.map((h, i) => (
+              <label key={i} style={{ display: 'block', border: '1px solid var(--border)', borderRadius: 10, padding: '8px 10px', background: 'var(--surface2)' }}>
+                <span style={{ display: 'block', fontSize: 11.5, fontWeight: 800, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {h || <em style={{ color: 'var(--text3)' }}>(no heading)</em>}
+                </span>
+                <span style={{ display: 'block', fontSize: 11, color: 'var(--text3)', margin: '1px 0 6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  e.g. {raw.rows[0]?.[i] ? String(raw.rows[0][i]).slice(0, 28) : '—'}
+                </span>
+                <select
+                  value={mapping[i] || ''}
+                  onChange={e => setMapping(m => {
+                    const next = { ...m }
+                    if (!e.target.value) delete next[i]
+                    else {
+                      Object.keys(next).forEach(k => { if (next[k] === e.target.value) delete next[k] })
+                      next[i] = e.target.value
+                    }
+                    return next
+                  })}
+                  style={{ width: '100%', padding: '6px 8px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 12, fontFamily: 'inherit' }}
+                >
+                  <option value="">Skip this column</option>
+                  <option value="full_name">Full name (split automatically)</option>
+                  {AVAILABLE_FIELDS.map(f => <option key={f.key} value={f.key}>{f.label}</option>)}
+                </select>
+              </label>
+            ))}
+          </div>
+
+          {!hasName && (
+            <div style={{ background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 10, padding: '10px 12px', fontSize: 12.5, color: 'var(--warn-text)', marginBottom: 14 }}>
+              Point one column at <b>Full name</b>, or one each at <b>First Name</b> and <b>Last Name</b>, before importing.
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+            <Pill tone="ok" label={`${result.ready.length} ready to import`} />
+            {result.duplicates.length > 0 && <Pill tone="warn" label={`${result.duplicates.length} already on the register`} />}
+            {hardSkips.length > 0 && <Pill tone="danger" label={`${hardSkips.length} cannot be imported`} />}
+            {result.newGroups.length > 0 && <Pill tone="info" label={`${result.newGroups.length} new group${result.newGroups.length === 1 ? '' : 's'}`} />}
+          </div>
+
+          {result.newGroups.length > 0 && (
+            <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 12 }}>
+              New group{result.newGroups.length === 1 ? '' : 's'} in this file: <b style={{ color: 'var(--text2)' }}>{result.newGroups.join(', ')}</b>. They will be created as you go.
+            </div>
+          )}
+
+          {result.duplicates.length > 0 && (
+            <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 12px', marginBottom: 12, cursor: 'pointer' }}>
+              <input type="checkbox" checked={includeDuplicates} onChange={e => setIncludeDuplicates(e.target.checked)} style={{ marginTop: 2 }} />
+              <span style={{ fontSize: 12.5, color: 'var(--text2)', lineHeight: 1.5 }}>
+                Add {result.duplicates.length} child{result.duplicates.length === 1 ? '' : 'ren'} who {result.duplicates.length === 1 ? 'is' : 'are'} already on your register anyway.
+                <span style={{ display: 'block', color: 'var(--text3)', marginTop: 2 }}>
+                  {result.duplicates.slice(0, 6).map(d => d.name).join(', ')}{result.duplicates.length > 6 ? `, +${result.duplicates.length - 6} more` : ''}
+                </span>
+              </span>
+            </label>
+          )}
+
+          {(hardSkips.length > 0 || softSkips.length > 0) && (
+            <div style={{ border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', marginBottom: 4 }}>
+              <div style={{ padding: '8px 12px', background: 'var(--surface2)', fontSize: 11.5, fontWeight: 800, color: 'var(--text2)' }}>
+                Rows we could not use in full
+              </div>
+              <div style={{ maxHeight: 150, overflowY: 'auto' }}>
+                {[...hardSkips, ...softSkips].slice(0, 40).map((sk, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 10, padding: '6px 12px', fontSize: 12, borderTop: '1px solid var(--border-soft)' }}>
+                    <span style={{ color: 'var(--text3)', minWidth: 48 }}>Row {sk.rowNumber}</span>
+                    <span style={{ color: sk.soft ? 'var(--warn-text)' : 'var(--danger-text)' }}>{sk.reason}</span>
+                    {sk.name && <span style={{ color: 'var(--text3)', marginLeft: 'auto' }}>{sk.name}</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {fileError && (
+            <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 10, padding: '10px 12px', fontSize: 12.5, color: 'var(--danger-text)', marginTop: 10 }}>{fileError}</div>
+          )}
+        </div>
+
+        <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border)', display: 'flex', gap: 10 }}>
+          <button onClick={() => setRaw(null)} style={{ padding: '10px 16px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+          <button onClick={handleImport} disabled={importing || !hasName || importable === 0}
+            style={{ flex: 1, padding: '10px 16px', borderRadius: 10, border: 'none', fontSize: 13, fontWeight: 800, color: '#fff', cursor: importing || !hasName || importable === 0 ? 'not-allowed' : 'pointer', background: importing || !hasName || importable === 0 ? 'var(--text-faint)' : primary }}>
+            {importing ? 'Importing…' : importable === 0 ? 'Nothing to import' : `Import ${importable} child${importable === 1 ? '' : 'ren'}`}
+          </button>
+        </div>
       </div>
-      <div style={{ display: 'flex', gap: 6 }}>
-        <button onClick={() => setStep('upload')} style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 11, fontWeight: 600, cursor: 'pointer', color: 'var(--text3)' }}><Icon name="←" /> Back</button>
-        <button onClick={handleImport} disabled={importing || errors.length > 0} style={{ flex: 2, padding: '8px', borderRadius: 8, border: 'none', background: errors.length > 0 ? 'var(--text-faint)' : primary, color: '#fff', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>
-          {importing ? 'Importing...' : `Import ${rows.filter(r=>r.first_name&&r.last_name).length}`}
-        </button>
-      </div>
-    </div>
-  )
+    </div></OverlayPortal>
+  }
 
   return (
     <div>
-      <div onClick={() => inputRef.current?.click()} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); handleFile(e.dataTransfer.files[0]) }}
-        style={{ border: `2px dashed var(--org-a35)`, borderRadius: 10, padding: '14px 10px', textAlign: 'center', cursor: 'pointer', background: primary + '06', marginBottom: 8 }}>
-        <input ref={inputRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={e => handleFile(e.target.files[0])} />
+      <div onClick={() => inputRef.current?.click()} onDragOver={e => e.preventDefault()}
+        onDrop={e => { e.preventDefault(); handleFile(e.dataTransfer.files[0]) }}
+        style={{ border: '2px dashed var(--org-a35)', borderRadius: 10, padding: '14px 10px', textAlign: 'center', cursor: 'pointer', background: primary + '06', marginBottom: 8 }}>
+        <input ref={inputRef} type="file" accept=".csv,.tsv,.txt,.xlsx,.xlsm,.xls" style={{ display: 'none' }}
+          onChange={e => handleFile(e.target.files[0])} />
         <div style={{ fontSize: 20, marginBottom: 4 }}><Icon name="📂" /></div>
-        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>Drop CSV or click to browse</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{reading ? 'Reading…' : 'Drop a file or click to browse'}</div>
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>Excel or CSV · any column names</div>
       </div>
-      <textarea value={csvText} onChange={e => setCsvText(e.target.value)} placeholder="or paste CSV here..." rows={3} style={fi} />
+
+      <textarea
+        value={pasted}
+        onChange={e => setPasted(e.target.value)}
+        onPaste={e => {
+          const text = e.clipboardData?.getData('text')
+          if (text && /[\t,]/.test(text)) { e.preventDefault(); setPasted(text); load(parseDelimited(text), 'pasted rows') }
+        }}
+        placeholder="…or paste rows straight from a spreadsheet"
+        rows={3}
+        style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border)', fontSize: 11, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace', resize: 'vertical', background: 'var(--surface)', color: 'var(--text)' }}
+      />
+
+      {fileError && <div style={{ fontSize: 11, color: 'var(--danger-text)', marginTop: 6 }}>{fileError}</div>}
+
       <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-        <button onClick={downloadTemplate} style={{ flex: 1, padding: '7px', borderRadius: 8, border: `1px solid var(--org-a20)`, background: primary + '10', color: 'var(--org-ink)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}><Icon name="⬇" /> Template</button>
-        <button onClick={() => { const { rows: p, errs } = parseCSV(csvText); setRows(p); setErrors(errs); setStep('preview') }} disabled={!csvText.trim()}
-          style={{ flex: 1, padding: '7px', borderRadius: 8, border: 'none', background: csvText.trim() ? primary : 'var(--text-faint)', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Preview <Icon name="→" /></button>
+        <button onClick={downloadTemplate} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid var(--org-a20)', background: primary + '10', color: 'var(--org-ink)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}><Icon name="⬇" /> Template</button>
+        <button onClick={() => load(parseDelimited(pasted), 'pasted rows')} disabled={!pasted.trim()}
+          style={{ flex: 1, padding: '7px', borderRadius: 8, border: 'none', background: pasted.trim() ? primary : 'var(--text-faint)', color: '#fff', fontSize: 11, fontWeight: 700, cursor: pasted.trim() ? 'pointer' : 'not-allowed' }}>Check <Icon name="→" /></button>
       </div>
     </div>
+  )
+}
+
+function Pill({ tone, label }) {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', fontSize: 11.5, fontWeight: 800, padding: '4px 10px', borderRadius: 999, background: `var(--${tone}-bg)`, color: `var(--${tone}-text)`, border: `1px solid var(--${tone}-border)` }}>{label}</span>
   )
 }
 
@@ -2109,11 +2247,11 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                   🧩 Using "{activeImportTemplate.name}" template
                 </div>
               )}
-              <InlineChildImport org={org} template={activeImportTemplate} onImported={newChildren => {
+              <InlineChildImport org={org} template={activeImportTemplate} existingChildren={children} groups={bubbles} onImported={(newChildren, added) => {
                 setChildren(newChildren)
                 setShowImport(false)
                 setActiveImportTemplate(null)
-                showToast(`✅ Register updated — ${newChildren.length} children total`)
+                showToast(`✅ ${added} added — ${newChildren.length} children on the register`)
               }} />
             </div>
           )}
@@ -2207,11 +2345,11 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
                 🧩 Using "{activeImportTemplate.name}" template
               </div>
             )}
-            <InlineChildImport org={org} template={activeImportTemplate} onImported={newChildren => {
+            <InlineChildImport org={org} template={activeImportTemplate} existingChildren={children} groups={bubbles} onImported={(newChildren, added) => {
               setChildren(newChildren)
               setShowImport(false)
               setActiveImportTemplate(null)
-              showToast(`✅ Register updated — ${newChildren.length} children total`)
+              showToast(`✅ ${added} added — ${newChildren.length} children on the register`)
             }} />
           </div>
         </div>,
