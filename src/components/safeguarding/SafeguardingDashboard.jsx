@@ -9,16 +9,16 @@ import { withAlpha } from '../../lib/withAlpha'
 const PRIMARY = '#DC2626' // safeguarding stays red-branded regardless of org colour — deliberate, signals seriousness
 
 const STATUS_COLORS = {
-  open:        { bg: 'rgba(239,68,68,0.1)',   color: '#EF4444', label: 'Open' },
-  in_progress: { bg: 'rgba(245,158,11,0.1)',  color: '#F59E0B', label: 'In Progress' },
-  resolved:    { bg: 'rgba(34,197,94,0.1)',   color: '#22C55E', label: 'Resolved' },
+  open:        { bg: 'var(--danger-bg)', color: 'var(--danger-text)', label: 'Open' },
+  in_progress: { bg: 'var(--warn-bg)',   color: 'var(--warn-text)',   label: 'In Progress' },
+  resolved:    { bg: 'var(--ok-bg)',     color: 'var(--ok-text)',     label: 'Resolved' },
   closed:      { bg: 'rgba(100,116,139,0.1)', color: 'var(--text3)', label: 'Closed' },
 }
 
 const PRIORITY_COLORS = {
-  urgent: { bg: 'rgba(239,68,68,0.12)', color: 'var(--danger-text)', label: 'Urgent' },
-  high:   { bg: 'rgba(245,158,11,0.12)', color: 'var(--warn-text)', label: 'High' },
-  medium: { bg: 'rgba(59,130,246,0.12)', color: 'var(--info-text)', label: 'Medium' },
+  urgent: { bg: 'var(--danger-bg)', color: 'var(--danger-text)', label: 'Urgent' },
+  high:   { bg: 'var(--warn-bg)',   color: 'var(--warn-text)',   label: 'High' },
+  medium: { bg: 'var(--info-bg)',   color: 'var(--info-text)',   label: 'Medium' },
   low:    { bg: 'rgba(100,116,139,0.12)', color: 'var(--text3)', label: 'Low' },
 }
 
@@ -189,7 +189,7 @@ function CaseDetailModal({ c, onClose, onStatusChange, orgId, userId, onNavigate
   ) : null
 
   const Badge = ({ show, label }) => show ? (
-    <span style={{ fontSize: 11, fontWeight: 700, color: '#EF4444', background: 'rgba(239,68,68,0.1)', padding: '2px 8px', borderRadius: 999, marginRight: 6 }}>{label}</span>
+    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--danger-text)', background: 'var(--danger-bg)', padding: '2px 8px', borderRadius: 999, marginRight: 6 }}>{label}</span>
   ) : null
 
   const sc = STATUS_COLORS[c.status] || STATUS_COLORS.open
@@ -398,11 +398,11 @@ function CasesTab({ cases, loading, filter, setFilter, onSelect, isMobile }) {
                       <span style={{ fontSize: 10.5, fontWeight: 700, color: sc.color, background: sc.bg, padding: '2px 7px', borderRadius: 999 }}>{sc.label}</span>
                     )}
                     {pc && <span style={{ fontSize: 10.5, fontWeight: 700, color: pc.color, background: pc.bg, padding: '2px 7px', borderRadius: 999 }}>{pc.label}</span>}
-                    {!isHandedOver(c) && c.follow_up_required && <span style={{ fontSize: 10.5, fontWeight: 700, color: '#F59E0B' }}>· Follow-up</span>}
+                    {!isHandedOver(c) && c.follow_up_required && <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--warn-text)' }}>· Follow-up</span>}
                     <span style={{ fontSize: 10.5, color: 'var(--text3)' }}>· {new Date(c.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
                   </div>
                 </div>
-                <span style={{ fontSize: 11.5, fontWeight: 800, color: isHandedOver(c) ? '#4338CA' : PRIMARY, flexShrink: 0, whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 11.5, fontWeight: 800, color: isHandedOver(c) ? 'var(--info-text)' : 'var(--danger-text)', flexShrink: 0, whiteSpace: 'nowrap' }}>
                   {isHandedOver(c) ? 'Open case' : 'View'} <Icon name="→" />
                 </span>
               </button>
@@ -716,7 +716,7 @@ function Sidebar({ org, cases }) {
           <div style={{ fontSize: 12, color: 'var(--text3)' }}>Nothing pending <Icon name="🎉" /></div>
         ) : followUps.slice(0, 5).map(c => (
           <div key={c.id} style={{ fontSize: 12, color: 'var(--text)', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
-            {c.child_name} — <span style={{ color: '#F59E0B', fontWeight: 700 }}>{c.follow_up_details ? c.follow_up_details.slice(0, 40) : 'Follow-up due'}</span>
+            {c.child_name} — <span style={{ color: 'var(--warn-text)', fontWeight: 700 }}>{c.follow_up_details ? c.follow_up_details.slice(0, 40) : 'Follow-up due'}</span>
           </div>
         ))}
       </div>

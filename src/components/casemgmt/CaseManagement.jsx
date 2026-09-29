@@ -175,8 +175,8 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
     activeCases.forEach(c => { const r = c.risk_level || c.priority || 'medium'; if (counts[r] !== undefined) counts[r]++ })
     return [
       { label: 'High Risk', value: counts.high + counts.critical, color: '#EF4444' },
-      { label: 'Medium Risk', value: counts.medium, color: '#F59E0B' },
-      { label: 'Low Risk', value: counts.low, color: '#22C55E' },
+      { label: 'Medium Risk', value: counts.medium, color: 'var(--warn-text)' },
+      { label: 'Low Risk', value: counts.low, color: 'var(--ok-text)' },
     ].filter(s => s.value > 0)
   }, [activeCases])
 
@@ -243,9 +243,9 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, marginBottom: 18 }}>
         {[
           { label: 'Open Cases', value: kpis.open, icon: '📂', color: 'var(--violet-text)', trend: kpis.trend },
-          { label: 'In Progress', value: kpis.inProgress, icon: '⏳', color: '#F59E0B' },
+          { label: 'In Progress', value: kpis.inProgress, icon: '⏳', color: 'var(--warn-text)' },
           { label: 'Monitoring', value: kpis.monitoring, icon: '👁️', color: '#3B82F6' },
-          { label: 'Resolved This Month', value: kpis.resolvedThisMonth, icon: '✅', color: '#22C55E' },
+          { label: 'Resolved This Month', value: kpis.resolvedThisMonth, icon: '✅', color: 'var(--ok-text)' },
           { label: 'Closed', value: kpis.closed, icon: '📥', color: 'var(--text3)' },
         ].map((k, i) => (
           <motion.div key={k.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
@@ -254,7 +254,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
             <div style={{ fontSize: 24, fontWeight: 900, color: k.color, lineHeight: 1 }}><CountUp value={k.value} /></div>
             <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 700, marginTop: 4 }}>{k.label}</div>
             {typeof k.trend === 'number' && (
-              <div style={{ fontSize: 10.5, color: k.trend >= 0 ? '#DC2626' : 'var(--ok-text)', fontWeight: 700, marginTop: 4 }}>{k.trend >= 0 ? '↑' : '↓'} {Math.abs(k.trend)} from last month</div>
+              <div style={{ fontSize: 10.5, color: k.trend >= 0 ? 'var(--danger-text)' : 'var(--ok-text)', fontWeight: 700, marginTop: 4 }}>{k.trend >= 0 ? '↑' : '↓'} {Math.abs(k.trend)} from last month</div>
             )}
           </motion.div>
         ))}

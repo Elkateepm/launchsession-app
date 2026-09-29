@@ -63,7 +63,7 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
                 )}
               </div>
               {subtitle && (
-                <p className="ls-header-sub" style={{ fontSize: 12.5, color: 'var(--text3, #6B7280)', margin: 0, fontWeight: 500, lineHeight: 1.35 }}>{subtitle}</p>
+                <p className="ls-header-sub" style={{ fontSize: 12.5, color: 'var(--text3, #5D6472)', margin: 0, fontWeight: 500, lineHeight: 1.35 }}>{subtitle}</p>
               )}
               {orgName && (
                 <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--org-ink)', textTransform: 'uppercase', letterSpacing: 0.7, marginTop: 3, opacity: 0.8 }}>{orgName}</div>
@@ -138,7 +138,7 @@ export default function PageHeader({ icon, iconImg, title, subtitle, primary = '
                   )}
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: isMobile ? 15 : 17, fontWeight: 900, color: c, lineHeight: 1, fontFamily: 'var(--font-display, sans-serif)' }}>{s.value}</div>
-                    <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text3, #6B7280)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</div>
+                    <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text3, #5D6472)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</div>
                   </div>
                 </Tag>
               )
