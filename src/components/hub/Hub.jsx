@@ -24,6 +24,7 @@ import { useTerms } from '../../context/OrgContext'
 import SignedImg from '../shared/SignedImg'
 import OverlayPortal from '../shared/OverlayPortal'
 import Icon from '../../lib/icons'
+import { carryAssessmentToSession } from '../../lib/sessionRiskAssessment'
 import { withAlpha } from '../../lib/withAlpha'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
@@ -923,6 +924,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
       consent_required: activeSession.consent_required, age_range: activeSession.age_range,
       internal_notes: activeSession.internal_notes, colour: activeSession.colour, lead_staff_id: activeSession.lead_staff_id,
       min_staff: activeSession.min_staff, staff_ratio: activeSession.staff_ratio, venue_id: activeSession.venue_id,
+      risk_assessment_required: activeSession.risk_assessment_required,
       created_by: authUserId, created_at: new Date().toISOString(),
     }
     const { data: newSession, error } = await supabase.from('sessions').insert(copyFields).select().single()
@@ -930,6 +932,9 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     // Carry over the same expected roster so the copy doesn't start empty.
     const rows = targetedChildren.map(c => ({ org_id: orgId, session_id: newSession.id, child_id: c.id, status: 'expected' }))
     if (rows.length) await supabase.from('attendance').insert(rows)
+    // And the risk assessment, which lives in a join table rather than on the
+    // session row -- so copying the columns left every duplicate uncovered.
+    await carryAssessmentToSession(activeSession.id, newSession.id, orgId)
     setDuplicating(false)
     setShowOverflowMenu(false)
     showRegToast(`✓ Duplicated as "${copyFields.title}"`)

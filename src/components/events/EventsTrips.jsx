@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import SessionWizard, { EVENT_TYPE_KEYS, EVENT_TYPE_META } from '../sessions/SessionWizard'
 import { useOrgSettings } from '../../hooks/useOrgSettings'
+import { assessmentIdForSession } from '../../lib/sessionRiskAssessment'
 import Icon from '../../lib/icons'
 
 const STATUS_META = {
@@ -149,6 +150,10 @@ function EventDrawer({ event, org, session, onClose, onNavigate, onChanged }) {
   }
 
   const duplicateEvent = async () => {
+    // Same activity, same hazards, different date. Copying the
+    // "risk assessment required" flag while dropping the assessment left
+    // the copy demanding work that had already been done.
+    const carriedRa = await assessmentIdForSession(event.id, event.org_id || org?.id)
     const { error } = await supabase.rpc('create_session_with_dependencies', {
       p_title: `${event.title} (copy)`, p_session_date: event.session_date, p_end_date: event.end_date,
       p_start_time: event.start_time, p_end_time: event.end_time, p_location: event.location,
@@ -162,7 +167,7 @@ function EventDrawer({ event, org, session, onClose, onNavigate, onChanged }) {
       p_safeguarding_lead_required: event.safeguarding_lead_required, p_transport_required: event.transport_required,
       p_equipment_required: event.equipment_required, p_medication_support_required: event.medication_support_required,
       p_venue_confirmation_required: event.venue_confirmation_required, p_emergency_contact_sheet_required: event.emergency_contact_sheet_required,
-      p_reflection_required: event.reflection_required, p_form_ids: null, p_outcome_areas: null, p_pending_risk_assessment_id: null,
+      p_reflection_required: event.reflection_required, p_form_ids: null, p_outcome_areas: null, p_pending_risk_assessment_id: carriedRa,
     })
     if (!error) { onClose(); onChanged(null, true) }
   }

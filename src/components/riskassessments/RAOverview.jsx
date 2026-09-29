@@ -76,8 +76,11 @@ function SafetyStrip({ counts, activeFilter, onFilter }) {
   )
 }
 
-function NeedsAttention({ items, onOpen, onCreateForSession, primary, truncated }) {
+function NeedsAttention({ items, onOpen, onCreateForSession, onReuseForSession, primary, truncated }) {
   const isMobile = useIsMobile()
+  const [showAll, setShowAll] = React.useState(false)
+  const VISIBLE = 6
+  const shown = showAll ? items : items.slice(0, VISIBLE)
 
   if (!items.length) {
     return (
@@ -109,7 +112,7 @@ function NeedsAttention({ items, onOpen, onCreateForSession, primary, truncated 
       </div>
 
       <div>
-        {items.slice(0, 6).map((item, i) => {
+        {shown.map((item, i) => {
           const tone = item.severity === 'action'
             ? { dot: 'var(--danger-text)', bg: 'var(--danger-bg)' }
             : { dot: '#F79009', bg: 'var(--warn-bg)' }
@@ -123,7 +126,7 @@ function NeedsAttention({ items, onOpen, onCreateForSession, primary, truncated 
               style={{
                 display: 'flex', alignItems: 'center', gap: 12,
                 padding: '13px 16px',
-                borderBottom: i < Math.min(items.length, 6) - 1 ? '1px solid #F5F3FA' : 'none',
+                borderBottom: i < shown.length - 1 ? '1px solid #F5F3FA' : 'none',
                 flexWrap: isMobile ? 'wrap' : 'nowrap',
               }}
             >
@@ -137,34 +140,63 @@ function NeedsAttention({ items, onOpen, onCreateForSession, primary, truncated 
                 }}>{item.title}</div>
                 <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>{item.detail}</div>
               </div>
-              <button
-                onClick={() => item.assessment ? onOpen(item.assessment) : onCreateForSession(item.session)}
-                style={{
-                  padding: '8px 14px', borderRadius: 10, border: 'none',
-                  background: primary, color: '#fff', fontSize: 13, fontWeight: 700,
-                  cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
-                  width: isMobile ? '100%' : 'auto',
-                  marginTop: isMobile ? 8 : 0,
-                }}
-              >{item.cta}</button>
+              <div style={{
+                display: 'flex', gap: 8, flexShrink: 0,
+                width: isMobile ? '100%' : 'auto', marginTop: isMobile ? 8 : 0,
+              }}>
+                {!item.assessment && item.session && onReuseForSession && (
+                  <button
+                    onClick={() => onReuseForSession(item.session)}
+                    style={{
+                      padding: '8px 12px', borderRadius: 10, border: '1px solid var(--border)',
+                      background: 'var(--surface)', color: 'var(--text2)', fontSize: 12.5,
+                      fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                      flex: isMobile ? 1 : 'none', whiteSpace: 'nowrap',
+                    }}
+                  >Reuse</button>
+                )}
+                <button
+                  onClick={() => item.assessment ? onOpen(item.assessment) : onCreateForSession(item.session)}
+                  style={{
+                    padding: '8px 14px', borderRadius: 10, border: 'none',
+                    background: primary, color: '#fff', fontSize: 13, fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+                    flex: isMobile ? 1 : 'none',
+                  }}
+                >{item.cta}</button>
+              </div>
             </motion.div>
           )
         })}
       </div>
+
+      {items.length > VISIBLE && (
+        <button
+          onClick={() => setShowAll(v => !v)}
+          style={{
+            display: 'block', width: '100%', padding: '11px 16px', border: 'none',
+            borderTop: '1px solid #F5F3FA', background: 'var(--surface)',
+            color: 'var(--text2)', fontSize: 13, fontWeight: 700,
+            cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+          }}
+        >{showAll ? 'Show less' : `Show ${items.length - VISIBLE} more`}</button>
+      )}
     </div>
   )
 }
 
-function UpcomingActivities({ sessions, coverage, outstandingByAssessment = {}, onOpen, onCreateForSession, onReuseForSession, primary }) {
+function UpcomingActivities({ sessions, coverage, outstandingByAssessment = {}, handledSessionIds, onOpen, primary }) {
   const isMobile = useIsMobile()
-  const upcoming = sessions.slice(0, isMobile ? 4 : 6)
+  const upcoming = sessions
+    .filter(s => !handledSessionIds.has(s.id))
+    .slice(0, isMobile ? 4 : 6)
 
   if (!upcoming.length) return null
 
   return (
     <div style={{ marginBottom: 14 }}>
       <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>
-        Upcoming activities
+        Also coming up
       </div>
       <div style={{
         display: 'grid',
@@ -200,28 +232,16 @@ function UpcomingActivities({ sessions, coverage, outstandingByAssessment = {}, 
                 {cover ? meta.label : 'No risk assessment'}
               </div>
 
-              <button
-                onClick={() => cover ? onOpen(cover) : onCreateForSession(s)}
-                style={{
-                  display: 'block', width: '100%', marginTop: 11,
-                  padding: '9px 12px', borderRadius: 10,
-                  border: `1px solid ${cover ? 'var(--border)' : primary}`,
-                  background: cover ? 'var(--surface)' : primary,
-                  color: cover ? 'var(--text)' : 'var(--surface)',
-                  fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                }}
-              >{cover ? 'View Assessment' : 'Create Assessment'}</button>
-
-              {!cover && onReuseForSession && (
+              {cover && (
                 <button
-                  onClick={() => onReuseForSession(s)}
+                  onClick={() => onOpen(cover)}
                   style={{
-                    display: 'block', width: '100%', marginTop: 6,
-                    padding: '8px 12px', borderRadius: 10, border: '1px solid #ECE9F5',
-                    background: 'var(--surface)', color: 'var(--text2)',
-                    fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                    display: 'block', width: '100%', marginTop: 11,
+                    padding: '9px 12px', borderRadius: 10, border: '1px solid var(--border)',
+                    background: 'var(--surface)', color: 'var(--text)',
+                    fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                   }}
-                >Reuse a previous one</button>
+                >View assessment</button>
               )}
             </div>
           )
@@ -372,6 +392,13 @@ export default function RAOverview({
     [live, sessions, coverage, outstandingByAssessment]
   )
 
+  // Sessions the attention list already accounts for. Listing them again below
+  // with the same button was the screen's main duplication.
+  const handledSessionIds = useMemo(
+    () => new Set(attention.filter(i => i.session).map(i => i.session.id)),
+    [attention]
+  )
+
   const staffById = useMemo(
     () => Object.fromEntries(staff.map(s => [s.id, s])),
     [staff]
@@ -390,6 +417,7 @@ export default function RAOverview({
         items={attention}
         onOpen={onOpen}
         onCreateForSession={onCreateForSession}
+        onReuseForSession={onReuseForSession}
         primary={primary}
         truncated={sessionsTruncated}
       />
@@ -398,9 +426,8 @@ export default function RAOverview({
         sessions={sessions}
         coverage={coverage}
         outstandingByAssessment={outstandingByAssessment}
+        handledSessionIds={handledSessionIds}
         onOpen={onOpen}
-        onCreateForSession={onCreateForSession}
-        onReuseForSession={onReuseForSession}
         primary={primary}
       />
 
