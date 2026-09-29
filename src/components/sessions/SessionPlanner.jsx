@@ -142,7 +142,7 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, sessi
   const canSave  = canNext0
 
   const fi = { width: '100%', padding: compact ? '13px 14px' : '12px 14px', borderRadius: 12, border: '1.5px solid var(--border)', fontSize: 15, outline: 'none', background: 'var(--surface, #fff)', boxSizing: 'border-box', color: 'var(--text, #111)', fontFamily: 'inherit' }
-  const lb = { fontSize: 11, fontWeight: 800, color: 'var(--text3, #6B7280)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6, display: 'block' }
+  const lb = { fontSize: 11, fontWeight: 800, color: 'var(--text3, #5D6472)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6, display: 'block' }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -225,12 +225,12 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, sessi
               <label style={lb}>{isTrip ? 'Trip dates' : 'Date'}</label>
               <div style={{ display: 'grid', gridTemplateColumns: isTrip ? 'minmax(0,1fr) minmax(0,1fr)' : '1fr', gap: 8 }}>
                 <div>
-                  {isTrip && <div style={{ fontSize: 11, color: 'var(--text3, #6B7280)', marginBottom: 4 }}>From</div>}
+                  {isTrip && <div style={{ fontSize: 11, color: 'var(--text3, #5D6472)', marginBottom: 4 }}>From</div>}
                   <input type="date" value={form.session_date} onChange={e => set('session_date', e.target.value)} style={fi} />
                 </div>
                 {isTrip && (
                   <div>
-                    <div style={{ fontSize: 11, color: 'var(--text3, #6B7280)', marginBottom: 4 }}>To</div>
+                    <div style={{ fontSize: 11, color: 'var(--text3, #5D6472)', marginBottom: 4 }}>To</div>
                     <input type="date" value={form.end_date || form.session_date} onChange={e => set('end_date', e.target.value)} style={fi} />
                   </div>
                 )}
@@ -242,11 +242,11 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, sessi
               <label style={lb}>Time</label>
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 8 }}>
                 <div>
-                  <div style={{ fontSize: 11, color: 'var(--text3, #6B7280)', marginBottom: 4 }}>Start</div>
+                  <div style={{ fontSize: 11, color: 'var(--text3, #5D6472)', marginBottom: 4 }}>Start</div>
                   <input type="time" value={form.start_time} onChange={e => set('start_time', e.target.value)} style={fi} />
                 </div>
                 <div>
-                  <div style={{ fontSize: 11, color: 'var(--text3, #6B7280)', marginBottom: 4 }}>End</div>
+                  <div style={{ fontSize: 11, color: 'var(--text3, #5D6472)', marginBottom: 4 }}>End</div>
                   <input type="time" value={form.end_time} onChange={e => set('end_time', e.target.value)} style={fi} />
                 </div>
               </div>
@@ -335,7 +335,7 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, sessi
                     { key: 'consent_required', icon: '📋', label: 'Consent Form' },
                   ].map(opt => (
                     <motion.button key={opt.key} onClick={() => set(opt.key, !form[opt.key])} whileTap={{ scale: 0.97 }}
-                      style={{ padding: compact ? '15px 14px' : '14px', borderRadius: 12, border: `2px solid ${form[opt.key] ? '#1B9AAA' : 'var(--border, #e5e7eb)'}`, background: form[opt.key] ? '#E8F7F9' : 'var(--surface, #fff)', cursor: 'pointer', fontSize: 13, fontWeight: 800, color: form[opt.key] ? '#1B9AAA' : 'var(--text3, #6B7280)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      style={{ padding: compact ? '15px 14px' : '14px', borderRadius: 12, border: `2px solid ${form[opt.key] ? '#1B9AAA' : 'var(--border, #e5e7eb)'}`, background: form[opt.key] ? '#E8F7F9' : 'var(--surface, #fff)', cursor: 'pointer', fontSize: 13, fontWeight: 800, color: form[opt.key] ? '#1B9AAA' : 'var(--text3, #5D6472)', display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ fontSize: 20 }}><Icon name={opt.icon} /></span> {opt.label}
                       {form[opt.key] && <span style={{ marginLeft: 'auto', fontSize: 16 }}><Icon name="✓" /></span>}
                     </motion.button>
@@ -358,7 +358,7 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, sessi
 
             {/* Summary card */}
             <div style={{ background: 'var(--surface2, #F9FAFB)', borderRadius: 14, border: '1.5px solid var(--border)', padding: '16px' }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3, #6B7280)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 }}>Summary</div>
+              <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3, #5D6472)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 }}>Summary</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {[
                   { icon: type.icon, label: form.title || '—' },
@@ -386,13 +386,13 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, sessi
       <div style={{ padding: compact ? '12px 18px' : '16px 24px', borderTop: '1px solid var(--border)', flexShrink: 0, display: 'flex', gap: 10, background: 'var(--surface, #fff)' }}>
         {step > 0 && (
           <motion.button onClick={() => setStep(s => s - 1)} whileTap={{ scale: 0.95 }}
-            style={{ padding: compact ? '14px 18px' : '13px 18px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface, #fff)', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text3, #6B7280)' }}>
+            style={{ padding: compact ? '14px 18px' : '13px 18px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface, #fff)', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text3, #5D6472)' }}>
             ← Back
           </motion.button>
         )}
         {step === 0 && (
           <motion.button onClick={onCancel} whileTap={{ scale: 0.95 }}
-            style={{ padding: compact ? '14px 18px' : '13px 18px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface, #fff)', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text3, #6B7280)' }}>
+            style={{ padding: compact ? '14px 18px' : '13px 18px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface, #fff)', fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text3, #5D6472)' }}>
             Cancel
           </motion.button>
         )}
@@ -797,7 +797,7 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
                           ].map(opt => {
                             const active = form.would_repeat === opt.key
                             return (
-                              <button key={String(opt.key)} onClick={() => set('would_repeat', opt.key)} style={{ position: 'relative', flex: 1, padding: '9px 0', borderRadius: 9, border: 'none', background: 'transparent', color: active ? opt.color : 'var(--text3, #6B7280)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                              <button key={String(opt.key)} onClick={() => set('would_repeat', opt.key)} style={{ position: 'relative', flex: 1, padding: '9px 0', borderRadius: 9, border: 'none', background: 'transparent', color: active ? opt.color : 'var(--text3, #5D6472)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
                                 {active && (
                                   <motion.div layoutId="repeatPill" transition={{ type: 'spring', stiffness: 400, damping: 32 }} style={{ position: 'absolute', inset: 0, background: opt.bg, borderRadius: 9, border: `1.5px solid ${opt.color}` }} />
                                 )}
@@ -836,7 +836,7 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
                       <ReflectionField i={2}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, background: `linear-gradient(135deg, var(--org-a05), ${withAlpha(secondary, '08')})`, border: `1px dashed var(--org-a20)` }}>
                           <span style={{ fontSize: 24 }}>{RATING_REACTIONS[form.overall_rating]?.emoji}</span>
-                          <div style={{ fontSize: 12, color: 'var(--text3, #6B7280)' }}>You rated this session <strong style={{ color: 'var(--text, #111)' }}>{form.overall_rating}/5</strong>. Ready to save?</div>
+                          <div style={{ fontSize: 12, color: 'var(--text3, #5D6472)' }}>You rated this session <strong style={{ color: 'var(--text, #111)' }}>{form.overall_rating}/5</strong>. Ready to save?</div>
                         </div>
                       </ReflectionField>
                     </div>
@@ -849,7 +849,7 @@ function ReflectionModal({ session, org, onClose, existing, plannedOutcomes = []
             {/* Footer */}
             <div style={{ padding: '16px 20px calc(16px + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid var(--border, var(--border-soft))', display: 'flex', gap: 10, flexShrink: 0, background: 'var(--surface, #fff)' }}>
               {step > 0 && (
-                <motion.button whileTap={{ scale: 0.97 }} onClick={goBack} style={{ minHeight: 44, padding: '12px 16px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface, #fff)', color: 'var(--text3, #6B7280)', fontWeight: 700, cursor: 'pointer' }}><Icon name="←" /> Back</motion.button>
+                <motion.button whileTap={{ scale: 0.97 }} onClick={goBack} style={{ minHeight: 44, padding: '12px 16px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface, #fff)', color: 'var(--text3, #5D6472)', fontWeight: 700, cursor: 'pointer' }}><Icon name="←" /> Back</motion.button>
               )}
               {!isLast ? (
                 <motion.button whileTap={{ scale: 0.97 }} disabled={!canAdvance} onClick={goNext} style={{ minHeight: 44, flex: 1, padding: 12, borderRadius: 12, border: 'none', background: canAdvance ? `linear-gradient(135deg, ${primary}, ${secondary})` : 'var(--text-faint)', color: '#fff', fontWeight: 800, fontSize: 14, cursor: canAdvance ? 'pointer' : 'default', boxShadow: canAdvance ? `0 8px 20px var(--org-a20)` : 'none' }}>

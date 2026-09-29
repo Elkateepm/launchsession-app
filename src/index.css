@@ -52,13 +52,13 @@ body {
   --surface3:      #F3F4F6;
   --surface-hover: #F1F5F9;
   --text2:    #374151;
-  --text3:    #6B7280;
+  --text3:    #5D6472;
   --text4:    rgba(0,0,0,0.35);
   /* The two tiers the app reaches for constantly and had no token for:
      the faintest text (timestamps, counts, placeholder hints) and the
      hairline that separates rows inside a card. Both had to exist before the
      hardcoded colours could be migrated, or ~700 sites had nowhere to go. */
-  --text-faint:  #9CA3AF;
+  --text-faint:  #69707C;
   --border-soft: #F1F5F9;
 
   /* The frosted card used across Volunteers, Cases, Risk Assessments, Medical
@@ -211,7 +211,7 @@ body {
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--text3, #6B7280);
+  color: var(--text3, #5D6472);
   position: relative;
 }
 [data-theme="dark"] .ls-glass-stat {
@@ -238,7 +238,7 @@ body {
   --text3:    #94A3B8;
   --text4:    rgba(255,255,255,0.3);
 
-  --text-faint:  #7C7C96;
+  --text-faint:  #8888A2;
   --border-soft: #24243A;
   --glass-bg:     rgba(36,36,58,0.72);
   --glass-border: rgba(255,255,255,0.09);
