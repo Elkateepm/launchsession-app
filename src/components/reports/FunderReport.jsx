@@ -5,6 +5,7 @@ import { areaByKey } from '../impact/impact_shared'
 import {
   getFunderMetrics, buildNarrative, buildCaveats, formatPeriod, AGE_BANDS, DOSE_BANDS,
 } from '../../lib/funderReport'
+import { INK, MUTED, RULE, RULE_SOFT, PAPER, DocMasthead, DocFooter } from './docShared'
 import Icon from '../../lib/icons'
 
 // A funder report is a document, not a dashboard. It is printed, attached to an
@@ -14,10 +15,6 @@ import Icon from '../../lib/icons'
 //
 // The old builder previewed the same fourteen overview numbers for all nine
 // report types and offered window.print(), which printed the app around it.
-
-const INK = '#111827'
-const MUTED = 'var(--text3)'
-const RULE = 'var(--border)'
 
 // One signed number format for the whole document. A typographic minus, not a
 // hyphen: the table and the headline figure sat on the same page using
@@ -29,6 +26,12 @@ const signedTenth = (n) => {
 
 const PRINT_CSS = `
 @media print {
+  /* Colour is the branding; browsers drop backgrounds in print unless told
+     otherwise, which would strip the brand rule out of the PDF a funder reads. */
+  #ls-funder-print-root, #ls-funder-print-root * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
   /* Everything except the document itself. The old Print button printed the
      dashboard, the nav and the modal chrome along with the report. */
   body > * { display: none !important; }
@@ -79,7 +82,7 @@ function Distribution({ rows, total }) {
         return (
           <div key={r.label} style={{ display: 'grid', gridTemplateColumns: '108px 1fr 76px', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 12, color: INK, fontWeight: 600 }}>{r.label}</span>
-            <span style={{ height: 9, background: 'var(--surface3)', borderRadius: 2, overflow: 'hidden', display: 'block' }}>
+            <span style={{ height: 9, background: RULE, borderRadius: 2, overflow: 'hidden', display: 'block' }}>
               <span style={{ display: 'block', height: '100%', width: `${pct}%`, background: INK, borderRadius: 2 }} />
             </span>
             <span style={{ fontSize: 12, color: MUTED, fontWeight: 700, textAlign: 'right' }}>{r.n} · {pct}%</span>
@@ -129,7 +132,7 @@ export default function FunderReport({ org, range, onClose }) {
 
   const ctl = {
     padding: '9px 11px', borderRadius: 9, border: '1.5px solid var(--border)',
-    fontSize: 13, fontFamily: 'inherit', minHeight: 40, background: 'var(--surface)', color: INK,
+    fontSize: 13, fontFamily: 'inherit', minHeight: 40, background: 'var(--surface)', color: 'var(--text)',
   }
 
   return (
@@ -156,7 +159,7 @@ export default function FunderReport({ org, range, onClose }) {
       </div>
 
       <div id="ls-funder-doc" style={{
-        maxWidth: 820, margin: isMobile ? '14px 10px' : '22px auto', background: 'var(--surface)',
+        maxWidth: 820, margin: isMobile ? '14px 10px' : '22px auto', background: PAPER,
         padding: isMobile ? '26px 20px' : '46px 52px',
         borderRadius: isMobile ? 12 : 4, boxShadow: '0 10px 40px rgba(15,23,42,0.10)',
         color: INK, boxSizing: 'border-box',
@@ -170,15 +173,12 @@ export default function FunderReport({ org, range, onClose }) {
           </div>
         ) : (
           <>
-            <header>
-              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.2, color: MUTED, textTransform: 'uppercase' }}>
-                {org?.name}
-              </div>
-              <h1 style={{ margin: '8px 0 0', fontSize: isMobile ? 24 : 30, fontWeight: 900, letterSpacing: -0.8, lineHeight: 1.15 }}>
-                Impact and delivery report
-              </h1>
-              <div style={{ fontSize: 13, color: MUTED, marginTop: 6 }}>{formatPeriod(from, to)}</div>
-            </header>
+            <DocMasthead
+              org={org}
+              docTitle="Impact and delivery report"
+              subtitle={formatPeriod(from, to)}
+              isMobile={isMobile}
+            />
 
             <Section title="Summary">
               {narrative.map((p, i) => (
@@ -266,11 +266,11 @@ export default function FunderReport({ org, range, onClose }) {
                       <tbody>
                         {out.by_area.map(a => (
                           <tr key={a.area}>
-                            <td style={{ padding: '8px 0', borderBottom: '1px solid var(--border-soft)', fontWeight: 700 }}>{areaByKey(a.area).label}</td>
-                            <td style={{ padding: '8px 0', borderBottom: '1px solid var(--border-soft)', textAlign: 'right', color: MUTED }}>{a.people}</td>
-                            <td style={{ padding: '8px 0', borderBottom: '1px solid var(--border-soft)', textAlign: 'right', color: MUTED }}>{Number(a.baseline).toFixed(1)}</td>
-                            <td style={{ padding: '8px 0', borderBottom: '1px solid var(--border-soft)', textAlign: 'right' }}>{Number(a.latest).toFixed(1)}</td>
-                            <td style={{ padding: '8px 0', borderBottom: '1px solid var(--border-soft)', textAlign: 'right', fontWeight: 900 }}>
+                            <td style={{ padding: '8px 0', borderBottom: `1px solid ${RULE_SOFT}`, fontWeight: 700 }}>{areaByKey(a.area).label}</td>
+                            <td style={{ padding: '8px 0', borderBottom: `1px solid ${RULE_SOFT}`, textAlign: 'right', color: MUTED }}>{a.people}</td>
+                            <td style={{ padding: '8px 0', borderBottom: `1px solid ${RULE_SOFT}`, textAlign: 'right', color: MUTED }}>{Number(a.baseline).toFixed(1)}</td>
+                            <td style={{ padding: '8px 0', borderBottom: `1px solid ${RULE_SOFT}`, textAlign: 'right' }}>{Number(a.latest).toFixed(1)}</td>
+                            <td style={{ padding: '8px 0', borderBottom: `1px solid ${RULE_SOFT}`, textAlign: 'right', fontWeight: 900 }}>
                               {signedTenth(a.delta)}
                             </td>
                           </tr>
@@ -312,10 +312,11 @@ export default function FunderReport({ org, range, onClose }) {
               </ul>
             </Section>
 
-            <footer style={{ marginTop: 34, paddingTop: 14, borderTop: `1px solid ${RULE}`, fontSize: 11, color: MUTED, lineHeight: 1.6 }}>
-              Produced by {org?.name} on {new Date(m?.generated_at || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.
-              {' '}Figures are drawn directly from attendance registers and outcome records kept at the point of delivery.
-            </footer>
+            <DocFooter
+              org={org}
+              generatedAt={m?.generated_at}
+              note="Figures are drawn directly from attendance registers and outcome records kept at the point of delivery."
+            />
           </>
         )}
       </div>

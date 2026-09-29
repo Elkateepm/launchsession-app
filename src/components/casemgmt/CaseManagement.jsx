@@ -183,7 +183,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
   const toggleSelect = (id) => setSelectedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
   const bulkArchive = async () => { for (const id of selectedIds) await updateCase(id, { archived: true }, 'edited', 'Archived via bulk action'); setSelectedIds(new Set()) }
   const bulkClose = async () => { for (const id of selectedIds) await updateCase(id, { status: 'closed' }, 'closed', 'Closed via bulk action'); setSelectedIds(new Set()) }
-  const bulkExport = () => exportCasesToCSV(cases.filter(c => selectedIds.has(c.id)))
+  const bulkExport = () => exportCasesToCSV(cases.filter(c => selectedIds.has(c.id)), org)
 
   const categories = useMemo(() => [...new Set(cases.map(c => c.category || c.case_type).filter(Boolean))], [cases])
 
@@ -226,7 +226,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                     ['📋 Record Concern', () => setShowWizard(true)],
                     ['📎 Upload Evidence', () => { if (selectedCase) setTab('documents'); else alert('Select a case first') }],
                     ['📄 Generate Report', () => { if (selectedCase) setReportFor(selectedCase); else alert('Select a case first') }],
-                    ['⬇ Export Cases (CSV)', () => exportCasesToCSV(filteredCases)],
+                    ['⬇ Export Cases (CSV)', () => exportCasesToCSV(filteredCases, org)],
                   ].map(([label, fn]) => (
                     <button key={label} onClick={() => { fn(); setShowQuickMenu(false) }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: 8, border: 'none', background: 'none', fontSize: 13, fontWeight: 600, color: 'var(--text2)', cursor: 'pointer' }}
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--border-soft)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>{label}</button>
@@ -541,7 +541,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Quick Actions</div>
                   {[
                     ['📋 Record New Concern', () => setShowWizard(true)],
-                    ['⬇ Export All Cases', () => exportCasesToCSV(filteredCases)],
+                    ['⬇ Export All Cases', () => exportCasesToCSV(filteredCases, org)],
                   ].map(([label, fn]) => (
                     <button key={label} onClick={fn} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 4px', border: 'none', borderTop: '1px solid rgba(15,23,42,0.05)', background: 'none', fontSize: 12.5, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>{label}</button>
                   ))}

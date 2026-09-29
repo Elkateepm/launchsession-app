@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { btnGhost, btnPrimary } from '../volunteers/vh_shared'
 import { EVENT_META, STATUS_LABELS } from './cm_shared'
 import Icon from '../../lib/icons'
+import { orgFilename } from '../../lib/orgExport'
 
 function downloadBlob(content, filename, type) {
   const blob = new Blob([content], { type })
@@ -14,14 +15,14 @@ function downloadBlob(content, filename, type) {
   URL.revokeObjectURL(url)
 }
 
-export function exportCasesToCSV(cases) {
+export function exportCasesToCSV(cases, org) {
   const headers = ['Case ID', 'Child', 'Category', 'Status', 'Risk Level', 'Assigned To', 'Created', 'Next Review']
   const rows = cases.map(c => [
     c.id.slice(0, 8).toUpperCase(), c.child_name, c.category || c.case_type || '', STATUS_LABELS[c.status] || c.status,
     c.risk_level || c.priority || '', c.assigned_to || '', new Date(c.created_at).toLocaleDateString('en-GB'), c.next_review_date || '',
   ])
   const csv = [headers, ...rows].map(r => r.map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(',')).join('\n')
-  downloadBlob(csv, `cases-export-${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv')
+  downloadBlob(csv, orgFilename(org, 'cases-export'), 'text/csv')
 }
 
 export default function CaseReportModal({ cas, org, staff = [], onClose }) {

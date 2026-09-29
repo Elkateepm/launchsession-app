@@ -1,6 +1,7 @@
 import React from 'react'
 import { format } from 'date-fns'
 import { TIERS } from './medicalShared'
+import { INK, MUTED, RULE, RULE_SOFT, PAPER, DocMasthead } from '../reports/docShared'
 
 // ─── PRINTED MEDICATION LIST ─────────────────────────────────
 // The one place this information is needed most is the one place the app cannot
@@ -14,6 +15,10 @@ import { TIERS } from './medicalShared'
 
 const PRINT_CSS = `
 @media print {
+  #ls-med-print-root, #ls-med-print-root * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
   body > * { display: none !important; }
   body > #ls-med-print-root { display: block !important; }
   #ls-med-print-root { position: static !important; inset: auto !important;
@@ -51,39 +56,38 @@ export default function MedicalPrintSheet({ org, rows, scopeLabel, todaySessions
       </div>
 
       <div id="ls-med-paper" style={{
-        maxWidth: 820, margin: '22px auto', background: 'var(--surface)', padding: '40px 46px',
-        borderRadius: 4, boxShadow: '0 10px 40px rgba(15,23,42,0.10)', color: 'var(--text)', boxSizing: 'border-box',
+        maxWidth: 820, margin: '22px auto', background: PAPER, padding: '40px 46px',
+        borderRadius: 4, boxShadow: '0 10px 40px rgba(15,23,42,0.10)', color: INK, boxSizing: 'border-box',
       }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.2, color: 'var(--text3)', textTransform: 'uppercase' }}>{org?.name}</div>
-        <h1 style={{ margin: '8px 0 0', fontSize: 26, fontWeight: 900, letterSpacing: -0.6 }}>Medication and allergy list</h1>
-        <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 6 }}>
-          {scopeLabel}
-          {todaySessions?.length > 0 && ` · ${todaySessions.map(s => s.title).join(', ')}`}
-        </div>
+        <DocMasthead
+          org={org}
+          docTitle="Medication and allergy list"
+          subtitle={`${scopeLabel}${todaySessions?.length > 0 ? ` · ${todaySessions.map(s => s.title).join(', ')}` : ''}`}
+        />
 
         <div style={{
-          marginTop: 16, padding: '10px 13px', border: '1.5px solid var(--danger-border)',
-          background: 'var(--danger-bg)', borderRadius: 8, fontSize: 12, color: 'var(--danger-text)', lineHeight: 1.55,
+          marginTop: 16, padding: '10px 13px', border: '1.5px solid #FECACA',
+          background: '#FEF2F2', borderRadius: 8, fontSize: 12, color: '#B91C1C', lineHeight: 1.55,
         }}>
           Confidential. This sheet holds medical information about {rows.length === 1 ? 'a child' : 'children'} in
           your care. Keep it with the first aid kit, do not leave it unattended, and destroy it when the session ends.
         </div>
 
-        <div style={{ height: 1, background: 'var(--border)', margin: '20px 0 4px' }} />
+        <div style={{ height: 1, background: RULE, margin: '20px 0 4px' }} />
 
         {rows.length === 0 ? (
-          <div style={{ padding: '30px 0', fontSize: 13, color: 'var(--text3)' }}>Nobody in this list.</div>
+          <div style={{ padding: '30px 0', fontSize: 13, color: MUTED }}>Nobody in this list.</div>
         ) : rows.map(({ child, flags, tier }) => (
           <div className="ls-med-row" key={child.id} style={{
-            padding: '14px 0', borderBottom: '1px solid var(--border-soft)',
+            padding: '14px 0', borderBottom: `1px solid ${RULE_SOFT}`,
             borderLeft: tier === 1 ? '3px solid #B91C1C' : 'none',
             paddingLeft: tier === 1 ? 11 : 0,
           }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 15.5, fontWeight: 900 }}>{child.first_name} {child.last_name}</span>
-              {child.group_name && <span style={{ fontSize: 11.5, color: 'var(--text3)', fontWeight: 700 }}>{child.group_name}</span>}
+              {child.group_name && <span style={{ fontSize: 11.5, color: MUTED, fontWeight: 700 }}>{child.group_name}</span>}
               {tier === 1 && (
-                <span style={{ fontSize: 10, fontWeight: 900, color: 'var(--danger-text)', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+                <span style={{ fontSize: 10, fontWeight: 900, color: '#B91C1C', letterSpacing: 0.5, textTransform: 'uppercase' }}>
                   {TIERS[1].label}
                 </span>
               )}
@@ -93,7 +97,7 @@ export default function MedicalPrintSheet({ org, rows, scopeLabel, todaySessions
               {flags.map((f, i) => (
                 <div key={i} style={{ fontSize: 12.5, lineHeight: 1.5 }}>
                   <span style={{ fontWeight: 800 }}>{f.label}:</span>{' '}
-                  <span style={{ color: f.detail ? 'var(--text2)' : 'var(--text-faint)' }}>
+                  <span style={{ color: f.detail ? '#374151' : MUTED }}>
                     {f.detail || 'no further detail recorded'}
                   </span>
                 </div>
@@ -110,7 +114,7 @@ export default function MedicalPrintSheet({ org, rows, scopeLabel, todaySessions
           </div>
         ))}
 
-        <div style={{ marginTop: 26, paddingTop: 12, borderTop: '1px solid var(--border)', fontSize: 11, color: 'var(--text3)', lineHeight: 1.6 }}>
+        <div style={{ marginTop: 26, paddingTop: 12, borderTop: `1px solid ${RULE}`, fontSize: 11, color: MUTED, lineHeight: 1.6 }}>
           Printed {format(new Date(), 'd MMMM yyyy, HH:mm')} · {rows.length} {rows.length === 1 ? 'person' : 'people'}.
           {' '}Information is only as current as the records it came from — check the app if anything here looks wrong.
         </div>

@@ -1,4 +1,5 @@
 import React from 'react'
+import { brandPalette } from '../../lib/brandColors'
 
 // The shared look of every report document.
 //
@@ -11,12 +12,96 @@ import React from 'react'
 // each invent their own heading weight is how a report pack stops looking like
 // it came from one organisation.
 
+export const PAPER = '#FFFFFF'
 export const INK = '#111827'
-export const MUTED = 'var(--text3)'
-export const RULE = 'var(--border)'
+export const MUTED = '#5D6472'
+export const RULE = '#E5E7EB'
+export const RULE_SOFT = '#F3F4F6'
+
+/**
+ * The organisation's identity, resolved for a white page.
+ *
+ * `brandPalette` is asked for the LIGHT palette explicitly, whatever the app
+ * theme is: `ink` is the brand colour darkened until it clears 4.5:1 on white,
+ * and the sheet is always white.
+ */
+export function docBrand(org) {
+  const primary = org?.primary_color || '#1B9AAA'
+  const palette = brandPalette(primary, false)
+  return {
+    primary: palette.primary,
+    ink: palette.ink,
+    onPrimary: palette.onPrimary,
+    logo: org?.logo_url || org?.icon_url || '',
+    name: org?.name || 'Your organisation',
+    slogan: org?.slogan || '',
+    initials: (org?.name || 'Your organisation').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase(),
+  }
+}
+
+/**
+ * The masthead every document opens with.
+ *
+ * A report leaves this app: it is printed, attached to an email, and read by a
+ * trustee, a funder or a commissioner who has never seen the software. It has
+ * to be unmistakably the organisation's document at a glance, which the old
+ * header -- the org name set in 11px grey capitals above the title -- did not
+ * manage. Logo, name at reading size, and the brand colour carried across the
+ * page as a rule under both.
+ */
+export function DocMasthead({ org, docTitle, subtitle, isMobile }) {
+  const b = docBrand(org)
+  return (
+    <header>
+      <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 11 : 14 }}>
+        {b.logo ? (
+          <img
+            src={b.logo}
+            alt={`${b.name} logo`}
+            style={{ height: isMobile ? 38 : 50, maxWidth: isMobile ? 130 : 200, objectFit: 'contain', objectPosition: 'left center', display: 'block', flexShrink: 0 }}
+          />
+        ) : (
+          <div style={{
+            width: isMobile ? 38 : 50, height: isMobile ? 38 : 50, borderRadius: 10, flexShrink: 0,
+            background: b.primary, color: b.onPrimary, display: 'grid', placeItems: 'center',
+            fontSize: isMobile ? 15 : 19, fontWeight: 900, letterSpacing: 0.5,
+          }}>{b.initials}</div>
+        )}
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: isMobile ? 17 : 21, fontWeight: 900, color: b.ink, letterSpacing: -0.4, lineHeight: 1.15 }}>{b.name}</div>
+          {b.slogan && <div style={{ fontSize: isMobile ? 11 : 12, color: MUTED, marginTop: 3, lineHeight: 1.4 }}>{b.slogan}</div>}
+        </div>
+      </div>
+
+      <div style={{ height: 4, background: b.primary, borderRadius: 2, margin: isMobile ? '13px 0 0' : '16px 0 0' }} />
+
+      <h1 style={{ margin: isMobile ? '16px 0 0' : '20px 0 0', fontSize: isMobile ? 24 : 30, fontWeight: 900, letterSpacing: -0.8, lineHeight: 1.15, color: INK }}>{docTitle}</h1>
+      {subtitle && <div style={{ fontSize: 13, color: MUTED, marginTop: 6 }}>{subtitle}</div>}
+    </header>
+  )
+}
+
+/** The matching close: who produced it, when, and on what basis. */
+export function DocFooter({ org, generatedAt, note }) {
+  const b = docBrand(org)
+  return (
+    <footer style={{ marginTop: 34, paddingTop: 14, borderTop: `3px solid ${b.primary}`, fontSize: 11, color: MUTED, lineHeight: 1.6 }}>
+      Produced by <strong style={{ color: b.ink, fontWeight: 800 }}>{b.name}</strong> on{' '}
+      {new Date(generatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.
+      {' '}{note || 'Figures are drawn directly from records kept at the point of delivery.'}
+    </footer>
+  )
+}
 
 export const PRINT_CSS = `
 @media print {
+  /* Colour is the branding. Without this the brand rule, the fallback logo
+     plate and every tint print as blank white, so the document that reaches a
+     funder is the one piece of it nobody checked. */
+  #ls-doc-print-root, #ls-doc-print-root * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
   /* Everything except the document. The old Print button printed the
      dashboard, the nav and the modal chrome along with the report. */
   body > * { display: none !important; }
@@ -90,7 +175,7 @@ export function Distribution({ rows, total, suffix = '' }) {
         return (
           <div key={r.label} style={{ display: 'grid', gridTemplateColumns: '132px 1fr 82px', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 12, color: INK, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.label}</span>
-            <span style={{ height: 9, background: 'var(--surface3)', borderRadius: 2, overflow: 'hidden', display: 'block' }}>
+            <span style={{ height: 9, background: RULE, borderRadius: 2, overflow: 'hidden', display: 'block' }}>
               <span style={{ display: 'block', height: '100%', width: `${pct}%`, background: INK, borderRadius: 2 }} />
             </span>
             <span style={{ fontSize: 12, color: MUTED, fontWeight: 700, textAlign: 'right' }}>{r.n}{suffix} · {pct}%</span>
@@ -108,7 +193,7 @@ export function RankedList({ rows, unit = '' }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {list.map((r, i) => (
-        <div key={`${r.label}-${i}`} style={{ display: 'flex', alignItems: 'baseline', gap: 10, padding: '6px 0', borderBottom: i === list.length - 1 ? 'none' : '1px solid #F3F4F6' }}>
+        <div key={`${r.label}-${i}`} style={{ display: 'flex', alignItems: 'baseline', gap: 10, padding: '6px 0', borderBottom: i === list.length - 1 ? 'none' : `1px solid ${RULE_SOFT}` }}>
           <span style={{ fontSize: 12.5, color: INK, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.label}</span>
           <span style={{ marginLeft: 'auto', fontSize: 12.5, color: MUTED, fontWeight: 800, flexShrink: 0 }}>{r.value}{unit}</span>
         </div>
@@ -138,7 +223,7 @@ export function Table({ columns, rows }) {
             <tr key={ri}>
               {columns.map((c, i) => (
                 <td key={c.key} style={{
-                  padding: '8px 0', borderBottom: '1px solid var(--border-soft)',
+                  padding: '8px 0', borderBottom: `1px solid ${RULE_SOFT}`,
                   textAlign: i === 0 ? 'left' : 'right',
                   fontWeight: i === 0 ? 700 : c.strong ? 900 : 400,
                   color: i === 0 || c.strong ? INK : MUTED,
@@ -184,7 +269,7 @@ export function DocShell({
 }) {
   const ctl = {
     padding: '9px 11px', borderRadius: 9, border: '1.5px solid var(--border)',
-    fontSize: 13, fontFamily: 'inherit', minHeight: 40, background: 'var(--surface)', color: INK,
+    fontSize: 13, fontFamily: 'inherit', minHeight: 40, background: 'var(--surface)', color: 'var(--text)',
   }
   return (
     <div id="ls-doc-print-root" style={{ position: 'fixed', inset: 0, zIndex: 10500, background: 'var(--surface-hover)', overflowY: 'auto' }}>
@@ -205,7 +290,7 @@ export function DocShell({
       </div>
 
       <div id="ls-doc-paper" style={{
-        maxWidth: 820, margin: isMobile ? '14px 10px' : '22px auto', background: 'var(--surface)',
+        maxWidth: 820, margin: isMobile ? '14px 10px' : '22px auto', background: PAPER,
         padding: isMobile ? '26px 20px' : '46px 52px', borderRadius: isMobile ? 12 : 4,
         boxShadow: '0 10px 40px rgba(15,23,42,0.10)', color: INK, boxSizing: 'border-box',
       }}>
@@ -218,16 +303,9 @@ export function DocShell({
           </div>
         ) : (
           <>
-            <header>
-              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.2, color: MUTED, textTransform: 'uppercase' }}>{org?.name}</div>
-              <h1 style={{ margin: '8px 0 0', fontSize: isMobile ? 24 : 30, fontWeight: 900, letterSpacing: -0.8, lineHeight: 1.15 }}>{docTitle}</h1>
-              <div style={{ fontSize: 13, color: MUTED, marginTop: 6 }}>{formatPeriod(from, to)}</div>
-            </header>
+            <DocMasthead org={org} docTitle={docTitle} subtitle={formatPeriod(from, to)} isMobile={isMobile} />
             {children}
-            <footer style={{ marginTop: 34, paddingTop: 14, borderTop: `1px solid ${RULE}`, fontSize: 11, color: MUTED, lineHeight: 1.6 }}>
-              Produced by {org?.name} on {new Date(generatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.
-              {' '}{footerNote || 'Figures are drawn directly from records kept at the point of delivery.'}
-            </footer>
+            <DocFooter org={org} generatedAt={generatedAt} note={footerNote} />
           </>
         )}
       </div>
