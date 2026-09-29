@@ -7,6 +7,7 @@ import { allowedModules } from '../../lib/moduleAccess'
 import Icon from '../../lib/icons'
 import { sessionPhase } from '../../lib/sessionPhase'
 import SessionSheet, { flowButton } from '../sessions/SessionSheet'
+import { carryAssessmentToSession } from '../../lib/sessionRiskAssessment'
 import { withAlpha } from '../../lib/withAlpha'
 
 // Postgres returns time columns as HH:MM:SS. Trim to HH:MM everywhere the
@@ -365,7 +366,12 @@ export default function Calendar({ org, onSessionChanged, onNavigate }) {
     const { id, created_at, ...rest } = mostRecent
     const nextDate = format(addDays(new Date(), 7), 'yyyy-MM-dd')
     const { data } = await supabase.from('sessions').insert({ ...rest, title: `${rest.title} (Copy)`, session_date: nextDate }).select().single()
-    if (data) { setSessions(s => [...s, data]); setSelectedSession(data); if (onSessionChanged) onSessionChanged() }
+    if (data) {
+      // The spread above carries `risk_assessment_required`; the assessment
+      // itself is a join row and has to be carried deliberately.
+      await carryAssessmentToSession(mostRecent.id, data.id, org.id)
+      setSessions(s => [...s, data]); setSelectedSession(data); if (onSessionChanged) onSessionChanged()
+    }
   }
 
   const exportCalendarIcs = () => {

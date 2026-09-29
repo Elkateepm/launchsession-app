@@ -113,7 +113,7 @@ export function buildAttentionItems({ assessments = [], sessions = [], coverage 
         assessment: a,
         severity: 'review',
         title: a.name,
-        detail: `${outstanding} hazard${outstanding === 1 ? '' : 's'} still require controls`,
+        detail: `${outstanding} hazard${outstanding === 1 ? ' still requires' : 's still require'} controls`,
         cta: 'Continue Assessment',
         weight: -500,
       })
