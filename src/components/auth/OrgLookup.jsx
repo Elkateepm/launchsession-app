@@ -179,14 +179,14 @@ export default function OrgLookup() {
   }
 
   const selectedOrg = step === 'found' && org && !Array.isArray(org) ? org : null
-  const primary = selectedOrg?.primary_color || '#5A45BC'
+  const primary = selectedOrg?.primary_color || AUTH.blue
   const heading = { margin: '0 0 10px', fontSize: isDesktop ? 28 : 25, lineHeight: 1.25, letterSpacing: -0.8, color: AUTH.ink, fontWeight: 800 }
   const description = { margin: '0 0 24px', fontSize: 13, lineHeight: 1.7, color: AUTH.muted }
   const resetSearch = () => { setStep('org'); setError(''); setOrg(null); setOrgName(''); setSuggestions([]); setHighlight(-1); setRememberOrg(false) }
   const showSuggestions = inputFocused && suggestions.length > 0 && !dismissed
   const orgOption = (o, i, suggestion) => <button type="button" aria-label={`Select ${o.name}`} onMouseDown={e => suggestion && e.preventDefault()} onClick={() => handlePick(o)} onMouseEnter={() => suggestion && setHighlight(i)}
-    style={{ width: '100%', minHeight: 60, display: 'flex', alignItems: 'center', gap: 12, padding: '12px', borderRadius: 10, border: suggestion ? 0 : `1px solid ${AUTH.border}`, textAlign: 'left', background: suggestion && i === highlight ? '#F0EDF9' : '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
-    <span style={{ width: 34, height: 34, borderRadius: 8, flexShrink: 0, display: 'grid', placeItems: 'center', color: AUTH.muted, background: AUTH.wash, border: `1px solid ${withAlpha(o.primary_color || '#5A45BC', '30')}`, overflow: 'hidden' }}>{o.logo_url ? <img src={o.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <Icon name="🏢" />}</span>
+    style={{ width: '100%', minHeight: 60, display: 'flex', alignItems: 'center', gap: 12, padding: '12px', borderRadius: 10, border: suggestion ? 0 : `1px solid ${AUTH.border}`, textAlign: 'left', background: suggestion && i === highlight ? AUTH.highlight : AUTH.surface, cursor: 'pointer', fontFamily: 'inherit' }}>
+    <span style={{ width: 34, height: 34, borderRadius: 8, flexShrink: 0, display: 'grid', placeItems: 'center', color: AUTH.muted, background: AUTH.wash, border: `1px solid ${withAlpha(o.primary_color || AUTH.blue, '30')}`, overflow: 'hidden' }}>{o.logo_url ? <img src={o.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <Icon name="🏢" />}</span>
     <span style={{ flex: 1, minWidth: 0 }}><strong style={{ display: 'block', fontSize: 13, color: AUTH.ink, overflowWrap: 'anywhere' }}>{o.name}</strong><span style={{ display: 'block', color: AUTH.muted, fontSize: 11, marginTop: 4, overflowWrap: 'anywhere' }}>Workspace: {o.slug}</span></span><span aria-hidden="true" style={{ color: AUTH.muted }}><Icon name="chevron" /></span>
   </button>
 
@@ -207,10 +207,10 @@ export default function OrgLookup() {
             aria-activedescendant={showSuggestions && highlight >= 0 ? `org-suggestion-${highlight}` : undefined}
             placeholder="Enter your organisation name" style={{ ...authInput, paddingLeft: 42 }} />
         </div>
-        {showSuggestions && <ul id="org-suggestions" role="listbox" aria-label="Matching organisations" style={{ margin: '8px 0 0', padding: 5, listStyle: 'none', maxHeight: 252, overflowY: 'auto', border: `1px solid ${AUTH.border}`, borderRadius: 12, background: '#fff' }}>
+        {showSuggestions && <ul id="org-suggestions" role="listbox" aria-label="Matching organisations" style={{ margin: '8px 0 0', padding: 5, listStyle: 'none', maxHeight: 252, overflowY: 'auto', border: `1px solid ${AUTH.border}`, borderRadius: 12, background: AUTH.surface }}>
           {suggestions.map((o, i) => <li key={o.id} id={`org-suggestion-${i}`} role="option" aria-selected={i === highlight}>{orgOption(o, i, true)}</li>)}
         </ul>}
-        <button type="submit" disabled={loading || !orgName.trim()} style={{ ...authButton(primary, loading || !orgName.trim()), marginTop: 18 }}>{loading ? 'Searching…' : 'Find my workspace'}</button>
+        <button type="submit" disabled={loading || !orgName.trim()} style={{ ...authButton(loading || !orgName.trim()), marginTop: 18 }}>{loading ? 'Searching…' : 'Find my workspace'}</button>
       </form>
       <p style={{ ...description, margin: '18px 0 0', fontSize: 12 }}>Not sure which name to use? Ask the person who invited you. New accounts are arranged by your organisation.</p>
     </>}
@@ -224,7 +224,7 @@ export default function OrgLookup() {
         <input type="checkbox" checked={rememberOrg} onChange={e => setRememberOrg(e.target.checked)} aria-describedby="remember-org-hint" style={{ width: 19, height: 19, margin: '2px 0 0', flexShrink: 0, accentColor: primary }} />
         <span><span style={{ fontSize: 13, fontWeight: 650, color: AUTH.ink }}>Remember this organisation</span><span id="remember-org-hint" style={{ display: 'block', marginTop: 4, fontSize: 11, color: AUTH.muted, lineHeight: 1.6 }}>For future sign-ins on this device. This does not keep you signed in.</span></span>
       </label>
-      <button type="button" onClick={() => handleContinue(selectedOrg)} style={authButton(primary)}>Continue to sign in</button>
+      <button type="button" onClick={() => handleContinue(selectedOrg)} style={authButton()}>Continue to sign in</button>
       <button type="button" onClick={resetSearch} style={{ ...authLink, marginTop: 8 }}><Icon name="←" /> Choose a different organisation</button>
     </>}
 

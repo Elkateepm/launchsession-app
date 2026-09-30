@@ -31,7 +31,7 @@ export default function Login({ org }) {
   const { isDesktop } = useBreakpoint()
   const id = useId()
   const terms = useTerms()
-  const primary = org?.primary_color || '#5A45BC'
+  const primary = org?.primary_color || AUTH.blue
   const orgName = org?.name || 'your organisation'
   const changeStep = next => { setStep(next); setError(''); setForgotSent(false); setShowPassword(false) }
   const heading = { margin: '0 0 10px', color: AUTH.ink, fontSize: isDesktop ? 28 : 25, fontWeight: 800, lineHeight: 1.25, letterSpacing: -0.8 }
@@ -84,7 +84,7 @@ export default function Login({ org }) {
     finally { setLoading(false) }
   }
 
-  if (!org) return <AuthLayout stage="organisation"><h1 style={heading}>Choose your organisation</h1><p style={description}>Find your organisation before signing in to your account.</p><button type="button" onClick={() => leaveOrg()} style={authButton(primary)}>Find my organisation</button></AuthLayout>
+  if (!org) return <AuthLayout stage="organisation"><h1 style={heading}>Choose your organisation</h1><p style={description}>Find your organisation before signing in to your account.</p><button type="button" onClick={() => leaveOrg()} style={authButton()}>Find my organisation</button></AuthLayout>
 
   return (
     <AuthLayout org={org} onHome={() => leaveOrg('https://www.launchsession.co.uk/landing.html')}>
@@ -100,7 +100,7 @@ export default function Login({ org }) {
         <form onSubmit={handleEmailContinue}>
           <label htmlFor={`${id}-email`} style={authLabel}>Email address</label>
           <input id={`${id}-email`} name="email" type="email" inputMode="email" value={email} onChange={e => setEmail(e.target.value)} required autoFocus={isDesktop} autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder="you@organisation.com" style={{ ...authInput, marginBottom: 18 }} />
-          <button type="submit" disabled={loading || !email.trim()} style={authButton(primary, loading || !email.trim())}>Continue <span aria-hidden="true">→</span></button>
+          <button type="submit" disabled={loading || !email.trim()} style={authButton(loading || !email.trim())}>Continue <span aria-hidden="true">→</span></button>
         </form>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 10 }}>
           <button type="button" onClick={() => changeStep(STEPS.FORGOT)} style={authLink}>Forgot password?</button>
@@ -129,14 +129,14 @@ export default function Login({ org }) {
             <input type="checkbox" checked={rememberMe} disabled={loading} onChange={e => setRememberMe(e.target.checked)} aria-describedby={`${id}-remember-hint`} style={{ width: 19, height: 19, margin: '2px 0 0', flexShrink: 0, accentColor: primary }} />
             <span><span style={{ fontSize: 13, fontWeight: 650, color: AUTH.ink }}>Keep me signed in on this device</span><span id={`${id}-remember-hint`} style={{ display: 'block', color: AUTH.muted, fontSize: 11, lineHeight: 1.6, marginTop: 4 }}>Only choose this on a device you control. Leave it off on shared devices.</span></span>
           </label>
-          <button type="submit" disabled={loading || !password} style={authButton(primary, loading || !password)}>{loading ? 'Signing in…' : 'Sign in'}</button>
+          <button type="submit" disabled={loading || !password} style={authButton(loading || !password)}>{loading ? 'Signing in…' : 'Sign in'}</button>
         </form>
       </>}
 
       {step === STEPS.FORGOT && <>
         <button type="button" disabled={loading} onClick={() => changeStep(STEPS.EMAIL)} style={{ ...authLink, marginBottom: 10 }}><Icon name="←" /> Back to sign in</button>
         {forgotSent ? <div role="status">
-          <span style={{ display: 'grid', placeItems: 'center', width: 48, height: 48, borderRadius: 12, color: '#286554', background: '#EDF6F1', marginBottom: 18 }}><Icon name="newsletter" /></span>
+          <span style={{ display: 'grid', placeItems: 'center', width: 48, height: 48, borderRadius: 12, color: AUTH.mint, background: '#102D2E', marginBottom: 18 }}><Icon name="newsletter" /></span>
           <h1 style={heading}>Reset link sent</h1>
           <p style={{ ...description, overflowWrap: 'anywhere' }}>If an account exists for <strong>{email}</strong>, you will receive a password reset link. Check your inbox and spam folder.</p>
           <p style={{ ...description, marginBottom: 0 }}>Still need help? Contact your organisation administrator. Do not send passwords or information about {terms.people} to support.</p>
@@ -147,7 +147,7 @@ export default function Login({ org }) {
           <form onSubmit={handleForgot} aria-busy={loading}>
             <label htmlFor={`${id}-reset-email`} style={authLabel}>Email address</label>
             <input id={`${id}-reset-email`} name="email" type="email" inputMode="email" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder="you@organisation.com" style={{ ...authInput, marginBottom: 18 }} />
-            <button type="submit" disabled={loading || !email.trim()} style={authButton(primary, loading || !email.trim())}>{loading ? 'Sending…' : 'Send reset link'}</button>
+            <button type="submit" disabled={loading || !email.trim()} style={authButton(loading || !email.trim())}>{loading ? 'Sending…' : 'Send reset link'}</button>
           </form>
         </>}
       </>}
