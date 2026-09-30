@@ -157,10 +157,17 @@ export const ACCESS_MODULES = [
 // administrators restrictable means one bad save locks an organisation out of
 // the screen that would undo it.
 //
-// Volunteers and parents are absent because they never reach the dashboard:
-// both are routed to their own portals, so a module grant against one would be
-// a control that looks like it does something and does not. The database
-// refuses rows for these roles outright rather than storing that lie.
+// Volunteers and parents are absent because a per-member grant is not how
+// their access is decided: both are routed to their own portals, so a row here
+// would be a control that looks like it does something and does not. The
+// database refuses rows for these roles outright rather than storing that lie.
+//
+// Absent from THIS screen is not the same as ungoverned. module_access() in the
+// database decides what a portal role may write, and the RLS policies consult
+// it whoever is asking -- a volunteer holds an ordinary session and can call
+// PostgREST directly, portal or no portal. Reading "they never reach the
+// dashboard" as "this layer does not apply to them" is what put a blanket
+// 'edit' behind those roles and opened seventeen tables to them.
 export const TEMPLATABLE_ROLES = [
   { key: 'manager', label: 'Managers' },
   { key: 'staff', label: 'Staff' },
@@ -171,8 +178,8 @@ export const TEMPLATABLE_ROLES = [
 export const UNGOVERNED_ROLES = {
   owner: 'Owners can reach every module. To restrict this person, change their account role to Staff first.',
   admin: 'Administrators can reach every module. To restrict this person, change their account role to Staff first.',
-  volunteer: 'Volunteers use the volunteer portal, not the dashboard, so module access does not apply to them.',
-  parent: 'Parents use the parent portal, not the dashboard, so module access does not apply to them.',
+  volunteer: 'Volunteers use the volunteer portal, not the dashboard. What they can reach is fixed in the database, not set per person here.',
+  parent: 'Parents use the parent portal, not the dashboard. What they can reach is fixed in the database, not set per person here.',
 }
 
 export const LEVEL_OPTIONS = [
