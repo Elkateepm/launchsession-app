@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useId } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { useOrg, useTerms } from '../../context/OrgContext'
@@ -18,31 +18,10 @@ import { signOne } from '../../lib/storageUrl'
 import Icon from '../../lib/icons'
 import BrandingCentre from './branding/BrandingCentre'
 import { withAlpha } from '../../lib/withAlpha'
+import SettingsWorkspace, { SETTINGS_NAV as NAV } from './SettingsWorkspace'
 
 // Shown everywhere an org logo would go, whenever the org hasn't set one (or has removed one)
-const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
-
-const NAV = [
-  { key: 'organisation', icon: '🏢', label: 'Organisation', group: 'Platform', requiresAdmin: true },
-  { key: 'users',        icon: '👥', label: 'Admin', group: 'Platform' },
-  { key: 'branding',     icon: '🎨', label: 'Branding', group: 'Platform', requiresBranding: true, requiresAdmin: true },
-  { key: 'display',      icon: '🖥', label: 'Display', group: 'Platform', requiresAdmin: true },
-  { key: 'access',       icon: '🔑', label: 'Role Access', group: 'Platform', requiresAdmin: true },
-  { key: 'safeguarding', icon: '🛡', label: 'Safeguarding', group: 'Operations' },
-  { key: 'registers',    icon: '📋', label: 'Registers', group: 'Operations' },
-  { key: 'sessions',     icon: '📍', label: 'Venues', group: 'Operations' },
-  { key: 'notifications',icon: '🔔', label: 'Notifications', group: 'Communications' },
-  { key: 'communications',icon: '📢', label: 'Communications', group: 'Communications' },
-  // Account, not Platform: this is a personal choice, and Display is
-  // admin-only because the sidebar it governs is shared.
-  { key: 'appearance',   icon: '🌗', label: 'Appearance', group: 'Account' },
-  { key: 'security',     icon: '🔒', label: 'Security', group: 'Account' },
-  { key: 'integrations', icon: '🔌', label: 'Integrations', group: 'Account' },
-  { key: 'billing',      icon: '💳', label: 'Billing', group: 'Account' },
-  { key: 'help',         icon: '📚', label: 'Help & Support', group: 'Account' },
-]
-
-const GROUPS = ['Platform', 'Operations', 'Communications', 'Account']
+const FALLBACK_LOGO_URL = '/launchsession-badge.png'
 
 const BRANDING_PREMIUM_FEATURES = [
   ['Workspace identity', 'Logo, app icon, colours, type and interface feel across the team app.'],
@@ -52,38 +31,47 @@ const BRANDING_PREMIUM_FEATURES = [
 ]
 
 function SettingCard({ title, description, children }) {
+  const isMobile = useIsMobile()
   return (
-    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, marginBottom: 16, overflow: 'hidden' }}>
-      <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-soft)' }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{title}</div>
-        {description && <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>{description}</div>}
+    <section style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, marginBottom: 20, minWidth: 0, boxShadow: '0 3px 16px rgba(15,23,42,.025)' }}>
+      <div style={{ padding: isMobile ? '18px 16px' : '20px 24px', borderBottom: '1px solid var(--border-soft)' }}>
+        <h2 style={{ margin: 0, fontSize: 16, fontWeight: 750, color: 'var(--text)' }}>{title}</h2>
+        {description && <p style={{ fontSize: 13, color: 'var(--text3)', margin: '5px 0 0', lineHeight: 1.6 }}>{description}</p>}
       </div>
-      <div style={{ padding: '20px' }}>{children}</div>
-    </div>
+      <div style={{ padding: isMobile ? 16 : 24, minWidth: 0 }}>{children}</div>
+    </section>
   )
 }
 
 function Field({ label, hint, children }) {
+  const id = useId()
+  const control = React.isValidElement(children) && ['input', 'select', 'textarea'].includes(children.type)
   return (
-    <div style={{ marginBottom: 16 }}>
-      <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text2)', display: 'block', marginBottom: 4 }}>{label}</label>
-      {hint && <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 6 }}>{hint}</div>}
-      {children}
+    <div style={{ marginBottom: 18, minWidth: 0 }}>
+      <label htmlFor={control ? id : undefined} style={{ fontSize: 13, fontWeight: 650, color: 'var(--text2)', display: 'block', marginBottom: 7 }}>{label}</label>
+      {hint && <div id={`${id}-hint`} style={{ fontSize: 12, lineHeight: 1.6, color: 'var(--text3)', marginBottom: 7 }}>{hint}</div>}
+      {control ? React.cloneElement(children, { id, 'aria-describedby': hint ? `${id}-hint` : undefined }) : children}
     </div>
   )
 }
 
-const inp = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', boxSizing: 'border-box', background: 'var(--surface)' }
+const inp = { width: '100%', minWidth: 0, minHeight: 46, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', fontSize: 16, fontFamily: 'inherit', color: 'var(--text)', boxSizing: 'border-box', background: 'var(--surface)' }
 
 function Toggle({ value, onChange, label }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid var(--border-soft)' }}>
-      <span style={{ fontSize: 14, color: 'var(--text2)', fontWeight: 500 }}>{label}</span>
-      <div onClick={() => onChange(!value)} style={{ width: 40, height: 22, borderRadius: 11, background: value ? 'var(--org-primary)' : 'var(--text-faint)', position: 'relative', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0 }}>
-        <div style={{ position: 'absolute', top: 2, left: value ? 20 : 2, width: 18, height: 18, borderRadius: '50%', background: 'var(--surface)', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
-      </div>
-    </div>
+    <button type="button" role="switch" aria-checked={!!value} onClick={() => onChange(!value)} style={{ minWidth: 44,  width: '100%', minHeight: 52, display: 'flex', gap: 16, alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', marginBottom: 8, border: 0, borderBottom: '1px solid var(--border-soft)', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+      <span style={{ fontSize: 14, lineHeight: 1.5, color: 'var(--text2)', fontWeight: 500 }}>{label}</span>
+      <span aria-hidden="true" style={{ width: 42, height: 24, borderRadius: 12, background: value ? 'var(--org-primary)' : 'var(--text-faint)', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
+        <span style={{ position: 'absolute', top: 3, left: value ? 21 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+      </span>
+    </button>
   )
+}
+
+function SettingsSwitch({ value, disabled, label, onChange }) {
+  return <button type="button" role="switch" aria-label={label} aria-checked={!!value} disabled={disabled} onClick={onChange} style={{ minHeight: 44, minWidth: 44,  width: 48, height: 44, marginLeft: 12, display: 'grid', placeItems: 'center', border: 0, padding: 0, background: 'transparent', flexShrink: 0, cursor: disabled ? 'default' : 'pointer' }}>
+    <span aria-hidden="true" style={{ width: 40, height: 24, borderRadius: 12, background: value ? 'var(--org-primary)' : 'var(--text-faint)', position: 'relative' }}><span style={{ position: 'absolute', top: 3, left: value ? 19 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff' }} /></span>
+  </button>
 }
 
 // ─── SECTIONS ─────────────────────────────────────────────────
@@ -172,7 +160,7 @@ function SidebarDisplayCard({ org, isAdmin }) {
                   role="switch"
                   aria-checked={on}
                   aria-label={labelFor(item)}
-                  style={{
+                  style={{ minWidth: 44,
                     display: 'flex', alignItems: 'center', gap: 11, width: '100%', minHeight: 46,
                     padding: '9px 12px', borderRadius: 10, cursor: 'pointer', textAlign: 'left',
                     border: '1px solid var(--border)', background: 'var(--surface)',
@@ -218,7 +206,7 @@ function SidebarDisplayCard({ org, isAdmin }) {
         <button
           onClick={save}
           disabled={!dirty || saving}
-          style={{
+          style={{ minWidth: 44,
             minHeight: 44, padding: '0 20px', borderRadius: 10, border: 'none', fontFamily: 'inherit',
             background: dirty && !saving ? 'var(--org-primary, #6D5DF6)' : 'var(--border)',
             color: dirty && !saving ? '#fff' : 'var(--text3)',
@@ -226,7 +214,7 @@ function SidebarDisplayCard({ org, isAdmin }) {
           }}
         >{saving ? 'Saving…' : 'Save changes'}</button>
         {offCount > 0 && (
-          <button onClick={() => setHidden([])} style={{
+          <button onClick={() => setHidden([])} style={{ minWidth: 44,
             minHeight: 44, padding: '0 16px', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit',
             border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)',
             fontSize: 13, fontWeight: 700,
@@ -275,7 +263,7 @@ function OrgTypeCard({ org }) {
   }
 
   return (
-    <SettingCard title="Organisation type" description="Changes what the app calls things — young people, sessions, staff.">
+    <SettingCard title="Organisation type" description="Choose your organisation type to update the wording used across your workspace.">
       <Field label="Type">
         <select style={inp} value={selected} onChange={e => { setSelected(e.target.value); setMsg('') }}>
           {ORG_TYPE_OPTIONS.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
@@ -311,8 +299,8 @@ function OrgTypeCard({ org }) {
       )}
 
       <button onClick={handleSave} disabled={!changed || saving}
-        style={{ marginTop: 14, padding: '10px 20px', borderRadius: 8, border: 'none',
-          background: (!changed || saving) ? 'var(--border)' : 'linear-gradient(135deg,#7C3AED,#3B82F6)',
+        style={{ minWidth: 44,  minHeight: 44, marginTop: 14, padding: '10px 20px', borderRadius: 8, border: 'none',
+          background: (!changed || saving) ? 'var(--border)' : 'var(--org-primary)',
           color: '#fff', fontSize: 14, fontWeight: 700, cursor: (!changed || saving) ? 'default' : 'pointer' }}>
         {saving ? 'Saving...' : changed ? 'Save type' : 'Saved'}
       </button>
@@ -321,59 +309,86 @@ function OrgTypeCard({ org }) {
   )
 }
 
-function OrgSection({ org }) {
-  const isMobile = useIsMobile()
-  const [form, setForm] = useState({
-    name: org?.name || '',
-    charity_number: org?.charity_number || '',
-    website: org?.website || '',
-    address: org?.address || '',
-    contact_email: org?.contact_email || '',
-    contact_phone: org?.contact_phone || '',
-    description: org?.description || '',
-  })
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+const profileFromOrg = org => Object.fromEntries(['name', 'charity_number', 'website', 'address', 'contact_email', 'contact_phone', 'description'].map(key => [key, org?.[key] || '']))
 
-  const handleSave = async () => {
-    setSaving(true)
-    await supabase.from('organisations').update(form).eq('id', org?.id)
-    setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000)
+function OrgSection({ org, onDirtyChange }) {
+  const isMobile = useIsMobile()
+  const { refreshOrg } = useOrg()
+  const [form, setForm] = useState(() => profileFromOrg(org))
+  const [baseline, setBaseline] = useState(() => profileFromOrg(org))
+  const [saving, setSaving] = useState(false)
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+  const dirty = JSON.stringify(form) !== JSON.stringify(baseline)
+  const incoming = JSON.stringify(profileFromOrg(org))
+
+  useEffect(() => {
+    if (!dirty) {
+      const latest = JSON.parse(incoming)
+      setForm(latest); setBaseline(latest)
+    }
+    // A background org refresh must not replace an in-progress draft.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incoming])
+  useEffect(() => { onDirtyChange(dirty) }, [dirty, onDirtyChange])
+  useEffect(() => {
+    if (!dirty) return undefined
+    const warn = event => { event.preventDefault(); event.returnValue = '' }
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [dirty])
+
+  const set = (key, value) => { setForm(f => ({ ...f, [key]: value })); setMessage(''); setError('') }
+  const handleSave = async event => {
+    event.preventDefault()
+    if (saving || !dirty) return
+    if (!form.name.trim()) { setError('Enter your organisation name.'); return }
+    if (!org?.id) { setError('Your organisation could not be found. Reload and try again.'); return }
+    setSaving(true); setError(''); setMessage('')
+    const draft = { ...form, name: form.name.trim() }
+    try {
+      const { data, error: saveError } = await supabase.from('organisations').update(draft).eq('id', org.id).select('id').single()
+      if (saveError) throw saveError
+      if (data?.id !== org.id) throw new Error('Your changes were not saved. Please check your access and try again.')
+      setForm(draft); setBaseline(draft); onDirtyChange(false)
+      setMessage('Your organisation details are saved.')
+      try { await refreshOrg?.() } catch { setMessage('Your details are saved. Refresh the app to update the workspace header.') }
+    } catch (e) { setError(e.message || 'Could not save. Your changes are still here; please try again.') }
+    finally { setSaving(false) }
   }
 
   return (
     <div>
-      <div style={{ background: 'linear-gradient(135deg, #0A0F1E, #1a2744)', borderRadius: 12, padding: '20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
-        <div style={{ width: 56, height: 56, borderRadius: 14, background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
-          <img src={org?.logo_url || FALLBACK_LOGO_URL} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 14 }} />
-        </div>
-        <div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{org?.name || 'Your Organisation'}</div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-            <span style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', borderRadius: 99, padding: '2px 10px', fontSize: 11, fontWeight: 700 }}>{org?.plan || 'trial'} plan</span>
-            <span style={{ background: 'rgba(34,197,94,0.15)', color: '#4ADE80', borderRadius: 99, padding: '2px 10px', fontSize: 11, fontWeight: 700 }}>● Active</span>
-          </div>
-        </div>
+      <div style={{ padding: isMobile ? 18 : 24, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16, borderRadius: 16, border: '1px solid var(--org-a20)', background: 'linear-gradient(120deg, var(--org-a10), var(--surface))' }}>
+        <img src={org?.logo_url || FALLBACK_LOGO_URL} alt="" style={{ width: 56, height: 56, flexShrink: 0, objectFit: 'contain', borderRadius: 14, background: 'var(--surface)', border: '1px solid var(--border)' }} />
+        <div style={{ minWidth: 0 }}><div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', overflowWrap: 'anywhere' }}>{org?.name || 'Your organisation'}</div><div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 6, lineHeight: 1.5 }}>The details that represent your organisation across LaunchSession.</div></div>
       </div>
+      <form onSubmit={handleSave} aria-label="Organisation profile">
+        <SettingCard title="Organisation profile" description="Keep your name and contact information up to date.">
+          <fieldset disabled={saving} style={{ margin: 0, padding: 0, border: 0, minWidth: 0 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'minmax(0, 1fr)' : 'repeat(2, minmax(0, 1fr))', columnGap: 20 }}>
+              <Field label="Organisation name"><input required autoComplete="organization" style={inp} value={form.name} onChange={e => set('name', e.target.value)} /></Field>
+              <Field label="Charity number (optional)"><input style={inp} value={form.charity_number} onChange={e => set('charity_number', e.target.value)} placeholder="e.g. 1234567" /></Field>
+            </div>
+            <Field label="Website"><input autoComplete="url" inputMode="url" style={inp} value={form.website} onChange={e => set('website', e.target.value)} placeholder="https://your-organisation.org" /></Field>
+            <Field label="Address"><textarea autoComplete="street-address" rows={2} style={{ ...inp, resize: 'vertical' }} value={form.address} onChange={e => set('address', e.target.value)} placeholder="Street, town and postcode" /></Field>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'minmax(0, 1fr)' : 'repeat(2, minmax(0, 1fr))', columnGap: 20 }}>
+              <Field label="Contact email"><input autoComplete="email" style={inp} type="email" value={form.contact_email} onChange={e => set('contact_email', e.target.value)} placeholder="hello@your-organisation.org" /></Field>
+              <Field label="Contact phone"><input autoComplete="tel" type="tel" style={inp} value={form.contact_phone} onChange={e => set('contact_phone', e.target.value)} placeholder="Phone number" /></Field>
+            </div>
+            <Field label="About your organisation"><textarea rows={3} style={{ ...inp, resize: 'vertical' }} value={form.description} onChange={e => set('description', e.target.value)} placeholder="A few words about what you do…" /></Field>
+          </fieldset>
+          {error && <div role="alert" style={{ padding: 12, marginBottom: 14, borderRadius: 10, background: 'var(--danger-bg)', color: 'var(--danger-text)', fontSize: 13, lineHeight: 1.5 }}>{error}</div>}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between', paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+            <span role="status" style={{ color: 'var(--text3)', fontSize: 12, lineHeight: 1.5, flex: '1 1 190px' }}>{saving ? 'Saving your details…' : message || (dirty ? 'You have unsaved changes' : 'Your profile is up to date')}</span>
+            <div style={{ display: 'flex', gap: 8, width: isMobile ? '100%' : undefined }}>
+              {dirty && <button type="button" disabled={saving} onClick={() => { setForm(baseline); setError(''); setMessage('') }} style={{ minWidth: 44,  minHeight: 46, padding: '0 16px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontWeight: 700, cursor: 'pointer' }}>Discard</button>}
+              <button type="submit" disabled={!dirty || saving} style={{ minWidth: 44,  flex: isMobile ? 1 : undefined, minHeight: 46, padding: '0 22px', borderRadius: 10, border: 'none', background: !dirty || saving ? 'var(--border)' : 'var(--org-primary)', color: !dirty || saving ? 'var(--text3)' : '#fff', fontSize: 14, fontWeight: 750, cursor: !dirty || saving ? 'default' : 'pointer' }}>{saving ? 'Saving…' : 'Save changes'}</button>
+            </div>
+          </div>
+        </SettingCard>
+      </form>
       <OrgTypeCard org={org} />
-      <SettingCard title="Organisation Profile" description="Basic information about your organisation">
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
-          <Field label="Organisation Name"><input style={inp} value={form.name} onChange={e => set('name', e.target.value)} /></Field>
-          <Field label="Charity Number"><input style={inp} value={form.charity_number} onChange={e => set('charity_number', e.target.value)} placeholder="e.g. 1234567" /></Field>
-        </div>
-        <Field label="Website"><input style={inp} value={form.website} onChange={e => set('website', e.target.value)} placeholder="https://..." /></Field>
-        <Field label="Address"><input style={inp} value={form.address} onChange={e => set('address', e.target.value)} placeholder="Full address" /></Field>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
-          <Field label="Contact Email"><input style={inp} type="email" value={form.contact_email} onChange={e => set('contact_email', e.target.value)} /></Field>
-          <Field label="Contact Phone"><input style={inp} value={form.contact_phone} onChange={e => set('contact_phone', e.target.value)} /></Field>
-        </div>
-        <Field label="Description"><textarea style={{ ...inp, resize: 'vertical', minHeight: 80 }} value={form.description} onChange={e => set('description', e.target.value)} placeholder="Brief description of your organisation..." /></Field>
-        <button onClick={handleSave} disabled={saving} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: saving ? 'var(--text-faint)' : 'var(--org-primary)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-          {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save Changes'}
-        </button>
-      </SettingCard>
-
       <RegisterGroupsManager org={org} />
     </div>
   )
@@ -487,10 +502,10 @@ function RegisterGroupsManager({ org }) {
           <div style={{ fontSize: 32, marginBottom: 10 }}><Icon name="🏷️" /></div>
           <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>No groups yet</div>
           <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>Create groups like Red, Blue, Juniors or Teens to organise your register.</div>
-          <button onClick={() => setAdding(true)} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: org?.primary_color || 'var(--org-primary)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>+ Add Group</button>
+          <button onClick={() => setAdding(true)} style={{ minHeight: 44, minWidth: 44,  padding: '9px 18px', borderRadius: 10, border: 'none', background: org?.primary_color || 'var(--org-primary)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>+ Add Group</button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10, marginBottom: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 10, marginBottom: 12 }}>
           {groups.map(g => (
             <GroupCard key={g.id} group={g} count={counts[g.label.toLowerCase()] || 0} onRename={handleRename} onColorChange={handleColorChange} onDelete={handleDelete} />
           ))}
@@ -498,17 +513,17 @@ function RegisterGroupsManager({ org }) {
       )}
 
       {groups.length > 0 && !adding && (
-        <button onClick={() => setAdding(true)} style={{ padding: '9px 16px', borderRadius: 10, border: `1.5px solid ${withAlpha(org?.primary_color || 'var(--org-primary)', '40')}`, background: (org?.primary_color || 'var(--org-primary)') + '0c', color: 'var(--org-ink)' || 'var(--org-ink)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+        <button onClick={() => setAdding(true)} style={{ minHeight: 44, minWidth: 44,  padding: '9px 16px', borderRadius: 10, border: `1.5px solid ${withAlpha(org?.primary_color || 'var(--org-primary)', '40')}`, background: (org?.primary_color || 'var(--org-primary)') + '0c', color: 'var(--org-ink)' || 'var(--org-ink)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
           + Add Group
         </button>
       )}
 
       {adding && (
-        <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
           <input autoFocus value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAdd()}
-            placeholder="e.g. Red, Juniors, Coach A..." style={{ ...inp, flex: 1 }} />
-          <button onClick={handleAdd} style={{ padding: '0 18px', borderRadius: 8, border: 'none', background: org?.primary_color || 'var(--org-primary)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Add</button>
-          <button onClick={() => { setAdding(false); setNewName(''); setError('') }} style={{ padding: '0 14px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+            placeholder="e.g. Red, Juniors, Coach A..." style={{ ...inp, flex: '1 1 140px' }} />
+          <button onClick={handleAdd} style={{ minHeight: 44, minWidth: 44,  padding: '0 18px', borderRadius: 8, border: 'none', background: org?.primary_color || 'var(--org-primary)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Add</button>
+          <button onClick={() => { setAdding(false); setNewName(''); setError('') }} style={{ minHeight: 44, minWidth: 44,  padding: '0 14px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
         </div>
       )}
     </SettingCard>
@@ -529,22 +544,22 @@ function GroupCard({ group, count, onRename, onColorChange, onDelete }) {
     <div style={{ border: '1.5px solid var(--border)', borderRadius: 14, padding: '12px 14px', background: 'var(--surface)', position: 'relative' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
         <button onClick={() => setShowColors(v => !v)} title="Change colour"
-          style={{ width: 20, height: 20, borderRadius: '50%', background: group.color, border: '2px solid #fff', boxShadow: '0 0 0 1.5px ' + group.color, cursor: 'pointer', flexShrink: 0 }} />
+          style={{ minHeight: 44, minWidth: 44,  width: 44, height: 44, borderRadius: '50%', background: group.color, border: '2px solid #fff', boxShadow: '0 0 0 1.5px ' + group.color, cursor: 'pointer', flexShrink: 0 }} />
         {editing ? (
           <input autoFocus value={label} onChange={e => setLabel(e.target.value)} onBlur={saveRename} onKeyDown={e => e.key === 'Enter' && saveRename()}
-            style={{ flex: 1, fontSize: 14, fontWeight: 800, border: 'none', borderBottom: `1.5px solid ${group.color}`, outline: 'none', padding: '2px 0', fontFamily: 'inherit', background: 'transparent', color: 'var(--text)' }} />
+            style={{ flex: 1, minWidth: 0, minHeight: 44, fontSize: 16, fontWeight: 800, border: 'none', borderBottom: `1.5px solid ${group.color}`, outline: 'none', padding: '2px 0', fontFamily: 'inherit', background: 'transparent', color: 'var(--text)' }} />
         ) : (
-          <div onClick={() => setEditing(true)} style={{ flex: 1, fontSize: 14, fontWeight: 800, color: 'var(--text)', cursor: 'text' }}>{group.label}</div>
+          <button type="button" aria-label={`Rename ${group.label}`} onClick={() => setEditing(true)} style={{ minHeight: 44,  flex: 1, minWidth: 0, overflowWrap: 'anywhere', textAlign: 'left', padding: 0, border: 0, background: 'transparent', fontSize: 14, fontWeight: 800, color: 'var(--text)', cursor: 'text' }}>{group.label}</button>
         )}
-        <button onClick={() => onDelete(group.id)} title="Delete group" style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--danger-text)', opacity: 0.7, padding: 2 }}><Icon name="🗑️" /></button>
+        <button onClick={() => onDelete(group.id)} title="Delete group" style={{ minHeight: 44, minWidth: 44,  border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--danger-text)', opacity: 0.7, padding: 2 }}><Icon name="🗑️" /></button>
       </div>
       <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600 }}>{count} {count === 1 ? 'child' : 'children'}</div>
 
       {showColors && (
-        <div style={{ position: 'absolute', top: '100%', left: 12, marginTop: 6, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: 8, display: 'flex', gap: 5, flexWrap: 'wrap', width: 150, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 10 }}>
+        <div style={{ position: 'absolute', top: '100%', left: 12, marginTop: 6, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: 8, display: 'flex', gap: 5, flexWrap: 'wrap', width: 172, maxWidth: 'calc(100% - 24px)', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 10 }}>
           {GROUP_COLOR_PRESETS.map(c => (
-            <button key={c} onClick={() => { onColorChange(group.id, c); setShowColors(false) }}
-              style={{ width: 22, height: 22, borderRadius: '50%', background: c, border: c === group.color ? '2px solid #111' : '2px solid #fff', boxShadow: '0 0 0 1px #E5E7EB', cursor: 'pointer' }} />
+            <button key={c} aria-label={`Use colour ${c}`} onClick={() => { onColorChange(group.id, c); setShowColors(false) }}
+              style={{ minHeight: 44, minWidth: 44,  width: 44, height: 44, borderRadius: '50%', background: c, border: c === group.color ? '2px solid #111' : '2px solid #fff', boxShadow: '0 0 0 1px #E5E7EB', cursor: 'pointer' }} />
           ))}
         </div>
       )}
@@ -616,11 +631,11 @@ function ModulePasswordCard({ moduleKey, label, icon, accentColor }) {
           </div>
           {pwError && <div style={{ fontSize: 12.5, color: 'var(--danger-text)', fontWeight: 600, marginBottom: 12 }}>{pwError}</div>}
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <button onClick={handleSetPassword} disabled={pwSaving} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: pwSaving ? 'var(--text-faint)' : accentColor, color: '#fff', fontSize: 14, fontWeight: 700, cursor: pwSaving ? 'default' : 'pointer' }}>
+            <button onClick={handleSetPassword} disabled={pwSaving} style={{ minHeight: 44, minWidth: 44,  padding: '10px 24px', borderRadius: 8, border: 'none', background: pwSaving ? 'var(--text-faint)' : accentColor, color: '#fff', fontSize: 14, fontWeight: 700, cursor: pwSaving ? 'default' : 'pointer' }}>
               {pwSaving ? 'Saving...' : pwSaved ? '✓ Saved!' : pwStatus === 'set' ? 'Update Password' : 'Set Password'}
             </button>
             {pwStatus === 'set' && (
-              <button onClick={handleRemovePassword} disabled={removing} style={{ padding: '10px 20px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 14, fontWeight: 700, cursor: removing ? 'default' : 'pointer' }}>
+              <button onClick={handleRemovePassword} disabled={removing} style={{ minHeight: 44, minWidth: 44,  padding: '10px 20px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 14, fontWeight: 700, cursor: removing ? 'default' : 'pointer' }}>
                 {removing ? 'Removing...' : 'Remove Password'}
               </button>
             )}
@@ -693,7 +708,7 @@ function BiometricUnlockCard() {
               This computer was set up for app lock previously. It no longer locks.
             </div>
             <button onClick={handleDisable}
-              style={{ padding: '10px 20px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+              style={{ minHeight: 44, minWidth: 44,  padding: '10px 20px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
               Clear the setting on this computer
             </button>
           </>
@@ -728,13 +743,13 @@ function BiometricUnlockCard() {
             <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 5 }}>How long the app can be in the background before it locks. It always locks when reopened from closed.</div>
           </div>
           <button onClick={handleDisable}
-            style={{ padding: '10px 20px', borderRadius: 8, border: '1.5px solid var(--danger-border)', background: 'var(--danger-bg)', color: 'var(--danger-text)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+            style={{ minHeight: 44, minWidth: 44,  padding: '10px 20px', borderRadius: 8, border: '1.5px solid var(--danger-border)', background: 'var(--danger-bg)', color: 'var(--danger-text)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
             Turn off on this device
           </button>
         </>
       ) : (
         <button onClick={handleEnable} disabled={busy || !userId}
-          style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: busy ? 'var(--border)' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: busy ? 'default' : 'pointer' }}>
+          style={{ minHeight: 44, minWidth: 44,  padding: '10px 20px', borderRadius: 8, border: 'none', background: busy ? 'var(--border)' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: busy ? 'default' : 'pointer' }}>
           {busy ? 'Setting up...' : 'Enable on this device'}
         </button>
       )}
@@ -761,7 +776,7 @@ function SecuritySection() {
   return (
     <div>
       <SettingCard title="Password & Authentication">
-        <button onClick={handleChangePassword} disabled={pwLoading} style={{ padding: '10px 20px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 14, fontWeight: 600, cursor: 'pointer', marginBottom: 12 }}>
+        <button onClick={handleChangePassword} disabled={pwLoading} style={{ minHeight: 44, minWidth: 44,  padding: '10px 20px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 14, fontWeight: 600, cursor: 'pointer', marginBottom: 12 }}>
           {pwLoading ? 'Sending...' : 'Change Password'}
         </button>
         {pwMsg && <div style={{ fontSize: 13, color: pwMsg.startsWith('✅') ? '#16A34A' : '#DC2626', marginBottom: 12, fontWeight: 600 }}>{pwMsg}</div>}
@@ -941,11 +956,11 @@ function NotificationsSection({ org, session: authSession }) {
             {status === 'blocked' && <span style={{ fontSize: 12, color: 'var(--text3)' }}>Update this in your browser's site settings, then reload.</span>}
           </div>
           {status === 'enabled' ? (
-            <button onClick={handleDisable} disabled={busy} style={{ padding: '9px 16px', borderRadius: 9, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+            <button onClick={handleDisable} disabled={busy} style={{ minHeight: 44, minWidth: 44,  padding: '9px 16px', borderRadius: 9, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
               {busy ? 'Working…' : 'Disable on this device'}
             </button>
           ) : status === 'not_enabled' ? (
-            <button onClick={handleEnable} disabled={busy} style={{ padding: '9px 18px', borderRadius: 9, border: 'none', background: 'var(--org-primary)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}>
+            <button onClick={handleEnable} disabled={busy} style={{ minHeight: 44, minWidth: 44,  padding: '9px 18px', borderRadius: 9, border: 'none', background: 'var(--org-primary)', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}>
               {busy ? 'Enabling…' : 'Enable notifications'}
             </button>
           ) : null}
@@ -958,7 +973,7 @@ function NotificationsSection({ org, session: authSession }) {
         )}
 
         {status === 'enabled' && (
-          <button onClick={handleTest} disabled={testState === 'sending'} style={{ padding: '9px 16px', borderRadius: 9, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', marginBottom: 4 }}>
+          <button onClick={handleTest} disabled={testState === 'sending'} style={{ minHeight: 44, minWidth: 44,  padding: '9px 16px', borderRadius: 9, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', marginBottom: 4 }}>
             {testState === 'sending' ? 'Sending…' : testState === 'sent' ? '✅ Sent — check your notifications' : testState === 'error' ? '⚠ Could not send' : 'Send test notification'}
           </button>
         )}
@@ -972,7 +987,7 @@ function NotificationsSection({ org, session: authSession }) {
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{d.device_name || 'Unknown device'}</div>
                 <div style={{ fontSize: 11.5, color: 'var(--text3)' }}>Last active: {d.last_used_at ? new Date(d.last_used_at).toLocaleDateString('en-GB') : '—'}</div>
               </div>
-              <button onClick={() => handleRemoveDevice(d.id)} style={{ padding: '6px 12px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: 'var(--danger-text)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Remove</button>
+              <button onClick={() => handleRemoveDevice(d.id)} style={{ minHeight: 44, minWidth: 44,  padding: '6px 12px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: 'var(--danger-text)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Remove</button>
             </div>
           ))}
         </SettingCard>
@@ -990,11 +1005,9 @@ function NotificationsSection({ org, session: authSession }) {
                     <span style={{ fontSize: 14, color: 'var(--text2)', fontWeight: 600 }}>{g.icon} {g.label}{g.locked ? ' (required)' : ''}</span>
                     <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2 }}>{g.description}</div>
                   </div>
-                  <div onClick={() => toggleCategory(g.key, g.locked)} style={{ width: 40, height: 22, borderRadius: 11, background: groupOn ? 'var(--org-primary)' : 'var(--text-faint)', position: 'relative', cursor: g.locked ? 'default' : 'pointer', flexShrink: 0, marginLeft: 12 }}>
-                    <div style={{ position: 'absolute', top: 2, left: groupOn ? 20 : 2, width: 18, height: 18, borderRadius: '50%', background: 'var(--surface)', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
-                  </div>
+                  <SettingsSwitch value={groupOn} disabled={g.locked} label={g.label} onChange={() => toggleCategory(g.key, g.locked)} />
                 </div>
-                <button onClick={() => setExpandedGroups(prev => ({ ...prev, [g.key]: !prev[g.key] }))} style={{ background: 'none', border: 'none', padding: '0 0 10px', color: 'var(--org-ink)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>
+                <button onClick={() => setExpandedGroups(prev => ({ ...prev, [g.key]: !prev[g.key] }))} style={{ minHeight: 44, minWidth: 44,  background: 'none', border: 'none', padding: '0 0 10px', color: 'var(--org-ink)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>
                   {isExpanded ? '▾ Hide individual alerts' : `▸ Customise ${g.events.length} individual alert${g.events.length > 1 ? 's' : ''}`}
                 </button>
               </div>
@@ -1006,9 +1019,7 @@ function NotificationsSection({ org, session: authSession }) {
                     return (
                       <div key={ev.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', opacity: g.locked ? 0.75 : 1 }}>
                         <span style={{ fontSize: 12.5, color: 'var(--text3)' }}>{ev.label}</span>
-                        <div onClick={() => toggleEventOverride(g, ev.key)} style={{ width: 32, height: 18, borderRadius: 9, background: on ? 'var(--org-primary)' : 'var(--text-faint)', position: 'relative', cursor: g.locked ? 'default' : 'pointer', flexShrink: 0, marginLeft: 12 }}>
-                          <div style={{ position: 'absolute', top: 2, left: on ? 16 : 2, width: 14, height: 14, borderRadius: '50%', background: 'var(--surface)', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
-                        </div>
+                        <SettingsSwitch value={on} disabled={g.locked} label={ev.label} onChange={() => toggleEventOverride(g, ev.key)} />
                       </div>
                     )
                   })}
@@ -1025,15 +1036,15 @@ function NotificationsSection({ org, session: authSession }) {
           <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', padding: '14px 0 4px' }}>
             <div>
               <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 4, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>From</div>
-              <input type="time" value={prefs?.quiet_hours_start?.slice(0, 5) || '21:00'} onChange={e => updateQuietHours({ quiet_hours_start: e.target.value })} style={{ padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 13, background: 'var(--surface)', color: 'var(--text)' }} />
+              <input type="time" value={prefs?.quiet_hours_start?.slice(0, 5) || '21:00'} onChange={e => updateQuietHours({ quiet_hours_start: e.target.value })} style={{ padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--border)', minHeight: 44, fontSize: 16, background: 'var(--surface)', color: 'var(--text)' }} />
             </div>
             <div>
               <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 4, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>To</div>
-              <input type="time" value={prefs?.quiet_hours_end?.slice(0, 5) || '07:00'} onChange={e => updateQuietHours({ quiet_hours_end: e.target.value })} style={{ padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 13, background: 'var(--surface)', color: 'var(--text)' }} />
+              <input type="time" value={prefs?.quiet_hours_end?.slice(0, 5) || '07:00'} onChange={e => updateQuietHours({ quiet_hours_end: e.target.value })} style={{ padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--border)', minHeight: 44, fontSize: 16, background: 'var(--surface)', color: 'var(--text)' }} />
             </div>
             <div style={{ flex: 1, minWidth: 160 }}>
               <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 4, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>Time zone</div>
-              <select value={prefs?.timezone || 'Europe/London'} onChange={e => updateQuietHours({ timezone: e.target.value })} style={{ padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 13, background: 'var(--surface)', color: 'var(--text)', width: '100%' }}>
+              <select value={prefs?.timezone || 'Europe/London'} onChange={e => updateQuietHours({ timezone: e.target.value })} style={{ padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--border)', minHeight: 44, fontSize: 16, background: 'var(--surface)', color: 'var(--text)', width: '100%' }}>
                 <option value="Europe/London">UK (Europe/London)</option>
                 <option value="Europe/Dublin">Ireland (Europe/Dublin)</option>
                 <option value="Europe/Paris">Central Europe (Europe/Paris)</option>
@@ -1074,7 +1085,7 @@ function IntegrationsSection() {
             </div>
             <div>
               {i.status === 'connected' && <span style={{ background: 'var(--ok-bg)', color: 'var(--ok-text)', borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>● Connected</span>}
-              {i.status === 'available' && <button style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid var(--org-primary)', background: 'var(--surface)', color: 'var(--org-ink)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Connect</button>}
+              {i.status === 'available' && <button style={{ minHeight: 44, minWidth: 44,  padding: '5px 12px', borderRadius: 6, border: '1px solid var(--org-primary)', background: 'var(--surface)', color: 'var(--org-ink)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Connect</button>}
               {i.status === 'coming_soon' && <span style={{ background: 'var(--surface3)', color: 'var(--text-faint)', borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>Coming Soon</span>}
             </div>
           </div>
@@ -1248,7 +1259,7 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
 
         {isAdmin && org?.stripe_customer_id && (
           <button onClick={handleManageBilling} disabled={portalLoading}
-            style={{ minHeight: 44, padding: '10px 20px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+            style={{ minWidth: 44,  minHeight: 44, padding: '10px 20px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
             {portalLoading ? 'Opening...' : 'Manage Billing'}
           </button>
         )}
@@ -1267,7 +1278,7 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
                 {CYCLES.map(c => (
                   <button key={c.key} onClick={() => setCycle(c.key)}
                     aria-pressed={cycle === c.key}
-                    style={{
+                    style={{ minWidth: 44,
                       minHeight: 36, padding: '7px 16px', borderRadius: 7, border: 'none', cursor: 'pointer',
                       background: cycle === c.key ? 'var(--org-primary)' : 'transparent',
                       color: cycle === c.key ? '#fff' : 'var(--text3)',
@@ -1297,7 +1308,7 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
                         <div style={{ textAlign: 'center', padding: '12px 0', borderRadius: 8, background: 'var(--ok-bg)', color: 'var(--ok-text)', fontWeight: 700, fontSize: 13 }}>Current Plan</div>
                       ) : (
                         <button onClick={() => handleChoose(p.plan)} disabled={loadingPlan === p.plan}
-                          style={{ width: '100%', minHeight: 44, borderRadius: 8, border: 'none', background: loadingPlan === p.plan ? 'var(--text-faint)' : 'var(--org-primary)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
+                          style={{ minWidth: 44,  width: '100%', minHeight: 44, borderRadius: 8, border: 'none', background: loadingPlan === p.plan ? 'var(--text-faint)' : 'var(--org-primary)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
                           {loadingPlan === p.plan ? 'Redirecting...' : org?.stripe_subscription_id ? `Switch to ${p.label}` : `Choose ${p.label}`}
                         </button>
                       )}
@@ -1399,7 +1410,7 @@ function AppearanceSection() {
                 role="radio"
                 aria-checked={active}
                 onClick={() => pick(opt.key)}
-                style={{
+                style={{ minWidth: 44,
                   display: 'flex', alignItems: 'center', gap: 13, textAlign: 'left',
                   padding: '14px 15px', borderRadius: 13, cursor: 'pointer', minHeight: 44,
                   fontFamily: 'inherit', width: '100%',
@@ -1523,7 +1534,7 @@ function SafeguardingSection({ org }) {
         <Field label="DSL Email Address">
           <input style={inp} type="email" value={form.dsl_email} onChange={e => set('dsl_email', e.target.value)} placeholder="dsl@yourorg.org.uk" />
         </Field>
-        <button onClick={handleSave} disabled={saving} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: saving ? 'var(--text-faint)' : '#DC2626', color: '#fff', fontSize: 14, fontWeight: 700, cursor: saving ? 'default' : 'pointer' }}>
+        <button onClick={handleSave} disabled={saving} style={{ minHeight: 44, minWidth: 44,  padding: '10px 24px', borderRadius: 8, border: 'none', background: saving ? 'var(--text-faint)' : '#DC2626', color: '#fff', fontSize: 14, fontWeight: 700, cursor: saving ? 'default' : 'pointer' }}>
           {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save DSL Details'}
         </button>
       </SettingCard>
@@ -1535,9 +1546,9 @@ function SafeguardingSection({ org }) {
             <span style={{ fontSize: 22 }}><Icon name="📄" /></span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Policy document uploaded</div>
-              <button type="button" onClick={async () => { const u = await signOne('safeguarding-docs', policyUrl, 300); if (u) window.open(u, '_blank', 'noopener,noreferrer') }} style={{ fontSize: 12, color: 'var(--danger-text)', fontWeight: 600, textDecoration: 'none', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>View / Download <Icon name="↗" /></button>
+              <button type="button" onClick={async () => { const u = await signOne('safeguarding-docs', policyUrl, 300); if (u) window.open(u, '_blank', 'noopener,noreferrer') }} style={{ minHeight: 44, minWidth: 44,  fontSize: 12, color: 'var(--danger-text)', fontWeight: 600, textDecoration: 'none', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>View / Download <Icon name="↗" /></button>
             </div>
-            <button onClick={() => setPolicyUrl('')} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 18, cursor: 'pointer', padding: 4 }}>×</button>
+            <button onClick={() => setPolicyUrl('')} style={{ minHeight: 44, minWidth: 44,  background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 18, cursor: 'pointer', padding: 4 }}>×</button>
           </div>
         ) : (
           <div style={{ border: '2px dashed var(--border)', borderRadius: 12, padding: '28px 20px', textAlign: 'center', marginBottom: 14 }}>
@@ -1676,7 +1687,7 @@ function GroupsSection({ org, refreshOrg }) {
           </div>
         </Field>
 
-        <button onClick={handleSaveRegisterOptions} disabled={saving} style={{ marginTop: 4, padding: '10px 20px', borderRadius: 10, border: 'none', background: saving ? 'var(--text-faint)' : 'var(--org-primary)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: saving ? 'default' : 'pointer' }}>
+        <button onClick={handleSaveRegisterOptions} disabled={saving} style={{ minHeight: 44, minWidth: 44,  marginTop: 4, padding: '10px 20px', borderRadius: 10, border: 'none', background: saving ? 'var(--text-faint)' : 'var(--org-primary)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: saving ? 'default' : 'pointer' }}>
           {saving ? 'Saving...' : saved ? '✓ Saved' : 'Save Register Options'}
         </button>
       </SettingCard>
@@ -1712,7 +1723,7 @@ function GroupsSection({ org, refreshOrg }) {
           </div>
         )}
 
-        <button onClick={handleSaveRetention} disabled={retentionSaving} style={{ marginTop: 4, padding: '10px 20px', borderRadius: 10, border: 'none', background: retentionSaving ? 'var(--text-faint)' : 'var(--org-primary)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: retentionSaving ? 'default' : 'pointer' }}>
+        <button onClick={handleSaveRetention} disabled={retentionSaving} style={{ minHeight: 44, minWidth: 44,  marginTop: 4, padding: '10px 20px', borderRadius: 10, border: 'none', background: retentionSaving ? 'var(--text-faint)' : 'var(--org-primary)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: retentionSaving ? 'default' : 'pointer' }}>
           {retentionSaving ? 'Saving...' : retentionSaved ? '✓ Saved' : 'Save Data Retention'}
         </button>
       </SettingCard>
@@ -1726,6 +1737,7 @@ function GroupsSection({ org, refreshOrg }) {
 }
 
 function VenuesSection({ org, isAdmin }) {
+  const isMobile = useIsMobile(1100)
   const [venues, setVenues] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -1807,8 +1819,8 @@ function VenuesSection({ org, isAdmin }) {
           <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--text3)', fontSize: 13 }}>No venues yet — add your first one below.</div>
         ) : (
           venues.map(v => (
-            <div key={v.id} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid var(--border-soft)', opacity: v.is_active ? 1 : 0.5 }}>
-              <div style={{ flex: 1 }}>
+            <div key={v.id} style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-start', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid var(--border-soft)', opacity: v.is_active ? 1 : 0.5 }}>
+              <div style={{ flex: '1 1 160px', minWidth: 0, overflowWrap: 'anywhere' }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>
                   {v.name} {!v.is_active && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-faint)', marginLeft: 6 }}>INACTIVE</span>}
                 </div>
@@ -1820,10 +1832,10 @@ function VenuesSection({ org, isAdmin }) {
                 </div>
               </div>
               {isAdmin && (
-                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                  <button onClick={() => startEdit(v)} style={{ padding: '5px 10px', borderRadius: 7, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Edit</button>
-                  <button onClick={() => toggleActive(v)} style={{ padding: '5px 10px', borderRadius: 7, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>{v.is_active ? 'Deactivate' : 'Reactivate'}</button>
-                  <button onClick={() => handleDelete(v)} style={{ padding: '5px 10px', borderRadius: 7, border: '1.5px solid var(--danger-border)', background: 'var(--danger-bg)', color: 'var(--danger-text)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, flexShrink: 0 }}>
+                  <button onClick={() => startEdit(v)} style={{ minHeight: 44, minWidth: 44,  padding: '5px 10px', borderRadius: 7, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                  <button onClick={() => toggleActive(v)} style={{ minHeight: 44, minWidth: 44,  padding: '5px 10px', borderRadius: 7, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>{v.is_active ? 'Deactivate' : 'Reactivate'}</button>
+                  <button onClick={() => handleDelete(v)} style={{ minHeight: 44, minWidth: 44,  padding: '5px 10px', borderRadius: 7, border: '1.5px solid var(--danger-border)', background: 'var(--danger-bg)', color: 'var(--danger-text)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
                 </div>
               )}
             </div>
@@ -1831,30 +1843,30 @@ function VenuesSection({ org, isAdmin }) {
         )}
 
         {isAdmin && !adding && (
-          <button onClick={startAdd} style={{ marginTop: 14, padding: '9px 16px', borderRadius: 8, border: 'none', background: 'var(--org-primary)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ Add Venue</button>
+          <button onClick={startAdd} style={{ minHeight: 44, minWidth: 44,  marginTop: 14, padding: '9px 16px', borderRadius: 8, border: 'none', background: 'var(--org-primary)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ Add Venue</button>
         )}
 
         {isAdmin && adding && (
           <div style={{ marginTop: 16, padding: 16, background: 'var(--surface2)', borderRadius: 10, border: '1px solid var(--border)' }}>
             <Field label="Venue name *"><input style={inp} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Cassiobury Park Sports Hall" /></Field>
             <Field label="Address"><input style={inp} value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="Street, town, postcode" /></Field>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <div style={{ flex: 1 }}><Field label="Capacity"><input style={inp} type="number" value={form.capacity} onChange={e => setForm({ ...form, capacity: e.target.value })} placeholder="e.g. 40" /></Field></div>
-              <div style={{ flex: 1 }}><Field label="Default meeting point"><input style={inp} value={form.default_meeting_point} onChange={e => setForm({ ...form, default_meeting_point: e.target.value })} placeholder="e.g. Main entrance" /></Field></div>
+            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 12 }}>
+              <div style={{ flex: 1, minWidth: 0 }}><Field label="Capacity"><input style={inp} type="number" value={form.capacity} onChange={e => setForm({ ...form, capacity: e.target.value })} placeholder="e.g. 40" /></Field></div>
+              <div style={{ flex: 1, minWidth: 0 }}><Field label="Default meeting point"><input style={inp} value={form.default_meeting_point} onChange={e => setForm({ ...form, default_meeting_point: e.target.value })} placeholder="e.g. Main entrance" /></Field></div>
             </div>
             <Field label="Notes" hint="Access codes, parking, anything staff should know"><textarea style={{ ...inp, minHeight: 60, resize: 'vertical' }} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></Field>
 
             <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 8, marginBottom: 6 }}>Emergency details (used by Risk Assessments)</div>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <div style={{ flex: 1 }}><Field label="Nearest hospital / A&E"><input style={inp} value={form.nearest_hospital} onChange={e => setForm({ ...form, nearest_hospital: e.target.value })} placeholder="Name and address" /></Field></div>
-              <div style={{ flex: 1 }}><Field label="Defibrillator location"><input style={inp} value={form.defibrillator_location} onChange={e => setForm({ ...form, defibrillator_location: e.target.value })} placeholder="e.g. Main reception" /></Field></div>
+            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 12 }}>
+              <div style={{ flex: 1, minWidth: 0 }}><Field label="Nearest hospital / A&E"><input style={inp} value={form.nearest_hospital} onChange={e => setForm({ ...form, nearest_hospital: e.target.value })} placeholder="Name and address" /></Field></div>
+              <div style={{ flex: 1, minWidth: 0 }}><Field label="Defibrillator location"><input style={inp} value={form.defibrillator_location} onChange={e => setForm({ ...form, defibrillator_location: e.target.value })} placeholder="e.g. Main reception" /></Field></div>
             </div>
 
             <VenueDefaultHazardsEditor hazards={form.default_hazards} onChange={h => setForm(f => ({ ...f, default_hazards: h }))} />
 
             <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-              <button onClick={handleSave} disabled={saving} style={{ padding: '9px 18px', borderRadius: 8, border: 'none', background: 'var(--org-primary)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving...' : (editingId ? 'Save Changes' : 'Add Venue')}</button>
-              <button onClick={() => { setAdding(false); setEditingId(null); setError('') }} style={{ padding: '9px 18px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={handleSave} disabled={saving} style={{ minHeight: 44, minWidth: 44,  padding: '9px 18px', borderRadius: 8, border: 'none', background: 'var(--org-primary)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving...' : (editingId ? 'Save Changes' : 'Add Venue')}</button>
+              <button onClick={() => { setAdding(false); setEditingId(null); setError('') }} style={{ minHeight: 44, minWidth: 44,  padding: '9px 18px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
             </div>
           </div>
         )}
@@ -1869,7 +1881,7 @@ function VenueDefaultHazardsEditor({ hazards, onChange }) {
   const add = () => onChange([...(hazards || []), { hazard: '', who_at_risk: '', likelihood: 2, severity: 2, control_measures: '' }])
   const update = (i, patch) => onChange(hazards.map((h, idx) => idx === i ? { ...h, ...patch } : h))
   const remove = (i) => onChange(hazards.filter((_, idx) => idx !== i))
-  const smallInp = { ...inp, padding: '7px 9px', fontSize: 12.5 }
+  const smallInp = { ...inp, padding: '7px 9px', fontSize: 16 }
 
   return (
     <div style={{ marginTop: 14 }}>
@@ -1881,10 +1893,10 @@ function VenueDefaultHazardsEditor({ hazards, onChange }) {
             <div key={i} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 9, padding: 10 }}>
               <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
                 <input style={{ ...smallInp, flex: 1 }} value={h.hazard} onChange={e => update(i, { hazard: e.target.value })} placeholder="e.g. Slips on wet flooring" />
-                <button onClick={() => remove(i)} style={{ padding: '0 10px', borderRadius: 7, border: '1px solid var(--danger-border)', background: 'var(--danger-bg)', color: 'var(--danger-text)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Remove</button>
+                <button onClick={() => remove(i)} style={{ minHeight: 44, minWidth: 44,  padding: '0 10px', borderRadius: 7, border: '1px solid var(--danger-border)', background: 'var(--danger-bg)', color: 'var(--danger-text)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Remove</button>
               </div>
               <input style={{ ...smallInp, width: '100%', boxSizing: 'border-box', marginBottom: 6 }} value={h.control_measures || ''} onChange={e => update(i, { control_measures: e.target.value })} placeholder="Control measures" />
-              <div style={{ display: 'flex', gap: 12 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
                 <label style={{ fontSize: 11, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 6 }}>Likelihood
                   <select style={{ ...smallInp, width: 50 }} value={h.likelihood || 2} onChange={e => update(i, { likelihood: Number(e.target.value) })}>
                     {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}</option>)}
@@ -1900,7 +1912,7 @@ function VenueDefaultHazardsEditor({ hazards, onChange }) {
           ))}
         </div>
       )}
-      <button type="button" onClick={add} style={{ padding: '6px 12px', borderRadius: 8, border: '1.5px dashed var(--border)', background: 'none', fontSize: 11.5, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>+ Add default hazard</button>
+      <button type="button" onClick={add} style={{ minHeight: 44, minWidth: 44,  padding: '6px 12px', borderRadius: 8, border: '1.5px dashed var(--border)', background: 'none', fontSize: 11.5, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>+ Add default hazard</button>
     </div>
   )
 }
@@ -1995,7 +2007,7 @@ function UsersSection({ org, session, isAdmin, currentUserId }) {
           <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>Manage who has access to {org?.name || 'your organisation'} and what they can do.</div>
         </div>
         {isAdmin && (
-          <button onClick={() => setShowInvite(true)} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: org?.primary_color || 'var(--org-primary)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+          <button onClick={() => setShowInvite(true)} style={{ minHeight: 44, minWidth: 44,  padding: '9px 18px', borderRadius: 10, border: 'none', background: org?.primary_color || 'var(--org-primary)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
             + Invite Person
           </button>
         )}
@@ -2034,25 +2046,26 @@ function UsersSection({ org, session, isAdmin, currentUserId }) {
 }
 
 function UserRow({ user, isAdmin, isSelf, busy, onRoleChange, onRemove }) {
+  const isMobile = useIsMobile()
   const rc = ROLE_CONFIG[user.role] || ROLE_UNKNOWN
   const isOwner = user.role === 'owner'
   const initials = (user.full_name || user.email || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface)' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: isMobile ? 'wrap' : 'nowrap', padding: '10px 12px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface)' }}>
       <div style={{ width: 36, height: 36, borderRadius: 10, background: rc.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, flexShrink: 0, overflow: 'hidden' }}>
         {user.photo_url ? <SignedImg bucket="staff-photos" src={user.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6 }}>
-          {user.full_name || user.email}
+          <span style={{ overflowWrap: 'anywhere', minWidth: 0 }}>{user.full_name || user.email}</span>
           {isSelf && <span style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 600 }}>(you)</span>}
           {user.status === 'pending_invite' && <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--warn-text)', background: 'var(--warn-bg)', borderRadius: 99, padding: '1px 7px' }}>PENDING</span>}
         </div>
-        <div style={{ fontSize: 11, color: 'var(--text3)' }}>{user.email}</div>
+        <div style={{ fontSize: 12, color: 'var(--text3)', overflowWrap: 'anywhere' }}>{user.email}</div>
       </div>
       {isAdmin && !isOwner ? (
-        <select value={user.role} disabled={busy || isSelf} onChange={e => onRoleChange(user.id, e.target.value)}
-          style={{ fontSize: 12, fontWeight: 700, padding: '6px 10px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', cursor: isSelf ? 'default' : 'pointer' }}>
+        <select aria-label={`Role for ${user.full_name || user.email}`} value={user.role} disabled={busy || isSelf} onChange={e => onRoleChange(user.id, e.target.value)}
+          style={{ minHeight: 44, maxWidth: '100%', fontSize: 16, fontWeight: 700, padding: '6px 10px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', cursor: isSelf ? 'default' : 'pointer' }}>
           {/* Owner is absent deliberately: handing over ownership is not a
               dropdown change. An unrecognised role keeps its own option so
               selecting it is a choice rather than a silent reassignment. */}
@@ -2066,9 +2079,9 @@ function UserRow({ user, isAdmin, isSelf, busy, onRoleChange, onRemove }) {
         <span style={{ fontSize: 11, fontWeight: 800, color: rc.color, background: rc.bg, borderRadius: 99, padding: '4px 10px' }}>{rc.label}</span>
       )}
       {isAdmin && (
-        <button onClick={() => onRemove(user)} disabled={busy || isSelf || isOwner}
+        <button aria-label={`Remove ${user.full_name || user.email}`} onClick={() => onRemove(user)} disabled={busy || isSelf || isOwner}
           title={isSelf ? "You can't remove yourself" : isOwner ? "The owner can't be removed here" : 'Remove'}
-          style={{ border: 'none', background: 'none', cursor: (isSelf || isOwner) ? 'default' : 'pointer', fontSize: 14, opacity: (isSelf || isOwner) ? 0.3 : 0.7, padding: 4 }}>
+          style={{ border: 'none', background: 'none', cursor: (isSelf || isOwner) ? 'default' : 'pointer', minWidth: 44, minHeight: 44, fontSize: 14, opacity: (isSelf || isOwner) ? 0.3 : 0.7, padding: 4 }}>
           🗑️
         </button>
       )}
@@ -2105,7 +2118,7 @@ function InviteUserModal({ org, session, onClose, onInvited }) {
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 18, width: '100%', maxWidth: 400, padding: 24, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 18, width: '100%', maxWidth: 400, maxHeight: 'calc(100dvh - 32px)', overflowY: 'auto', boxSizing: 'border-box', padding: 24, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
         <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)', marginBottom: 4 }}>Invite to {org?.name}</div>
         <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 18 }}>They'll get a branded email with a link to set up their account.</div>
 
@@ -2122,8 +2135,8 @@ function InviteUserModal({ org, session, onClose, onInvited }) {
         </Field>
 
         <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: 11, borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-          <button onClick={handleInvite} disabled={sending} style={{ flex: 1, padding: 11, borderRadius: 10, border: 'none', background: sending ? 'var(--text-faint)' : primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
+          <button onClick={onClose} style={{ minHeight: 44, minWidth: 44,  flex: 1, padding: 11, borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+          <button onClick={handleInvite} disabled={sending} style={{ minHeight: 44, minWidth: 44,  flex: 1, padding: 11, borderRadius: 10, border: 'none', background: sending ? 'var(--text-faint)' : primary, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
             {sending ? 'Sending...' : 'Send Invite'}
           </button>
         </div>
@@ -2134,19 +2147,22 @@ function InviteUserModal({ org, session, onClose, onInvited }) {
 
 export default function Settings({ org, session, userProfile, initialSection }) {
   const isMobile = useIsMobile()
-  const [showSidebar, setShowSidebar] = useState(false)
   const { refreshOrg } = useOrg()
   const brandingEnabled = org?.branding_enabled !== false
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'owner'
-  const [active, setActive] = useState((initialSection === 'organisation' && !isAdmin) ? 'users' : (initialSection || (isAdmin ? 'organisation' : 'users')))
-  const [search, setSearch] = useState('')
-
-  const filtered = NAV.filter(n => (!search || n.label.toLowerCase().includes(search.toLowerCase())) && (!n.requiresBranding || brandingEnabled || isAdmin) && (!n.requiresAdmin || isAdmin))
-  const groups = GROUPS.map(g => ({ group: g, items: filtered.filter(n => n.group === g) })).filter(g => g.items.length > 0)
+  const available = NAV.filter(n => (!n.requiresBranding || brandingEnabled || isAdmin) && (!n.requiresAdmin || isAdmin))
+  const [active, setActive] = useState(() => available.some(n => n.key === initialSection) ? initialSection : 'overview')
+  const [profileDirty, setProfileDirty] = useState(false)
+  const navigate = key => {
+    if (key === active) return
+    if (profileDirty && !window.confirm('Leave organisation settings and discard your unsaved profile changes?')) return
+    setProfileDirty(false)
+    setActive(key)
+  }
 
   const renderContent = () => {
     switch(active) {
-      case 'organisation':   return isAdmin ? <OrgSection org={org} /> : (
+      case 'organisation':   return isAdmin ? <OrgSection key={org?.id} org={org} onDirtyChange={setProfileDirty} /> : (
         <div style={{ textAlign: 'center', padding: '60px 24px', background: 'var(--surface2)', borderRadius: 16, border: '1.5px dashed #CBD5E1' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}><Icon name="🔒" /></div>
           <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', marginBottom: 8 }}>Admins only</div>
@@ -2207,63 +2223,11 @@ export default function Settings({ org, session, userProfile, initialSection }) 
     }
   }
 
-  const current = NAV.find(n => n.key === active)
   if (initialSection === 'branding') return renderContent()
 
   return (
-    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', background: 'var(--surface2)' }}>
-
-      {/* MOBILE NAV TOGGLE */}
-      {isMobile && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: 'var(--surface)', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
-          <button onClick={() => setShowSidebar(!showSidebar)} style={{ padding: '7px 12px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface2)', fontSize: 12, fontWeight: 700, cursor: 'pointer', color: 'var(--text2)' }}>
-            {showSidebar ? '✕ Close' : '☰ Settings'}
-          </button>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{NAV.find(n => n.key === active)?.icon} {NAV.find(n => n.key === active)?.label}</div>
-        </div>
-      )}
-
-      {/* SETTINGS SIDEBAR */}
-      <div style={{ width: isMobile ? '100%' : 190, background: 'var(--surface)', borderRight: isMobile ? 'none' : '1px solid #e5e7eb', borderBottom: isMobile ? '1px solid #e5e7eb' : 'none', display: isMobile ? (showSidebar ? 'flex' : 'none') : 'flex', flexDirection: 'column', flexShrink: 0, maxHeight: isMobile ? 320 : 'none', overflowY: isMobile ? 'auto' : 'visible', position: isMobile ? 'static' : 'sticky', top: isMobile ? 'auto' : 0, alignSelf: isMobile ? 'auto' : 'flex-start' }}>
-        <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--border)' }}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}><Icon name="⚙️" /> Settings</div>
-          <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--text-faint)' }}><Icon name="🔍" /></span>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search settings..."
-              style={{ width: '100%', padding: '7px 9px 7px 28px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 12, outline: 'none', boxSizing: 'border-box', background: 'var(--surface2)' }} />
-          </div>
-        </div>
-        <div style={{ padding: '8px 8px', flex: 1 }}>
-          {groups.map(({ group, items }) => (
-            <div key={group} style={{ marginBottom: 4 }}>
-              <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1, padding: '8px 10px 4px' }}>{group}</div>
-              {items.map(n => (
-                <button key={n.key} onClick={() => { setActive(n.key); if (isMobile) setShowSidebar(false) }}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: 'none', background: active === n.key ? `${withAlpha(org?.primary_color || 'var(--org-primary)', '12')}` : 'transparent', color: active === n.key ? (org?.primary_color || 'var(--org-ink)') : 'var(--text2)', fontSize: 13, fontWeight: active === n.key ? 700 : 500, cursor: 'pointer', textAlign: 'left', marginBottom: 1, transition: 'all 0.1s' }}
-                  onMouseEnter={e => { if (active !== n.key) e.currentTarget.style.background = 'var(--surface2)' }}
-                  onMouseLeave={e => { if (active !== n.key) e.currentTarget.style.background = 'transparent' }}>
-                  <span style={{ fontSize: 15 }}><Icon name={n.icon} /></span>
-                  <span style={{ flex: 1, minWidth: 0 }}>{n.label}</span>
-                  {n.requiresBranding && !brandingEnabled && (
-                    <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: .7, color: 'var(--warn-text)', background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 999, padding: '3px 6px', textTransform: 'uppercase' }}>Premium</span>
-                  )}
-                </button>
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* CONTENT */}
-      <div style={{ flex: 1, minWidth: 0, padding: isMobile ? '16px' : '24px' }}>
-        <div style={{ maxWidth: active === 'branding' ? 'none' : 700 }}>
-          <div style={{ marginBottom: 20, display: active === 'branding' ? 'none' : 'block' }}>
-            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>{current?.icon} {current?.label}</div>
-            <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>Manage your {current?.label?.toLowerCase()} settings</div>
-          </div>
-          {renderContent()}
-        </div>
-      </div>
-    </div>
+    <SettingsWorkspace org={org} active={active} items={available} onNavigate={navigate}>
+      {active !== 'overview' && renderContent()}
+    </SettingsWorkspace>
   )
 }
