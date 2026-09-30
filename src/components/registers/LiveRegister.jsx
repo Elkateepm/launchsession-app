@@ -12,6 +12,7 @@ import SignedImg from '../shared/SignedImg'
 import Icon from '../../lib/icons'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { withAlpha } from '../../lib/withAlpha'
+import { todayInLondon } from '../../lib/today'
 
 const COLLECTION_TYPES = [
   { key: 'approved_adult', label: 'Approved adult' },
@@ -272,7 +273,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
     await supabase.from('cause_for_concern').insert({
       org_id: org.id, submitted_by: authUserId, submitter_name: profile?.full_name || 'Team member',
       child_name: childName, concern_type: 'other', description: summary,
-      date_of_incident: new Date().toISOString().slice(0, 10),
+      date_of_incident: todayInLondon(),
       location: session?.location || 'Not specified',
       session_id: session?.id || null,
       status: 'open', priority: 'medium',

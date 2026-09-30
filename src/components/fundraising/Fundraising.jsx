@@ -27,6 +27,7 @@ import UpcomingDeadlinesStrip from './hub/UpcomingDeadlinesStrip'
 import ImpactSnapshotPanel from './hub/ImpactSnapshotPanel'
 import FundraisingAssistantCard from './hub/FundraisingAssistantCard'
 import Icon from '../../lib/icons'
+import { todayInLondon } from '../../lib/today'
 
 const CAMPAIGN_TYPES = [
   { key: 'general',    label: 'General fundraiser' },
@@ -61,7 +62,7 @@ const TABS = [
 ]
 
 function statusOf(c) {
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayInLondon()
   if (c.start_date && c.start_date > today) return { key: 'planning', label: 'Planning' }
   if (c.end_date && c.end_date < today) return { key: 'completed', label: 'Completed' }
   return { key: 'active', label: 'Active' }
@@ -461,7 +462,7 @@ export default function Fundraising({ org, isAdmin }) {
   const [showCreate, setShowCreate] = useState(false)
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState(null)
-  const [newCampaign, setNewCampaign] = useState({ name: '', description: '', campaign_type: 'general', target_amount: '', start_date: new Date().toISOString().slice(0, 10), end_date: '', linked_project_id: '' })
+  const [newCampaign, setNewCampaign] = useState({ name: '', description: '', campaign_type: 'general', target_amount: '', start_date: todayInLondon(), end_date: '', linked_project_id: '' })
   const [projects, setProjects] = useState([])
   const primary = org?.primary_color || '#1B9AAA'
 
@@ -542,7 +543,7 @@ export default function Fundraising({ org, isAdmin }) {
     const { data, error } = await supabase.from('fundraising_campaigns').insert(payload).select().single()
     setCreating(false)
     if (error) { setCreateError(error.message); return }
-    if (data) { setCampaigns(c => [{ ...data, fundraising_donations: [{ count: 0 }] }, ...c]); setShowCreate(false); setNewCampaign({ name: '', description: '', campaign_type: 'general', target_amount: '', start_date: new Date().toISOString().slice(0, 10), end_date: '', linked_project_id: '' }) }
+    if (data) { setCampaigns(c => [{ ...data, fundraising_donations: [{ count: 0 }] }, ...c]); setShowCreate(false); setNewCampaign({ name: '', description: '', campaign_type: 'general', target_amount: '', start_date: todayInLondon(), end_date: '', linked_project_id: '' }) }
   }
 
   // Excludes failed, cancelled, pending and fully refunded gifts, and nets off

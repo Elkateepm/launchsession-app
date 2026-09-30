@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { todayInLondon } from '../../lib/today'
 
 export const DAY_MS = 1000 * 60 * 60 * 24
 export const GOLD = 'var(--warn-text)'
@@ -42,7 +43,7 @@ export const CAMPAIGN_TEMPLATES = [
 ]
 
 export function statusOf(c) {
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayInLondon()
   if (c.start_date && c.start_date > today) return { key: 'planning', label: 'Planning' }
   if (c.end_date && c.end_date < today) return { key: 'completed', label: 'Completed' }
   return { key: 'active', label: 'Active' }

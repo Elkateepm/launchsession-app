@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import Icon from '../../lib/icons'
 import { withAlpha } from '../../lib/withAlpha'
+import { todayInLondon } from '../../lib/today'
 
 const ACTIONS = [
   { key: 'concern', icon: '🛡️', label: 'Raise Concern', color: '#EF4444' },
@@ -224,7 +225,7 @@ function UploadDocModal({ org, user, onClose }) {
     const { error } = await supabase.storage.from('safeguarding-docs').upload(path, file)
     if (!error) {
       const urlData = { publicUrl: path } // private bucket: store the path, sign on open
-      await supabase.from('volunteer_training').insert({ org_id: org.id, volunteer_id: user.id, training_type: file.name, status: 'completed', completed_at: new Date().toISOString().slice(0, 10), certificate_url: urlData?.publicUrl })
+      await supabase.from('volunteer_training').insert({ org_id: org.id, volunteer_id: user.id, training_type: file.name, status: 'completed', completed_at: todayInLondon(), certificate_url: urlData?.publicUrl })
       setDone(true)
     }
     setUploading(false)

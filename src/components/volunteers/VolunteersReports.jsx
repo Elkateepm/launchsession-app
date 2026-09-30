@@ -1,6 +1,7 @@
 import React from 'react'
 import { orgFilename, csvPreamble } from '../../lib/orgExport'
 import { Card, SectionTitle, Avatar, sessionHours, PURPLE, btnGhost } from './vh_shared'
+import { todayInLondon } from '../../lib/today'
 
 function BarChart({ data, color, height = 140 }) {
   const max = Math.max(1, ...data.map(d => d.value))
@@ -23,7 +24,7 @@ function monthLabel(key) { const [y, m] = key.split('-'); return new Date(y, m -
 export default function VolunteersReports({ org, volunteers, sessionStaff, sessions, applicants }) {
   const primary = org?.primary_color || PURPLE
   const sessionsById = Object.fromEntries(sessions.map(s => [s.id, s]))
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayInLondon()
   const completedStaff = sessionStaff.filter(ss => sessionsById[ss.session_id]?.session_date <= today)
 
   const attendancePct = completedStaff.length ? Math.round((completedStaff.filter(ss => ss.attended !== false).length / completedStaff.length) * 100) : 0

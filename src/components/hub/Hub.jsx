@@ -26,6 +26,7 @@ import OverlayPortal from '../shared/OverlayPortal'
 import Icon from '../../lib/icons'
 import { carryAssessmentToSession } from '../../lib/sessionRiskAssessment'
 import { withAlpha } from '../../lib/withAlpha'
+import { todayInLondon } from '../../lib/today'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -829,7 +830,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     await supabase.from('cause_for_concern').insert({
       org_id: orgId, submitted_by: authUserId, submitter_name: profile?.full_name || 'Team member',
       child_name: childName, concern_type: 'other', description: summary,
-      date_of_incident: new Date().toISOString().slice(0, 10),
+      date_of_incident: todayInLondon(),
       location: activeSession?.location || 'Not specified',
       session_id: activeSession?.id || null,
       status: 'open', priority: 'medium',

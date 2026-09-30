@@ -21,6 +21,7 @@ import ReuseAssessmentDrawer from './ReuseAssessmentDrawer'
 import { buildCoverage } from './ra_safety'
 import Icon from '../../lib/icons'
 import { withAlpha } from '../../lib/withAlpha'
+import { todayInLondon } from '../../lib/today'
 
 const RATING_ORDER = { low: 1, medium: 2, high: 3, critical: 4 }
 const SESSION_WINDOW = 40
@@ -211,7 +212,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
   }
 
   const markReviewed = async (a) => {
-    const today = new Date().toISOString().slice(0, 10)
+    const today = todayInLondon()
     const next = new Date(); next.setFullYear(next.getFullYear() + 1)
     await update(a.id, { last_reviewed_at: today, next_review_date: next.toISOString().slice(0, 10), review_date: next.toISOString().slice(0, 10), status: 'active' }, 'reviewed', 'Marked as reviewed')
   }

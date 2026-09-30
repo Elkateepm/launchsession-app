@@ -2,9 +2,10 @@ import React, { useState, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import { findConflict, suggestNextSlot, fmtDate, fmtTime } from '../../lib/resourceHelpers'
 import Icon from '../../lib/icons'
+import { todayInLondon } from '../../lib/today'
 
 export default function QuickBookingPanel({ org, resources, bookings, sessions, staff, venues, authUserId, presetResourceId, onBooked }) {
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayInLondon()
   const [form, setForm] = useState({
     resource_id: presetResourceId || '', date: today, start_time: '09:00', end_time: '10:00',
     session_id: '', assigned_to: '', purpose: '', notes: '', quantity: 1,

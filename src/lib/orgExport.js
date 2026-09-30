@@ -1,3 +1,4 @@
+import { todayInLondon } from '../lib/today'
 // Naming and heading exported files after the organisation.
 //
 // An export leaves the app and lands in somebody's downloads folder, an email
@@ -14,7 +15,7 @@ const slug = (s) => String(s || '')
 /** `solidarity-sports-volunteer-report-2026-09-29.csv` */
 export function orgFilename(org, base, ext = 'csv', { date = true } = {}) {
   const parts = [slug(org?.name) || 'launchsession', slug(base)].filter(Boolean)
-  if (date) parts.push(new Date().toISOString().slice(0, 10))
+  if (date) parts.push(todayInLondon())
   return `${parts.join('-')}.${ext}`
 }
 

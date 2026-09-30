@@ -1,3 +1,4 @@
+import { todayInLondon } from '../../lib/today'
 // Distance travelled — the measure this module is actually for.
 //
 // The previous page averaged every reading ever recorded and showed the result
@@ -158,7 +159,7 @@ export function buildGoals(goals, since = null) {
   const inWindow = since
     ? completed.filter(g => g.completed_at && new Date(g.completed_at) >= since)
     : completed
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayInLondon()
   const active = list.filter(g => !(g.status === 'completed' || g.completed_at))
   return {
     completed: inWindow.length,

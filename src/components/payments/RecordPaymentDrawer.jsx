@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { PB, PAYMENT_METHODS, fmtMoney, inputStyle } from './paymentsShared'
 import Icon from '../../lib/icons'
+import { todayInLondon } from '../../lib/today'
 
 // Drawer for recording a payment against a charge. Can be opened two ways:
 //   - with a specific `charge` (balance row from payment_charge_balances) already known
@@ -16,7 +17,7 @@ export default function RecordPaymentDrawer({ org, session, charge: initialCharg
   const [charge, setCharge] = useState(initialCharge || null)
   const [amount, setAmount] = useState('')
   const [method, setMethod] = useState('cash')
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
+  const [date, setDate] = useState(todayInLondon())
   const [reference, setReference] = useState('')
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)

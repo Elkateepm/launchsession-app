@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { notifyEvent } from '../../services/notifyEvent'
 import Icon from '../../lib/icons'
+import { todayInLondon } from '../../lib/today'
 
 const iStyle = { width: '100%', padding: '11px 13px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', background: 'var(--surface2)', color: 'var(--text)', boxSizing: 'border-box' }
 const taStyle = { ...iStyle, resize: 'vertical', minHeight: 90, lineHeight: 1.5 }
@@ -53,7 +54,7 @@ export default function CauseForConcernForm({ org, session: authSession, initial
     submitter_name: authSession?.user?.email?.split('@')[0] || '',
     child_name: '',
     location: '',
-    date_of_incident: new Date().toISOString().split('T')[0],
+    date_of_incident: todayInLondon(),
     description: '',
     witnesses: '',
     action_taken: '',

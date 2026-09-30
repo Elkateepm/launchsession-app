@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import PageHeader from '../shared/PageHeader'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import Icon from '../../lib/icons'
+import { todayInLondon } from '../../lib/today'
 
 const OUTCOMES = [
   'Improve confidence',
@@ -308,7 +309,7 @@ function MatchForm({ org, children, team, referral, session, primary, onCancel, 
   const [childId, setChildId] = useState(referral?.child_id || '')
   const [volunteerId, setVolunteerId] = useState('')
   const [supervisorId, setSupervisorId] = useState('')
-  const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10))
+  const [startDate, setStartDate] = useState(todayInLondon())
   const [frequency, setFrequency] = useState('weekly')
   const [saving, setSaving] = useState(false)
 
@@ -344,7 +345,7 @@ function MatchForm({ org, children, team, referral, session, primary, onCancel, 
         emoji: '🤝',
         title: 'Mentor Assigned',
         description: 'A mentoring match was created.',
-        event_date: new Date().toISOString().slice(0, 10),
+        event_date: todayInLondon(),
       }])
 
       const due = new Date(startDate)
@@ -425,7 +426,7 @@ function MatchProfile({ org, match, session, primary, onBack }) {
     await supabase.from('mentoring_sessions').insert([{
       org_id: org.id,
       match_id: match.id,
-      session_date: new Date().toISOString().slice(0, 10),
+      session_date: todayInLondon(),
       mood: checkMood,
       attended: true,
       notes,
@@ -439,7 +440,7 @@ function MatchProfile({ org, match, session, primary, onBack }) {
       emoji: '⭐',
       title: 'Session Check-in',
       description: notes || 'Mentoring check-in logged.',
-      event_date: new Date().toISOString().slice(0, 10),
+      event_date: todayInLondon(),
     }])
 
     setNotes('')

@@ -11,6 +11,7 @@ import VolunteersReports from './VolunteersReports'
 import QRShareSheet from '../shared/QRShareSheet'
 import Icon from '../../lib/icons'
 import { withAlpha } from '../../lib/withAlpha'
+import { todayInLondon } from '../../lib/today'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one yet
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -117,7 +118,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
   }
 
   // ── KPIs ──────────────────────────────────────────────
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayInLondon()
   const sessionsById = Object.fromEntries(sessions.map(s => [s.id, s]))
   const completedStaff = sessionStaff.filter(ss => sessionsById[ss.session_id]?.session_date <= today)
   const thisMonth = today.slice(0, 7)

@@ -2,6 +2,7 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { Card, SectionTitle, Badge, PURPLE } from './vh_shared'
 import Icon from '../../lib/icons'
+import { todayInLondon } from '../../lib/today'
 
 function coverageStatus(assigned, required) {
   const pct = required > 0 ? Math.min(Math.round((assigned / required) * 100), 100) : 100
@@ -12,7 +13,7 @@ function coverageStatus(assigned, required) {
 
 export default function VolunteersCoverage({ org, sessions, sessionStaff, volunteers, onRequestCover, onMessageAll }) {
   const primary = org?.primary_color || PURPLE
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayInLondon()
   const upcoming = sessions.filter(s => s.session_date >= today).sort((a, b) => a.session_date.localeCompare(b.session_date))
 
   return (

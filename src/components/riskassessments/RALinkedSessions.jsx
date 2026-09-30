@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { btnPrimary, btnGhost } from '../volunteers/vh_shared'
 import { riskScore, riskRating, LIKELIHOOD_LABELS, SEVERITY_LABELS, RA_STATUS_LABELS } from './ra_shared'
 import Icon from '../../lib/icons'
+import { todayInLondon } from '../../lib/today'
 
 // ── Session linking tab ──
 export default function RALinkedSessions({ assessment, org, session: authSession }) {
@@ -14,7 +15,7 @@ export default function RALinkedSessions({ assessment, org, session: authSession
   const [search, setSearch] = useState('')
 
   const load = useCallback(async () => {
-    const today = new Date().toISOString().slice(0, 10)
+    const today = todayInLondon()
     const [{ data: links }, { data: sessions }] = await Promise.all([
       supabase.from('risk_assessment_sessions').select('*, sessions!ras_session_org_fk(*)').eq('org_id', org.id).eq('assessment_id', assessment.id),
       supabase.from('sessions').select('id, title, session_date, start_time, end_time, location, session_type').eq('org_id', org.id).gte('session_date', today).order('session_date').limit(100),

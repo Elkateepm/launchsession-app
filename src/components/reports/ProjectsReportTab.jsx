@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import Icon from '../../lib/icons'
+import { todayInLondon } from '../../lib/today'
 
 const PURPLE = '#6D5DF6'
 
@@ -83,7 +84,7 @@ export default function ProjectsReportTab({ org }) {
   const report = useMemo(() => {
     if (!detail) return null
     const { days, attendance, participants, staff, reflections, projectReflection, project } = detail
-    const today = new Date().toISOString().slice(0, 10)
+    const today = todayInLondon()
     const delivered = days.filter(d => d.closed_at || d.session_date < today)
 
     const attended = attendance.filter(a => a.status === 'signed_in' || a.status === 'signed_out')

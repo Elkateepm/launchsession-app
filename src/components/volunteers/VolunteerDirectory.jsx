@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { Card, SectionTitle, Badge, Avatar, statusStyle, daysUntil, sessionHours, inputStyle, btnPrimary, btnGhost, PURPLE } from './vh_shared'
 import Icon from '../../lib/icons'
+import { todayInLondon } from '../../lib/today'
 
 const FILTERS = [
   { key: 'all', label: 'All' },
@@ -17,14 +18,14 @@ function volunteerStats(v, sessionStaff, sessions) {
   const sessionsById = Object.fromEntries(sessions.map(s => [s.id, s]))
   const completed = mine.filter(ss => {
     const s = sessionsById[ss.session_id]
-    return s && s.session_date <= new Date().toISOString().slice(0, 10)
+    return s && s.session_date <= todayInLondon()
   })
   const attended = completed.filter(ss => ss.attended !== false)
   const hours = completed.reduce((sum, ss) => sum + sessionHours(sessionsById[ss.session_id]), 0)
   const attendancePct = completed.length ? Math.round((attended.length / completed.length) * 100) : null
   const upcoming = mine
     .map(ss => sessionsById[ss.session_id])
-    .filter(s => s && s.session_date >= new Date().toISOString().slice(0, 10))
+    .filter(s => s && s.session_date >= todayInLondon())
     .sort((a, b) => a.session_date.localeCompare(b.session_date))[0]
   return { sessionsCompleted: completed.length, hours: Math.round(hours), attendancePct, nextSession: upcoming }
 }
@@ -147,7 +148,7 @@ export function ProfileDrawer({ volunteer, org, stats, training, recognition, se
   const [assignSessionId, setAssignSessionId] = useState('')
   const [assigning, setAssigning] = useState(false)
 
-  const upcomingOptions = sessions.filter(s => s.session_date >= new Date().toISOString().slice(0, 10))
+  const upcomingOptions = sessions.filter(s => s.session_date >= todayInLondon())
 
   async function saveNotes() {
     setSaving(true)

@@ -59,6 +59,7 @@ import { TrialBanner, ReadOnlyBanner, PlanEndedWall } from '../billing/TrialStat
 import SignedImg from '../shared/SignedImg'
 import Icon from '../../lib/icons'
 import { withAlpha } from '../../lib/withAlpha'
+import { todayInLondon } from '../../lib/today'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -631,7 +632,7 @@ export default function Dashboard({ session, org }) {
   React.useEffect(() => {
     if (!org?.id) return
     const load = async () => {
-      const todayStr = new Date().toISOString().slice(0, 10)
+      const todayStr = todayInLondon()
       const [{ data: sess }, { count: mentoringCount }] = await Promise.all([
         supabase.from('sessions').select('id').eq('org_id', org.id).eq('session_date', todayStr),
         supabase.from('mentoring_referrals').select('id', { count: 'exact', head: true }).eq('org_id', org.id).eq('status', 'awaiting_match'),

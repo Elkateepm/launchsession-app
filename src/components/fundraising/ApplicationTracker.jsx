@@ -5,6 +5,7 @@ import { LS, IconGlyph } from './fundraisingShared'
 import FundraisingEmptyState from './hub/FundraisingEmptyState'
 import Icon from '../../lib/icons'
 import { withAlpha } from '../../lib/withAlpha'
+import { todayInLondon } from '../../lib/today'
 
 const STAGES = [
   { key: 'researching', label: 'Researching', color: 'var(--text3)', bg: 'var(--surface2)' },
@@ -33,8 +34,8 @@ export default function ApplicationTracker({ org, refreshKey }) {
   const moveStage = async (id, stage) => {
     setApps(a => a.map(x => x.id === id ? { ...x, stage } : x))
     const patch = { stage, updated_at: new Date().toISOString() }
-    if (stage === 'submitted') patch.submitted_date = new Date().toISOString().slice(0, 10)
-    if (stage === 'awarded' || stage === 'declined') patch.decision_date = new Date().toISOString().slice(0, 10)
+    if (stage === 'submitted') patch.submitted_date = todayInLondon()
+    if (stage === 'awarded' || stage === 'declined') patch.decision_date = todayInLondon()
     await supabase.from('grant_applications').update(patch).eq('id', id)
   }
 

@@ -12,6 +12,7 @@ import {
 } from './paymentsShared'
 import SignedImg from '../shared/SignedImg'
 import Icon from '../../lib/icons'
+import { todayInLondon } from '../../lib/today'
 
 const TABS = [
   { key: 'overview', label: 'Overview', shortLabel: 'Overview' },
@@ -634,7 +635,7 @@ function RefundModal({ transaction, charge, session, onClose, onRefunded }) {
     setSaving(true)
     const { error: err } = await supabase.from('payment_transactions').insert({
       org_id: transaction.org_id, charge_id: transaction.charge_id, child_id: transaction.child_id,
-      amount: amt, payment_method: transaction.payment_method, payment_date: new Date().toISOString().slice(0, 10),
+      amount: amt, payment_method: transaction.payment_method, payment_date: todayInLondon(),
       reference: `Refund of ${transaction.reference || transaction.id.slice(0, 8)}`,
       transaction_type: 'refund', recorded_by: session?.user?.id,
     })
@@ -669,7 +670,7 @@ function RefundModal({ transaction, charge, session, onClose, onRefunded }) {
 function ReconciliationTab({ transactions, childMap, staffMap, isMobile, onReconciled }) {
   const cashTx = transactions.filter(t => t.payment_method === 'cash' && t.transaction_type === 'payment')
   const awaiting = cashTx.filter(t => !t.reconciled)
-  const reconciledToday = cashTx.filter(t => t.reconciled && t.reconciled_at && t.reconciled_at.slice(0, 10) === new Date().toISOString().slice(0, 10))
+  const reconciledToday = cashTx.filter(t => t.reconciled && t.reconciled_at && t.reconciled_at.slice(0, 10) === todayInLondon())
 
   const awaitingTotal = awaiting.reduce((s, t) => s + Number(t.amount), 0)
   const reconciledTodayTotal = reconciledToday.reduce((s, t) => s + Number(t.amount), 0)

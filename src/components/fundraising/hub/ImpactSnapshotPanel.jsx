@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { LS, IconGlyph, AnimatedNumber } from '../fundraisingShared'
+import { todayInLondon } from '../../../lib/today'
 
 const RANGES = [
   { key: 'month', label: 'This month' },
@@ -23,7 +24,7 @@ export default function ImpactSnapshotPanel({ org }) {
   const load = useCallback(async () => {
     setLoading(true)
     const since = rangeStart(range)
-    const today = new Date().toISOString().slice(0, 10)
+    const today = todayInLondon()
 
     const [{ data: sessionsInRange }, { count: volunteerCount }, { data: mentoringInRange }, { count: outcomeCount }] = await Promise.all([
       supabase.from('sessions').select('id').eq('org_id', org.id).gte('session_date', since).lte('session_date', today),
