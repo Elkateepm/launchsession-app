@@ -7,7 +7,7 @@ jest.mock('../../lib/supabase', () => ({ supabase: { auth: { signInWithPassword:
 jest.mock('../../hooks/useIsMobile', () => ({ useBreakpoint: () => ({ isDesktop: mockDesktop }) }))
 jest.mock('../../lib/nativeEnv', () => ({ isNativeApp: () => false }))
 jest.mock('../../lib/icons', () => () => null)
-const org = { id: 'org-a', name: 'Community Youth Project', slug: 'community-youth', primary_color: '#4562BC' }
+const org = { id: 'org-a', name: 'Community Youth Project', slug: 'community-youth', primary_color: '#4562BC', branding_enabled: true }
 beforeEach(() => { jest.clearAllMocks(); localStorage.clear(); mockDesktop = false })
 const start = () => render(<Login org={org} />)
 const passwordStep = () => {
@@ -87,4 +87,14 @@ test('missing organisation never permits a password sign-in', () => {
   expect(screen.getByRole('button', { name: 'Find my organisation' })).toBeInTheDocument()
   expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
   expect(supabase.auth.signInWithPassword).not.toHaveBeenCalled()
+})
+
+test('a standard organisation sends LaunchSession styling with its reset request', async () => {
+  supabase.functions.invoke.mockResolvedValue({ error: null })
+  render(<Login org={{ ...org, branding_enabled: false, logo_url: 'https://assets.example/old-logo.png' }} />)
+  fireEvent.click(screen.getByRole('button', { name: 'Forgot password?' }))
+  fireEvent.change(screen.getByRole('textbox', { name: 'Email address' }), { target: { value: 'staff@example.com' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Send reset link' }))
+  await screen.findByRole('heading', { name: 'Reset link sent' })
+  expect(supabase.functions.invoke).toHaveBeenCalledWith('send-password-reset-email', expect.objectContaining({ body: expect.objectContaining({ org_slug: org.slug, org_name: org.name, org_color: '#3B82F6', org_logo: window.location.origin + '/logo.png' }) }))
 })

@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase'
 import AuthLayout, { AUTH, AuthError, OrganisationIdentity, authInput, authLabel, authLink, authButton } from './AuthLayout'
 import { useBreakpoint } from '../../hooks/useIsMobile'
 import Icon from '../../lib/icons'
-import { withAlpha } from '../../lib/withAlpha'
+import { AUTH_DIRECTORY_COLUMNS, getAuthBranding } from './authBranding'
 
 export default function OrgLookup() {
   const { isDesktop } = useBreakpoint()
@@ -33,7 +33,7 @@ export default function OrgLookup() {
   // to think about.
   useEffect(() => {
     let cancelled = false
-    supabase.from('organisations_public').select('*').then(({ data, error: loadError }) => {
+    supabase.from('organisations_safe').select(AUTH_DIRECTORY_COLUMNS).then(({ data, error: loadError }) => {
       if (!cancelled && !loadError) setAllOrgs(data || [])
     }, () => { /* Search can retry when the directory is unavailable. */ })
     return () => { cancelled = true; if (blurTimer.current) clearTimeout(blurTimer.current) }
@@ -126,13 +126,12 @@ export default function OrgLookup() {
 
     const normalizedQuery = norm(orgName)
 
-    // Uses the public-safe view (name/slug/logo/colours only) instead of the
-    // base table -- status filtering (active/trial) is already baked into the
-    // view. Prefetched on mount; re-read here only if that hasn't landed yet.
+    // Read only the public branding allowlist. The safe view supplies the
+    // server-owned entitlement and already filters to active/trial orgs. Prefetched on mount; re-read here only if that hasn't landed yet.
     let orgs = allOrgs
     if (!orgs) {
       try {
-        const { data, error: loadError } = await supabase.from('organisations_public').select('*')
+        const { data, error: loadError } = await supabase.from('organisations_safe').select(AUTH_DIRECTORY_COLUMNS)
         if (loadError) throw loadError
         orgs = data || []
         setAllOrgs(orgs)
@@ -179,16 +178,19 @@ export default function OrgLookup() {
   }
 
   const selectedOrg = step === 'found' && org && !Array.isArray(org) ? org : null
-  const primary = selectedOrg?.primary_color || AUTH.blue
+  const primary = getAuthBranding(selectedOrg).primary
   const heading = { margin: '0 0 10px', fontSize: isDesktop ? 28 : 25, lineHeight: 1.25, letterSpacing: -0.8, color: AUTH.ink, fontWeight: 800 }
   const description = { margin: '0 0 24px', fontSize: 13, lineHeight: 1.7, color: AUTH.muted }
   const resetSearch = () => { setStep('org'); setError(''); setOrg(null); setOrgName(''); setSuggestions([]); setHighlight(-1); setRememberOrg(false) }
   const showSuggestions = inputFocused && suggestions.length > 0 && !dismissed
-  const orgOption = (o, i, suggestion) => <button type="button" aria-label={`Select ${o.name}`} onMouseDown={e => suggestion && e.preventDefault()} onClick={() => handlePick(o)} onMouseEnter={() => suggestion && setHighlight(i)}
+  const orgOption = (o, i, suggestion) => {
+    const optionBrand = getAuthBranding(o)
+    return <button type="button" aria-label={`Select ${o.name}`} onMouseDown={e => suggestion && e.preventDefault()} onClick={() => handlePick(o)} onMouseEnter={() => suggestion && setHighlight(i)}
     style={{ width: '100%', minHeight: 60, display: 'flex', alignItems: 'center', gap: 12, padding: '12px', borderRadius: 10, border: suggestion ? 0 : `1px solid ${AUTH.border}`, textAlign: 'left', background: suggestion && i === highlight ? AUTH.highlight : AUTH.surface, cursor: 'pointer', fontFamily: 'inherit' }}>
-    <span style={{ width: 34, height: 34, borderRadius: 8, flexShrink: 0, display: 'grid', placeItems: 'center', color: AUTH.muted, background: AUTH.wash, border: `1px solid ${withAlpha(o.primary_color || AUTH.blue, '30')}`, overflow: 'hidden' }}>{o.logo_url ? <img src={o.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <Icon name="🏢" />}</span>
+    <span style={{ width: 34, height: 34, borderRadius: 8, flexShrink: 0, display: 'grid', placeItems: 'center', color: AUTH.muted, background: AUTH.wash, border: `1px solid ${optionBrand.primary}`, overflow: 'hidden' }}>{optionBrand.enabled && optionBrand.logo ? <img src={optionBrand.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <Icon name="🏢" />}</span>
     <span style={{ flex: 1, minWidth: 0 }}><strong style={{ display: 'block', fontSize: 13, color: AUTH.ink, overflowWrap: 'anywhere' }}>{o.name}</strong><span style={{ display: 'block', color: AUTH.muted, fontSize: 11, marginTop: 4, overflowWrap: 'anywhere' }}>Workspace: {o.slug}</span></span><span aria-hidden="true" style={{ color: AUTH.muted }}><Icon name="chevron" /></span>
   </button>
+  }
 
   return <AuthLayout org={selectedOrg} stage="organisation">
     {step === 'org' && <>

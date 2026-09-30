@@ -4,6 +4,7 @@ import { useBreakpoint } from '../../hooks/useIsMobile'
 import { useTerms } from '../../context/OrgContext'
 import AuthLayout, { AUTH, AuthError, OrganisationIdentity, authInput, authLabel, authLink, authButton } from './AuthLayout'
 import Icon from '../../lib/icons'
+import { getAuthBranding } from './authBranding'
 
 const STEPS = { EMAIL: 'email', PASSWORD: 'password', FORGOT: 'forgot' }
 
@@ -31,7 +32,8 @@ export default function Login({ org }) {
   const { isDesktop } = useBreakpoint()
   const id = useId()
   const terms = useTerms()
-  const primary = org?.primary_color || AUTH.blue
+  const brand = getAuthBranding(org)
+  const primary = brand.primary
   const orgName = org?.name || 'your organisation'
   const changeStep = next => { setStep(next); setError(''); setForgotSent(false); setShowPassword(false) }
   const heading = { margin: '0 0 10px', color: AUTH.ink, fontSize: isDesktop ? 28 : 25, fontWeight: 800, lineHeight: 1.25, letterSpacing: -0.8 }
@@ -74,7 +76,7 @@ export default function Login({ org }) {
       const { error: resetError } = await supabase.functions.invoke('send-password-reset-email', {
         body: {
           email: email.trim(), org_name: orgName, org_slug: org?.slug,
-          org_logo: org?.logo_url, org_color: primary,
+          org_logo: brand.enabled ? brand.logo : window.location.origin + '/logo.png', org_color: primary,
           redirect_to: window.location.origin + '/reset-password' + (org?.slug ? '?org=' + encodeURIComponent(org.slug) : ''),
         },
       })
@@ -89,7 +91,7 @@ export default function Login({ org }) {
   return (
     <AuthLayout org={org} onHome={() => leaveOrg('https://www.launchsession.co.uk/landing.html')}>
       <div style={{ marginBottom: 22 }}>
-        <OrganisationIdentity org={org} compact />
+        {!brand.enabled && <OrganisationIdentity org={org} compact />}
         <button type="button" disabled={loading} onClick={() => leaveOrg()} style={{ ...authLink, marginTop: 2, fontSize: 12 }}>Change organisation</button>
       </div>
 

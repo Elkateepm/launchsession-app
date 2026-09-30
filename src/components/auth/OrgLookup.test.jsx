@@ -2,6 +2,7 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import OrgLookup from './OrgLookup'
 import { supabase } from '../../lib/supabase'
+import { AUTH_DIRECTORY_COLUMNS } from './authBranding'
 jest.mock('../../lib/supabase', () => ({ supabase: { from: jest.fn() } }))
 jest.mock('../../hooks/useIsMobile', () => ({ useBreakpoint: () => ({ isDesktop: false }) }))
 jest.mock('../../lib/nativeEnv', () => ({ isNativeApp: () => false }))
@@ -22,13 +23,14 @@ const search = async text => {
   fireEvent.focus(input); fireEvent.change(input, { target: { value: text } })
   return input
 }
-test('organisation search clears both saved selections and only reads the public directory', async () => {
+test('organisation search clears both saved selections and only reads public branding columns from the safe view', async () => {
   localStorage.setItem('launchsession_org_slug', 'old'); localStorage.setItem('launchsession_remembered_org_slug', 'old')
   render(<OrgLookup />)
   await search('Community')
   expect(localStorage.getItem('launchsession_org_slug')).toBeNull()
   expect(localStorage.getItem('launchsession_remembered_org_slug')).toBeNull()
-  expect(supabase.from).toHaveBeenCalledWith('organisations_public')
+  expect(supabase.from).toHaveBeenCalledWith('organisations_safe')
+  expect(select).toHaveBeenCalledWith(AUTH_DIRECTORY_COLUMNS)
   expect(window.location.href).toBe('')
 })
 test('keyboard suggestions require organisation confirmation before navigating to sign-in', async () => {
@@ -69,4 +71,14 @@ test('no match stays on search and never selects a default organisation', async 
   expect(await screen.findByRole('alert')).toHaveTextContent('No organisation found')
   expect(window.location.href).toBe('')
   expect(localStorage.getItem('launchsession_org_slug')).toBeNull()
+})
+
+test.each([true, false])('organisation confirmation applies the branding entitlement: %s', async branding => {
+  select.mockResolvedValue({ data: [{ ...orgs[0], branding_enabled: branding, primary_color: '#C8102E', logo_url: 'https://assets.example/club.png', slogan: 'Together we thrive' }], error: null })
+  render(<OrgLookup />); await search('Community Youth')
+  fireEvent.click(screen.getByRole('button', { name: 'Find my workspace' }))
+  await screen.findByRole('heading', { name: 'Is this your organisation?' })
+  expect(Boolean(screen.queryByRole('img', { name: 'Community Youth Project logo' }))).toBe(branding)
+  expect(Boolean(screen.queryByText('Powered by LaunchSession'))).toBe(branding)
+  if (!branding) expect(document.querySelector('img[src="https://assets.example/club.png"]')).toBeNull()
 })
