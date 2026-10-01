@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { ACCESS_MODULES, TEMPLATABLE_ROLES, LEVEL_OPTIONS, allowedModules } from '../../lib/moduleAccess'
 import Icon from '../../lib/icons'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 // The organisation's role template: what each role can reach by default.
 // Individual people are adjusted from their profile in HR; this is the baseline
@@ -12,6 +13,7 @@ import Icon from '../../lib/icons'
 // an explicit "Default" option rather than silently pre-selecting Full access
 // and writing 20 rows the first time an admin opens this screen.
 export default function AccessSection({ org, isAdmin }) {
+  const isMobile = useIsMobile(1100)
   const [rows, setRows] = useState({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(null)
@@ -83,6 +85,24 @@ export default function AccessSection({ org, isAdmin }) {
 
       {loading ? (
         <div style={{ padding: 24, color: 'var(--text-faint)', fontSize: 13 }}>Loading…</div>
+      ) : isMobile ? (
+        <div style={{ display: 'grid', gap: 12 }}>
+          {ACCESS_MODULES.map(module => <section key={module.key} aria-label={module.label} style={{ padding: 16, border: '1px solid var(--border)', borderRadius: 14, background: 'var(--surface)' }}>
+            <h3 style={{ margin: '0 0 12px', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, fontSize: 14, color: 'var(--text)' }}><Icon name={module.icon} /> {module.label}
+              {!orgModules.includes(module.key) && <span style={{ fontSize: 10, color: 'var(--warn-text)', background: 'var(--warn-bg)', padding: '4px 6px', borderRadius: 6 }}>Not on plan</span>}
+            </h3>
+            {TEMPLATABLE_ROLES.map(role => {
+              const cell = `${role.key}:${module.key}`
+              return <label key={role.key} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.2fr)', alignItems: 'center', gap: 10, marginTop: 10, fontSize: 13, color: 'var(--text2)' }}>
+                {role.label}
+                <select aria-label={`${module.label}: ${role.label}`} value={rows[cell] ?? 'default'} disabled={saving !== null} onChange={e => setCell(role.key, module.key, e.target.value)} style={{ width: '100%', minWidth: 0, minHeight: 46, padding: '8px', fontSize: 16, borderRadius: 8, background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)' }}>
+                  <option value="default">Default</option>
+                  {LEVEL_OPTIONS.map(option => <option key={option.key} value={option.key}>{option.label}</option>)}
+                </select>
+              </label>
+            })}
+          </section>)}
+        </div>
       ) : (
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 620 }}>
@@ -111,10 +131,11 @@ export default function AccessSection({ org, isAdmin }) {
                       <td key={r.key} style={{ padding: '8px 10px', borderBottom: '1px solid var(--border-soft)' }}>
                         <select
                           value={value}
-                          disabled={saving === cell}
+                          aria-label={`${m.label}: ${r.label}`}
+                          disabled={saving !== null}
                           onChange={e => setCell(r.key, m.key, e.target.value)}
                           style={{
-                            padding: '6px 8px', borderRadius: 8, fontSize: 12.5, fontWeight: 600,
+                            minHeight: 44, padding: '6px 8px', borderRadius: 8, fontSize: 16, fontWeight: 600,
                             border: `1px solid ${value === 'none' ? 'var(--danger-border)' : 'var(--border)'}`,
                             background: 'var(--surface)', cursor: 'pointer', minWidth: 110,
                           }}>
