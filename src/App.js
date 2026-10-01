@@ -521,7 +521,26 @@ function AppContent() {
         window.location.replace('/landing.html')
       }
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, newSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+      // Signing in IS activity, and nothing recorded it.
+      //
+      // ls_last_activity persists so that reloading does not restart the idle
+      // clock -- without that, closing the laptop and reopening the tab next
+      // morning meant the timeout never fired. But it survives a tab close,
+      // and nothing reset it at sign-in, so both logout hooks read the
+      // PREVIOUS visit's clock the moment a new session appeared. Log in more
+      // than 8 hours after you last used it -- which on desktop is most
+      // mornings -- and the successful login was undone immediately by a stale
+      // timestamp, sending you back to sign in a second time. The second
+      // attempt stuck only because the forced logout had cleared the key.
+      //
+      // SIGNED_IN is a real sign-in: supabase-js v2 reports a page load that
+      // already had a session as INITIAL_SESSION, so stamping here cannot
+      // renew the clock of a session that was merely reloaded. Written before
+      // setSession so the hooks' mount check reads this value, not the old one.
+      if (event === 'SIGNED_IN') {
+        try { localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now())) } catch (e) { /* storage unavailable */ }
+      }
       setSession(newSession)
     })
     return () => subscription.unsubscribe()
