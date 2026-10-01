@@ -8,6 +8,7 @@ import VolunteersCoverage from './VolunteersCoverage'
 import VolunteersTraining from './VolunteersTraining'
 import VolunteersRecognition from './VolunteersRecognition'
 import VolunteersReports from './VolunteersReports'
+import VolunteerPortalPreview from './VolunteerPortalPreview'
 import QRShareSheet from '../shared/QRShareSheet'
 import Icon from '../../lib/icons'
 import { withAlpha } from '../../lib/withAlpha'
@@ -23,6 +24,10 @@ const TABS = [
   { key: 'training', label: 'Training', icon: '🎓' },
   { key: 'recognition', label: 'Recognition', icon: '🏆' },
   { key: 'reports', label: 'Reports', icon: '📊' },
+  // Staff cannot open the volunteer app -- it refuses any role but volunteer --
+  // so without this nobody running the organisation ever sees the screen their
+  // volunteers land on.
+  { key: 'volunteer_view', label: 'Volunteer view', icon: '📱' },
 ]
 
 const QUICK_INSERTS = [
@@ -517,6 +522,9 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
           )}
           {tab === 'reports' && (
             <VolunteersReports org={org} volunteers={volunteers} sessionStaff={sessionStaff} sessions={sessions} applicants={applicants} />
+          )}
+          {tab === 'volunteer_view' && (
+            <VolunteerPortalPreview org={org} primary={primary} />
           )}
         </motion.div>
       </AnimatePresence>

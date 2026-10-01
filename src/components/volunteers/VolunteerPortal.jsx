@@ -596,8 +596,8 @@ function VolunteerDashboard({ user, profile: initialProfile, org, onSignOut }) {
   ]
 
   return (
-    <div style={{ minHeight: '100dvh', background: '#E7E9EE', display: 'flex', justifyContent: 'center' }}>
-    <div style={{ width: '100%', maxWidth: 480, minHeight: '100dvh', background: '#F5F5F5', display: 'flex', flexDirection: 'column', fontFamily: 'Inter,sans-serif', paddingTop: 'env(safe-area-inset-top)', overflow: 'hidden', position: 'relative', boxShadow: '0 0 70px rgba(15,23,42,0.10)' }}>
+    <div style={{ minHeight: '100dvh', background: 'var(--surface-hover)', display: 'flex', justifyContent: 'center' }}>
+    <div style={{ width: '100%', maxWidth: 480, minHeight: '100dvh', background: 'var(--surface2)', display: 'flex', flexDirection: 'column', fontFamily: 'inherit', paddingTop: 'env(safe-area-inset-top)', overflow: 'hidden', position: 'relative', boxShadow: '0 0 70px rgba(15,23,42,0.10)' }}>
       <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
         {tab === 'today' && (
           <VPToday
@@ -633,7 +633,7 @@ function VolunteerDashboard({ user, profile: initialProfile, org, onSignOut }) {
                 style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '9px 4px', border: 'none', background: 'none', cursor: 'pointer' }}>
                 {active && <motion.div layoutId="vpNavPill" style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.1)', borderRadius: 16 }} />}
                 <span style={{ position: 'relative', fontSize: 18 }}><Icon name={t.icon} /></span>
-                <span style={{ position: 'relative', fontSize: 9, fontWeight: 800, color: active ? '#fff' : 'rgba(255,255,255,0.45)' }}>{t.label}</span>
+                <span style={{ position: 'relative', fontSize: 10.5, fontWeight: 800, color: active ? '#fff' : 'rgba(255,255,255,0.72)' }}>{t.label}</span>
               </button>
             )
           })}
