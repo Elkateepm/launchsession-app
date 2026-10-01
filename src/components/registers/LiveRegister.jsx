@@ -93,7 +93,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
   const [showWalkIn, setShowWalkIn] = useState(false)
   const [showClosure, setShowClosure] = useState(false)
   const [showNotes, setShowNotes] = useState(false)
-  const [toast, setToast] = useState('')
+  const [toast, setToast] = useState(null)
   const [selectedChild, setSelectedChild] = useState(null)
   const [paymentBalances, setPaymentBalances] = useState({}) // childId -> { outstanding, hasAny }
   // Correcting a mis-tap. null = closed; '' = open with no child chosen;
@@ -172,7 +172,37 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
     return map
   }, [attendance])
 
-  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
+  // An undoable toast is what lets somebody mark fifty children quickly. The
+  // alternative to undo is care, and care is slow when there is a child
+  // standing in front of you. Undoable messages stay longer because they have
+  // to be acted on, not just read.
+  const toastTimer = useRef(null)
+  const showToast = (msg, undo) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    setToast(undo ? { msg, undo } : { msg })
+    toastTimer.current = setTimeout(() => setToast(null), undo ? 6000 : 3000)
+  }
+
+  // Put a child back exactly as they were before the last tap. Restoring the
+  // whole shape rather than clearing fields means undoing a sign-out returns
+  // them to signed-in with their original time, not to unmarked.
+  const markWithUndo = async (child, patch, label) => {
+    const before = attendanceByChild[child.id] || null
+    const ok = await upsertAttendance(child.id, patch)
+    if (!ok) return false
+    showToast(label, async () => {
+      await upsertAttendance(child.id, {
+        status: before?.status ?? 'expected',
+        signed_in_at: before?.signed_in_at ?? null,
+        signed_out_at: before?.signed_out_at ?? null,
+        absence_reason: before?.absence_reason ?? null,
+      })
+      setToast(null)
+      load()
+    })
+    load()
+    return true
+  }
 
   const rows = useMemo(() => {
     const attendedIds = new Set(attendance.map(a => a.child_id))
@@ -226,14 +256,16 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
 
   const handleSignIn = async (child) => {
     const now = new Date().toISOString()
-    const ok = await upsertAttendance(child.id, { status: 'signed_in', signed_in_at: now, signed_in_by: authUserId })
-    if (ok) { showToast(`${child.first_name} signed in at ${fmtTime(now)}`); load() }
+    await markWithUndo(child,
+      { status: 'signed_in', signed_in_at: now, signed_in_by: authUserId },
+      `${child.first_name} signed in at ${fmtTime(now)}`)
   }
 
   const handleQuickSignOut = async (child) => {
     const now = new Date().toISOString()
-    const ok = await upsertAttendance(child.id, { status: 'signed_out', signed_out_at: now, signed_out_by: authUserId })
-    if (ok) { showToast(`${child.first_name} signed out at ${fmtTime(now)}`); load() }
+    await markWithUndo(child,
+      { status: 'signed_out', signed_out_at: now, signed_out_by: authUserId },
+      `${child.first_name} signed out at ${fmtTime(now)}`)
   }
 
   const handleConfirmSignOut = async (form) => {
@@ -247,8 +279,9 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
   }
 
   const handleMarkAbsent = async (reason) => {
-    const ok = await upsertAttendance(absentChild.id, { status: 'absent', absence_reason: reason })
-    if (ok) { setAbsentChild(null); load() }
+    const child = absentChild
+    setAbsentChild(null)
+    await markWithUndo(child, { status: 'absent', absence_reason: reason }, `${child.first_name} marked absent`)
   }
 
   const handleStaffSignIn = async (staffRow) => {
@@ -380,7 +413,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
             ? { day: 'numeric', month: 'short' }
             : { weekday: 'long', day: 'numeric', month: 'long' })}</span>
           <span style={{ color: 'var(--text-faint)' }}>•</span>
-          <span>{session.start_time}–{session.end_time}</span>
+          <span>{hhmm(session.start_time)}–{hhmm(session.end_time)}</span>
           {session.location && <><span style={{ color: 'var(--text-faint)' }}>•</span><span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.location}</span></>}
         </div>
         {/* Four pills wrapped onto two rows at phone width. A fixed four-column
@@ -449,7 +482,20 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
       <div style={{ padding: '0 14px 12px', background: 'var(--surface)', borderBottom: '1px solid var(--border-soft)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flex: '1 1 160px' }}>
           <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--text-faint)', pointerEvents: 'none' }}><Icon name="🔍" /></span>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${terms.people}...`} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px 10px 32px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 13, background: 'var(--surface2)', outline: 'none', transition: 'border-color 0.15s ease' }} onFocus={e => e.target.style.borderColor = '#A78BFA'} onBlur={e => e.target.style.borderColor = 'var(--border)'} />
+          <input value={search} onChange={e => setSearch(e.target.value)}
+            onKeyDown={e => {
+              if (e.key !== 'Enter') return
+              // Type a name, press Enter, next child. Only when the search has
+              // narrowed to exactly one person still to be marked: acting on
+              // the first of several would sign in the wrong child, and this
+              // is the record of who was actually there.
+              const q = search.trim().toLowerCase()
+              if (!q) return
+              const hits = grouped.expected.filter(({ child }) =>
+                `${child.first_name} ${child.last_name}`.toLowerCase().includes(q))
+              if (hits.length === 1) { handleSignIn(hits[0].child); setSearch('') }
+            }}
+            placeholder={`Search ${terms.people}, then press Enter`} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px 10px 32px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 13, background: 'var(--surface2)', outline: 'none', transition: 'border-color 0.15s ease' }} onFocus={e => e.target.style.borderColor = '#A78BFA'} onBlur={e => e.target.style.borderColor = 'var(--border)'} />
         </div>
         {registerGroups.length > 1 && <select aria-label="Filter register by group" value={groupFilter} onChange={e => setGroupFilter(e.target.value)} style={{ ...ghostBtn, maxWidth: '100%' }}>
           <option value="all">All groups</option>{registerGroups.map(name => <option key={name} value={name}>{name}</option>)}
@@ -547,7 +593,12 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
       </div>
 
       {toast && (
-        <div style={{ position: 'fixed', bottom: 70, left: '50%', transform: 'translateX(-50%)', background: '#111827', color: '#fff', padding: '9px 18px', borderRadius: 10, fontSize: 12.5, fontWeight: 600, zIndex: 10300 }}>{toast}</div>
+        <div style={{ position: 'fixed', bottom: 70, left: '50%', transform: 'translateX(-50%)', background: '#111827', color: '#fff', padding: '9px 10px 9px 18px', borderRadius: 10, fontSize: 12.5, fontWeight: 600, zIndex: 10300, display: 'flex', alignItems: 'center', gap: 12, maxWidth: 'calc(100vw - 32px)' }}>
+          <span>{toast.msg}</span>
+          {toast.undo && (
+            <button onClick={toast.undo} style={{ border: 'none', background: 'rgba(255,255,255,0.16)', color: '#fff', fontSize: 12.5, fontWeight: 800, padding: '7px 13px', minHeight: 36, borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>Undo</button>
+          )}
+        </div>
       )}
 
       {signOutChild && (
@@ -710,6 +761,10 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
     </motion.div>
   )
 }
+
+// Postgres time columns come back as HH:MM:SS. Nobody running a register
+// needs the seconds, and "10:00:00 – 16:00:00" is harder to read at a glance.
+function hhmm(t) { return (t || '').slice(0, 5) }
 
 function alertPill(color, bg) { return { fontSize: 9.5, fontWeight: 800, color, background: bg, border: `1px solid ${withAlpha(color, '30')}`, borderRadius: 6, padding: '1px 6px' } }
 // 9px of vertical padding around 12px text is a 33px target. Anything under

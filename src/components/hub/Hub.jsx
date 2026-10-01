@@ -1268,8 +1268,10 @@ function SessionOverflowMenu({ isClosed, isUpcoming, duplicating, cancelling, on
 
 // ── UPCOMING state: compact countdown + register-opening info + attendance line ──
 function UpcomingSessionBody({ session, minsToStart, registerOpen, stats, targetedChildren, onStartSession, onOpenRegisterEarly, onAddYoungPeople, children }) {
-  const countdownLabel = minsToStart === null ? null
-    : minsToStart <= 0 ? 'Starting now'
+  // Null means there is no countdown to show, and the heading falls back to
+  // "<session> is due to start now". 'Starting now' was truthy, so once the
+  // session reached its start time the heading read "Starts in Starting now".
+  const countdownLabel = minsToStart === null || minsToStart <= 0 ? null
     : minsToStart >= 60 ? `${Math.floor(minsToStart / 60)}h ${minsToStart % 60}m` : `${minsToStart}m`
 
   return (
