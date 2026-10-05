@@ -25,6 +25,15 @@ if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.()) {
     .catch(() => { /* plugin absent in a web build; nothing to hide */ })
 }
 
+// iOS Safari ignores user-scalable=no in the viewport meta, so pinch-zoom has
+// to be refused here. gesture* events are WebKit-only; elsewhere this no-ops.
+if (typeof document !== 'undefined') {
+  const block = (e) => e.preventDefault()
+  ;['gesturestart', 'gesturechange', 'gestureend'].forEach(type =>
+    document.addEventListener(type, block, { passive: false })
+  )
+}
+
 if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => { registerServiceWorker() });
 }

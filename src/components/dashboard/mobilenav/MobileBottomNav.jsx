@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import MobileNavItem from './MobileNavItem'
+import { useKeyboardOffset } from '../../../hooks/useKeyboardOffset'
 import LaunchActionButton from './LaunchActionButton'
 import LaunchActionMenu, { DEFAULT_ACTION_ICONS } from './LaunchActionMenu'
 import {
@@ -56,6 +57,7 @@ export default function MobileBottomNav({
   const [menuOpen, setMenuOpen] = useState(false)
   const [toast, setToast] = useState('')
   const reducedMotion = usePrefersReducedMotion()
+  const keyboardOffset = useKeyboardOffset()
 
   useEffect(() => {
     if (!toast) return
@@ -94,13 +96,17 @@ export default function MobileBottomNav({
         animate={{ y: 0 }}
         transition={{ type: 'spring', stiffness: 320, damping: 32, delay: 0.05 }}
         style={{
-          position: 'fixed', left: 0, right: 0, bottom: 0,
+          // Sits on top of the on-screen keyboard while it is open, and back
+          // on the screen edge once it closes.
+          position: 'fixed', left: 0, right: 0, bottom: keyboardOffset,
           background: 'linear-gradient(110deg, var(--org-sidebar), var(--org-sidebar-end))',
           backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
           borderTop: '2px solid var(--org-primary)',
           borderRadius: '20px 20px 0 0',
           boxShadow: '0 -8px 28px rgba(0,0,0,0.28)',
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          // The keyboard covers the home indicator, so its inset would only
+          // leave a gap between the dock and the keys.
+          paddingBottom: keyboardOffset ? 0 : 'env(safe-area-inset-bottom, 0px)',
           zIndex: 9999,
         }}
       >
@@ -177,7 +183,7 @@ export default function MobileBottomNav({
           transition={{ type: 'spring', stiffness: 460, damping: 32 }}
           style={{
             position: 'fixed', left: '50%', transform: 'translateX(-50%)',
-            bottom: 'calc(78px + env(safe-area-inset-bottom, 0px))',
+            bottom: keyboardOffset ? keyboardOffset + 78 : 'calc(78px + env(safe-area-inset-bottom, 0px))',
             zIndex: 10003,
             background: '#111827', color: '#fff', padding: '9px 16px', borderRadius: 10,
             fontSize: 12.5, fontWeight: 700, boxShadow: '0 8px 24px rgba(0,0,0,0.3)', whiteSpace: 'nowrap',
