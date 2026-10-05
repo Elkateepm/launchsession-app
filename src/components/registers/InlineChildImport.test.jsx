@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { InlineChildImport } from './Registers'
 import { supabase } from '../../lib/supabase'
@@ -42,7 +42,7 @@ beforeEach(() => {
   // jest.mock factory above, so they are re-applied here rather than there.
   supabase.auth.getSession.mockResolvedValue({ data: { session: { access_token: 't' } } })
   supabase.auth.onAuthStateChange.mockReturnValue({ data: { subscription: { unsubscribe: jest.fn() } } })
-  global.fetch = jest.fn().mockResolvedValue({ json: () => Promise.resolve({ inserted: 2 }) })
+  global.fetch = jest.fn().mockImplementation(async (_, options) => ({ ok: true, json: async () => ({ inserted: JSON.parse(options.body).records.length }) }))
   const order = jest.fn().mockResolvedValue({ data: [], error: null })
   const eq2 = jest.fn(() => ({ order }))
   const eq1 = jest.fn(() => ({ eq: eq2 }))
@@ -144,4 +144,32 @@ describe('InlineChildImport', () => {
     expect(record).toMatchObject({ first_name: 'Aaliyah', last_name: 'Baptiste' })
     expect(onImported.mock.calls[0][1]).toBe(1)
   })
+  it('keeps the review available after a network error and permits retry', async () => {
+    global.fetch.mockRejectedValueOnce(new Error('Connection lost'))
+    const onImported = jest.fn()
+    render(<InlineChildImport org={org} onImported={onImported} />)
+    paste('Name,Class\nRiver Chen,Tigers')
+    fireEvent.click(await screen.findByRole('button', { name: /Import 1 young person/i }))
+    expect(await screen.findByText('Connection lost')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Import 1 young person/i })).toBeEnabled()
+    expect(onImported).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: /Import 1 young person/i }))
+    await waitFor(() => expect(onImported).toHaveBeenCalledTimes(1))
+  })
+
+  it('prevents closing the review while the import is in flight', async () => {
+    let finish
+    global.fetch.mockReturnValueOnce(new Promise(resolve => { finish = resolve }))
+    render(<InlineChildImport org={org} onImported={() => {}} />)
+    paste('Name,Class\nRiver Chen,Tigers')
+    fireEvent.click(await screen.findByRole('button', { name: /Import 1 young person/i }))
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled())
+    expect(screen.getByRole('button', { name: 'Back to upload' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled()
+    fireEvent.click(screen.getByRole('dialog').parentElement)
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    finish({ ok: true, json: async () => ({ inserted: 1 }) })
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+
 })

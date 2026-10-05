@@ -315,6 +315,7 @@ export function InlineChildImport({ org, template, existingChildren = [], groups
   const [mapping, setMapping] = useState({})
   const [pasted, setPasted] = useState('')
   const [reading, setReading] = useState(false)
+  const [dragging, setDragging] = useState(false)
   const [importing, setImporting] = useState(false)
   const [fileError, setFileError] = useState('')
   const [includeDuplicates, setIncludeDuplicates] = useState(false)
@@ -332,6 +333,7 @@ export function InlineChildImport({ org, template, existingChildren = [], groups
       return
     }
     setFileError('')
+    setIncludeDuplicates(false)
     setRaw({ headers, rows: body, source })
     setMapping(detectMapping(headers))
   }, [terms])
@@ -373,23 +375,36 @@ export function InlineChildImport({ org, template, existingChildren = [], groups
     || (Object.values(mapping).includes('first_name') && Object.values(mapping).includes('last_name'))
 
   const handleImport = async () => {
-    if (!result) return
-    setImporting(true)
+    if (!result || importing || !hasName) return
     const records = includeDuplicates
       ? [...result.ready, ...result.duplicates.map(d => ({ ...d.record, active: true }))]
       : result.ready
-    const { data: { session } } = await supabase.auth.getSession()
-    const res = await fetch('/api/import-children', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
-      body: JSON.stringify({ org_id: org.id, records }),
-    })
-    const json = await res.json().catch(() => ({ error: 'The import did not complete.' }))
-    setImporting(false)
-    if (json.error) { setFileError(json.error); return }
-    const { data: all } = await supabase.from('children').select('*').eq('org_id', org.id).eq('active', true).order('last_name')
-    setRaw(null); setPasted('')
-    onImported(all || [], records.length)
+    if (!records.length) return
+    setImporting(true)
+    setFileError('')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) throw new Error('Your sign-in has expired. Sign in again before importing.')
+      const res = await fetch('/api/import-children', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ org_id: org.id, records }),
+      })
+      const json = await res.json().catch(() => ({ error: 'The import did not complete.' }))
+      if (res.ok === false || json.error) throw new Error(json.error || 'The import did not complete.')
+      const { data: all, error } = await supabase.from('children').select('*').eq('org_id', org.id).eq('active', true).order('last_name')
+      if (error) {
+        // The write succeeded: do not invite a retry that would add these people twice.
+        onImported(existingChildren, json.inserted ?? records.length)
+        return
+      }
+      onImported(all || [], json.inserted ?? records.length)
+      setRaw(null); setPasted('')
+    } catch (error) {
+      setFileError(error.message || 'Unable to connect. Check your connection and try again.')
+    } finally {
+      setImporting(false)
+    }
   }
 
   const downloadTemplate = () => {
@@ -401,6 +416,7 @@ export function InlineChildImport({ org, template, existingChildren = [], groups
     a.href = URL.createObjectURL(blob)
     a.download = orgFilename(org, `${template?.name || 'children'}-import-template`, 'csv', { date: false })
     a.click()
+    URL.revokeObjectURL(a.href)
   }
 
   // ── The drop target stays in the sidebar; the mapping and review happen in a
@@ -410,18 +426,19 @@ export function InlineChildImport({ org, template, existingChildren = [], groups
     const hardSkips = result.skipped.filter(s => !s.soft)
     const softSkips = result.skipped.filter(s => s.soft)
 
-    return <OverlayPortal><div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.6)', zIndex: 10400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
-      onClick={() => setRaw(null)}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 18, width: '100%', maxWidth: 760, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    return <OverlayPortal><div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.6)', zIndex: 10800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+      onClick={() => { if (!importing) setRaw(null) }}>
+      <div role="dialog" aria-modal="true" aria-label="Review register import" aria-busy={importing} onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 18, width: '100%', maxWidth: 760, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 15.5, fontWeight: 800, color: 'var(--text)' }}>Check the columns</div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: primary, marginBottom: 6 }}>STEP 2 OF 2 · REVIEW & IMPORT</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>Check the columns</div>
             <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {raw.source} · {raw.rows.length} row{raw.rows.length === 1 ? '' : 's'}
             </div>
           </div>
-          <button onClick={() => setRaw(null)} style={{ border: 'none', background: 'var(--surface-hover)', color: 'var(--text2)', width: 30, height: 30, borderRadius: 9, cursor: 'pointer', fontSize: 15, fontWeight: 800 }}>×</button>
+          <button disabled={importing} aria-label="Back to upload" onClick={() => setRaw(null)} style={{ border: 'none', background: 'var(--surface-hover)', color: 'var(--text2)', width: 44, height: 44, borderRadius: 9, cursor: 'pointer', fontSize: 15, fontWeight: 800 }}>×</button>
         </div>
 
         <div style={{ padding: '14px 20px', overflowY: 'auto', flex: 1 }}>
@@ -449,7 +466,7 @@ export function InlineChildImport({ org, template, existingChildren = [], groups
                     }
                     return next
                   })}
-                  style={{ width: '100%', padding: '6px 8px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 12, fontFamily: 'inherit' }}
+                  style={{ width: '100%', minHeight: 44, padding: '6px 8px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 12, fontFamily: 'inherit' }}
                 >
                   <option value="">Skip this column</option>
                   <option value="full_name">Full name (split automatically)</option>
@@ -513,7 +530,7 @@ export function InlineChildImport({ org, template, existingChildren = [], groups
         </div>
 
         <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border)', display: 'flex', gap: 10 }}>
-          <button onClick={() => setRaw(null)} style={{ padding: '10px 16px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+          <button disabled={importing} onClick={() => setRaw(null)} style={{ padding: '10px 16px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
           <button onClick={handleImport} disabled={importing || !hasName || importable === 0}
             style={{ flex: 1, padding: '10px 16px', borderRadius: 10, border: 'none', fontSize: 13, fontWeight: 800, color: '#fff', cursor: importing || !hasName || importable === 0 ? 'not-allowed' : 'pointer', background: importing || !hasName || importable === 0 ? 'var(--text-faint)' : primary }}>
             {importing ? 'Importing…' : importable === 0 ? 'Nothing to import' : `Import ${importable} ${someone(importable)}`}
@@ -525,17 +542,19 @@ export function InlineChildImport({ org, template, existingChildren = [], groups
 
   return (
     <div>
-      <div onClick={() => inputRef.current?.click()} onDragOver={e => e.preventDefault()}
-        onDrop={e => { e.preventDefault(); handleFile(e.dataTransfer.files[0]) }}
-        style={{ border: '2px dashed var(--org-a35)', borderRadius: 10, padding: '14px 10px', textAlign: 'center', cursor: 'pointer', background: primary + '06', marginBottom: 8 }}>
-        <input ref={inputRef} type="file" accept=".csv,.tsv,.txt,.xlsx,.xlsm,.xls" style={{ display: 'none' }}
-          onChange={e => handleFile(e.target.files[0])} />
+      <button type="button" disabled={reading} onClick={() => inputRef.current?.click()} onDragOver={e => { e.preventDefault(); setDragging(true) }} onDragLeave={() => setDragging(false)}
+        onDrop={e => { e.preventDefault(); setDragging(false); if (!reading) handleFile(e.dataTransfer.files[0]) }}
+        style={{ width: '100%', border: `2px dashed ${dragging ? primary : 'var(--org-a35)'}`, borderRadius: 18, padding: '32px 20px', textAlign: 'center', cursor: 'pointer', background: withAlpha(primary, dragging ? 0.12 : 0.04), marginBottom: 18, fontFamily: 'inherit' }}>
         <div style={{ fontSize: 20, marginBottom: 4 }}><Icon name="📂" /></div>
-        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{reading ? 'Reading…' : 'Drop a file or click to browse'}</div>
-        <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>Excel or CSV · any column names</div>
-      </div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{reading ? 'Reading your register…' : dragging ? 'Drop your register here' : 'Choose a file or drop it here'}</div>
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>Excel or CSV · up to 2,000 rows · headings matched automatically</div>
+      </button>
+        <input ref={inputRef} type="file" accept=".csv,.tsv,.txt,.xlsx,.xlsm,.xls" style={{ display: 'none' }}
+          onChange={e => { handleFile(e.target.files[0]); e.target.value = '' }} />
+      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Or paste from a spreadsheet</div>
 
       <textarea
+        aria-label="Spreadsheet rows"
         value={pasted}
         onChange={e => setPasted(e.target.value)}
         onPaste={e => {
@@ -550,9 +569,9 @@ export function InlineChildImport({ org, template, existingChildren = [], groups
       {fileError && <div style={{ fontSize: 11, color: 'var(--danger-text)', marginTop: 6 }}>{fileError}</div>}
 
       <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-        <button onClick={downloadTemplate} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid var(--org-a20)', background: primary + '10', color: 'var(--org-ink)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}><Icon name="⬇" /> Template</button>
+        <button onClick={downloadTemplate} style={{ flex: 1, minHeight: 44, padding: '10px', borderRadius: 8, border: '1px solid var(--org-a20)', background: primary + '10', color: 'var(--org-ink)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}><Icon name="⬇" /> Template</button>
         <button onClick={() => load(parseDelimited(pasted), 'pasted rows')} disabled={!pasted.trim()}
-          style={{ flex: 1, padding: '7px', borderRadius: 8, border: 'none', background: pasted.trim() ? primary : 'var(--text-faint)', color: '#fff', fontSize: 11, fontWeight: 700, cursor: pasted.trim() ? 'pointer' : 'not-allowed' }}>Check <Icon name="→" /></button>
+          style={{ flex: 1, minHeight: 44, padding: '10px', borderRadius: 8, border: 'none', background: pasted.trim() ? primary : 'var(--text-faint)', color: '#fff', fontSize: 11, fontWeight: 700, cursor: pasted.trim() ? 'pointer' : 'not-allowed' }}>Check <Icon name="→" /></button>
       </div>
     </div>
   )
@@ -1535,6 +1554,7 @@ function EncouragementPanel({ org, primary }) {
 
 // ─── MAIN REGISTER ────────────────────────────────────────────
 export default function Registers({ org, onNavigate, autoOpenAdd }) {
+  const terms = useTerms()
   const orgId  = org?.id
   const primary = org?.primary_color || '#1B9AAA'
   const isMobile = useIsMobile()
@@ -2241,23 +2261,6 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             </div>
           )}
 
-          {/* Import panel */}
-          {showImport && (
-            <div style={{ padding: 14, borderBottom: '1px solid var(--border-soft)' }}>
-              {activeImportTemplate && (
-                <div style={{ marginBottom: 10, fontSize: 11, fontWeight: 700, color: 'var(--org-ink)', background: primary + '0c', border: `1px solid var(--org-a10)`, borderRadius: 8, padding: '6px 10px' }}>
-                  🧩 Using "{activeImportTemplate.name}" template
-                </div>
-              )}
-              <InlineChildImport org={org} template={activeImportTemplate} existingChildren={children} groups={bubbles} onImported={(newChildren, added) => {
-                setChildren(newChildren)
-                setShowImport(false)
-                setActiveImportTemplate(null)
-                showToast(`✅ ${added} added — ${newChildren.length} children on the register`)
-              }} />
-            </div>
-          )}
-
           {/* Register notes */}
           <div style={{ padding: 14, borderBottom: '1px solid var(--border-soft)' }}>
             <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)', marginBottom: 8 }}>Session Notes</div>
@@ -2333,15 +2336,16 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
         document.body
       )}
 
-      {/* MOBILE IMPORT MODAL — the desktop sidebar renders InlineChildImport inline, but the sidebar
-          is hidden on mobile, so this presents the same import flow as a bottom sheet on phones */}
-      {isMobile && showImport && createPortal(
-        <div onClick={() => { setShowImport(false); setActiveImportTemplate(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '88vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '16px 16px calc(16px + env(safe-area-inset-bottom))' }}>
+      {/* Shared import dialog keeps the upload comfortable on desktop and mobile. */}
+      {showImport && createPortal(
+        <div onClick={() => { setShowImport(false); setActiveImportTemplate(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10700, display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', padding: isMobile ? 0 : 24, justifyContent: 'center' }}>
+          <div role="dialog" aria-modal="true" aria-label="Import register" onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: isMobile ? '24px 24px 0 0' : 24, width: '100%', maxWidth: 620, maxHeight: '88dvh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '16px 16px calc(16px + env(safe-area-inset-bottom))' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>Import Children</div>
-              <button onClick={() => { setShowImport(false); setActiveImportTemplate(null) }} style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--surface-hover)', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 16 }}>×</button>
+              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>Import {terms.people}</div>
+              <button aria-label="Close import" onClick={() => { setShowImport(false); setActiveImportTemplate(null) }} style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--surface-hover)', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 16 }}>×</button>
             </div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: primary, marginBottom: 8 }}>STEP 1 OF 2 · UPLOAD</div>
+            <p style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text3)', margin: '0 0 20px' }}>Bring your existing register into {org?.name || 'your organisation'}. Review matched columns and duplicates before anything is added.</p>
             {activeImportTemplate && (
               <div style={{ marginBottom: 10, fontSize: 11, fontWeight: 700, color: 'var(--org-ink)', background: primary + '0c', border: `1px solid var(--org-a10)`, borderRadius: 8, padding: '6px 10px' }}>
                 🧩 Using "{activeImportTemplate.name}" template
