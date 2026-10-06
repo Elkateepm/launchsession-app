@@ -13,6 +13,7 @@ import Icon from '../../lib/icons'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { withAlpha } from '../../lib/withAlpha'
 import { todayInLondon } from '../../lib/today'
+import RegisterBrandMark from './RegisterBrandMark'
 
 const COLLECTION_TYPES = [
   { key: 'approved_adult', label: 'Approved adult' },
@@ -378,14 +379,15 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
       }}>
       {/* HEADER */}
       <div style={{
-        background: 'linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.85))',
+        background: `linear-gradient(120deg, var(--org-a10), var(--surface) 70%)`,
+        borderTop: `3px solid ${org?.primary_color || 'var(--org-primary)'}`,
         backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
-        borderBottom: '1px solid rgba(226,232,240,0.8)', padding: isMobile ? '12px 14px 11px' : '16px 18px 14px',
+        borderBottom: '1px solid var(--border)', padding: isMobile ? '12px 14px 11px' : '16px 18px 14px',
         boxShadow: '0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 24px -18px rgba(15,23,42,0.25)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <button aria-label={backLabel} onClick={onClose} style={{ minHeight: 44, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', fontSize: 15.5, fontWeight: 800, color: 'var(--text)', cursor: 'pointer', padding: '4px 6px 4px 2px', borderRadius: 8, letterSpacing: '-0.01em' }}>
-            <span style={{ fontSize: 20, color: 'var(--org-ink)' || '#1B9AAA' }}>‹</span><span style={{ textAlign: 'left', minWidth: 0 }}><span style={{ display: 'block', color: 'var(--text3)', fontSize: 11, fontWeight: 600, marginBottom: 4 }}>{backLabel}</span><span style={{ display: 'block', overflowWrap: 'anywhere' }}>{session.title}</span></span>
+            <span style={{ fontSize: 20, color: 'var(--org-ink)' || '#1B9AAA' }}>‹</span><RegisterBrandMark org={org} size={isMobile ? 32 : 42} /><span style={{ textAlign: 'left', minWidth: 0 }}><span style={{ display: 'block', color: 'var(--text3)', fontSize: 11, fontWeight: 600, marginBottom: 4 }}>{backLabel}</span><span style={{ display: 'block', overflowWrap: 'anywhere' }}>{session.title}</span></span>
           </button>
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800,
@@ -425,7 +427,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
           <MiniStat icon="✓" label="Signed out" value={grouped.signed_out.length} color="#2563EB" />
         </div>
         {ratioBreached && (
-          <div style={{ marginTop: 12, background: 'linear-gradient(135deg,#FEF2F2,#FEF7F7)', border: '1px solid var(--danger-border)', borderRadius: 12, padding: '10px 13px', fontSize: 12, fontWeight: 700, color: 'var(--danger-text)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ marginTop: 12, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 12, padding: '10px 13px', fontSize: 12, fontWeight: 700, color: 'var(--danger-text)', display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 14 }}><Icon name="⚠" /></span> {signedInStaffCount ? `Current staffing ratio 1:${currentRatio.toFixed(1)}. Required ratio: 1:${requiredRatio}.` : 'No team members are signed in. Check the team attendance below.'}
           </div>
         )}
@@ -435,12 +437,12 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
               <span>Register progress</span>
               <span>{processedCount} / {totalExpected}</span>
             </div>
-            <div style={{ height: 6, borderRadius: 99, background: '#EEF0F4', overflow: 'hidden' }}>
+            <div style={{ height: 6, borderRadius: 99, background: 'var(--border-soft)', overflow: 'hidden' }}>
               <motion.div
                 initial={false}
                 animate={{ width: `${totalExpected ? (processedCount / totalExpected) * 100 : 0}%` }}
                 transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-                style={{ height: '100%', borderRadius: 99, background: 'linear-gradient(90deg,#7C3AED,#3B82F6)' }}
+                style={{ height: '100%', borderRadius: 99, background: org?.primary_color || 'var(--org-primary)' }}
               />
             </div>
           </div>
@@ -457,7 +459,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
       </div>
       {/* TABS */}
       <div style={{ padding: '10px 14px 0', background: 'var(--surface)', borderBottom: '1px solid var(--border-soft)' }}>
-        <div style={{ display: 'flex', gap: 4, background: '#F1F3F7', borderRadius: 12, padding: 4, overflowX: 'auto', marginBottom: 10 }}>
+        <div style={{ display: 'flex', gap: 4, background: 'var(--surface2)', borderRadius: 12, padding: 4, overflowX: 'auto', marginBottom: 10 }}>
           {[
             { key: 'all', label: 'All', count: rows.length },
             { key: 'expected', label: 'Expected', count: grouped.expected.length },
@@ -472,7 +474,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
               color: tab === t.key ? 'var(--text)' : 'var(--text3)', fontSize: 12.5, fontWeight: 700,
               cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s ease',
             }}>
-              {t.label} <span style={{ color: tab === t.key ? '#7C3AED' : 'var(--text-faint)', fontWeight: 800 }}>{t.count}</span>
+              {t.label} <span style={{ color: tab === t.key ? 'var(--org-ink)' : 'var(--text-faint)', fontWeight: 800 }}>{t.count}</span>
             </button>
           ))}
         </div>
@@ -495,7 +497,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
                 `${child.first_name} ${child.last_name}`.toLowerCase().includes(q))
               if (hits.length === 1) { handleSignIn(hits[0].child); setSearch('') }
             }}
-            placeholder={`Search ${terms.people}, then press Enter`} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px 10px 32px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 13, background: 'var(--surface2)', outline: 'none', transition: 'border-color 0.15s ease' }} onFocus={e => e.target.style.borderColor = '#A78BFA'} onBlur={e => e.target.style.borderColor = 'var(--border)'} />
+            aria-label={`Search ${terms.people}`} placeholder={`Search ${terms.people}, then press Enter`} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px 10px 32px', borderRadius: 10, border: '1.5px solid var(--border)', minHeight: 44, fontSize: isMobile ? 16 : 14, color: 'var(--text)', background: 'var(--surface2)', outline: 'none', transition: 'border-color 0.15s ease' }} onFocus={e => e.target.style.borderColor = org?.primary_color || 'var(--org-primary)'} onBlur={e => e.target.style.borderColor = 'var(--border)'} />
         </div>
         {registerGroups.length > 1 && <select aria-label="Filter register by group" value={groupFilter} onChange={e => setGroupFilter(e.target.value)} style={{ ...ghostBtn, maxWidth: '100%' }}>
           <option value="all">All groups</option>{registerGroups.map(name => <option key={name} value={name}>{name}</option>)}
@@ -513,7 +515,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
       {/* LIST */}
       {/* ls-scroll gives momentum scrolling and stops a flick at the end of the
           list rubber-banding the page behind this overlay. */}
-      <div className="ls-scroll" style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 12 : 14, background: '#FAFBFD' }}>
+      <div className="ls-scroll" style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 12 : 14, background: 'var(--surface2)' }}>
         {activeList.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text-faint)', fontSize: 13 }}>
             <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.5 }}><Icon name="✓" /></div>
@@ -537,7 +539,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
         )}
 
         {/* STAFF PANEL */}
-        <div style={{ marginTop: 20, background: 'var(--surface)', border: '1px solid #EDEFF3', borderRadius: 16, padding: 16, boxShadow: '0 1px 3px rgba(15,23,42,0.04)' }}>
+        <div style={{ marginTop: 20, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 16, boxShadow: '0 1px 3px rgba(15,23,42,0.04)' }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ width: 22, height: 22, borderRadius: 7, background: 'var(--violet-bg)', color: 'var(--violet-text)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}><Icon name="👤" /></span>
             Session team
@@ -696,7 +698,7 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
         display: 'flex', alignItems: isMobile ? 'stretch' : 'center',
         flexDirection: isMobile ? 'column' : 'row',
         gap: isMobile ? 10 : 12, background: 'var(--surface)',
-        border: '1px solid #EDEFF3', borderRadius: 16, padding: 12,
+        border: '1px solid var(--border)', borderRadius: 16, padding: 12,
         boxShadow: hover ? '0 6px 18px -10px rgba(15,23,42,0.18)' : '0 1px 2px rgba(15,23,42,0.04)',
         // Transform is left to framer here — an inline transform would be
         // overwritten by the layout animation the moment the list reorders.
