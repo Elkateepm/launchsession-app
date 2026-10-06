@@ -4,8 +4,7 @@ import { withAlpha } from '../../lib/withAlpha'
 import { londonDate } from '../../lib/sessionPhase'
 import Icon from '../../lib/icons'
 import SignedImg from '../shared/SignedImg'
-import RegisterBrandMark from './RegisterBrandMark'
-import OrgBrandHero, { orgBrand } from '../shared/OrgBrandHero'
+import OrgPageHero, { orgBrand, heroButtons } from '../shared/OrgPageHero'
 import { ageOnDate, groupFor, registerView, UNGROUPED } from './registerView'
 
 const button = { minHeight: 44, minWidth: 44, borderRadius: 12, padding: '10px 15px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', font: 'inherit', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }
@@ -16,6 +15,7 @@ export default function RegisterWorkspace({ org, terms, people, sessions, sessio
   const mobile = useIsMobile()
   const brand = orgBrand(org)
   const { primary, secondary, gradient: brandGradient } = brand
+  const onHero = heroButtons(brand, button)
   const [directory, setDirectory] = useState(!session)
   const [search, setSearch] = useState('')
   const [group, setGroup] = useState('all')
@@ -56,36 +56,23 @@ export default function RegisterWorkspace({ org, terms, people, sessions, sessio
     <div aria-hidden="true" style={{ height: 4, background: brand.stripe }} />
     <div style={{ maxWidth: 1280, margin: '0 auto', padding: mobile ? '20px 16px 0' : '28px 28px 0' }}>
     <header>
-      {!mobile && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
-        <span style={{ fontSize: 11, letterSpacing: 1.2, color: 'var(--text3)', fontWeight: 800 }}>LAUNCHSESSION · PLAN · RUN · REVIEW</span>
-        <nav aria-label="Delivery shortcuts" style={{ display: 'flex', gap: 8 }}>
-          <button onClick={onPlan} style={{ ...button, background: 'transparent', borderColor: 'transparent', padding: '6px 10px', color: 'var(--text3)' }}><Icon name="📅" />{terms.Sessions}</button>
-          <button onClick={onToday} style={{ ...button, background: 'transparent', borderColor: 'transparent', padding: '6px 10px', color: 'var(--text3)' }}><Icon name="⚡" />Today</button>
-        </nav>
-      </div>}
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: mobile ? 14 : 22 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: mobile ? 12 : 16, minWidth: 0 }}>
-          <RegisterBrandMark product size={mobile ? 46 : 60} />
-          <div style={{ minWidth: 0 }}>
-            {mobile && <div style={{ color: 'var(--org-ink)', fontSize: 10, letterSpacing: 1.4, fontWeight: 800, marginBottom: 4 }}>LAUNCHSESSION</div>}
-            <h1 style={{ fontFamily: 'var(--font-display, inherit)', fontSize: mobile ? 28 : 34, lineHeight: 1.1, fontWeight: 850, letterSpacing: -1, margin: mobile ? 0 : '0 0 8px' }}>Registers</h1>
-            {!mobile && <p style={{ margin: 0, color: 'var(--text3)', fontSize: 14, lineHeight: 1.5 }}>A clear view of who's here and what they need.</p>}
-          </div>
-        </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, width: mobile ? '100%' : undefined }}>
-          <button onClick={onImport} style={{ ...button, flex: mobile ? 1 : undefined, color: 'var(--org-ink)', background: withAlpha(primary, '0C'), borderColor: withAlpha(primary, '35') }}><Icon name="📥" /> Import register</button>
-          <button onClick={onAdd} style={{ ...button, flex: mobile ? 1 : undefined }}><Icon name="➕" /> Add {terms.person}</button>
+      <OrgPageHero org={org} mobile={mobile} title="Registers" subtitle="A clear view of who's here and what they need." label="Today's register" detail={dateLabel}
+        actions={<>
+          <button onClick={onImport} style={{ ...onHero.main, flex: mobile ? 1 : undefined }}><Icon name="📥" /> Import register</button>
+          <button onClick={onAdd} style={{ ...onHero.quiet, flex: mobile ? 1 : undefined }}><Icon name="➕" /> Add {terms.person}</button>
           <div ref={toolsRef} style={{ position: 'relative' }}>
-            <button onClick={() => setToolsOpen(value => !value)} aria-expanded={toolsOpen} aria-controls="register-tools" aria-label="Tools" style={{ ...button, padding: mobile ? 12 : '10px 15px' }}><Icon name="⚙️" />{!mobile && 'Tools'}</button>
+            <button onClick={() => setToolsOpen(value => !value)} aria-expanded={toolsOpen} aria-controls="register-tools" aria-label="Tools" style={{ ...onHero.quiet, padding: mobile ? 12 : '10px 15px' }}><Icon name="⚙️" />{!mobile && 'Tools'}</button>
             {toolsOpen && <div id="register-tools" style={{ position: 'absolute', right: 0, top: 52, width: 235, maxWidth: 'calc(100vw - 32px)', padding: 8, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, boxShadow: '0 16px 48px #0002', zIndex: 10 }}>
               {tools.map(tool => <button key={tool.label} onClick={() => { setToolsOpen(false); tool.action() }} style={{ ...button, width: '100%', justifyContent: 'flex-start', border: 0, textAlign: 'left' }}><Icon name={tool.icon} />{tool.label}</button>)}
             </div>}
           </div>
-        </div>
-      </div>
+        </>}
+        shortcuts={<>
+          <button onClick={onPlan} style={onHero.shortcut}><Icon name="📅" />{terms.Sessions}</button>
+          <button onClick={onToday} style={onHero.shortcut}><Icon name="⚡" />Today</button>
+        </>} />
 
       <section aria-label="Today's register overview" style={{ borderRadius: 22, border: `1px solid ${withAlpha(primary, '35')}`, background: `linear-gradient(115deg, ${withAlpha(primary, '12')}, var(--surface) 60%, ${withAlpha(secondary, '12')})`, marginBottom: mobile ? 16 : 22, boxShadow: `0 12px 35px -24px ${withAlpha(primary, '80')}` }}>
-        <OrgBrandHero org={org} terms={terms} mobile={mobile} radius="21px 21px 0 0" label="Today's register" detail={dateLabel} />
         <div style={{ padding: mobile ? 14 : 24 }}>
         {sessions.length > 1 && <label style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', fontSize: 12, fontWeight: 700, color: 'var(--text3)', marginBottom: 16 }}>
           {!mobile && <>Today's {terms.sessions}</>}
@@ -115,7 +102,7 @@ export default function RegisterWorkspace({ org, terms, people, sessions, sessio
             </div>
           </div>
         </div> : <div style={{ display: 'flex', gap: 22, justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
-          <div style={{ flex: '1 1 240px' }}><div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--text3)', marginBottom: 8 }}>Plan your next {terms.session}</div><h2 style={{ fontSize: mobile ? 20 : 26, letterSpacing: -.6, margin: '0 0 8px' }}>Ready for your next {terms.session}.</h2><p style={{ margin: 0, fontSize: 14, color: 'var(--text3)', lineHeight: 1.6 }}>No {terms.session} scheduled for today. Your directory is ready below — choose a plan to start taking attendance.</p></div>
+          <div style={{ flex: '1 1 240px' }}><div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--org-ink)', marginBottom: 8 }}>Plan your next {terms.session}</div><h2 style={{ fontSize: mobile ? 20 : 26, letterSpacing: -.6, margin: '0 0 8px' }}>Ready for your next {terms.session}.</h2><p style={{ margin: 0, fontSize: 14, color: 'var(--text3)', lineHeight: 1.6 }}>No {terms.session} scheduled for today. Your directory is ready below — choose a plan to start taking attendance.</p></div>
           <button onClick={onPlan} style={{ ...actionStyle, width: mobile ? '100%' : undefined }}><Icon name="📅" /> Open {terms.session} planner</button>
         </div>}
         </div>
