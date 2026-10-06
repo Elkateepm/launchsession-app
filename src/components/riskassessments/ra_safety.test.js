@@ -1,6 +1,12 @@
+import { addDays, format, parseISO } from 'date-fns'
 import { buildAttentionItems } from './ra_safety'
+import { todayInLondon } from '../../lib/today'
 
-const day = n => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10) }
+// Calendar days from today in London. toISOString() gave the UTC date, which is
+// a day behind between midnight and 1am BST, so "today" read as yesterday and
+// the session two days out fell off the list. Stepping by calendar day rather
+// than by 24 hours also keeps it right across the clock change.
+const day = n => format(addDays(parseISO(todayInLondon()), n), 'yyyy-MM-dd')
 const approved = { manager_approved_at: '2026-01-01T00:00:00Z', status: 'active' }
 
 describe('buildAttentionItems', () => {
