@@ -7,15 +7,13 @@ import { signRows, signOne } from '../../lib/storageUrl'
 import { useTodaySession, useAttendance, useChildren, useOnlineStatus } from '../../lib/hooks'
 import { useOrgSettings } from '../../hooks/useOrgSettings'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { useIsDarkTheme } from '../../hooks/useIsDarkTheme'
-import { setThemeChoice } from '../../lib/theme'
+import RegisterWorkspace from './RegisterWorkspace'
 import { TemplatePicker, AVAILABLE_FIELDS, SAMPLE_ROW } from './TemplateCreator'
 import OverlayPortal from '../shared/OverlayPortal'
 import { parseDelimited, detectMapping, buildImport } from '../../lib/childImport'
 import { orgFilename } from '../../lib/orgExport'
 import HistoricalAttendanceModal from '../shared/HistoricalAttendanceModal'
 import { useTerms } from '../../context/OrgContext'
-import SignedImg from '../shared/SignedImg'
 import shrinkImage from '../../lib/shrinkImage'
 import Icon from '../../lib/icons'
 import { withAlpha } from '../../lib/withAlpha'
@@ -544,7 +542,7 @@ export function InlineChildImport({ org, template, existingChildren = [], groups
     <div>
       <button type="button" disabled={reading} onClick={() => inputRef.current?.click()} onDragOver={e => { e.preventDefault(); setDragging(true) }} onDragLeave={() => setDragging(false)}
         onDrop={e => { e.preventDefault(); setDragging(false); if (!reading) handleFile(e.dataTransfer.files[0]) }}
-        style={{ width: '100%', border: `2px dashed ${dragging ? primary : 'var(--org-a35)'}`, borderRadius: 18, padding: '32px 20px', textAlign: 'center', cursor: 'pointer', background: withAlpha(primary, dragging ? 0.12 : 0.04), marginBottom: 18, fontFamily: 'inherit' }}>
+        style={{ width: '100%', border: `2px dashed ${dragging ? primary : 'var(--org-a35)'}`, borderRadius: 18, padding: '32px 20px', textAlign: 'center', cursor: 'pointer', background: withAlpha(primary, dragging ? '1F' : '0A'), marginBottom: 18, fontFamily: 'inherit' }}>
         <div style={{ fontSize: 20, marginBottom: 4 }}><Icon name="📂" /></div>
         <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{reading ? 'Reading your register…' : dragging ? 'Drop your register here' : 'Choose a file or drop it here'}</div>
         <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>Excel or CSV · up to 2,000 rows · headings matched automatically</div>
@@ -1398,160 +1396,6 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
 }
 
 
-// ─── CHILD CARD ───────────────────────────────────────────────
-function ChildCard({ child, status, bubble, onClick, onMark, primary, selected, selectMode, onToggleSelect, dark, roster }) {
-  const bColor = bubble?.color || primary || '#1B9AAA'
-  const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
-  const [hovered, setHovered] = React.useState(false)
-
-  const statusConfig = dark ? {
-    signed_in:  { label: 'In',          bg: 'rgba(34,197,94,0.16)', color: '#4ADE80', dot: '#22C55E' },
-    signed_out: { label: 'Out',         bg: 'rgba(59,130,246,0.16)', color: '#60A5FA', dot: '#3B82F6' },
-    absent:     { label: 'Absent',      bg: 'rgba(239,68,68,0.16)', color: '#F87171', dot: '#EF4444' },
-    expected:   { label: 'Expected',    bg: 'rgba(255,255,255,0.06)', color: 'var(--text-faint)', dot: 'var(--text-faint)' },
-    unmarked:   { label: 'Not marked',  bg: 'rgba(255,255,255,0.06)', color: 'var(--text-faint)', dot: 'var(--text-faint)' },
-  } : {
-    signed_in:  { label: 'In',          bg: 'linear-gradient(135deg,var(--ok-bg),#BBF7D0)', color: 'var(--ok-text)', dot: '#16A34A' },
-    signed_out: { label: 'Out',         bg: 'linear-gradient(135deg,var(--info-bg),#BFDBFE)', color: 'var(--info-text)', dot: '#2563EB' },
-    absent:     { label: 'Absent',      bg: 'linear-gradient(135deg,#FEE2E2,#FECACA)', color: 'var(--danger-text)', dot: '#DC2626' },
-    expected:   { label: 'Expected',    bg: 'var(--surface-hover)', color: 'var(--text-faint)', dot: 'var(--text-faint)' },
-    unmarked:   { label: 'Not marked',  bg: 'var(--surface-hover)', color: 'var(--text-faint)', dot: 'var(--text-faint)' },
-  }
-  const sc = statusConfig[status] || statusConfig.unmarked
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onClick={onClick}
-      style={{
-        position: 'relative',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        padding: '10px 14px 10px 18px',
-        overflow: 'hidden',
-        background: dark
-          ? (selected ? 'var(--org-a10)' : hovered ? 'rgba(255,255,255,0.06)' : '#161A30')
-          : (selected ? 'var(--org-a10)' : hovered ? `${withAlpha(bColor, '14')}` : `${withAlpha(bColor, '08')}`),
-        border: dark
-          ? `1px solid ${selected ? primary + '55' : 'rgba(255,255,255,0.08)'}`
-          : `1.5px solid ${selected ? primary + '45' : hovered ? bColor + '38' : bColor + '20'}`,
-        borderRadius: 16,
-        cursor: 'pointer',
-        transition: 'background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s',
-        boxShadow: hovered ? `0 6px 16px -8px ${withAlpha(bColor, '55')}` : (dark ? 'none' : '0 1px 3px rgba(0,0,0,0.04)'),
-        transform: hovered ? 'translateY(-1px)' : 'none',
-      }}
-    >
-      {/* Group colour accent bar */}
-      <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: dark ? 4 : 5, background: bColor }} />
-
-      {/* Checkbox — only shown once "Select" mode is switched on */}
-      {selectMode && (
-        <button onClick={e => { e.stopPropagation(); onToggleSelect(child.id) }}
-          style={{ width: 20, height: 20, borderRadius: 7, border: `2px solid ${selected ? primary : (dark ? 'rgba(255,255,255,0.25)' : 'var(--text-faint)')}`, background: selected ? primary : (dark ? 'transparent' : 'var(--surface)'), cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 900 }}>
-          {selected ? '✓' : ''}
-        </button>
-      )}
-
-      {/* Avatar + name */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-        <div style={{ width: 42, height: 42, borderRadius: 14, background: `linear-gradient(135deg, ${bColor}, ${withAlpha(bColor, 'CC')})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: '#fff', flexShrink: 0, overflow: 'hidden', boxShadow: `0 3px 10px -4px ${withAlpha(bColor, '90')}`, transition: 'transform 0.15s', transform: hovered ? 'scale(1.06)' : 'none' }}>
-          {child.photo_url ? <SignedImg bucket="gallery" src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
-        </div>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {child.first_name} {child.last_name}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: dark ? bColor : '#fff', background: dark ? 'transparent' : bColor, borderRadius: 99, padding: dark ? '1px 0' : '1px 8px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-              {dark && <span style={{ width: 6, height: 6, borderRadius: '50%', background: bColor, display: 'inline-block' }} />}
-              {bubble?.label || 'Ungrouped'}
-            </span>
-            {child.allergies && (
-              <span style={{ fontSize: 10, fontWeight: 800, color: dark ? '#FBBF24' : '#D97706', background: dark ? 'rgba(251,191,36,0.14)' : 'linear-gradient(135deg,var(--warn-bg),#FDE68A)', borderRadius: 6, padding: '1px 6px' }}><Icon name="⚠" /> ALLERGY</span>
-            )}
-            {child.medical_notes && (
-              <span style={{ fontSize: 10, fontWeight: 800, color: dark ? '#F87171' : '#DC2626', background: dark ? 'rgba(248,113,113,0.14)' : 'linear-gradient(135deg,#FEE2E2,#FECACA)', borderRadius: 6, padding: '1px 6px' }}><Icon name="✚" /> MEDICAL</span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Status + chevron */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-        {roster ? (
-          // No session is open, so there is nothing to mark. Fifty-four grey
-          // "Not marked" chips implied a pending job that could not be done;
-          // school and age are at least worth reading while browsing the roster.
-          <div style={{ textAlign: 'right', minWidth: 0 }}>
-            {child.school && (
-              <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>
-                {child.school}
-              </div>
-            )}
-            {child.date_of_birth && (
-              <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 1 }}>
-                {Math.floor((Date.now() - new Date(child.date_of_birth)) / 31557600000)} yrs
-              </div>
-            )}
-          </div>
-        ) : (
-        <div
-          onClick={e => { e.stopPropagation(); if (onMark) onMark() }}
-          style={{ display: 'flex', alignItems: 'center', gap: 5, background: dark ? 'transparent' : sc.bg, borderRadius: 99, padding: dark ? '5px 0' : '5px 12px', cursor: onMark ? 'pointer' : 'default', transition: 'transform 0.12s', boxShadow: !dark && (status === 'signed_in' || status === 'signed_out' || status === 'absent') ? '0 2px 6px -3px rgba(0,0,0,0.25)' : 'none' }}
-          onMouseEnter={e => { if (onMark) e.currentTarget.style.transform = 'scale(1.06)' }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'none' }}
-        >
-          <div style={{ width: 7, height: 7, borderRadius: '50%', background: sc.dot }} />
-          <span style={{ fontSize: 11, fontWeight: 800, color: sc.color }}>{sc.label}</span>
-        </div>
-        )}
-        {dark && <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>›</span>}
-      </div>
-    </motion.div>
-  )
-}
-
-// ─── ENCOURAGEMENT PANEL ─────────────────────────────────────
-function EncouragementPanel({ org, primary }) {
-  const terms = useTerms()
-  const orgName = org?.name || 'your team'
-  const quotes = [
-    { text: `Every child who walks through that door is lucky to have ${orgName} in their corner.`, emoji: '⭐' },
-    { text: 'You\'re not just running a session. You\'re building someone\'s highlight reel.', emoji: '🌟' },
-    { text: `The work ${orgName} does today will stay with these ${terms.people} for life.`, emoji: '💛' },
-    { text: 'Small moments of connection matter more than you know. Keep showing up.', emoji: '🤝' },
-    { text: `${orgName} is the reason some of these kids get out of bed on a Saturday.`, emoji: '🚀' },
-    { text: 'You are the constant in someone\'s inconsistent world. That\'s everything.', emoji: '🏡' },
-    { text: 'Every register signed is a young person who chose to be here. That\'s because of you.', emoji: '✅' },
-    { text: 'The best youth workers don\'t just teach skills — they teach kids they matter.', emoji: '❤️' },
-    { text: `What ${orgName} is building here is bigger than any one session.`, emoji: '🏗️' },
-    { text: 'Someone in this room today will remember this moment for the rest of their life.', emoji: '✨' },
-    { text: 'You chose the hardest and most important job there is. Thank you.', emoji: '🙏' },
-    { text: `${orgName} — turning up, every time, for every child. That's the work.`, emoji: '💪' },
-  ]
-
-  // Seed by day so it changes daily but is consistent within a session
-  const dayIndex = Math.floor(Date.now() / (1000 * 60 * 60 * 24))
-  const quote = quotes[dayIndex % quotes.length]
-
-  return (
-    <div style={{ padding: '12px 14px', borderTop: '1px solid var(--border-soft)', marginTop: 'auto' }}>
-      <div style={{ background: `linear-gradient(135deg, var(--org-a05), var(--org-a05))`, border: `1px solid var(--org-a10)`, borderRadius: 12, padding: '12px 14px' }}>
-        <div style={{ fontSize: 20, marginBottom: 8 }}>{quote.emoji}</div>
-        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text2)', lineHeight: 1.6, fontStyle: 'italic' }}>
-          "{quote.text}"
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // ─── MAIN REGISTER ────────────────────────────────────────────
 export default function Registers({ org, onNavigate, autoOpenAdd }) {
   const terms = useTerms()
@@ -1560,43 +1404,27 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   const isMobile = useIsMobile()
   const { groups: orgGroups, refetch: refetchOrgSettings } = useOrgSettings(orgId)
   const bubbles = normaliseBubbles(orgGroups)
-  const { session, fromCache: sessionFromCache } = useTodaySession(orgId)
+  const { sessions: todaySessions, session: defaultSession, loading: sessionsLoading, error: sessionsError, refetch: refetchSessions, fromCache: sessionFromCache } = useTodaySession(orgId)
+  const [chosenSessionId, setChosenSessionId] = useState(null)
+  const availableSessions = todaySessions.filter(item => !item.archived_at && !item.cancelled_at && item.status !== 'cancelled' && item.status !== 'draft')
+  const session = availableSessions.find(item => item.id === chosenSessionId) || availableSessions.find(item => item.id === defaultSession?.id) || availableSessions[0] || null
   const { children, setChildren, loading, fromCache: childrenFromCache } = useChildren(orgId)
-  const { attendance } = useAttendance(session?.id)
+  const { attendance: loadedAttendance, loading: attendanceLoading, fromCache: attendanceFromCache, error: attendanceError, refetch: refetchAttendance } = useAttendance(session?.id, orgId)
+  const attendance = loadedAttendance.filter(row => row.session_id === session?.id)
   const isOnline = useOnlineStatus()
-  const showOfflineBanner = !isOnline || childrenFromCache || sessionFromCache
+  const showOfflineBanner = !isOnline || childrenFromCache || sessionFromCache || (!!session && attendanceFromCache)
 
-  const [search, setSearch] = useState('')
-  const [activeGroup, setActiveGroup] = useState('all')
   const [selectedChild, setSelectedChild] = useState(null)
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [selectMode, setSelectMode] = useState(false)
+  useEffect(() => { setSelectedIds(new Set()); setSelectMode(false); setSelectedChild(null) }, [session?.id, orgId])
   const [bulkAssigning, setBulkAssigning] = useState(false)
-  const [showBulkGroupPicker, setShowBulkGroupPicker] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
   const [showImport, setShowImport] = useState(false)
   const [showTemplates, setShowTemplates] = useState(false)
   const [showGroupsSetup, setShowGroupsSetup] = useState(false)
   const [activeImportTemplate, setActiveImportTemplate] = useState(null)
   const [toast, setToast] = useState('')
-  const [note, setNote] = useState('')
-  const [showMobileTools, setShowMobileTools] = useState(false)
-  const [statListModal, setStatListModal] = useState(null) // 'allergies' | 'medical' | null
-  // Follows the app theme. The Register used to keep its own dark flag, which
-  // predates the app-wide theme; once that existed the two disagreed, and a dark
-  // app rendered this screen's light palette over dark tokens -- white header,
-  // invisible group headings.
-  const darkMode = useIsDarkTheme()
-  // The header's Live/Upcoming/Ended badge is derived from the clock, so with
-  // no ticker it only re-evaluated when something unrelated re-rendered. A
-  // session could start, or end, and the header would keep claiming otherwise
-  // until the page was touched. Ticking every 30s also drives the elapsed
-  // timer on a live session.
-  const [, setClockTick] = useState(0)
-  useEffect(() => {
-    const id = setInterval(() => setClockTick(n => n + 1), 30000)
-    return () => clearInterval(id)
-  }, [])
   const [showPastRegisters, setShowPastRegisters] = useState(false)
   const [pastSessions, setPastSessions] = useState([])
   const [pastSessionsLoading, setPastSessionsLoading] = useState(false)
@@ -1616,7 +1444,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   const openPastSession = async (s) => {
     setViewingPastLoading(true)
     setViewingPastSession(s)
-    const { data } = await supabase.from('attendance').select('*').eq('session_id', s.id)
+    const { data } = await supabase.from('attendance').select('*').eq('org_id', orgId).eq('session_id', s.id)
     setViewingPastAttendance(data || [])
     setViewingPastLoading(false)
   }
@@ -1645,13 +1473,13 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   const openArchivedSession = async (s) => {
     setViewingArchivedLoading(true)
     setViewingArchivedSession(s)
-    const { data } = await supabase.from('attendance').select('*').eq('session_id', s.id)
+    const { data } = await supabase.from('attendance').select('*').eq('org_id', orgId).eq('session_id', s.id)
     setViewingArchivedAttendance(data || [])
     setViewingArchivedLoading(false)
   }
 
   const handleRestoreSession = async (s) => {
-    await supabase.from('sessions').update({ archived_at: null }).eq('id', s.id)
+    await supabase.from('sessions').update({ archived_at: null }).eq('org_id', orgId).eq('id', s.id)
     setArchivedSessions(prev => prev.filter(x => x.id !== s.id))
     showToast(`"${s.title}" restored to Past Registers`)
   }
@@ -1667,33 +1495,35 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
     return g === b.key || g === b.label.toLowerCase()
   }) || null
 
-  const handlePrint = () => {
-    const rows = children.map(c => {
-      const status = getStatus(c.id)
+  const handlePrint = (visible = children, withAttendance = false) => {
+    const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]))
+    const rows = visible.map(c => {
+      const status = withAttendance ? getStatus(c.id) : 'unmarked'
       const bubble = getBubble(c)
       const statusLabel = { signed_in: 'In', signed_out: 'Out', absent: 'Absent', expected: 'Expected', unmarked: '—' }[status] || '—'
       const alerts = [c.allergies && '⚠ Allergy', c.medical_notes && '✚ Medical', c.has_epipen && '💉 EpiPen'].filter(Boolean).join('  ')
       return `<tr>
-        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-weight:700">${c.first_name} ${c.last_name}</td>
-        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;color:${bubble?.color || 'var(--text3)'};font-weight:700">${bubble?.label || 'Ungrouped'}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-weight:700">${escape(c.first_name)} ${escape(c.last_name)}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;color:#64748b;font-weight:700">${escape(bubble?.label || 'Ungrouped')}</td>
         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-size:11px;color:#dc2626">${alerts}</td>
         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-weight:800;color:${status === 'signed_in' ? '#16a34a' : status === 'absent' ? '#dc2626' : 'var(--text3)'}">${statusLabel}</td>
         <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;color:#94a3b8;font-size:12px">_______________</td>
       </tr>`
     }).join('')
 
-    const html = `<!DOCTYPE html><html><head><title>Register — ${org?.name || ''}</title>
+    const html = `<!DOCTYPE html><html><head><title>Register — ${escape(org?.name)}</title>
     <style>body{font-family:system-ui,sans-serif;color:#111;padding:24px}h1{font-size:20px;font-weight:900;margin:0 0 4px}p{margin:0 0 16px;color:#64748b;font-size:13px}table{width:100%;border-collapse:collapse}th{padding:8px 10px;text-align:left;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;border-bottom:2px solid #e5e7eb}@media print{.no-print{display:none}}</style>
     </head><body>
     <button class="no-print" onclick="window.close()" aria-label="Close" style="position:fixed;top:16px;right:16px;width:34px;height:34px;border-radius:50%;border:1.5px solid #e5e7eb;background:#fff;color:#374151;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px -2px rgba(0,0,0,0.15);z-index:99">×</button>
-    <h1>${session?.title || 'Register'} — ${org?.name || ''}</h1>
-    <p>${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} &nbsp;·&nbsp; ${children.length} children</p>
+    <h1>${escape(withAttendance ? session?.title || 'Register' : terms.People)} — ${escape(org?.name)}</h1>
+    <p>${new Date().toLocaleDateString('en-GB', { timeZone: 'Europe/London', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} &nbsp;·&nbsp; ${visible.length} ${escape(terms.people)}</p>
     <table><thead><tr>
       <th>Name</th><th>Group</th><th>Alerts</th><th>Status</th><th>Signature</th>
     </tr></thead><tbody>${rows}</tbody></table>
     </body></html>`
 
     const w = window.open('', '_blank')
+    if (!w) { showToast('Allow pop-ups to print the register.'); return }
     w.document.write(html)
     w.document.close()
     w.focus()
@@ -1718,623 +1548,43 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
     setBulkAssigning(true)
     try {
       const ids = [...selectedIds]
-      const { error: err } = await supabase.from('children').update({ group_name: groupLabel }).in('id', ids)
+      const { error: err } = await supabase.from('children').update({ group_name: groupLabel }).eq('org_id', orgId).in('id', ids)
       if (err) throw err
       setChildren(prev => prev.map(c => ids.includes(c.id) ? { ...c, group_name: groupLabel } : c))
-      showToast(`✅ Moved ${ids.length} ${ids.length === 1 ? 'child' : 'children'} to ${groupLabel}`)
+      showToast(`Moved ${ids.length} ${ids.length === 1 ? terms.person : terms.people} to ${groupLabel}`)
       clearSelection()
-      setShowBulkGroupPicker(false)
     } catch (e) {
       showToast(`⚠️ Could not assign group: ${e.message || 'unknown error'}`)
     }
     setBulkAssigning(false)
   }
 
-  const counts = {
-    total:      children.length,
-    signed_in:  children.filter(c => getStatus(c.id) === 'signed_in').length,
-    absent:     children.filter(c => getStatus(c.id) === 'absent').length,
-    expected:   children.filter(c => getStatus(c.id) === 'expected').length,
-    signed_out: children.filter(c => getStatus(c.id) === 'signed_out').length,
-  }
-
-  // Available groups — configured groups only. A child's group_name that no
-  // longer matches a configured group (e.g. the group was since deleted or
-  // renamed) is treated as ungrouped, not surfaced as a phantom filter tab.
-  const availableGroups = React.useMemo(() => bubbles.map(b => b.label), [bubbles])
-
-  const filtered = children.filter(c => {
-    const nameOk = !search.trim() || `${c.first_name} ${c.last_name}`.toLowerCase().includes(search.toLowerCase())
-    const groupOk = activeGroup === 'all' || (c.group_name || '').toLowerCase() === activeGroup.toLowerCase()
-    return nameOk && groupOk
-  })
-
-
-  // Session status for the header badge — must agree with Hub and the session
-  // detail panel: closed_at (actually closed) takes priority over the scheduled
-  // time window, otherwise a manually-closed session still shows as "Live" here
-  // just because a session object exists.
-  const registerSessionStatus = (() => {
-    if (!session) return { key: 'none', label: 'No Session', bg: 'var(--surface2)', color: 'var(--text-faint)' }
-    if (session.closed_at) return { key: 'closed', label: '● Closed', bg: 'var(--surface-hover)', color: 'var(--text3)' }
-    const now = new Date()
-    const startDT = session.start_time ? new Date(`${session.session_date}T${session.start_time}`) : null
-    const endDT = session.end_time ? new Date(`${session.session_date}T${session.end_time}`) : null
-    const hasEnded = !!endDT && endDT < now
-    const isLiveNow = !hasEnded && (!startDT || startDT <= now)
-    if (hasEnded) return { key: 'ended', label: '● Ended', bg: 'var(--surface-hover)', color: 'var(--text3)' }
-    if (isLiveNow) return { key: 'live', label: '● Live', bg: 'var(--ok-bg)', color: 'var(--ok-text)' }
-    return { key: 'upcoming', label: '● Upcoming', bg: 'var(--warn-bg)', color: 'var(--warn-text)' }
-  })()
-
-  const isLiveSession = registerSessionStatus.key === 'live'
-
-  // Elapsed / remaining for a live session. Guarded because start_time and
-  // end_time are both optional, and a session that crosses midnight has an
-  // end earlier in the day than its start -- treating that naively would show
-  // a negative duration.
-  const liveProgress = (() => {
-    if (!isLiveSession || !session?.start_time) return null
-    const now = new Date()
-    const start = new Date(`${session.session_date}T${session.start_time}`)
-    if (isNaN(start)) return null
-    let end = session.end_time ? new Date(`${session.session_date}T${session.end_time}`) : null
-    if (end && !isNaN(end) && end < start) end = new Date(end.getTime() + 24 * 60 * 60 * 1000)
-    if (end && isNaN(end)) end = null
-
-    const fmt = (ms) => {
-      const mins = Math.max(0, Math.floor(ms / 60000))
-      const h = Math.floor(mins / 60)
-      return h > 0 ? `${h}h ${mins % 60}m` : `${mins}m`
-    }
-    const elapsedMs = Math.max(0, now - start)
-    const remainingMs = end ? end - now : null
-    const totalMs = end ? end - start : null
-    return {
-      elapsedLabel: `${fmt(elapsedMs)} in`,
-      remainingLabel: remainingMs !== null && remainingMs > 0 ? fmt(remainingMs) : null,
-      pct: totalMs && totalMs > 0 ? Math.min(100, Math.max(0, (elapsedMs / totalMs) * 100)) : null,
-    }
-  })()
-
-  // Theme tokens — light values match the original design exactly; dark values
-  // apply whenever the app is in its dark theme.
-  const t = {
-    pageBg: darkMode ? 'linear-gradient(180deg, #0A0D1C 0%, #12152A 100%)' : 'var(--surface2)',
-    headerBg: darkMode ? 'linear-gradient(165deg, #171B33 0%, rgba(16,19,36,0) 60%)' : `linear-gradient(165deg, var(--org-a05) 0%, #fff 55%)`,
-    headerBorder: darkMode ? 'rgba(255,255,255,0.08)' : 'var(--border)',
-    text: darkMode ? 'var(--text)' : '#0B1220',
-    textSub: 'var(--text3)',
-    textMuted: 'var(--text-faint)',
-    miniChipBg: darkMode ? 'rgba(255,255,255,0.06)' : 'var(--surface2)',
-    miniChipBorder: darkMode ? 'rgba(255,255,255,0.1)' : 'var(--border)',
-    btnBg: darkMode ? null : 'var(--surface)',
-    btnBorder: darkMode ? null : 'var(--border)',
-    btnShadow: darkMode ? null : '0 1px 4px -1px rgba(0,0,0,0.06)',
-    cardBg: darkMode ? '#161A30' : 'var(--surface)',
-    cardBorder: darkMode ? 'rgba(255,255,255,0.08)' : 'var(--border)',
-    inputBg: darkMode ? '#12152A' : (primary + '06'),
-    inputBorder: darkMode ? 'rgba(255,255,255,0.1)' : (primary + '25'),
-    filterBg: darkMode ? 'transparent' : 'var(--surface)',
-    filterBorder: darkMode ? 'rgba(255,255,255,0.08)' : 'var(--border-soft)',
-    // Opaque in both themes: the sticky group headings paint with it, and a
-    // transparent heading let the cards scroll visibly through its text.
-    listBg: darkMode ? 'var(--bg)' : 'var(--surface2)',
-  }
-  const actionColors = { past: '#8B5CF6', archive: '#6366F1', medical: '#3B82F6', groups: '#14B8A6', print: '#A855F7', import: '#EC4899' }
-
   return (
-    <div style={{ display: 'flex', height: '100%', overflow: 'hidden', background: t.pageBg }}>
+    <div style={{ height: '100%', minWidth: 0, position: 'relative', overflow: 'hidden', background: 'var(--surface2)' }}>
 
       {/* TOAST */}
       {toast && (
-        <div style={{ position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', background: '#111827', color: '#fff', borderRadius: 12, padding: '11px 20px', fontSize: 13, fontWeight: 700, zIndex: 10900, boxShadow: '0 8px 24px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
+        <div style={{ position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', background: '#111827', color: '#fff', borderRadius: 12, padding: '11px 20px', fontSize: 13, fontWeight: 700, zIndex: 10900, boxShadow: '0 8px 24px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', gap: 8, maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', overflowWrap: 'anywhere' }}>
           <span style={{ color: '#4ADE80' }}><Icon name="✓" /></span> {toast}
         </div>
       )}
 
-      {/* MAIN PANEL */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-
-        {/* HEADER */}
-        <div style={{
-          background: isLiveSession
-            ? (darkMode
-                ? 'linear-gradient(165deg, #0F2A1E 0%, #12152A 62%)'
-                : 'linear-gradient(165deg, #ECFDF5 0%, #F6FEFA 40%, #fff 75%)')
-            : t.headerBg,
-          borderBottom: `1px solid ${isLiveSession ? (darkMode ? 'rgba(34,197,94,0.22)' : '#C9F2DD') : t.headerBorder}`,
-          padding: isMobile ? '12px 16px 8px' : '18px 20px 12px', flexShrink: 0, position: 'relative',
-          transition: 'background 0.4s ease',
-        }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: isLiveSession ? 'linear-gradient(90deg, #16A34A, #4ADE80 45%, transparent)' : `linear-gradient(90deg, ${primary}, var(--org-a20), transparent)` }} />
-          {isLiveSession && (
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: '35%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.85), transparent)', animation: 'reg-live-sweep 2.6s ease-in-out infinite' }} />
-            </div>
-          )}
-          <style>{`
-            @keyframes reg-live-sweep { 0% { transform: translateX(-120%); } 100% { transform: translateX(400%); } }
-            @keyframes reg-live-ping { 0% { transform: scale(1); opacity: 0.75; } 70%, 100% { transform: scale(2.6); opacity: 0; } }
-            @keyframes reg-live-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
-            @media (prefers-reduced-motion: reduce) {
-              [data-reg-live-anim] { animation: none !important; }
-            }
-          `}</style>
-
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: isMobile ? 8 : 14, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 9 : 12, minWidth: 0 }}>
-              <div style={{ width: isMobile ? 32 : 42, height: isMobile ? 32 : 42, borderRadius: isMobile ? 10 : 13, background: isLiveSession ? 'linear-gradient(135deg, #16A34A, #22C55E)' : `linear-gradient(135deg, ${primary}, var(--org-a85))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 15 : 19, flexShrink: 0, boxShadow: isLiveSession ? '0 4px 16px -4px rgba(22,163,74,0.65)' : `0 4px 14px -5px var(--org-a60)`, position: 'relative' }}>
-                <img src="/icons/registers-icon.png" alt="" style={{ width: isMobile ? 22 : 28, height: isMobile ? 22 : 28, objectFit: 'contain' }} />
-                {isLiveSession && (
-                  <span data-reg-live-anim style={{ position: 'absolute', inset: -2, borderRadius: 'inherit', border: '2px solid #22C55E', animation: 'reg-live-ping 2.4s ease-out infinite', pointerEvents: 'none' }} />
-                )}
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: isMobile ? 3 : 5, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: isMobile ? 16 : 19, fontWeight: 900, color: t.text, fontFamily: 'var(--font-display)', letterSpacing: -0.3 }}>
-                    {session?.title || 'Register'}
-                  </span>
-                  {isLiveSession ? (
-                    <span style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 7,
-                      fontSize: isMobile ? 10.5 : 11.5, fontWeight: 900, letterSpacing: 0.8, textTransform: 'uppercase',
-                      borderRadius: 99, padding: isMobile ? '4px 11px 4px 9px' : '5px 13px 5px 10px',
-                      background: 'linear-gradient(135deg, #16A34A, #22C55E)', color: '#fff',
-                      boxShadow: '0 4px 14px -3px rgba(22,163,74,0.6)',
-                    }}>
-                      <span style={{ position: 'relative', display: 'inline-flex', width: 7, height: 7, flexShrink: 0 }}>
-                        <span data-reg-live-anim style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'var(--surface)', animation: 'reg-live-ping 2s ease-out infinite' }} />
-                        <span data-reg-live-anim style={{ position: 'relative', width: 7, height: 7, borderRadius: '50%', background: 'var(--surface)', animation: 'reg-live-dot 2s ease-in-out infinite' }} />
-                      </span>
-                      Live now
-                    </span>
-                  ) : (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase', borderRadius: 99, padding: '3px 9px 3px 7px', background: darkMode ? 'rgba(255,255,255,0.08)' : registerSessionStatus.bg, color: darkMode ? t.textSub : registerSessionStatus.color }}>
-                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: registerSessionStatus.color, flexShrink: 0 }} />
-                      {registerSessionStatus.label.replace('● ', '')}
-                    </span>
-                  )}
-                  {isLiveSession && liveProgress && (
-                    <span style={{ fontSize: isMobile ? 10.5 : 11.5, fontWeight: 700, color: darkMode ? '#4ADE80' : 'var(--ok-text)', fontVariantNumeric: 'tabular-nums' }}>
-                      {liveProgress.elapsedLabel}
-                      {liveProgress.remainingLabel ? ` · ${liveProgress.remainingLabel} left` : ''}
-                    </span>
-                  )}
-                </div>
-                {session && (
-                  <div style={{ display: 'flex', gap: isMobile ? 4 : 6, flexWrap: 'wrap' }}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: isMobile ? 10.5 : 11.5, fontWeight: 600, color: t.textSub, background: t.miniChipBg, border: `1px solid ${t.miniChipBorder}`, borderRadius: 7, padding: isMobile ? '2px 7px' : '3px 9px' }}>
-                      📅 {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
-                    </span>
-                    {session.start_time && (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: isMobile ? 10.5 : 11.5, fontWeight: 600, color: t.textSub, background: t.miniChipBg, border: `1px solid ${t.miniChipBorder}`, borderRadius: 7, padding: isMobile ? '2px 7px' : '3px 9px' }}>
-                        🕐 {session.start_time}{session.end_time ? ` – ${session.end_time}` : ''}
-                      </span>
-                    )}
-                    {session.location && !isMobile && (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, fontWeight: 600, color: t.textSub, background: t.miniChipBg, border: `1px solid ${t.miniChipBorder}`, borderRadius: 7, padding: '3px 9px' }}>
-                        📍 {session.location.split(',')[0]}
-                      </span>
-                    )}
-                  </div>
-                )}
-                {isLiveSession && liveProgress && liveProgress.pct !== null && (
-                  <div style={{ marginTop: 9, maxWidth: 320 }}>
-                    <div style={{ height: 4, borderRadius: 99, background: darkMode ? 'rgba(255,255,255,0.1)' : '#D6F5E3', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${liveProgress.pct}%`, borderRadius: 99, background: 'linear-gradient(90deg,#16A34A,#4ADE80)', transition: 'width 0.6s ease' }} />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-            {isMobile && (
-              <button onClick={() => setShowMobileTools(true)} aria-label="Register options"
-                style={{ width: 34, height: 34, borderRadius: 10, border: `1.5px solid ${darkMode ? 'rgba(255,255,255,0.12)' : 'var(--border)'}`, background: darkMode ? 'rgba(255,255,255,0.06)' : 'var(--surface)', color: t.textSub, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                ⚙️
-              </button>
-            )}
-            {isMobile && (
-              <div style={{ display: 'flex', gap: 4, alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
-                {[
-                  { key: 'past', label: 'Past Registers', icon: '/icons/past-registers-icon.png', onClick: () => setShowPastRegisters(true) },
-                  { key: 'medical', label: 'Medical Alerts', icon: '/icons/medical-icon.png', onClick: () => onNavigate && onNavigate('medical_alerts') },
-                  { key: 'groups', label: 'Manage Groups', icon: '/icons/manage-groups-icon.png', onClick: () => setShowGroupsSetup(true) },
-                  { key: 'print', label: 'Print Register', icon: '/icons/print-register-icon.png', onClick: () => handlePrint() },
-                  { key: 'import', label: 'Import Children', icon: '/icons/import-children-icon.png', onClick: () => setShowImport(true) },
-                ].map(a => {
-                  const ac = actionColors[a.key]
-                  return (
-                    <button key={a.key} onClick={a.onClick} aria-label={a.label}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '1 1 0', minWidth: 0, height: 48, boxSizing: 'border-box', padding: '3px 1px', borderRadius: 12, border: darkMode ? `1px solid ${withAlpha(ac, '3A')}` : '1.5px solid #E2E8F0', background: darkMode ? `linear-gradient(160deg, ${withAlpha(ac, '30')}, ${withAlpha(ac, '12')})` : '#fff', cursor: 'pointer', boxShadow: darkMode ? `0 4px 14px -8px ${withAlpha(ac, '80')}` : '0 1px 4px -1px rgba(0,0,0,0.06)' }}>
-                      {a.icon.startsWith('/') ? (
-                        <img src={a.icon} alt="" style={{ width: 30, height: 30, objectFit: 'contain', flexShrink: 0 }} />
-                      ) : (
-                        <span style={{ fontSize: 22, lineHeight: 1 }}><Icon name={a.icon} /></span>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Stats strip + search + select */}
-          <div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: isMobile ? 8 : 10, marginBottom: isMobile ? 10 : 14 }}>
-              {/* Colours are hex, never var(--...): every use below appends an
-                  alpha suffix (`${s.color}22`), which makes a var() invalid CSS
-                  and silently drops the chip's background, border and shadow. */}
-              {(session ? [
-                { icon: '📋', value: counts.total, label: 'On Register', color: 'var(--org-ink)' },
-                { icon: '✅', value: counts.signed_in, label: 'Signed In', color: '#16A34A', live: isLiveSession },
-                { icon: '⏳', value: counts.expected, label: 'Yet to Arrive', color: '#D97706' },
-              ] : [
-                { icon: '📋', value: counts.total, label: 'On Register', color: 'var(--org-ink)' },
-                { icon: '⚠️', value: children.filter(c => c.allergies).length, label: 'Allergies', color: '#D97706', onClick: () => setStatListModal('allergies') },
-                { icon: '✚', value: children.filter(c => c.medical_notes).length, label: 'Medical Alerts', color: '#DC2626', onClick: () => setStatListModal('medical') },
-              ]).map(s => (
-                <motion.button key={s.label} onClick={s.onClick} disabled={!s.onClick}
-                  whileHover={s.onClick ? { y: -2, boxShadow: `0 10px 22px -8px ${withAlpha(s.color, '45')}` } : {}}
-                  whileTap={s.onClick ? { scale: 0.97 } : {}}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: isMobile ? 7 : 10, minWidth: 0,
-                    padding: isMobile ? '10px 8px' : '13px 14px', borderRadius: 16,
-                    background: darkMode ? `linear-gradient(160deg, ${withAlpha(s.color, '22')}, ${withAlpha(s.color, '0C')})` : `linear-gradient(160deg, ${s.color}${s.live ? '1E' : '12'}, #fff)`,
-                    border: `${s.live ? 2 : 1.5}px solid ${s.live ? s.color + (darkMode ? '66' : '55') : (darkMode ? s.color + '30' : s.color + '22')}`,
-                    boxShadow: s.live
-                      ? `0 6px 20px -8px ${withAlpha(s.color, '70')}`
-                      : (darkMode ? 'none' : '0 1px 3px rgba(15,23,42,0.04)'),
-                    cursor: s.onClick ? 'pointer' : 'default', font: 'inherit', textAlign: 'left',
-                    position: 'relative',
-                  }}>
-                  <span style={{
-                    width: isMobile ? 28 : 38, height: isMobile ? 28 : 38, borderRadius: isMobile ? 9 : 11, flexShrink: 0,
-                    background: `linear-gradient(135deg, ${s.color}, ${withAlpha(s.color, 'CC')})`, boxShadow: `0 4px 10px -3px ${withAlpha(s.color, '70')}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 13 : 16, color: '#fff',
-                  }}><Icon name={s.icon} /></span>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: isMobile ? 17 : 20, fontWeight: 900, color: t.text, lineHeight: 1.1 }}>{s.value}</div>
-                    <div style={{ fontSize: isMobile ? 9.5 : 10.5, fontWeight: 700, color: s.live ? (darkMode ? '#4ADE80' : 'var(--ok-text)') : t.textSub, whiteSpace: isMobile ? 'normal' : 'nowrap', lineHeight: isMobile ? 1.2 : undefined, overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 4 }}>
-                      {s.live && <span data-reg-live-anim style={{ width: 5, height: 5, borderRadius: '50%', background: '#16A34A', flexShrink: 0, animation: 'reg-live-dot 2s ease-in-out infinite' }} />}
-                      {s.live ? 'On Site Now' : s.label}
-                    </div>
-                  </div>
-                  {s.onClick && (
-                    <span style={isMobile
-                      ? { position: 'absolute', top: 6, right: 7, fontSize: 10, lineHeight: 1, color: s.color, opacity: 0.6 }
-                      : { marginLeft: 'auto', fontSize: 12, color: s.color, opacity: 0.6, flexShrink: 0 }}><Icon name="→" /></span>
-                  )}
-                </motion.button>
-              ))}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: isMobile ? 8 : 12 }}>
-              <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
-                <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: t.textMuted }}><Icon name="🔍" /></span>
-                <input
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Escape') setSearch('') }}
-                  placeholder="Search by name..."
-                  style={{ width: '100%', boxSizing: 'border-box', height: isMobile ? 38 : 40, padding: `0 32px 0 34px`, borderRadius: 10, border: `1.5px solid ${search ? primary : t.inputBorder}`, background: t.inputBg, color: t.text, fontSize: 13, outline: 'none', fontFamily: 'inherit' }}
-                  onFocus={e => e.target.style.borderColor = primary}
-                  onBlur={e => e.target.style.borderColor = search ? primary : t.inputBorder}
-                />
-                {search && (
-                  <button onClick={() => setSearch('')} aria-label="Clear search"
-                    style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: darkMode ? 'rgba(255,255,255,0.1)' : 'var(--border-soft)', borderRadius: '50%', width: 18, height: 18, cursor: 'pointer', fontSize: 10, color: t.textSub, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
-                )}
-              </div>
-              <button
-                onClick={() => { if (selectMode) clearSelection(); setSelectMode(v => !v) }}
-                style={{
-                  padding: '0 14px', height: isMobile ? 38 : 40, borderRadius: 10, border: `1.5px solid ${selectMode ? primary : (darkMode ? 'rgba(255,255,255,0.12)' : 'var(--border)')}`,
-                  background: selectMode ? primary : (darkMode ? 'rgba(255,255,255,0.06)' : 'var(--surface)'), color: selectMode ? '#fff' : t.textSub,
-                  fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-                }}
-              >
-                {selectMode ? 'Cancel' : 'Select'}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* OFFLINE BANNER */}
-        {showOfflineBanner && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: darkMode ? 'rgba(217,119,6,0.16)' : 'var(--warn-bg)', borderBottom: `1px solid ${darkMode ? 'rgba(217,119,6,0.3)' : 'var(--warn-border)'}`, flexShrink: 0 }}>
-            <span style={{ fontSize: 13 }}><Icon name="📡" /></span>
-            <span style={{ fontSize: 11.5, fontWeight: 700, color: darkMode ? '#FBBF24' : 'var(--warn-text)' }}>
-              {isOnline ? 'Reconnecting…' : "You're offline"} — showing the last saved register{isOnline ? '' : '. Changes made elsewhere won\'t appear until you\'re back online'}.
-            </span>
-          </div>
-        )}
-
-        {/* GROUP FILTER */}
-        {availableGroups.length > 1 && (
-          <div style={{ display: 'flex', gap: 6, padding: '10px 16px', background: t.filterBg, borderBottom: `1px solid ${t.filterBorder}`, overflowX: 'auto', flexShrink: 0 }}>
-            {['all', ...availableGroups].map(g => {
-              const bubble = g === 'all' ? null : bubbles.find(b => b.label.toLowerCase() === g.toLowerCase())
-              const isActive = activeGroup === g
-              const chipColor = bubble?.color || primary
-              return (
-                <button key={g} onClick={() => setActiveGroup(g)} style={{
-                  padding: '6px 14px', borderRadius: 99, border: `1.5px solid ${isActive ? chipColor : (darkMode ? 'rgba(255,255,255,0.1)' : 'var(--border)')}`,
-                  background: isActive ? `linear-gradient(135deg, ${chipColor}, ${withAlpha(chipColor, 'CC')})` : (darkMode ? '#161A30' : '#fff'),
-                  color: isActive ? '#fff' : t.textSub,
-                  fontSize: 12, fontWeight: isActive ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-                  display: 'flex', alignItems: 'center', gap: 5,
-                  boxShadow: isActive ? `0 3px 10px -4px ${withAlpha(chipColor, '90')}` : 'none',
-                  transition: 'all 0.15s ease',
-                }}>
-                  {bubble && <span style={{ width: 8, height: 8, borderRadius: '50%', background: isActive ? 'var(--surface)' : bubble.color, display: 'inline-block' }} />}
-                  {g === 'all' ? 'All Groups' : g}
-                  <span style={{ fontSize: 10, opacity: isActive ? 0.9 : 0.7 }}>
-                    {g === 'all' ? children.length : children.filter(c => (c.group_name || '').toLowerCase() === g.toLowerCase()).length}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-        )}
-
-        {/* No session open. The register cannot be marked, so say so once and
-            offer the way forward, rather than leaving a screen that looks like
-            a register nobody has got round to filling in. */}
-        {!session && !loading && children.length > 0 && (
-          <div style={{ padding: isMobile ? '0 10px' : '0 14px', marginTop: 2 }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
-              padding: isMobile ? '14px 15px' : '16px 18px', borderRadius: 16,
-              background: darkMode
-                ? `linear-gradient(160deg, var(--org-a10), var(--org-a05))`
-                : `linear-gradient(160deg, var(--org-a10), #fff)`,
-              border: `1.5px solid ${primary}${darkMode ? '3A' : '2E'}`,
-            }}>
-              <span aria-hidden="true" style={{
-                width: 40, height: 40, borderRadius: 13, flexShrink: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
-                background: `linear-gradient(135deg, ${primary}, var(--org-a85))`,
-                boxShadow: `0 4px 12px -4px var(--org-a60)`,
-              }}><Icon name="📋" /></span>
-              <div style={{ flex: 1, minWidth: 180 }}>
-                <div style={{ fontSize: 14.5, fontWeight: 800, color: t.text }}>No session is open</div>
-                <div style={{ fontSize: 12.5, color: t.textSub, marginTop: 2, lineHeight: 1.5 }}>
-                  You're looking at the full roster of {children.length}. Open a session to start signing people in.
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <button onClick={() => onNavigate && onNavigate('sessions')} style={{
-                  padding: '10px 17px', borderRadius: 11, border: 'none', background: primary,
-                  color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
-                }}>Open a session</button>
-                <button onClick={() => setShowPastRegisters(true)} style={{
-                  padding: '10px 15px', borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit',
-                  border: `1.5px solid ${darkMode ? 'rgba(255,255,255,0.14)' : 'var(--border)'}`,
-                  background: 'transparent', color: t.textSub, fontSize: 13, fontWeight: 700,
-                }}>Past registers</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* CHILDREN LIST */}
-        <div style={{ flex: 1, overflowY: 'auto', background: t.listBg, padding: isMobile ? '10px 10px' : '12px 14px' }}>
-          {loading ? (
-            <div style={{ padding: 40, textAlign: 'center', color: t.textMuted, fontWeight: 600 }}>Loading register...</div>
-          ) : filtered.length === 0 ? (
-            <div style={{ padding: 60, textAlign: 'center' }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}><Icon name="👧" /></div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: t.text, marginBottom: 6 }}>{children.length === 0 ? 'No children yet' : 'No matches'}</div>
-              <div style={{ fontSize: 13, color: t.textMuted, marginBottom: 16 }}>{children.length === 0 ? 'Add or import children to get started' : 'Try a different search or filter'}</div>
-              {children.length === 0 && (
-                <button onClick={() => setShowImport(true)} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}><Icon name="📥" /> Import Children</button>
-              )}
-            </div>
-          ) : (
-            (() => {
-              const renderCard = child => (
-                <ChildCard
-                  key={child.id}
-                  child={child}
-                  status={getStatus(child.id)}
-                  bubble={getBubble(child)}
-                  primary={primary}
-                  selectMode={selectMode}
-                  selected={selectedIds.has(child.id)}
-                  onToggleSelect={toggleSelect}
-                  onClick={() => selectMode ? toggleSelect(child.id) : setSelectedChild({ child, status: getStatus(child.id), attRec: getAttRec(child.id) })}
-                  onMark={null}
-                  dark={darkMode}
-                  roster={!session}
-                />
-              )
-
-              // Only section when showing everyone. Filtered to one group, the
-              // headers would just repeat the chip you already pressed, and
-              // searching wants a flat list of hits rather than hits scattered
-              // under group headings.
-              if (activeGroup !== 'all' || search.trim()) {
-                return <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>{filtered.map(renderCard)}</div>
-              }
-
-              const sections = []
-              filtered.forEach(c => {
-                const key = c.group_name || 'Ungrouped'
-                let sec = sections.find(x => x.key === key)
-                if (!sec) { sec = { key, children: [] }; sections.push(sec) }
-                sec.children.push(c)
-              })
-
-              return (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                  {sections.map(sec => {
-                    const col = getBubble(sec.children[0])?.color || primary
-                    return (
-                      <div key={sec.key}>
-                        <div style={{
-                          display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8,
-                          position: 'sticky', top: -2, zIndex: 2,
-                          background: t.listBg, padding: '4px 2px',
-                        }}>
-                          <span style={{ width: 9, height: 9, borderRadius: '50%', background: col, flexShrink: 0 }} />
-                          <span style={{ fontSize: 11.5, fontWeight: 900, color: t.text, textTransform: 'uppercase', letterSpacing: 0.7 }}>
-                            {sec.key}
-                          </span>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: t.textMuted }}>{sec.children.length}</span>
-                          <span style={{ flex: 1, height: 1, background: darkMode ? 'rgba(255,255,255,0.07)' : '#E9EDF3' }} />
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          {sec.children.map(renderCard)}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )
-            })()
-          )}
-        </div>
-
-        {/* FOOTER */}
-        {!isMobile && (
-          <div style={{ background: 'var(--surface)', borderTop: '1px solid var(--border-soft)', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', flexShrink: 0 }}>
-            <div style={{ fontSize: 13, color: 'var(--text-faint)', fontWeight: 600 }}>{filtered.length} of {children.length} shown</div>
-          </div>
-        )}
-      </div>
-
-      {/* SIDEBAR TOOLS — desktop only */}
-      {!isMobile && (
-        <div style={{ width: 220, background: 'var(--surface)', borderLeft: '1px solid var(--border-soft)', display: 'flex', flexDirection: 'column', overflowY: 'auto', flexShrink: 0 }}>
-          <div style={{ padding: '14px 14px 10px', borderBottom: '1px solid var(--border-soft)' }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Register Tools</div>
-            {[
-              { icon: '➕', label: 'Add Child', sub: 'Not on list', action: () => setShowAdd(true) },
-              { icon: '🏷️', label: 'Manage Groups', sub: 'Quick add & colours', action: () => setShowGroupsSetup(true) },
-              { icon: '💊', label: 'Medical Alerts', sub: 'Review & sign off', action: () => onNavigate && onNavigate('medical_alerts') },
-              { icon: '📥', label: 'Import Children', sub: 'Bulk add from CSV', action: () => setShowImport(v => !v) },
-              { icon: '🧩', label: 'Import Templates', sub: 'Customise import fields', action: () => setShowTemplates(v => !v) },
-              { icon: '🖨', label: 'Print Register', sub: 'Print attendance sheet', action: () => handlePrint() },
-              { icon: '📜', label: 'Past Registers', sub: 'View closed sessions', action: () => setShowPastRegisters(true) },
-            ].map(t => (
-              <button key={t.label} onClick={t.action}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 10px', borderRadius: 14, border: '1px solid var(--border-soft)', background: 'var(--surface2)', cursor: t.action ? 'pointer' : 'default', textAlign: 'left', marginBottom: 6, transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease' }}
-                onMouseEnter={e => {
-                  if (!t.action) return
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                  e.currentTarget.style.boxShadow = '0 8px 18px -8px rgba(0,0,0,0.14)'
-                  e.currentTarget.style.borderColor = primary + '40'
-                  e.currentTarget.style.background = 'var(--surface)'
-                  const badge = e.currentTarget.querySelector('.tool-icon')
-                  if (badge) { badge.style.transform = 'scale(1.12)'; badge.style.background = primary + '14' }
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.transform = 'none'
-                  e.currentTarget.style.boxShadow = 'none'
-                  e.currentTarget.style.borderColor = 'var(--border-soft)'
-                  e.currentTarget.style.background = 'var(--surface2)'
-                  const badge = e.currentTarget.querySelector('.tool-icon')
-                  if (badge) { badge.style.transform = 'none'; badge.style.background = 'var(--border-soft)' }
-                }}>
-                <div className="tool-icon" style={{ width: 32, height: 32, borderRadius: 10, background: 'var(--surface3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0, transition: 'transform 0.18s ease, background 0.18s ease' }}><Icon name={t.icon} /></div>
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{t.label}</div>
-                  <div style={{ fontSize: 10, color: 'var(--text-faint)' }}>{t.sub}</div>
-                </div>
-              </button>
-            ))}
-            {onNavigate && (
-              <button onClick={() => onNavigate('settings')} style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: 'var(--org-ink)', padding: '8px 8px 2px' }}>
-                Full Groups Settings →
-              </button>
-            )}
-          </div>
-
-          {/* Templates panel */}
-          {showTemplates && (
-            <div style={{ padding: 14, borderBottom: '1px solid var(--border-soft)' }}>
-              <TemplatePicker org={org} onUseTemplate={(template) => {
-                setActiveImportTemplate(template)
-                setShowTemplates(false)
-                setShowImport(true)
-              }} />
-            </div>
-          )}
-
-          {/* Register notes */}
-          <div style={{ padding: 14, borderBottom: '1px solid var(--border-soft)' }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)', marginBottom: 8 }}>Session Notes</div>
-            <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Add notes about this session..."
-              style={{ width: '100%', height: 72, border: '1px solid var(--border)', borderRadius: 8, padding: 8, fontSize: 11, resize: 'none', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', color: 'var(--text2)' }} />
-          </div>
-
-          {/* Safeguarding */}
-          <div style={{ padding: 14 }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)', marginBottom: 8 }}><Icon name="🛡" /> Safeguarding</div>
-            <div style={{ background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 8, padding: '10px 12px' }}>
-              {/* Counts children, not alerts, and says which -- this panel and
-                  the Medical Alerts stat chip both read "medical alerts" while
-                  one counted medical_notes and the other counted allergies OR
-                  medical_notes, so the same screen showed two numbers. */}
-              <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--warn-text)', marginBottom: 3 }}>
-                {children.filter(c => c.allergies || c.medical_notes).length} child{children.filter(c => c.allergies || c.medical_notes).length !== 1 ? 'ren' : ''} with a medical or allergy alert
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--warn-text)', lineHeight: 1.4, opacity: 0.8 }}>Log all concerns immediately.</div>
-            </div>
-          </div>
-
-          {/* Encouragement */}
-          <EncouragementPanel org={org} primary={primary} />
-        </div>
-      )}
-
-      {/* MOBILE TOOLS SHEET — same actions as the desktop sidebar, surfaced as a bottom sheet.
-          Portaled to document.body so it escapes this panel's stacking context and always
-          renders above the fixed bottom nav bar (same fix as the Staff Rota rebuild). */}
-      {isMobile && showMobileTools && createPortal(
-        <div onClick={() => setShowMobileTools(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '80vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '8px 16px calc(24px + env(safe-area-inset-bottom))', boxShadow: '0 -20px 50px rgba(0,0,0,0.25)' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 8, paddingBottom: 10 }}><div style={{ width: 40, height: 4, borderRadius: 99, background: 'var(--border2)' }} /></div>
-            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Register Options</div>
-            <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 10px', borderRadius: 14, border: '1px solid var(--border-soft)', background: 'var(--surface2)', marginBottom: 8 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--surface3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>{darkMode ? '🌙' : '☀️'}</div>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>Dark Mode</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{darkMode ? 'On' : 'Off'} · applies to the whole app</div>
-                </div>
-              </div>
-              <button onClick={() => setThemeChoice(darkMode ? 'light' : 'dark')} aria-label="Toggle dark mode" aria-pressed={darkMode}
-                style={{ width: 46, height: 26, borderRadius: 99, border: 'none', background: darkMode ? primary : 'var(--text-faint)', position: 'relative', cursor: 'pointer', flexShrink: 0, transition: 'background 0.15s' }}>
-                <span style={{ position: 'absolute', top: 3, left: darkMode ? 23 : 3, width: 20, height: 20, borderRadius: '50%', background: 'var(--surface)', boxShadow: '0 1px 3px rgba(0,0,0,0.3)', transition: 'left 0.15s' }} />
-              </button>
-            </div>
-            {[
-              { icon: '🏷️', label: 'Manage Groups', sub: 'Quick add & colours', action: () => { setShowGroupsSetup(true); setShowMobileTools(false) } },
-              { icon: '💊', label: 'Medical Alerts', sub: 'Review & sign off', action: () => { setShowMobileTools(false); onNavigate && onNavigate('medical_alerts') } },
-              { icon: '📥', label: 'Import Children', sub: 'Bulk add from CSV', action: () => { setShowImport(true); setShowMobileTools(false) } },
-              { icon: '🧩', label: 'Import Templates', sub: 'Customise import fields', action: () => { setShowTemplates(true); setShowMobileTools(false) } },
-              { icon: '🖨', label: 'Print Register', sub: 'Print attendance sheet', action: () => { handlePrint(); setShowMobileTools(false) } },
-              { icon: '📜', label: 'Past Registers', sub: 'View closed sessions', action: () => { setShowPastRegisters(true); setShowMobileTools(false) } },
-            ].map(t => (
-              <button key={t.label} onClick={t.action}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 10px', borderRadius: 14, border: '1px solid var(--border-soft)', background: 'var(--surface2)', cursor: 'pointer', textAlign: 'left', marginBottom: 8 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--surface3)', color: 'var(--text2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}><Icon name={t.icon} /></div>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{t.label}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{t.sub}</div>
-                </div>
-              </button>
-            ))}
-            {onNavigate && (
-              <button onClick={() => { setShowMobileTools(false); onNavigate('settings') }} style={{ width: '100%', textAlign: 'center', border: '1px solid var(--border-soft)', background: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: 'var(--org-ink)', padding: '10px 8px', borderRadius: 12, marginTop: 2 }}>
-                Full Groups Settings →
-              </button>
-            )}
-          </div>
-        </div>,
-        document.body
-      )}
+      <RegisterWorkspace
+        org={org} terms={terms} people={children} sessions={availableSessions} session={session}
+        onSessionChange={setChosenSessionId} attendance={attendance} loading={loading}
+        sessionsLoading={sessionsLoading} sessionsError={sessionsError} onRetrySessions={refetchSessions} attendanceLoading={attendanceLoading} attendanceError={attendanceError} onRetryAttendance={refetchAttendance} offline={showOfflineBanner}
+        groups={bubbles} selectedIds={selectedIds} selectMode={selectMode} assigning={bulkAssigning}
+        onSelectMode={() => { clearSelection(); setSelectMode(value => !value) }}
+        onToggleSelect={toggleSelect} onSelectVisible={ids => setSelectedIds(new Set(ids))}
+        onClearSelection={clearSelection} onAssign={handleBulkAssignGroup}
+        onPerson={child => setSelectedChild({ child, status: getStatus(child.id), attRec: getAttRec(child.id) })}
+        onOpenRegister={item => onNavigate?.('registers', { sessionId: item.id })}
+        onPlan={() => onNavigate?.('planner')} onToday={() => onNavigate?.('today')}
+        onAdd={() => setShowAdd(true)} onImport={() => setShowImport(true)}
+        onTemplates={() => setShowTemplates(true)} onGroups={() => setShowGroupsSetup(true)}
+        onMedical={() => onNavigate?.('medical_alerts')} onPrint={handlePrint}
+        onHistory={() => setShowPastRegisters(true)} onArchive={() => setShowArchive(true)}
+      />
 
       {/* Shared import dialog keeps the upload comfortable on desktop and mobile. */}
       {showImport && createPortal(
@@ -2355,20 +1605,20 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
               setChildren(newChildren)
               setShowImport(false)
               setActiveImportTemplate(null)
-              showToast(`✅ ${added} added — ${newChildren.length} children on the register`)
+              showToast(`${added} added · ${newChildren.length} ${terms.people} in your directory`)
             }} />
           </div>
         </div>,
         document.body
       )}
 
-      {/* MOBILE TEMPLATES MODAL — mirrors the desktop sidebar's inline TemplatePicker panel */}
-      {isMobile && showTemplates && createPortal(
-        <div onClick={() => setShowTemplates(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: '24px 24px 0 0', width: '100%', maxHeight: '88vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '16px 16px calc(16px + env(safe-area-inset-bottom))' }}>
+      {/* Import templates are available from Tools on every viewport. */}
+      {showTemplates && createPortal(
+        <div onClick={() => setShowTemplates(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10700, display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', padding: isMobile ? 0 : 24, justifyContent: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: isMobile ? '24px 24px 0 0' : 24, width: '100%', maxWidth: 640, maxHeight: '88vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '16px 16px calc(16px + env(safe-area-inset-bottom))' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>Import Templates</div>
-              <button onClick={() => setShowTemplates(false)} style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--surface-hover)', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 16 }}>×</button>
+              <button aria-label="Close templates" onClick={() => setShowTemplates(false)} style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--surface-hover)', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 16 }}>×</button>
             </div>
             <TemplatePicker org={org} onUseTemplate={(template) => {
               setActiveImportTemplate(template)
@@ -2378,39 +1628,6 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           </div>
         </div>,
         document.body
-      )}
-
-      {/* BULK ASSIGN ACTION BAR */}
-      {selectedIds.size > 0 && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 10600, background: '#111827', borderRadius: 16, padding: '12px 16px', boxShadow: '0 20px 50px rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap' }}>
-            {selectedIds.size} selected
-          </div>
-          <div style={{ position: 'relative' }}>
-            <button onClick={() => setShowBulkGroupPicker(v => !v)} disabled={bulkAssigning}
-              style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-              {bulkAssigning ? 'Assigning...' : '🏷️ Assign to Group ▾'}
-            </button>
-            {showBulkGroupPicker && (
-              <div style={{ position: 'absolute', bottom: '110%', left: 0, background: 'var(--surface)', borderRadius: 12, boxShadow: '0 16px 40px rgba(0,0,0,0.25)', padding: 8, minWidth: 180, maxHeight: 240, overflowY: 'auto' }}>
-                {bubbles.length === 0 ? (
-                  <div style={{ fontSize: 12, color: 'var(--text-faint)', padding: '8px 10px' }}>No groups set up yet.</div>
-                ) : bubbles.map(b => (
-                  <button key={b.key} onClick={() => handleBulkAssignGroup(b.label)}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 8, fontSize: 13, fontWeight: 700, color: 'var(--text)' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                    <span style={{ width: 10, height: 10, borderRadius: '50%', background: b.color, flexShrink: 0 }} />
-                    {b.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <button onClick={clearSelection} style={{ padding: '9px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-            Cancel
-          </button>
-        </div>
       )}
 
       {/* CHILD DRAWER */}
@@ -2435,7 +1652,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
             setChildren(prev => prev.map(ch => ch.id === childId ? { ...ch, group_name: groupName } : ch))
           }}
           onChildUpdated={async (childId) => {
-            const { data } = await supabase.from('children').select('*').eq('id', childId).single()
+            const { data } = await supabase.from('children').select('*').eq('org_id', orgId).eq('id', childId).single()
             if (data) setChildren(prev => prev.map(ch => ch.id === childId ? data : ch))
             setSelectedChild(null)
           }}
@@ -2511,17 +1728,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
         />
       )}
 
-      {statListModal && (
-        <ChildrenFieldListModal
-          title={statListModal === 'allergies' ? 'Allergies' : 'Medical Alerts'}
-          icon={statListModal === 'allergies' ? '⚠️' : '✚'}
-          color={statListModal === 'allergies' ? '#D97706' : '#DC2626'}
-          items={children.filter(c => statListModal === 'allergies' ? c.allergies : c.medical_notes)}
-          getFieldText={c => statListModal === 'allergies' ? c.allergies : c.medical_notes}
-          onClose={() => setStatListModal(null)}
-          onSelectChild={c => { setStatListModal(null); setSelectedChild({ child: c, status: getStatus(c.id), attRec: getAttRec(c.id) }) }}
-        />
-      )}
+
     </div>
   )
 }
@@ -2529,85 +1736,6 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
 // ─── PAST REGISTERS LIST ──────────────────────────────────────
 // Every closed session for the org, most recent first, grouped by month —
 // tap one to open its read-only timestamped attendance view.
-// ─── STAT CHIP CHILDREN LIST ────────────────────────────────────
-// Shown when tapping the Allergies / Medical Alerts stat chips — a quick
-// scan of who has the flag and what it says, without leaving the register.
-function ChildrenFieldListModal({ title, icon, color, items, getFieldText, onClose, onSelectChild }) {
-  const isMobile = useIsMobile()
-  const [search, setSearch] = useState('')
-  const filtered = items.filter(c => !search.trim() || `${c.first_name} ${c.last_name}`.toLowerCase().includes(search.trim().toLowerCase()))
-  const sorted = [...filtered].sort((a, b) => `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`))
-
-  return createPortal(
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 10900, display: 'flex', flexDirection: 'column',
-      background: isMobile ? 'var(--surface2)' : 'rgba(15,23,42,0.45)',
-      alignItems: isMobile ? 'stretch' : 'center', justifyContent: isMobile ? 'flex-start' : 'center',
-      padding: isMobile ? 0 : 24, boxSizing: 'border-box',
-    }} onClick={isMobile ? undefined : (e) => { if (e.target === e.currentTarget) onClose() }}>
-      <div style={{
-        position: 'relative', width: '100%', maxWidth: isMobile ? 'none' : 560, maxHeight: isMobile ? 'none' : '86vh',
-        display: 'flex', flexDirection: 'column', overflow: 'hidden',
-        borderRadius: isMobile ? 0 : 24, flex: isMobile ? 1 : undefined,
-        background: 'var(--surface2)', boxShadow: isMobile ? 'none' : '0 24px 60px -20px rgba(0,0,0,0.35)',
-      }} onClick={e => e.stopPropagation()}>
-
-        {/* Header */}
-        <div style={{ background: `linear-gradient(165deg, ${withAlpha(color, '12')} 0%, var(--surface) 60%)`, borderBottom: '1px solid var(--border)', padding: isMobile ? '18px 18px 14px' : '20px 22px 16px', flexShrink: 0, position: 'relative' }}>
-          <button onClick={onClose} aria-label="Close" style={{
-            position: 'absolute', top: isMobile ? 14 : 16, right: isMobile ? 14 : 16,
-            width: 32, height: 32, borderRadius: '50%', border: '1.5px solid var(--border)', background: 'var(--surface)',
-            color: 'var(--text2)', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-          }}><Icon name="✕" /></button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingRight: 40 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 11, background: `linear-gradient(135deg, ${color}, ${withAlpha(color, 'CC')})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{icon}</div>
-            <div>
-              <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.3 }}>{title}</div>
-              <div style={{ fontSize: 11.5, color: 'var(--text-faint)', fontWeight: 600 }}>{items.length} child{items.length !== 1 ? 'ren' : ''} on register</div>
-            </div>
-          </div>
-          {items.length > 5 && (
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search by name..."
-              style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 11, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 12.5, outline: 'none' }} />
-          )}
-        </div>
-
-        {/* List */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '14px 16px 24px' : '16px 22px 24px', WebkitOverflowScrolling: 'touch' }}>
-          {sorted.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--text-faint)', fontSize: 13, fontWeight: 600 }}>
-              {items.length === 0 ? `No children have a ${title.toLowerCase()} flag.` : 'Nothing matches your search.'}
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {sorted.map(c => (
-                <button key={c.id} onClick={() => onSelectChild(c)} style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 10, textAlign: 'left', width: '100%',
-                  background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, padding: '11px 13px',
-                  cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
-                }}>
-                  <span style={{ width: 34, height: 34, borderRadius: '50%', background: color + '18', color, fontSize: 12, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    {(c.first_name?.[0] || '') + (c.last_name?.[0] || '')}
-                  </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{c.first_name} {c.last_name}</span>
-                      {c.group_name && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-faint)' }}>· {c.group_name}</span>}
-                    </div>
-                    <div style={{ fontSize: 12, color, fontWeight: 600, marginTop: 3, lineHeight: 1.4 }}>{getFieldText(c)}</div>
-                  </div>
-                  <span style={{ fontSize: 14, color: 'var(--text-faint)', flexShrink: 0, marginTop: 4 }}><Icon name="→" /></span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>,
-    document.body
-  )
-}
-
 function PastRegistersListModal({ sessions, loading, primary, onClose, onSelect }) {
   const isMobile = useIsMobile()
   const [search, setSearch] = useState('')

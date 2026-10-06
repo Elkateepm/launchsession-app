@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { format, startOfToday } from 'date-fns'
+import { londonDate, londonNow } from './sessionPhase'
 
 // ─── OFFLINE CACHE HELPERS ───────────────────────────────────
 // Simple localStorage read/write with a timestamp, used to let the Registers
@@ -62,11 +62,12 @@ export function useOnlineStatus() {
 // band fall back to start_time.
 export function pickActiveSession(sessions) {
   if (!sessions || sessions.length === 0) return null
-  const now = new Date()
+  // Compare wall-clock values in London, independent of the device timezone.
+  const now = new Date(`${londonNow()}Z`)
   const rank = (s) => {
-    if (s.closed_at) return 3
-    const start = s.start_time ? new Date(`${s.session_date}T${s.start_time}`) : null
-    let end = s.end_time ? new Date(`${s.session_date}T${s.end_time}`) : null
+    if (s.closed_at || s.status === 'completed') return 3
+    const start = s.start_time ? new Date(`${s.session_date}T${s.start_time}Z`) : null
+    let end = s.end_time ? new Date(`${s.session_date}T${s.end_time}Z`) : null
     // An end earlier than the start means the session crosses midnight.
     if (start && end && !isNaN(start) && !isNaN(end) && end < start) {
       end = new Date(end.getTime() + 24 * 60 * 60 * 1000)
@@ -77,82 +78,120 @@ export function pickActiveSession(sessions) {
     if (!hasStarted) return 1               // still to come
     return 2                                // ended but never closed
   }
-  return [...sessions].sort((a, b) => {
+  return sessions.filter(s => !s.archived_at && !s.cancelled_at && !['draft', 'cancelled'].includes(s.status)).sort((a, b) => {
     const ra = rank(a), rb = rank(b)
     if (ra !== rb) return ra - rb
     return (a.start_time || '').localeCompare(b.start_time || '')
-  })[0]
+  })[0] || null
 }
 
 export function useTodaySession(orgId) {
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(true)
   const [fromCache, setFromCache] = useState(false)
+  const [error, setError] = useState(null)
+  const [revision, setRevision] = useState(0)
 
   useEffect(() => {
-    if (!orgId) return
-    const today = format(startOfToday(), 'yyyy-MM-dd')
-    const cacheKey = `session:${orgId}:${today}`
+    let active = true
+    let inFlight = false
+    let loadedDay = null
+    setSessions([])
+    setFromCache(false)
+    setError(null)
+    if (!orgId) { setLoading(false); return }
+    setLoading(true)
 
-    // Show cached data immediately so the register isn't blank while the
-    // network request is in flight or if it never completes.
-    const cached = cacheRead(cacheKey)
-    if (cached) { setSessions(cached.data); setFromCache(true) }
-
-    supabase
-      .from('sessions')
-      .select('*')
-      .eq('org_id', orgId)
-      .eq('session_date', today)
-      .order('start_time')
-      .then(({ data, error }) => {
-        if (error || data == null) {
-          // Network/request failed — keep showing cached data if we have it.
-          if (!cached) setSessions([])
-          setLoading(false)
-          return
-        }
+    const refresh = async () => {
+      if (inFlight) return
+      inFlight = true
+      const today = londonDate()
+      const cacheKey = `session:${orgId}:${today}`
+      if (loadedDay !== today) {
+        loadedDay = today
+        const cached = cacheRead(cacheKey)
+        setSessions(cached?.data || [])
+        setFromCache(!!cached)
+        setLoading(true)
+      }
+      try {
+        const { data, error: requestError } = await supabase.from('sessions').select('*')
+          .eq('org_id', orgId).eq('session_date', today).order('start_time')
+        if (!active) return
+        if (requestError || data == null) throw requestError || new Error('No response')
         setSessions(data)
         setFromCache(false)
-        setLoading(false)
+        setError(null)
         cacheWrite(cacheKey, data)
-      })
-      .catch(() => { setLoading(false) })
-  }, [orgId])
+      } catch {
+        if (active) setError("Today's plans could not be refreshed. Check your connection and try again.")
+      } finally {
+        inFlight = false
+        if (active) setLoading(false)
+      }
+    }
+    refresh()
+    const timer = setInterval(() => { if (document.visibilityState !== 'hidden') refresh() }, 30000)
+    const onVisible = () => { if (document.visibilityState !== 'hidden') refresh() }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('online', onVisible)
+    return () => {
+      active = false
+      clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('online', onVisible)
+    }
+  }, [orgId, revision])
 
-  return { sessions, session: pickActiveSession(sessions), loading, fromCache }
+  return { sessions, session: pickActiveSession(sessions), loading, fromCache, error, refetch: () => setRevision(value => value + 1) }
 }
 
 // ─── ATTENDANCE ──────────────────────────────────────────────
-export function useAttendance(sessionId) {
+export function useAttendance(sessionId, orgId) {
   const [attendance, setAttendance] = useState([])
   const [loading, setLoading] = useState(true)
   const [fromCache, setFromCache] = useState(false)
+  const [error, setError] = useState(null)
+  const [revision, setRevision] = useState(0)
 
   useEffect(() => {
-    if (!sessionId) { setLoading(false); return }
-    const cacheKey = `attendance:${sessionId}`
-
+    let active = true
+    let inFlight = false
+    setAttendance([])
+    setFromCache(false)
+    setError(null)
+    if (!sessionId || !orgId) { setLoading(false); return }
+    setLoading(true)
+    const cacheKey = `attendance:${orgId}:${sessionId}`
     const cached = cacheRead(cacheKey)
     if (cached) { setAttendance(cached.data); setFromCache(true) }
 
-    supabase
-      .from('attendance')
-      .select('*, child:children(*)')
-      .eq('session_id', sessionId)
-      .then(({ data, error }) => {
-        if (error || data == null) {
-          if (!cached) setAttendance([])
-          setLoading(false)
-          return
-        }
+    const refresh = async () => {
+      if (inFlight) return
+      inFlight = true
+      try {
+        const { data, error: requestError } = await supabase.from('attendance')
+          .select('*, child:children(*)').eq('org_id', orgId).eq('session_id', sessionId)
+        if (!active) return
+        if (requestError || data == null) throw requestError || new Error('No response')
         setAttendance(data)
         setFromCache(false)
-        setLoading(false)
+        setError(null)
         cacheWrite(cacheKey, data)
-      })
-      .catch(() => { setLoading(false) })
-  }, [sessionId])
+      } catch {
+        if (active) setError('Attendance could not be refreshed. The overview may be out of date.')
+      } finally {
+        inFlight = false
+        if (active) setLoading(false)
+      }
+    }
+    refresh()
+    const timer = setInterval(() => { if (document.visibilityState !== 'hidden') refresh() }, 30000)
+    const onVisible = () => { if (document.visibilityState !== 'hidden') refresh() }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('online', onVisible)
+    return () => { active = false; clearInterval(timer); document.removeEventListener('visibilitychange', onVisible); window.removeEventListener('online', onVisible) }
+  }, [sessionId, orgId, revision])
 
   const updateStatus = async (attendanceId, status, extra = {}) => {
     const now = new Date().toISOString()
@@ -167,7 +206,7 @@ export function useAttendance(sessionId) {
     setAttendance(prev => [...prev, row])
   }
 
-  return { attendance, loading, updateStatus, addAttendanceRow, fromCache }
+  return { attendance, loading, updateStatus, addAttendanceRow, fromCache, error, refetch: () => setRevision(value => value + 1) }
 }
 
 // ─── CHILDREN ────────────────────────────────────────────────
