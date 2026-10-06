@@ -5,7 +5,7 @@ import { londonDate } from '../../lib/sessionPhase'
 import Icon from '../../lib/icons'
 import SignedImg from '../shared/SignedImg'
 import RegisterBrandMark from './RegisterBrandMark'
-import { brandPalette, darken } from '../../lib/brandColors'
+import OrgBrandHero, { orgBrand } from '../shared/OrgBrandHero'
 import { ageOnDate, groupFor, registerView, UNGROUPED } from './registerView'
 
 const button = { minHeight: 44, minWidth: 44, borderRadius: 12, padding: '10px 15px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', font: 'inherit', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }
@@ -14,12 +14,8 @@ const statusColours = { signed_in: 'var(--ok-text)', signed_out: 'var(--info-tex
 
 export default function RegisterWorkspace({ org, terms, people, sessions, session, onSessionChange, attendance, loading, sessionsLoading, sessionsError, onRetrySessions, attendanceLoading, attendanceError, onRetryAttendance, offline, groups, selectedIds, selectMode, onSelectMode, onToggleSelect, onSelectVisible, onClearSelection, onAssign, assigning, onPerson, onOpenRegister, onPlan, onToday, onAdd, onImport, onTemplates, onGroups, onMedical, onPrint, onHistory, onArchive }) {
   const mobile = useIsMobile()
-  const primary = org?.primary_color || '#1B9AAA'
-  const secondary = org?.secondary_color || primary
-  const brandInk = brandPalette(primary, false).ink
-  const secondaryInk = brandPalette(secondary, false).ink
-  const brandGradient = `linear-gradient(120deg, ${brandInk}, ${secondaryInk})`
-  const heroGradient = `linear-gradient(120deg, ${darken(brandInk, .58)}, ${darken(brandInk, .3)} 60%, ${darken(secondaryInk, .4)})`
+  const brand = orgBrand(org)
+  const { primary, secondary, gradient: brandGradient } = brand
   const [directory, setDirectory] = useState(!session)
   const [search, setSearch] = useState('')
   const [group, setGroup] = useState('all')
@@ -57,7 +53,7 @@ export default function RegisterWorkspace({ org, terms, people, sessions, sessio
   ]
 
   return <div data-register-workspace style={{ height: '100%', width: '100%', minWidth: 0, overflowY: 'auto', background: `radial-gradient(ellipse at 0% 0%, ${withAlpha(primary, '14')}, transparent 48%), var(--bg, var(--surface2))`, color: 'var(--text)', boxSizing: 'border-box', paddingBottom: mobile ? 24 : 32 }}>
-    <div aria-hidden="true" style={{ height: 4, background: `linear-gradient(90deg, ${primary}, ${secondary}, ${primary})` }} />
+    <div aria-hidden="true" style={{ height: 4, background: brand.stripe }} />
     <div style={{ maxWidth: 1280, margin: '0 auto', padding: mobile ? '20px 16px 0' : '28px 28px 0' }}>
     <header>
       {!mobile && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
@@ -89,20 +85,7 @@ export default function RegisterWorkspace({ org, terms, people, sessions, sessio
       </div>
 
       <section aria-label="Today's register overview" style={{ borderRadius: 22, border: `1px solid ${withAlpha(primary, '35')}`, background: `linear-gradient(115deg, ${withAlpha(primary, '12')}, var(--surface) 60%, ${withAlpha(secondary, '12')})`, marginBottom: mobile ? 16 : 22, boxShadow: `0 12px 35px -24px ${withAlpha(primary, '80')}` }}>
-        <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '21px 21px 0 0', background: heroGradient, color: '#fff', padding: mobile ? '12px 14px' : '18px 24px' }}>
-          <div aria-hidden="true" style={{ pointerEvents: 'none', position: 'absolute', width: 310, height: 310, right: -40, top: -150, border: '1px solid #ffffff20', borderRadius: '50%', transform: 'rotate(-20deg) scaleY(.5)' }} />
-          <div aria-hidden="true" style={{ pointerEvents: 'none', position: 'absolute', width: 410, height: 410, right: -70, top: -195, border: '1px solid #ffffff16', borderRadius: '50%', transform: 'rotate(-20deg) scaleY(.5)' }} />
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-              <RegisterBrandMark org={org} size={mobile ? 34 : 46} />
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontFamily: 'var(--font-display, inherit)', fontSize: mobile ? 14 : 17, fontWeight: 800, overflowWrap: 'anywhere', lineHeight: 1.3 }}>{org?.name || 'Your organisation'}</div>
-                {!mobile && <div style={{ color: '#ffffffc7', fontSize: 12, lineHeight: 1.5, marginTop: 3 }}>{org?.slogan || `Every ${terms.person} counts.`}</div>}
-              </div>
-            </div>
-            {!mobile && <div style={{ textAlign: 'right', flexShrink: 0 }}><div style={{ color: '#ffffffb3', fontSize: 10, fontWeight: 800, letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 5 }}>Today's register</div><span style={{ fontSize: 12 }}>{dateLabel}</span></div>}
-          </div>
-        </div>
+        <OrgBrandHero org={org} terms={terms} mobile={mobile} radius="21px 21px 0 0" label="Today's register" detail={dateLabel} />
         <div style={{ padding: mobile ? 14 : 24 }}>
         {sessions.length > 1 && <label style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', fontSize: 12, fontWeight: 700, color: 'var(--text3)', marginBottom: 16 }}>
           {!mobile && <>Today's {terms.sessions}</>}

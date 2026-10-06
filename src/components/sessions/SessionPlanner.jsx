@@ -13,6 +13,8 @@ import { useTerms } from '../../context/OrgContext'
 import { londonDate, sessionPhase } from '../../lib/sessionPhase'
 import SessionSheet, { flowButton, flowInput } from './SessionSheet'
 import { withAlpha } from '../../lib/withAlpha'
+import OrgBrandHero, { orgBrand } from '../shared/OrgBrandHero'
+import RegisterBrandMark from '../registers/RegisterBrandMark'
 
 const SESSION_TYPES = [
   { key: 'activity',  label: 'Activity',  icon: '🏃', color: '#1B9AAA' },
@@ -1375,7 +1377,7 @@ function CardMenu({ status, onView, onEdit, onDuplicate, onDelete, onSaveTemplat
   )
 }
 
-function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, project, onOpenProject, isMobile, onView, onEdit, onDelete, onDuplicate, onSaveTemplate, onVolunteers, onReflect, onOpenRegister, primary, hasRiskAssessment }) {
+function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, project, onOpenProject, isMobile, onView, onEdit, onDelete, onDuplicate, onSaveTemplate, onVolunteers, onReflect, onOpenRegister, primary, brandGradient, hasRiskAssessment }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const terms = useTerms()
   const past = status === 'completed' || status === 'review'
@@ -1391,7 +1393,7 @@ function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, pr
   const actionLabel = status === 'draft' ? 'Continue planning' : past && !hasReflection ? 'Add reflection' : past ? 'View register' : 'Open register'
   return <article style={{ position: 'relative', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: isMobile ? 16 : 20, marginBottom: 12 }}>
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-      {!isMobile && <div style={{ width: 58, flexShrink: 0, background: 'var(--surface-hover)', borderRadius: 10, padding: '12px 0', textAlign: 'center' }}><div style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase' }}>{s.session_date ? format(parseISO(s.session_date), 'MMM') : 'Date'}</div><strong style={{ display: 'block', fontSize: 22, color: 'var(--text)' }}>{s.session_date ? format(parseISO(s.session_date), 'dd') : '—'}</strong></div>}
+      {!isMobile && <div style={{ width: 58, flexShrink: 0, background: 'var(--org-a10)', border: '1px solid var(--org-a20)', borderRadius: 10, padding: '12px 0', textAlign: 'center', boxSizing: 'border-box' }}><div style={{ fontSize: 11, fontWeight: 800, color: 'var(--org-ink)', textTransform: 'uppercase' }}>{s.session_date ? format(parseISO(s.session_date), 'MMM') : 'Date'}</div><strong style={{ display: 'block', fontSize: 22, color: 'var(--text)' }}>{s.session_date ? format(parseISO(s.session_date), 'dd') : '—'}</strong></div>}
       <div style={{ flex: 1, minWidth: 0 }}><span style={{ display: 'inline-flex', fontSize: 11, fontWeight: 800, color: tone.color, background: tone.bg, borderRadius: 6, padding: '4px 7px', marginBottom: 5 }}>{labels[status]}</span>
         <button onClick={onView} style={{ display: 'block', textAlign: 'left', minHeight: 44, background: 'none', border: 0, padding: 0, fontSize: 17, fontWeight: 800, color: 'var(--text)', cursor: 'pointer', overflowWrap: 'anywhere' }}>{s.title}</button>
         <div style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--text3)' }}>{s.session_date ? fmtDayLabel(s.session_date) : 'Date to be confirmed'}{s.start_time ? ` · ${s.start_time.slice(0, 5)}${s.end_time ? `–${s.end_time.slice(0, 5)}` : ''}` : ''}</div>
@@ -1402,7 +1404,7 @@ function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, pr
     </div>
     <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', padding: '14px 0', marginTop: 10, borderTop: '1px solid var(--border-soft)' }}><MetaStat value={status === 'live' || past ? counts?.signedIn || 0 : counts?.total || 0} label={status === 'live' ? 'signed in' : past ? 'attended' : 'expected'} />{status === 'live' && <MetaStat value={counts?.expected || 0} label="to arrive" />}<MetaStat value={volCount} label="volunteers" />{past && <MetaStat value={counts?.absent || 0} label="absent" />}</div>
     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: issues?.length || needsVols || s.risk_assessment_required ? 12 : 0 }}>{(issues || []).map((issue, i) => <span key={i} style={{ fontSize: 12, color: (REVIEW_TONES[issue.kind] || REVIEW_TONES.admin).color, background: (REVIEW_TONES[issue.kind] || REVIEW_TONES.admin).bg, padding: '5px 8px', borderRadius: 6 }}>{issue.label}</span>)}{!past && needsVols && <StatusPill tone="amber">{s.volunteer_limit - volCount} volunteers needed</StatusPill>}{!past && s.risk_assessment_required && !hasRiskAssessment && <StatusPill tone="amber">Risk assessment needed</StatusPill>}</div>
-    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{status !== 'cancelled' && <button onClick={action} style={{ ...flowButton, flex: isMobile ? '1 1 auto' : undefined, background: primary, borderColor: primary, color: '#fff' }}>{actionLabel} →</button>}<button onClick={onView} aria-label={`View ${terms.session} details for ${s.title}`} style={flowButton}>Details</button>{!isMobile && !past && needsVols && <button onClick={onVolunteers} style={flowButton}>Assign volunteers</button>}</div>
+    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{status !== 'cancelled' && <button onClick={action} style={{ ...flowButton, flex: isMobile ? '1 1 auto' : undefined, background: brandGradient || primary, borderColor: 'transparent', color: '#fff' }}>{actionLabel} →</button>}<button onClick={onView} aria-label={`View ${terms.session} details for ${s.title}`} style={flowButton}>Details</button>{!isMobile && !past && needsVols && <button onClick={onVolunteers} style={flowButton}>Assign volunteers</button>}</div>
   </article>
 }
 
@@ -1446,7 +1448,8 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
   const terms = useTerms()
   const preferencesKey = `ls_planner_view_${orgId}`
   const [preferences] = useState(() => { try { return JSON.parse(sessionStorage.getItem(preferencesKey)) || {} } catch { return {} } })
-  const primary = org?.primary_color || '#1B9AAA'
+  const brand = orgBrand(org)
+  const { primary } = brand
   const { groups: orgGroups } = useOrgSettings(orgId)
   const bubbleDefs = normaliseBubbleDefs(orgGroups)
   const isMobile = useIsMobile()
@@ -1997,21 +2000,47 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
     needs_review: { icon: '✓', title: "You're all caught up", text: 'No sessions currently need attention.', showCta: false },
   }[tab]
 
+  const nextSession = strictlyUpcomingSessions.find(s => s.session_date) || strictlyUpcomingSessions[0]
+  const heroStatus = liveSessions.length
+    ? { label: 'Live now', detail: `${liveSessions.length} ${liveSessions.length === 1 ? terms.session : terms.sessions} running` }
+    : nextSession
+      ? { label: `Next ${terms.session}`, detail: `${nextSession.session_date ? fmtDayLabel(nextSession.session_date) : 'Date to be confirmed'}${nextSession.start_time ? ` · ${nextSession.start_time.slice(0, 5)}` : ''}` }
+      : { label: 'Today', detail: new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'long', day: 'numeric', month: 'long' }).format(clock) }
+  const shortcut = { ...flowButton, background: 'transparent', borderColor: 'transparent', padding: '6px 10px', color: 'var(--text3)', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 8 }
+
   // ── LIST / WEEK VIEW ──
   return (
-    <div style={{ background: 'var(--bg)', minHeight: '100%' }}>
+    <div style={{ background: `radial-gradient(ellipse at 0% 0%, ${withAlpha(primary, '14')}, transparent 48%), var(--bg)`, minHeight: '100%' }}>
       <style>{`@keyframes sp-live-pulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
-      <div style={{ padding: isMobile ? 16 : 28, maxWidth: 1280, margin: '0 auto' }}>
+      <div aria-hidden="true" style={{ height: 4, background: brand.stripe }} />
+      <div style={{ padding: isMobile ? '20px 16px 16px' : 28, maxWidth: 1280, margin: '0 auto' }}>
 
-        <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
-          <div><div style={{ fontSize: 11, letterSpacing: 1.2, color: 'var(--text3)', fontWeight: 800, marginBottom: 8 }}>PLAN · RUN · REVIEW</div><h1 style={{ margin: 0, fontSize: isMobile ? 27 : 32, fontWeight: 800, color: 'var(--text)', letterSpacing: '-1px' }}>{terms.Sessions}</h1><p style={{ margin: '7px 0 0', fontSize: 14, color: 'var(--text3)' }}>Your plans, people and registers in one place.</p></div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, width: isMobile ? '100%' : undefined }}>
-            <button onClick={() => onNavigate?.('registers')} style={{ ...flowButton, flex: isMobile ? 1 : undefined }}><Icon name="📋" /> Registers</button>
-            <button onClick={() => setView('templates')} style={{ ...flowButton, flex: isMobile ? 1 : undefined }}>Templates</button><button onClick={() => openNew()} style={{ ...flowButton, flex: isMobile ? 2 : undefined, background: primary, borderColor: primary, color: '#fff' }}>+ New {terms.session}</button>
-            <div style={{ position: 'relative' }}><button aria-label="More creation options" aria-expanded={showNewMenu} onClick={() => setShowNewMenu(v => !v)} style={{ ...flowButton, width: 44, padding: 0 }}>•••</button>
-              {showNewMenu && <><div onClick={() => setShowNewMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} /><div style={{ position: 'absolute', right: 0, top: 50, width: 240, zIndex: 41, padding: 6, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 12px 30px #0F172A20' }}>{[{ label: 'Duplicate a previous plan', action: () => setShowDuplicatePicker(true) }, { label: 'Create a multi-day project', action: () => setShowProjectWizard(true) }].map(item => <button key={item.label} onClick={() => { setShowNewMenu(false); item.action() }} style={{ ...flowButton, width: '100%', border: 0, textAlign: 'left' }}>{item.label}</button>)}</div></>}
+        <header style={{ marginBottom: isMobile ? 16 : 22 }}>
+          {!isMobile && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
+            <span style={{ fontSize: 11, letterSpacing: 1.2, color: 'var(--text3)', fontWeight: 800 }}>LAUNCHSESSION · PLAN · RUN · REVIEW</span>
+            <nav aria-label="Delivery shortcuts" style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => onNavigate?.('registers')} style={shortcut}><Icon name="📋" />Registers</button>
+              <button onClick={() => onNavigate?.('today')} style={shortcut}><Icon name="⚡" />Today</button>
+            </nav>
+          </div>}
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: isMobile ? 14 : 22 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 12 : 16, minWidth: 0 }}>
+              <RegisterBrandMark product size={isMobile ? 46 : 60} />
+              <div style={{ minWidth: 0 }}>
+                {isMobile && <div style={{ color: 'var(--org-ink)', fontSize: 10, letterSpacing: 1.4, fontWeight: 800, marginBottom: 4 }}>LAUNCHSESSION</div>}
+                <h1 style={{ fontFamily: 'var(--font-display, inherit)', fontSize: isMobile ? 28 : 34, lineHeight: 1.1, fontWeight: 850, letterSpacing: -1, color: 'var(--text)', margin: isMobile ? 0 : '0 0 8px' }}>{terms.Sessions}</h1>
+                {!isMobile && <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: 'var(--text3)' }}>Your plans, people and registers in one place.</p>}
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, width: isMobile ? '100%' : undefined }}>
+              <button onClick={() => setView('templates')} style={{ ...flowButton, flex: isMobile ? 1 : undefined, color: 'var(--org-ink)', background: withAlpha(primary, '0C'), borderColor: withAlpha(primary, '35') }}>Templates</button>
+              <button onClick={() => openNew()} style={{ ...flowButton, flex: isMobile ? 2 : undefined, background: brand.gradient, borderColor: 'transparent', color: '#fff', boxShadow: `0 5px 14px ${withAlpha(primary, '26')}` }}>+ New {terms.session}</button>
+              <div style={{ position: 'relative' }}><button aria-label={isMobile ? 'More options' : 'More creation options'} aria-expanded={showNewMenu} onClick={() => setShowNewMenu(v => !v)} style={{ ...flowButton, width: 44, padding: 0 }}>•••</button>
+                {showNewMenu && <><div onClick={() => setShowNewMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} /><div style={{ position: 'absolute', right: 0, top: 50, width: 240, zIndex: 41, padding: 6, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 12px 30px #0F172A20' }}>{[...(isMobile ? [{ label: 'Registers', action: () => onNavigate?.('registers') }, { label: 'Today', action: () => onNavigate?.('today') }] : []), { label: 'Duplicate a previous plan', action: () => setShowDuplicatePicker(true) }, { label: 'Create a multi-day project', action: () => setShowProjectWizard(true) }].map(item => <button key={item.label} onClick={() => { setShowNewMenu(false); item.action() }} style={{ ...flowButton, width: '100%', border: 0, textAlign: 'left' }}>{item.label}</button>)}</div></>}
+              </div>
             </div>
           </div>
+          <OrgBrandHero org={org} terms={terms} mobile={isMobile} label={heroStatus.label} detail={heroStatus.detail} style={{ boxShadow: `0 12px 35px -24px ${withAlpha(primary, '80')}` }} />
         </header>
         {/* ═══ ACTIVE PROJECT STRIP — bridges Sessions to Projects ═══ */}
         {runningProject && (
@@ -2094,8 +2123,8 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
             {EMPTY_COPY.showCta && activeFilterChips.length === 0 && (
               <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
                 <button onClick={() => openNew()}
-                  style={{ padding: '11px 22px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #6D5DF6, #5B8DEF)', color: '#fff', fontSize: 13.5, fontWeight: 800, cursor: 'pointer' }}>
-                  + Create a Session
+                  style={{ padding: '11px 22px', borderRadius: 12, border: 'none', background: brand.gradient, color: '#fff', fontSize: 13.5, fontWeight: 800, cursor: 'pointer', boxShadow: `0 5px 14px ${withAlpha(primary, '26')}` }}>
+                  + Create a {terms.session}
                 </button>
                 {templates.length > 0 && (
                   <button onClick={() => setView('templates')}
@@ -2117,7 +2146,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
                   <SessionRowCard
                     key={s.id}
                     s={s}
-                    status={tab === 'needs_review' ? 'review' : sessionPhase(s, clock)} primary={primary} hasRiskAssessment={!!raSessions[s.id]}
+                    status={tab === 'needs_review' ? 'review' : sessionPhase(s, clock)} primary={primary} brandGradient={brand.gradient} hasRiskAssessment={!!raSessions[s.id]}
                     counts={attendanceCounts[s.id]}
                     volCount={volCounts[s.id] || 0}
                     hasReflection={!!reflections[s.id]}
