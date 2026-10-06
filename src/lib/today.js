@@ -34,11 +34,19 @@ export function dayInLondon(value) {
   return Number.isNaN(d.getTime()) ? null : ISO_DAY.format(d)
 }
 
-/** Today in London shifted by whole days — `-1` is yesterday. */
+/**
+ * Today in London shifted by whole days — `-1` is yesterday.
+ *
+ * Steps calendar days, not 24-hour blocks. Adding days to the current instant
+ * and then formatting in London repeats or skips a day when the span crosses
+ * a clock change during the hour London and UTC disagree on the date. Here the
+ * London day is pinned to UTC midnight, where a day is always 24 hours, so the
+ * UTC date of the result is the London date we want.
+ */
 export function londonDayOffset(days) {
-  const d = new Date()
+  const d = new Date(`${todayInLondon()}T00:00:00Z`)
   d.setUTCDate(d.getUTCDate() + days)
-  return ISO_DAY.format(d)
+  return d.toISOString().slice(0, 10)
 }
 
 export default todayInLondon

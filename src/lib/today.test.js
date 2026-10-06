@@ -43,6 +43,33 @@ describe('londonDayOffset', () => {
       expect(londonDayOffset(7)).toBe('2026-07-22')
     } finally { jest.useRealTimers() }
   })
+
+  // Both instants sit in the hour London and UTC disagree on the date, with a
+  // clock change inside the span. Adding 24-hour blocks to the instant gave
+  // 25 Oct twice in autumn and skipped 29 Mar in spring.
+  it('gives consecutive days across the October clock change', () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-10-23T23:30:00Z'))  // 00:30 BST, 24 Oct
+    try {
+      expect([0, 1, 2, 3].map(londonDayOffset))
+        .toEqual(['2026-10-24', '2026-10-25', '2026-10-26', '2026-10-27'])
+    } finally { jest.useRealTimers() }
+  })
+
+  it('gives consecutive days across the March clock change', () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-03-28T23:30:00Z'))  // 23:30 GMT, 28 Mar
+    try {
+      expect([0, 1, 2, 3].map(londonDayOffset))
+        .toEqual(['2026-03-28', '2026-03-29', '2026-03-30', '2026-03-31'])
+    } finally { jest.useRealTimers() }
+  })
+
+  it('steps back across a clock change too', () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-10-26T23:30:00Z'))  // 23:30 GMT, 26 Oct
+    try {
+      expect([0, -1, -2, -3].map(londonDayOffset))
+        .toEqual(['2026-10-26', '2026-10-25', '2026-10-24', '2026-10-23'])
+    } finally { jest.useRealTimers() }
+  })
 })
 
 // This pattern reads correctly and is wrong for eight months of the year, which
