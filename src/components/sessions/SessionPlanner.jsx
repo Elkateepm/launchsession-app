@@ -13,8 +13,7 @@ import { useTerms } from '../../context/OrgContext'
 import { londonDate, sessionPhase } from '../../lib/sessionPhase'
 import SessionSheet, { flowButton, flowInput } from './SessionSheet'
 import { withAlpha } from '../../lib/withAlpha'
-import OrgBrandHero, { orgBrand } from '../shared/OrgBrandHero'
-import RegisterBrandMark from '../registers/RegisterBrandMark'
+import OrgPageHero, { orgBrand, heroButtons } from '../shared/OrgPageHero'
 
 const SESSION_TYPES = [
   { key: 'activity',  label: 'Activity',  icon: '🏃', color: '#1B9AAA' },
@@ -2006,7 +2005,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
     : nextSession
       ? { label: `Next ${terms.session}`, detail: `${nextSession.session_date ? fmtDayLabel(nextSession.session_date) : 'Date to be confirmed'}${nextSession.start_time ? ` · ${nextSession.start_time.slice(0, 5)}` : ''}` }
       : { label: 'Today', detail: new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'long', day: 'numeric', month: 'long' }).format(clock) }
-  const shortcut = { ...flowButton, background: 'transparent', borderColor: 'transparent', padding: '6px 10px', color: 'var(--text3)', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 8 }
+  const onHero = heroButtons(brand, { ...flowButton, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 })
 
   // ── LIST / WEEK VIEW ──
   return (
@@ -2015,33 +2014,18 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
       <div aria-hidden="true" style={{ height: 4, background: brand.stripe }} />
       <div style={{ padding: isMobile ? '20px 16px 16px' : 28, maxWidth: 1280, margin: '0 auto' }}>
 
-        <header style={{ marginBottom: isMobile ? 16 : 22 }}>
-          {!isMobile && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
-            <span style={{ fontSize: 11, letterSpacing: 1.2, color: 'var(--text3)', fontWeight: 800 }}>LAUNCHSESSION · PLAN · RUN · REVIEW</span>
-            <nav aria-label="Delivery shortcuts" style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => onNavigate?.('registers')} style={shortcut}><Icon name="📋" />Registers</button>
-              <button onClick={() => onNavigate?.('today')} style={shortcut}><Icon name="⚡" />Today</button>
-            </nav>
-          </div>}
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: isMobile ? 14 : 22 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 12 : 16, minWidth: 0 }}>
-              <RegisterBrandMark product size={isMobile ? 46 : 60} />
-              <div style={{ minWidth: 0 }}>
-                {isMobile && <div style={{ color: 'var(--org-ink)', fontSize: 10, letterSpacing: 1.4, fontWeight: 800, marginBottom: 4 }}>LAUNCHSESSION</div>}
-                <h1 style={{ fontFamily: 'var(--font-display, inherit)', fontSize: isMobile ? 28 : 34, lineHeight: 1.1, fontWeight: 850, letterSpacing: -1, color: 'var(--text)', margin: isMobile ? 0 : '0 0 8px' }}>{terms.Sessions}</h1>
-                {!isMobile && <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: 'var(--text3)' }}>Your plans, people and registers in one place.</p>}
-              </div>
+        <OrgPageHero org={org} mobile={isMobile} title={terms.Sessions} subtitle="Your plans, people and registers in one place." label={heroStatus.label} detail={heroStatus.detail}
+          actions={<>
+            <button onClick={() => openNew()} style={{ ...onHero.main, flex: isMobile ? 2 : undefined }}>+ New {terms.session}</button>
+            <button onClick={() => setView('templates')} style={{ ...onHero.quiet, flex: isMobile ? 1 : undefined }}>Templates</button>
+            <div style={{ position: 'relative' }}><button aria-label={isMobile ? 'More options' : 'More creation options'} aria-expanded={showNewMenu} onClick={() => setShowNewMenu(v => !v)} style={{ ...onHero.quiet, width: 44, padding: 0 }}>•••</button>
+              {showNewMenu && <><div onClick={() => setShowNewMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} /><div style={{ position: 'absolute', right: 0, top: 50, width: 240, zIndex: 41, padding: 6, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 12px 30px #0F172A20' }}>{[...(isMobile ? [{ label: 'Registers', action: () => onNavigate?.('registers') }, { label: 'Today', action: () => onNavigate?.('today') }] : []), { label: 'Duplicate a previous plan', action: () => setShowDuplicatePicker(true) }, { label: 'Create a multi-day project', action: () => setShowProjectWizard(true) }].map(item => <button key={item.label} onClick={() => { setShowNewMenu(false); item.action() }} style={{ ...flowButton, width: '100%', border: 0, textAlign: 'left' }}>{item.label}</button>)}</div></>}
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, width: isMobile ? '100%' : undefined }}>
-              <button onClick={() => setView('templates')} style={{ ...flowButton, flex: isMobile ? 1 : undefined, color: 'var(--org-ink)', background: withAlpha(primary, '0C'), borderColor: withAlpha(primary, '35') }}>Templates</button>
-              <button onClick={() => openNew()} style={{ ...flowButton, flex: isMobile ? 2 : undefined, background: brand.gradient, borderColor: 'transparent', color: '#fff', boxShadow: `0 5px 14px ${withAlpha(primary, '26')}` }}>+ New {terms.session}</button>
-              <div style={{ position: 'relative' }}><button aria-label={isMobile ? 'More options' : 'More creation options'} aria-expanded={showNewMenu} onClick={() => setShowNewMenu(v => !v)} style={{ ...flowButton, width: 44, padding: 0 }}>•••</button>
-                {showNewMenu && <><div onClick={() => setShowNewMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} /><div style={{ position: 'absolute', right: 0, top: 50, width: 240, zIndex: 41, padding: 6, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 12px 30px #0F172A20' }}>{[...(isMobile ? [{ label: 'Registers', action: () => onNavigate?.('registers') }, { label: 'Today', action: () => onNavigate?.('today') }] : []), { label: 'Duplicate a previous plan', action: () => setShowDuplicatePicker(true) }, { label: 'Create a multi-day project', action: () => setShowProjectWizard(true) }].map(item => <button key={item.label} onClick={() => { setShowNewMenu(false); item.action() }} style={{ ...flowButton, width: '100%', border: 0, textAlign: 'left' }}>{item.label}</button>)}</div></>}
-              </div>
-            </div>
-          </div>
-          <OrgBrandHero org={org} terms={terms} mobile={isMobile} label={heroStatus.label} detail={heroStatus.detail} style={{ boxShadow: `0 12px 35px -24px ${withAlpha(primary, '80')}` }} />
-        </header>
+          </>}
+          shortcuts={<>
+            <button onClick={() => onNavigate?.('registers')} style={onHero.shortcut}><Icon name="📋" />Registers</button>
+            <button onClick={() => onNavigate?.('today')} style={onHero.shortcut}><Icon name="⚡" />Today</button>
+          </>} />
         {/* ═══ ACTIVE PROJECT STRIP — bridges Sessions to Projects ═══ */}
         {runningProject && (
           <button
@@ -2265,6 +2249,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
               style={{ ...flowButton, border: 0, width: 44, padding: 0, fontSize: 20 }}>×</button>
           </div>
         )}
+        <footer style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '22px 0 4px', fontSize: 11, color: 'var(--text3)' }}><Icon name="🚀" />Powered by <span style={{ fontWeight: 800, color: 'var(--org-ink)' }}>LaunchSession</span></footer>
       </div>
 
       {/* ═══ FILTERS DRAWER / BOTTOM SHEET ═══ */}
