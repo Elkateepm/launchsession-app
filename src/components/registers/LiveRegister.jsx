@@ -13,6 +13,7 @@ import Icon from '../../lib/icons'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { withAlpha } from '../../lib/withAlpha'
 import { todayInLondon } from '../../lib/today'
+import RegisterBrandMark from './RegisterBrandMark'
 
 const COLLECTION_TYPES = [
   { key: 'approved_adult', label: 'Approved adult' },
@@ -378,14 +379,15 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
       }}>
       {/* HEADER */}
       <div style={{
-        background: 'var(--surface)',
+        background: `linear-gradient(120deg, var(--org-a10), var(--surface) 70%)`,
+        borderTop: `3px solid ${org?.primary_color || 'var(--org-primary)'}`,
         backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
         borderBottom: '1px solid var(--border)', padding: isMobile ? '12px 14px 11px' : '16px 18px 14px',
         boxShadow: '0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 24px -18px rgba(15,23,42,0.25)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <button aria-label={backLabel} onClick={onClose} style={{ minHeight: 44, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', fontSize: 15.5, fontWeight: 800, color: 'var(--text)', cursor: 'pointer', padding: '4px 6px 4px 2px', borderRadius: 8, letterSpacing: '-0.01em' }}>
-            <span style={{ fontSize: 20, color: 'var(--org-ink)' || '#1B9AAA' }}>‹</span><span style={{ textAlign: 'left', minWidth: 0 }}><span style={{ display: 'block', color: 'var(--text3)', fontSize: 11, fontWeight: 600, marginBottom: 4 }}>{backLabel}</span><span style={{ display: 'block', overflowWrap: 'anywhere' }}>{session.title}</span></span>
+            <span style={{ fontSize: 20, color: 'var(--org-ink)' || '#1B9AAA' }}>‹</span><RegisterBrandMark org={org} size={isMobile ? 32 : 42} /><span style={{ textAlign: 'left', minWidth: 0 }}><span style={{ display: 'block', color: 'var(--text3)', fontSize: 11, fontWeight: 600, marginBottom: 4 }}>{backLabel}</span><span style={{ display: 'block', overflowWrap: 'anywhere' }}>{session.title}</span></span>
           </button>
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800,

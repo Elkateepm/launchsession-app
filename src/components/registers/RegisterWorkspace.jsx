@@ -4,6 +4,8 @@ import { withAlpha } from '../../lib/withAlpha'
 import { londonDate } from '../../lib/sessionPhase'
 import Icon from '../../lib/icons'
 import SignedImg from '../shared/SignedImg'
+import RegisterBrandMark from './RegisterBrandMark'
+import { brandPalette, darken } from '../../lib/brandColors'
 import { ageOnDate, groupFor, registerView, UNGROUPED } from './registerView'
 
 const button = { minHeight: 44, minWidth: 44, borderRadius: 12, padding: '10px 15px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', font: 'inherit', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }
@@ -14,6 +16,10 @@ export default function RegisterWorkspace({ org, terms, people, sessions, sessio
   const mobile = useIsMobile()
   const primary = org?.primary_color || '#1B9AAA'
   const secondary = org?.secondary_color || primary
+  const brandInk = brandPalette(primary, false).ink
+  const secondaryInk = brandPalette(secondary, false).ink
+  const brandGradient = `linear-gradient(120deg, ${brandInk}, ${secondaryInk})`
+  const heroGradient = `linear-gradient(120deg, ${darken(brandInk, .58)}, ${darken(brandInk, .3)} 60%, ${darken(secondaryInk, .4)})`
   const [directory, setDirectory] = useState(!session)
   const [search, setSearch] = useState('')
   const [group, setGroup] = useState('all')
@@ -40,7 +46,7 @@ export default function RegisterWorkspace({ org, terms, people, sessions, sessio
   const closed = !!session?.closed_at || session?.status === 'completed'
   const started = !!session?.opened_at || view.counts.signed_in > 0 || view.counts.signed_out > 0
   const phaseLabel = closed ? 'Register closed' : started ? 'Register open' : 'Ready to take attendance'
-  const actionStyle = { ...button, background: primary, color: 'var(--org-on-primary, #fff)', borderColor: primary }
+  const actionStyle = { ...button, background: brandGradient, color: '#fff', borderColor: 'transparent', boxShadow: `0 5px 14px ${withAlpha(primary, '26')}` }
   const tools = [
     ...(mobile ? [{ label: terms.Sessions, icon: '📅', action: onPlan }, { label: 'Today', icon: '⚡', action: onToday }] : []),
     { label: `Manage ${terms.groups || `${terms.group}s`}`, icon: '🏷️', action: onGroups },
@@ -50,24 +56,28 @@ export default function RegisterWorkspace({ org, terms, people, sessions, sessio
     { label: 'Archived registers', icon: '📦', action: onArchive },
   ]
 
-  return <div data-register-workspace style={{ height: '100%', width: '100%', minWidth: 0, overflowY: 'auto', background: 'var(--bg, var(--surface2))', color: 'var(--text)', boxSizing: 'border-box', paddingBottom: mobile ? 24 : 32 }}>
+  return <div data-register-workspace style={{ height: '100%', width: '100%', minWidth: 0, overflowY: 'auto', background: `radial-gradient(ellipse at 0% 0%, ${withAlpha(primary, '14')}, transparent 48%), var(--bg, var(--surface2))`, color: 'var(--text)', boxSizing: 'border-box', paddingBottom: mobile ? 24 : 32 }}>
+    <div aria-hidden="true" style={{ height: 4, background: `linear-gradient(90deg, ${primary}, ${secondary}, ${primary})` }} />
     <div style={{ maxWidth: 1280, margin: '0 auto', padding: mobile ? '20px 16px 0' : '28px 28px 0' }}>
     <header>
       {!mobile && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
-        <span style={{ fontSize: 11, letterSpacing: 1.2, color: 'var(--text3)', fontWeight: 800 }}>PLAN · RUN · REVIEW</span>
+        <span style={{ fontSize: 11, letterSpacing: 1.2, color: 'var(--text3)', fontWeight: 800 }}>LAUNCHSESSION · PLAN · RUN · REVIEW</span>
         <nav aria-label="Delivery shortcuts" style={{ display: 'flex', gap: 8 }}>
           <button onClick={onPlan} style={{ ...button, background: 'transparent', borderColor: 'transparent', padding: '6px 10px', color: 'var(--text3)' }}><Icon name="📅" />{terms.Sessions}</button>
           <button onClick={onToday} style={{ ...button, background: 'transparent', borderColor: 'transparent', padding: '6px 10px', color: 'var(--text3)' }}><Icon name="⚡" />Today</button>
         </nav>
       </div>}
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: mobile ? 14 : 22 }}>
-        <div>
-          
-          <h1 style={{ fontSize: mobile ? 28 : 32, lineHeight: 1.1, fontWeight: 850, letterSpacing: -1, margin: '0 0 8px' }}>Registers</h1>
-          {!mobile && <p style={{ margin: 0, color: 'var(--text3)', fontSize: 14, lineHeight: 1.5 }}>A clear view of who's here and what they need.</p>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: mobile ? 12 : 16, minWidth: 0 }}>
+          <RegisterBrandMark product size={mobile ? 46 : 60} />
+          <div style={{ minWidth: 0 }}>
+            {mobile && <div style={{ color: 'var(--org-ink)', fontSize: 10, letterSpacing: 1.4, fontWeight: 800, marginBottom: 4 }}>LAUNCHSESSION</div>}
+            <h1 style={{ fontFamily: 'var(--font-display, inherit)', fontSize: mobile ? 28 : 34, lineHeight: 1.1, fontWeight: 850, letterSpacing: -1, margin: mobile ? 0 : '0 0 8px' }}>Registers</h1>
+            {!mobile && <p style={{ margin: 0, color: 'var(--text3)', fontSize: 14, lineHeight: 1.5 }}>A clear view of who's here and what they need.</p>}
+          </div>
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, width: mobile ? '100%' : undefined }}>
-          <button onClick={onImport} style={{ ...button, flex: mobile ? 1 : undefined }}><Icon name="📥" /> Import register</button>
+          <button onClick={onImport} style={{ ...button, flex: mobile ? 1 : undefined, color: 'var(--org-ink)', background: withAlpha(primary, '0C'), borderColor: withAlpha(primary, '35') }}><Icon name="📥" /> Import register</button>
           <button onClick={onAdd} style={{ ...button, flex: mobile ? 1 : undefined }}><Icon name="➕" /> Add {terms.person}</button>
           <div ref={toolsRef} style={{ position: 'relative' }}>
             <button onClick={() => setToolsOpen(value => !value)} aria-expanded={toolsOpen} aria-controls="register-tools" aria-label="Tools" style={{ ...button, padding: mobile ? 12 : '10px 15px' }}><Icon name="⚙️" />{!mobile && 'Tools'}</button>
@@ -78,8 +88,22 @@ export default function RegisterWorkspace({ org, terms, people, sessions, sessio
         </div>
       </div>
 
-      <section aria-label="Today's register overview" style={{ borderRadius: 20, border: `1px solid ${withAlpha(primary, '30')}`,  background: `linear-gradient(115deg, ${withAlpha(primary, '0D')}, var(--surface) 60%, ${withAlpha(secondary, '0D')})`, padding: mobile ? 14 : 24, marginBottom: mobile ? 16 : 22 }}>
-        {(!mobile || !session) && <div style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: 18, fontSize: 12 }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--org-ink)', fontWeight: 800 }}><Icon name="📋" />{org?.name || 'Your organisation'}</span><span style={{ color: 'var(--text3)' }}>{dateLabel}</span></div>}
+      <section aria-label="Today's register overview" style={{ borderRadius: 22, border: `1px solid ${withAlpha(primary, '35')}`, background: `linear-gradient(115deg, ${withAlpha(primary, '12')}, var(--surface) 60%, ${withAlpha(secondary, '12')})`, marginBottom: mobile ? 16 : 22, boxShadow: `0 12px 35px -24px ${withAlpha(primary, '80')}` }}>
+        <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '21px 21px 0 0', background: heroGradient, color: '#fff', padding: mobile ? '12px 14px' : '18px 24px' }}>
+          <div aria-hidden="true" style={{ pointerEvents: 'none', position: 'absolute', width: 310, height: 310, right: -40, top: -150, border: '1px solid #ffffff20', borderRadius: '50%', transform: 'rotate(-20deg) scaleY(.5)' }} />
+          <div aria-hidden="true" style={{ pointerEvents: 'none', position: 'absolute', width: 410, height: 410, right: -70, top: -195, border: '1px solid #ffffff16', borderRadius: '50%', transform: 'rotate(-20deg) scaleY(.5)' }} />
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+              <RegisterBrandMark org={org} size={mobile ? 34 : 46} />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontFamily: 'var(--font-display, inherit)', fontSize: mobile ? 14 : 17, fontWeight: 800, overflowWrap: 'anywhere', lineHeight: 1.3 }}>{org?.name || 'Your organisation'}</div>
+                {!mobile && <div style={{ color: '#ffffffc7', fontSize: 12, lineHeight: 1.5, marginTop: 3 }}>{org?.slogan || `Every ${terms.person} counts.`}</div>}
+              </div>
+            </div>
+            {!mobile && <div style={{ textAlign: 'right', flexShrink: 0 }}><div style={{ color: '#ffffffb3', fontSize: 10, fontWeight: 800, letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 5 }}>Today's register</div><span style={{ fontSize: 12 }}>{dateLabel}</span></div>}
+          </div>
+        </div>
+        <div style={{ padding: mobile ? 14 : 24 }}>
         {sessions.length > 1 && <label style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', fontSize: 12, fontWeight: 700, color: 'var(--text3)', marginBottom: 16 }}>
           {!mobile && <>Today's {terms.sessions}</>}
           <select aria-label={`Choose today's ${terms.session}`} value={session?.id || ''} onChange={event => { onClearSelection(); onSessionChange(event.target.value) }} style={{ ...button, flex: 1, minWidth: 0, maxWidth: mobile ? '100%' : 440 }}>
@@ -97,20 +121,21 @@ export default function RegisterWorkspace({ org, terms, people, sessions, sessio
             {session.meeting_point && <p style={{ fontSize: 13, color: 'var(--text3)', margin: '8px 0' }}>Meeting point: {session.meeting_point}</p>}
             <button onClick={() => onOpenRegister(session)} style={{ ...actionStyle, marginTop: mobile ? 12 : 18, width: mobile ? '100%' : undefined }}>{closed ? 'View register' : 'Take attendance'} <Icon name="→" /></button>
           </div>
-          <div>
-            <button aria-label={`${view.counts.signed_in} currently on site`} onClick={() => filterStatus('signed_in')} style={{ border: 0, padding: 0, background: 'none', color: 'var(--text)', cursor: 'pointer', textAlign: 'left', minHeight: 44, display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: 10 }}>
-              <span style={{ fontSize: mobile ? 28 : 46, lineHeight: 1, letterSpacing: -2, fontWeight: 850 }}>{attendanceUnavailable ? '—' : view.counts.signed_in}<span style={{ fontSize: mobile ? 17 : 22, color: 'var(--text3)', letterSpacing: -1 }}> / {attendanceUnavailable ? '—' : view.counts.total}</span></span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text3)' }}>on site now</span>
+          <div style={{ display: mobile ? 'grid' : 'block', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 6 }}>
+            <button aria-label={`${view.counts.signed_in} currently on site`} onClick={() => filterStatus('signed_in')} style={{ border: mobile ? `1px solid ${withAlpha(primary, '35')}` : 0, borderRadius: 12, padding: mobile ? 6 : 0, background: mobile ? withAlpha(primary, '10') : 'none', color: 'var(--text)', cursor: 'pointer', textAlign: mobile ? 'center' : 'left', minHeight: mobile ? 56 : 44, display: 'flex', flexDirection: mobile ? 'column' : 'row', alignItems: mobile ? 'center' : 'baseline', justifyContent: mobile ? 'center' : 'flex-start', flexWrap: 'wrap', gap: mobile ? 4 : 10 }}>
+              <span style={{ fontSize: mobile ? 18 : 46, lineHeight: 1, letterSpacing: mobile ? -.5 : -2, fontWeight: 850 }}>{attendanceUnavailable ? '—' : view.counts.signed_in}<span style={{ fontSize: mobile ? 11 : 22, color: 'var(--text3)', letterSpacing: -1 }}> / {attendanceUnavailable ? '—' : view.counts.total}</span></span>
+              <span style={{ fontSize: mobile ? 10 : 13, fontWeight: 700, color: 'var(--text3)' }}>{mobile ? 'On site' : 'on site now'}</span>
             </button>
-            {!mobile && <div aria-hidden="true" style={{ height: 6, margin: '14px 0 16px', borderRadius: 10, background: 'var(--border-soft)', overflow: 'hidden' }}><div style={{ width: `${view.counts.total ? view.counts.signed_in / view.counts.total * 100 : 0}%`, height: '100%', background: primary, borderRadius: 10 }} /></div>}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 6 }}>
-              {[['expected', 'To arrive'], ['signed_out', 'Signed out'], ['absent', 'Absent']].map(([key, label]) => <button key={key} onClick={() => filterStatus(key)} aria-pressed={!effectiveDirectory && filter === key} style={{ ...button, padding: mobile ? '6px' : '10px 6px', flexDirection: mobile ? 'row' : 'column', gap: mobile ? 6 : 4, background: !effectiveDirectory && filter === key ? withAlpha(primary, '12') : 'var(--surface)', borderColor: !effectiveDirectory && filter === key ? primary : 'var(--border)' }}><b style={{ fontSize: 18 }}>{attendanceUnavailable ? '—' : view.counts[key]}</b><span style={{ fontSize: 11, color: 'var(--text3)' }}>{label}</span></button>)}
+            {!mobile && <div aria-hidden="true" style={{ height: 6, margin: '14px 0 16px', borderRadius: 10, background: 'var(--border-soft)', overflow: 'hidden' }}><div style={{ width: `${view.counts.total ? view.counts.signed_in / view.counts.total * 100 : 0}%`, height: '100%', background: brandGradient, borderRadius: 10 }} /></div>}
+            <div style={{ display: mobile ? 'contents' : 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 6 }}>
+              {[['expected', 'To arrive'], ['signed_out', 'Signed out'], ['absent', 'Absent']].map(([key, label]) => <button key={key} onClick={() => filterStatus(key)} aria-pressed={!effectiveDirectory && filter === key} style={{ ...button, padding: mobile ? '6px' : '10px 6px', flexDirection: 'column', gap: 4, background: !effectiveDirectory && filter === key ? withAlpha(primary, '1C') : 'var(--surface)', borderColor: !effectiveDirectory && filter === key ? primary : 'var(--border)' }}><b style={{ fontSize: 18 }}>{attendanceUnavailable ? '—' : view.counts[key]}</b><span style={{ fontSize: 11, color: 'var(--text3)' }}>{label}</span></button>)}
             </div>
           </div>
         </div> : <div style={{ display: 'flex', gap: 22, justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{ flex: '1 1 240px' }}><div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--text3)', marginBottom: 8 }}>Plan your next {terms.session}</div><h2 style={{ fontSize: mobile ? 20 : 26, letterSpacing: -.6, margin: '0 0 8px' }}>Ready for your next {terms.session}.</h2><p style={{ margin: 0, fontSize: 14, color: 'var(--text3)', lineHeight: 1.6 }}>No {terms.session} scheduled for today. Your directory is ready below — choose a plan to start taking attendance.</p></div>
           <button onClick={onPlan} style={{ ...actionStyle, width: mobile ? '100%' : undefined }}><Icon name="📅" /> Open {terms.session} planner</button>
         </div>}
+        </div>
       </section>
       {attendanceError && <div role="alert" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', padding: 12, borderRadius: 12, background: 'var(--warn-bg)', color: 'var(--warn-text)', marginBottom: 12 }}><span style={{ flex: 1, fontSize: 13 }}>{attendanceError}</span><button onClick={onRetryAttendance} style={button}>Retry attendance</button></div>}
       {offline && <p role="status" style={{ background: 'var(--warn-bg)', color: 'var(--warn-text)', borderRadius: 12, padding: 12, fontSize: 13 }}>Showing saved data. Attendance totals may be out of date until your connection returns.</p>}
@@ -131,7 +156,7 @@ export default function RegisterWorkspace({ org, terms, people, sessions, sessio
         <select aria-label={`Filter by ${terms.group}`} value={group} onChange={event => { setGroup(event.target.value); onClearSelection() }} style={{ ...button, maxWidth: '100%', flex: mobile ? '1 1 150px' : '0 1 200px', minWidth: 0, fontSize: 14 }}><option value="all">All {terms.group}s</option>{groups.map(item => <option key={item.key || item.label} value={item.label}>{item.label}</option>)}<option value={UNGROUPED}>Ungrouped</option></select>
         <button aria-pressed={filter === 'alerts'} onClick={() => { setFilter(filter === 'alerts' ? 'all' : 'alerts'); onClearSelection() }} style={{ ...button, background: filter === 'alerts' ? 'var(--warn-bg)' : 'var(--surface)', color: filter === 'alerts' ? 'var(--warn-text)' : 'var(--text3)' }}><Icon name="⚠" /> Care alerts {view.alertCount}</button>
       </div>
-      {!effectiveDirectory && <div aria-label="Attendance filters" style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8, marginBottom: 4 }}>{[['all', 'Everyone'], ['signed_in', 'On site'], ['expected', 'To arrive'], ['signed_out', 'Signed out'], ['absent', 'Absent']].map(([key, label]) => <button key={key} aria-pressed={filter === key} onClick={() => { setFilter(key); onClearSelection() }} style={{ ...button, minHeight: 44, whiteSpace: 'nowrap', borderRadius: 99, padding: '8px 13px', background: filter === key ? withAlpha(primary, '14') : 'transparent', color: filter === key ? 'var(--org-ink)' : 'var(--text3)', borderColor: filter === key ? withAlpha(primary, '45') : 'transparent' }}>{label}</button>)}</div>}
+      {!effectiveDirectory && <div aria-label="Attendance filters" style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8, marginBottom: 4 }}>{[['all', 'Everyone'], ['signed_in', 'On site'], ['expected', 'To arrive'], ['signed_out', 'Signed out'], ['absent', 'Absent']].map(([key, label]) => <button key={key} aria-pressed={filter === key} onClick={() => { setFilter(key); onClearSelection() }} style={{ ...button, minHeight: 44, whiteSpace: 'nowrap', borderRadius: 99, padding: '8px 13px', background: filter === key ? brandGradient : 'transparent', color: filter === key ? '#fff' : 'var(--text3)', borderColor: filter === key ? withAlpha(primary, '45') : 'transparent' }}>{label}</button>)}</div>}
       {selectMode && <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, padding: 12, background: withAlpha(primary, '0D'), border: `1px solid ${withAlpha(primary, '30')}`, borderRadius: 12, marginBottom: 12 }}>
         <b style={{ fontSize: 13 }}>{selectedIds.size} selected</b><button onClick={() => onSelectVisible(view.visible.map(person => person.id))} style={{ ...button, padding: '8px 10px' }}>Select shown</button>
         <select aria-label={`Assign selected to ${terms.group}`} value="" disabled={!selectedIds.size || assigning} onChange={event => onAssign(event.target.value)} style={{ ...button, flex: '1 1 160px', minWidth: 0, maxWidth: '100%' }}><option value="">{assigning ? 'Assigning…' : `Move to ${terms.group}…`}</option>{groups.map(item => <option key={item.key || item.label} value={item.label}>{item.label}</option>)}</select>
@@ -139,7 +164,7 @@ export default function RegisterWorkspace({ org, terms, people, sessions, sessio
       </div>}
       <div aria-live="polite" style={{ color: 'var(--text3)', fontSize: 12, margin: '4px 0 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}><span>{busy ? 'Loading…' : `${view.visible.length} of ${view.source.length} ${terms.people}`}</span>{(search || group !== 'all' || filter !== 'all') && <button onClick={() => { setSearch(''); setGroup('all'); setFilter('all') }} style={{ ...button, padding: '4px 10px', background: 'transparent', border: 0, color: 'var(--org-ink)' }}>Clear filters</button>}</div>
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
-        {!mobile && <div aria-hidden="true" style={{ display: 'grid', gridTemplateColumns: effectiveDirectory ? 'minmax(0, 1fr) 180px 90px' : 'minmax(0, 1fr) 180px 110px', gap: 12, padding: '12px 18px', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: .9, color: 'var(--text3)', borderBottom: '1px solid var(--border)', background: 'var(--surface2)' }}><span>{terms.Person} & care information</span><span>{terms.Group}</span><span style={{ textAlign: 'right' }}>{effectiveDirectory ? 'Age' : 'Attendance'}</span></div>}
+        {!mobile && <div aria-hidden="true" style={{ display: 'grid', gridTemplateColumns: effectiveDirectory ? 'minmax(0, 1fr) 180px 90px' : 'minmax(0, 1fr) 180px 110px', gap: 12, padding: '12px 18px', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: .9, color: 'var(--text3)', borderBottom: '1px solid var(--border)', background: withAlpha(primary, '0B') }}><span>{terms.Person} & care information</span><span>{terms.Group}</span><span style={{ textAlign: 'right' }}>{effectiveDirectory ? 'Age' : 'Attendance'}</span></div>}
         {attendanceError && !effectiveDirectory ? <div style={{ padding: 32, textAlign: 'center', color: 'var(--text3)', fontSize: 14 }}>Retry attendance above, or open Everyone to browse your directory.</div> : busy ? <div role="status" style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>Loading {terms.people}…</div> : view.visible.length === 0 ? <div style={{ padding: '40px 20px', textAlign: 'center' }}><div style={{ fontSize: 30, color: primary, marginBottom: 12 }}><Icon name="📋" /></div><h3 style={{ fontSize: 18, margin: '0 0 8px' }}>{view.source.length ? 'No matches just yet' : effectiveDirectory ? `Add your first ${terms.person}` : 'Build this register'}</h3><p style={{ color: 'var(--text3)', fontSize: 13, lineHeight: 1.6, margin: '0 0 16px' }}>{view.source.length ? 'Try a different name or clear the filters.' : effectiveDirectory ? 'Import a spreadsheet or add someone individually.' : `Open attendance to add the ${terms.people} joining this ${terms.session}.`}</p><button onClick={view.source.length ? () => { setSearch(''); setGroup('all'); setFilter('all') } : effectiveDirectory ? onImport : () => onOpenRegister(session)} style={actionStyle}>{view.source.length ? 'Clear filters' : effectiveDirectory ? 'Import register' : 'Take attendance'}</button></div> : <ul aria-label={effectiveDirectory ? terms.People : 'Attendance overview'} style={{ listStyle: 'none', padding: 0, margin: 0 }}>
           {view.visible.map(person => {
             const itemGroup = groupFor(person, groups)
@@ -169,6 +194,7 @@ export default function RegisterWorkspace({ org, terms, people, sessions, sessio
         </ul>}
       </div>
     </main>
+    <footer style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '6px 0 16px', fontSize: 11, color: 'var(--text3)' }}><Icon name="🚀" />Powered by <span style={{ fontWeight: 800, color: 'var(--org-ink)' }}>LaunchSession</span></footer>
     </div>
   </div>
 }
