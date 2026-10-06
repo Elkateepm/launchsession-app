@@ -85,6 +85,7 @@ export default function CreatePassword() {
   // step: 'password' | 'profile' | 'fun' | 'done'
   const [step, setStep] = useState('password')
   const [authedUserId, setAuthedUserId] = useState(null)
+  const [awaitingApproval, setAwaitingApproval] = useState(true)
   const [preferredName, setPreferredName] = useState('')
   const [phone, setPhone] = useState('')
   const [photoUrl, setPhotoUrl] = useState(null)
@@ -193,6 +194,14 @@ export default function CreatePassword() {
       setSaving(false)
       return
     }
+
+    // A founding admin is let straight in by claim_invite_profile(), because
+    // nobody in a new organisation could approve them; everyone else waits.
+    // Read the outcome rather than assume it, so the last step says the
+    // right thing. If the read fails, keep the cautious message.
+    const { data: claimed } = await supabase.from('user_profiles')
+      .select('approval_status').eq('id', uid).maybeSingle()
+    setAwaitingApproval(claimed?.approval_status !== 'approved')
 
     setAuthedUserId(uid)
     setSaving(false)
@@ -312,9 +321,11 @@ export default function CreatePassword() {
             {step === 'done' && (
               <motion.div key="done" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} style={{ textAlign: 'center', padding: '40px 28px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, backdropFilter: 'blur(18px)' }}>
                 <div style={{ fontSize: 56, marginBottom: 16 }}><Icon name="🎉" /></div>
-                <div style={{ fontSize: 24, fontWeight: 900, color: '#fff', marginBottom: 8 }}>All set — one last step</div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: '#fff', marginBottom: 8 }}>{awaitingApproval ? 'All set — one last step' : 'You’re all set'}</div>
                 <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)', lineHeight: 1.55 }}>
-                  Your account is ready. {orgName || 'Your organisation'} just needs to approve it before you can get in — we&apos;ll take you there now.
+                  {awaitingApproval
+                    ? <>Your account is ready. {orgName || 'Your organisation'} just needs to approve it before you can get in — we&apos;ll take you there now.</>
+                    : <>Your account is ready. Taking you to {orgName || 'your organisation'} now.</>}
                 </div>
                 <div style={{ marginTop: 22, height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 99, overflow: 'hidden' }}>
                   <motion.div initial={{ width: '0%' }} animate={{ width: '100%' }} transition={{ duration: 2.2, ease: 'linear' }} style={{ height: '100%', background: `linear-gradient(90deg, ${primary}, #6366F1)`, borderRadius: 99 }} />
