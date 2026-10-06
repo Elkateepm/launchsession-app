@@ -203,7 +203,7 @@ export default function Onboarding({ session, org, onComplete }) {
                   <AnimatedInput label="Country" valid={country.trim().length > 1} inputProps={{ value: country, onChange: e => setCountry(e.target.value) }} />
                 </div>
                 <div>
-                  <AnimatedInput label="Postcode (optional)" valid={false} inputProps={{ placeholder: 'e.g. WD18 0EU', value: postcode, onChange: e => setPostcode(e.target.value) }} />
+                  <AnimatedInput label="Postcode (optional)" valid={false} inputProps={{ placeholder: 'e.g. SW1A 1AA', value: postcode, onChange: e => setPostcode(e.target.value) }} />
                 </div>
                 <Teach>📍 You can add individual venue addresses later. {timezone ? `We've detected your time zone as ${timezone}.` : ''}</Teach>
               </div>
