@@ -54,7 +54,9 @@ export function storagePath(bucket, value) {
   }
 
   if (!/^https?:\/\//i.test(value)) {
-    return value || null
+    // A stored path may carry a version (`<id>.jpg?v=…`) so that a replaced
+    // photo gets a new reference; the object itself is named without it.
+    return value.split('?')[0] || null
   }
 
   for (const kind of ['public', 'sign', 'authenticated']) {
@@ -82,15 +84,26 @@ export async function signOne(bucket, value, ttl = DEFAULT_TTL_SECONDS) {
   if (!path) return null
 
   const key = `${bucket}:${path}`
+  const version = versionOf(value)
   const hit = cache.get(key)
-  if (isFresh(hit)) return hit.url
+  if (usable(hit, version)) return hit.url
 
   const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, ttl)
   if (error || !data?.signedUrl) return null
 
-  cache.set(key, { url: data.signedUrl, expiresAt: Date.now() + ttl * 1000 })
+  cache.set(key, { url: data.signedUrl, expiresAt: Date.now() + ttl * 1000, version })
   return data.signedUrl
 }
+
+// The version a stored path carries (`<id>.jpg?v=123` gives '123'), or ''.
+// A photo replaced at the same path gets a new version, and a URL signed for
+// an older one is not reused: the browser would show the old image from its
+// cache for as long as that URL lived.
+function versionOf(value) {
+  if (typeof value !== 'string' || /^[a-z][a-z0-9+.-]*:/i.test(value)) return ''
+  return new URLSearchParams(value.split('?')[1] || '').get('v') || ''
+}
+const usable = (hit, version) => isFresh(hit) && (!version || hit.version === version)
 
 /**
  * Sign many objects in one round trip. Order is preserved and entries that
@@ -98,14 +111,17 @@ export async function signOne(bucket, value, ttl = DEFAULT_TTL_SECONDS) {
  */
 export async function signMany(bucket, values, ttl = DEFAULT_TTL_SECONDS) {
   const paths = values.map(v => storagePath(bucket, v))
+  const versions = values.map(versionOf)
   const out = new Array(paths.length).fill(null)
 
   const needed = []
+  const wanted = {}
   paths.forEach((path, i) => {
     if (!path) return
     const hit = cache.get(`${bucket}:${path}`)
-    if (isFresh(hit)) { out[i] = hit.url; return }
+    if (usable(hit, versions[i])) { out[i] = hit.url; return }
     needed.push(path)
+    wanted[path] = versions[i]
   })
 
   if (needed.length) {
@@ -114,7 +130,7 @@ export async function signMany(bucket, values, ttl = DEFAULT_TTL_SECONDS) {
     if (!error && Array.isArray(data)) {
       data.forEach(entry => {
         if (entry?.signedUrl && entry?.path) {
-          cache.set(`${bucket}:${entry.path}`, { url: entry.signedUrl, expiresAt: Date.now() + ttl * 1000 })
+          cache.set(`${bucket}:${entry.path}`, { url: entry.signedUrl, expiresAt: Date.now() + ttl * 1000, version: wanted[entry.path] || '' })
         }
       })
     }

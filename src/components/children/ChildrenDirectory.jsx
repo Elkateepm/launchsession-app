@@ -9,6 +9,7 @@ import ChildPaymentsCard from '../payments/ChildPaymentsCard'
 import { useTerms } from '../../context/OrgContext'
 import Icon from '../../lib/icons'
 import { readableDbError } from '../../lib/dbErrors'
+import { uploadChildPhoto } from '../../lib/childPhoto'
 
 const CONSENT_TYPES = [
   { key: 'photo', label: 'Photo consent' },
@@ -210,6 +211,7 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
           notes={sessionNotes.filter(n => n.child_id === selected.id).slice(0, 5)}
           attendanceForChild={attendance.filter(a => a.child_id === selected.id)}
           onNavigate={onNavigate} onConsentChanged={load} isMobile={isMobile}
+          onPhotoChanged={(id, path) => setChildren(prev => prev.map(c => (c.id === id ? { ...c, photo_url: path } : c)))}
         />
       </PeopleProfileDrawer>}
       {showAdd && <AddChildQuickModal org={org} onClose={() => setShowAdd(false)} onAdded={() => { setShowAdd(false); load() }} />}
@@ -219,8 +221,26 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
   )
 }
 
-function ChildProfile({ child, org, session, primary, authUserId, groupLabel, consentRec, latestAtt, notes, attendanceForChild, onNavigate, onConsentChanged, isMobile }) {
+function ChildProfile({ child, org, session, primary, authUserId, groupLabel, consentRec, latestAtt, notes, attendanceForChild, onNavigate, onConsentChanged, onPhotoChanged, isMobile }) {
   const [savingConsent, setSavingConsent] = useState(null)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [photoError, setPhotoError] = useState('')
+  const photoInputRef = React.useRef(null)
+
+  const changePhoto = async e => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setUploadingPhoto(true)
+    setPhotoError('')
+    try {
+      const path = await uploadChildPhoto({ orgId: org?.id, childId: child.id, file, previous: child.photo_url })
+      onPhotoChanged?.(child.id, path)
+    } catch (err) {
+      setPhotoError(err.message)
+    }
+    setUploadingPhoto(false)
+  }
   const [editingContact, setEditingContact] = useState(false)
   const [savingContact, setSavingContact] = useState(false)
   const [contact, setContact] = useState({ parent_name: child.parent_name || '', parent_phone: child.parent_phone || '', parent_email: child.parent_email || '' })
@@ -268,7 +288,15 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
     <div style={{ background: 'var(--surface)', borderRadius: 16, border: '1px solid #E3E8F0', padding: isMobile ? 16 : 22 }}>
 
       <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap' }}>
-        <Avatar name={`${child.first_name} ${child.last_name}`} photoUrl={child.photo_url} size={56} />
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <div style={{ opacity: uploadingPhoto ? 0.5 : 1 }}><Avatar name={`${child.first_name} ${child.last_name}`} photoUrl={child.photo_url} size={56} /></div>
+          <button type="button" onClick={() => photoInputRef.current?.click()} disabled={uploadingPhoto}
+            aria-label={child.photo_url ? `Change photo of ${child.first_name}` : `Add a photo of ${child.first_name}`} title={child.photo_url ? 'Change photo' : 'Add photo'}
+            style={{ position: 'absolute', right: -6, bottom: -6, width: 28, height: 28, borderRadius: '50%', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', cursor: uploadingPhoto ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, boxShadow: '0 2px 6px rgba(15,23,42,0.15)' }}>
+            <Icon name="📷" />
+          </button>
+          <input ref={photoInputRef} type="file" accept="image/*" onChange={changePhoto} style={{ display: 'none' }} />
+        </div>
         <div style={{ flex: 1, minWidth: 200 }}>
           <div style={{ fontSize: 19, fontWeight: 900, color: 'var(--text)' }}>{child.first_name} {child.last_name}</div>
           <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>
@@ -282,6 +310,8 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
           {latestAtt?.status === 'signed_in' ? '● Signed in' : latestAtt?.status === 'signed_out' ? 'Signed out' : latestAtt?.status === 'absent' ? 'Absent' : 'No recent activity'}
         </span>
       </div>
+
+      {photoError && <div role="alert" style={{ fontSize: 12.5, lineHeight: 1.45, color: 'var(--danger-text)', background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 10, padding: '8px 12px', marginBottom: 14 }}>{photoError}</div>}
 
       {/* Alert banners */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 10, marginBottom: 18 }}>
