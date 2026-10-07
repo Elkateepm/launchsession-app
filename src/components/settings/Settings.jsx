@@ -1308,7 +1308,7 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
                       <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10, minHeight: 48, lineHeight: 1.5 }}>{p.blurb}</div>
                       {/* The two things that differ between plans; every plan has the rest. */}
                       <ul aria-label={`What ${p.label} adds`} style={{ listStyle: 'none', margin: '0 0 14px', padding: 0, fontSize: 12, lineHeight: 1.9 }}>
-                        {[['Branding Centre & branded emails', p.includes_branding], ['HR Centre', (p.modules || []).includes('hr')]].map(([label, has]) => (
+                        {[['Office: HR, resource booking & payments', (p.modules || []).includes('hr')], ['Branding Centre & branded emails', p.includes_branding]].map(([label, has]) => (
                           <li key={label} style={{ color: has ? 'var(--text)' : 'var(--text-faint)', fontWeight: has ? 700 : 500 }}>
                             <span aria-hidden="true" style={{ color: has ? 'var(--ok-text)' : 'var(--text-faint)', marginRight: 6 }}>{has ? '✓' : '–'}</span>
                             {label}<span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' }}>{has ? ' included' : ' not included'}</span>

@@ -731,7 +731,6 @@ export default function Dashboard({ session, org }) {
   // access is their job -- without gaining the admin-only screens.
   const isManager = isAdmin || userProfile?.role === 'manager'
   const canUsePeopleHR = isManager && hasModule('hr') && moduleLevel('hr') !== 'none'
-  const combinePeopleHR = canUsePeopleHR && !hiddenItems.includes('hr')
   const activeGroup = React.useMemo(() => groupContainingTab(tab), [tab])
 
   // Only offer creation of things this organisation actually has, and that this
@@ -740,9 +739,9 @@ export default function Dashboard({ session, org }) {
   // CREATE_ACTIONS carry their own ids, so they are matched to a hidden nav
   // entry by the tab they open rather than by id.
   const visibleOfficeTabs = React.useMemo(
-    () => visibleItems(OFFICE_TABS, { hasModule, isAdmin, isManager, moduleLevel, hiddenItems, combinePeopleHR }),
+    () => visibleItems(OFFICE_TABS, { hasModule, isAdmin, isManager, moduleLevel, hiddenItems }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [org?.id, org?.modules, isAdmin, accessLevels, hiddenItems, combinePeopleHR]
+    [org?.id, org?.modules, isAdmin, accessLevels, hiddenItems]
   )
   const officeTabKeys = React.useMemo(() => OFFICE_TABS.map(t => t.tab), [])
 
@@ -750,19 +749,19 @@ export default function Dashboard({ session, org }) {
   // filtering as the sidebar above, rather than from a second hardcoded list
   // that has to be remembered whenever the nav changes -- see mobileNav.js.
   const mobileDock = React.useMemo(
-    () => dockDestinations({ hasModule, isAdmin, isManager, moduleLevel, hiddenItems, combinePeopleHR })
+    () => dockDestinations({ hasModule, isAdmin, isManager, moduleLevel, hiddenItems })
       .map(d => ({ ...d, label: itemLabel(d, terms) })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [org?.id, org?.modules, isAdmin, terms, accessLevels, hiddenItems, combinePeopleHR]
+    [org?.id, org?.modules, isAdmin, terms, accessLevels, hiddenItems]
   )
 
   const mobileMoreSections = React.useMemo(
     () => moreSections(
-      { hasModule, isAdmin, isManager, moduleLevel, hiddenItems, combinePeopleHR },
+      { hasModule, isAdmin, isManager, moduleLevel, hiddenItems },
       { exclude: mobileDock.map(d => d.tab), officeTabCount: visibleOfficeTabs.length },
     ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [org?.id, org?.modules, isAdmin, accessLevels, hiddenItems, combinePeopleHR, mobileDock, visibleOfficeTabs]
+    [org?.id, org?.modules, isAdmin, accessLevels, hiddenItems, mobileDock, visibleOfficeTabs]
   )
 
   // The More sheet now lists every area rather than a fixed eight, so it can be
@@ -910,7 +909,7 @@ export default function Dashboard({ session, org }) {
         <div className="sb-nav" style={{ flex: 1, padding: '0 8px 8px', overflowY: 'auto' }}>
 
           {NAV_SECTIONS.map(section => {
-            const items = visibleItems(section.items, { hasModule, isAdmin, isManager, moduleLevel, hiddenItems, combinePeopleHR })
+            const items = visibleItems(section.items, { hasModule, isAdmin, isManager, moduleLevel, hiddenItems })
             if (!items.length) return null
             return (
               <SidebarSection key={section.id} title={section.label} collapsed={sidebarCollapsed}>
@@ -933,7 +932,7 @@ export default function Dashboard({ session, org }) {
           <div style={{ height: 1, margin: '4px 12px 12px', background: 'rgba(255,255,255,0.06)' }} />
 
           {NAV_GROUPS.map(group => {
-            const items = visibleItems(group.items, { hasModule, isAdmin, isManager, moduleLevel, hiddenItems, combinePeopleHR })
+            const items = visibleItems(group.items, { hasModule, isAdmin, isManager, moduleLevel, hiddenItems })
             if (!items.length) return null
             const active = activeGroup === group.id
             return (
@@ -1080,7 +1079,7 @@ export default function Dashboard({ session, org }) {
               (losing its state and refetching) every time you moved between
               Forms and Payments. */}
           <TabTransition
-            tabKey={canUsePeopleHR && ['hr', 'team', 'volunteers'].includes(effectiveTab) ? 'people_hr' : officeTabKeys.includes(effectiveTab) ? 'office' : effectiveTab}
+            tabKey={officeTabKeys.includes(effectiveTab) ? 'office' : effectiveTab}
             enabled={isMobileBottomNav && !prefersReducedMotion}
           >
           {/* ── BASE MODULES — always free ── */}
@@ -1097,28 +1096,12 @@ export default function Dashboard({ session, org }) {
           {effectiveTab === 'medical_alerts' && <MedicalAlerts org={org} session={session} onNavigate={handleSetTab} />}
           {/* Rendered inside Office below. */}
           {effectiveTab === 'settings'   && (isAdmin ? <Settings key={settingsSection || 'default'} org={org} session={session} userProfile={userProfile} initialSection={settingsSection || undefined} /> : <RestrictedModule label="Settings" icon="⚙️" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {effectiveTab === 'team' && !canUsePeopleHR && (isManager ? <TeamCentre org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} /> : <RestrictedModule label="Team" icon="👥" onNavigate={handleSetTab} />)}
-          {canUsePeopleHR && ['hr', 'team', 'volunteers'].includes(effectiveTab) && (
-            <HR key={`${org.id}:${session?.user?.id}`} org={org} session={session} userProfile={userProfile}
-              onNavigate={handleSetTab}
-              showVolunteers={hasModule('volunteers') && moduleLevel('volunteers') !== 'none' && !hiddenItems.includes('volunteers')}
-              section={effectiveTab === 'team' ? 'accounts' : effectiveTab === 'volunteers' ? 'volunteers' : null}
-              workspaceContent={effectiveTab === 'team'
-                ? <TeamCentre org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} />
-                : effectiveTab === 'volunteers' && hasModule('volunteers')
-                  ? <Volunteers org={org} session={session} autoOpenInvite={autoOpenInviteVolunteer} />
-                  : effectiveTab === 'volunteers'
-                    ? <LockedModule moduleKey="volunteers" label="Volunteers" icon="❤️" onNavigate={handleSetTab} onTrial={onTrial} />
-                    : null} />
-          )}
-          {effectiveTab === 'hr' && !canUsePeopleHR && (isManager
-            ? <LockedModule moduleKey="hr" label="People & HR" icon="🧑‍💼" onNavigate={handleSetTab} onTrial={onTrial} />
-            : <RestrictedModule label="People & HR" icon="🧑‍💼" onNavigate={handleSetTab} />)}
+          {effectiveTab === 'team' && (isManager ? <TeamCentre org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} /> : <RestrictedModule label="Team" icon="👥" onNavigate={handleSetTab} />)}
           {effectiveTab === 'branding'   && (isAdmin ? <Settings org={org} session={session} userProfile={userProfile} initialSection="branding" /> : <RestrictedModule label="Branding" icon="🎨" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── DELIVERY PACK ── */}
           {effectiveTab === 'registers'  && (hasModule('registers')  ? (registerSessionId && tabLevel === 'edit' ? <SessionRegisterRoute key={`${org.id}-${registerSessionId}`} sessionId={registerSessionId} org={org} authSession={session} userRole={userProfile?.role} backLabel={{ planner: 'Back to planner', calendar: 'Back to calendar', projects: 'Back to project', registers: 'Back to registers', today: 'Back to today' }[registerReturnTab]} onClose={() => { setRegisterSessionId(null); bumpSessions(); if (registerReturnTab !== 'registers') handleSetTab(registerReturnTab, { projectId: registerReturnProjectId }) }} onNavigate={handleSetTab} /> : <Registers key={registersKey} org={org} session={session} onNavigate={handleSetTab} autoOpenAdd={autoOpenAddChild} />) : <LockedModule moduleKey="registers"  label="Registers"  icon="📋" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {effectiveTab === 'volunteers' && !canUsePeopleHR && (hasModule('volunteers') ? <Volunteers org={org} session={session} autoOpenInvite={autoOpenInviteVolunteer} />                   : <LockedModule moduleKey="volunteers" label="Volunteers" icon="❤️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'volunteers' && (hasModule('volunteers') ? <Volunteers org={org} session={session} autoOpenInvite={autoOpenInviteVolunteer} />                   : <LockedModule moduleKey="volunteers" label="Volunteers" icon="❤️" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {effectiveTab === 'messaging'  && (hasModule('messaging')  ? <Messaging org={org} session={session} initialThreadId={initialThreadId} readOnly={tabLevel === 'view'} />                   : <LockedModule moduleKey="messaging"  label="Messaging"  icon="💬" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {/* Newsletter is rendered inside Office below. */}
 
@@ -1159,6 +1142,14 @@ export default function Dashboard({ session, org }) {
   {effectiveTab === 'newsletter' && (hasModule('messaging')  ? <NewsletterStudio org={org} session={session} />            : <LockedModule moduleKey="messaging"  label="Newsletter" icon="📨" onNavigate={handleSetTab} onTrial={onTrial} />)}
   {effectiveTab === 'forms'           && (hasModule('forms')           ? <Forms org={org} session={session} isAdmin={isAdmin} />                                  : <LockedModule moduleKey="forms"           label="Forms"           icon="📝" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
+  {/* HR is part of the Office add-on. Team and Volunteers keep their own
+      rows under People for every plan. */}
+  {effectiveTab === 'hr' && (canUsePeopleHR
+    ? <HR key={`${org.id}:${session?.user?.id}`} org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab}
+        showVolunteers={hasModule('volunteers') && moduleLevel('volunteers') !== 'none' && !hiddenItems.includes('volunteers')} />
+    : isManager
+      ? <LockedModule moduleKey="hr" label="HR" icon="🧑‍💼" onNavigate={handleSetTab} onTrial={onTrial} />
+      : <RestrictedModule label="HR" icon="🧑‍💼" onNavigate={handleSetTab} />)}
   {effectiveTab === 'payments'         && (userProfile?.role === 'volunteer' ? <RestrictedModule label="Payments" icon="💳" onNavigate={handleSetTab} /> : hasModule('payments')         ? <Payments org={org} session={session} isAdmin={isAdmin} />         : <LockedModule moduleKey="payments"         label="Payments"         icon="💳" onNavigate={handleSetTab} onTrial={onTrial} />)}
   {effectiveTab === 'resource_booking' && (hasModule('resource_booking') ? <ResourceCentre org={org} session={session} />                    : <LockedModule moduleKey="resource_booking" label="Resource Booking" icon="🗓️" onNavigate={handleSetTab} onTrial={onTrial} />)}
   {effectiveTab === 'templates'  && (isAdmin ? <Templates org={org} session={session} onNavigate={handleSetTab} /> : <RestrictedModule label="Templates" icon="🗂" onNavigate={handleSetTab} onTrial={onTrial} />)}
