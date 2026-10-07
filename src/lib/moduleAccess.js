@@ -42,25 +42,42 @@ export const BASE_MODULE_KEYS = [
  * have no expiry set, and locking them out because a column is empty would be
  * the wrong way to resolve that ambiguity.
  */
-export function isTrialActive(org) {
+export function isTrialActive(org, now = new Date()) {
   if (!org) return false
   if (org.plan !== 'trial') return false
   if (!org.trial_expires_at) return true
   const expiry = new Date(org.trial_expires_at)
   if (isNaN(expiry)) return true
-  return expiry > new Date()
+  return expiry > now
 }
+
+const DAY_MS = 86400000
 
 /**
  * Whole days left on the trial, rounded up, never below zero.
  * Returns null when the question doesn't apply -- not on a trial, or on a
  * trial with no expiry (which isTrialActive treats as open-ended).
  */
-export function trialDaysRemaining(org) {
+export function trialDaysRemaining(org, now = new Date()) {
   if (!org || org.plan !== 'trial' || !org.trial_expires_at) return null
   const expiry = new Date(org.trial_expires_at)
   if (isNaN(expiry)) return null
-  return Math.max(0, Math.ceil((expiry - new Date()) / 86400000))
+  return Math.max(0, Math.ceil((expiry - now) / DAY_MS))
+}
+
+/**
+ * Milliseconds until trialDaysRemaining() next changes -- the next whole-day
+ * step, or the expiry itself -- or null once there is nothing left to count.
+ *
+ * The count is worked out when something renders, so a tab or the installed
+ * app left open would otherwise keep showing yesterday's number, and would not
+ * show the trial-ended wall at expiry until something else caused a render.
+ */
+export function msUntilTrialChange(org, now = new Date()) {
+  if (!org || org.plan !== 'trial' || !org.trial_expires_at) return null
+  const left = new Date(org.trial_expires_at) - now
+  if (isNaN(left) || left <= 0) return null
+  return left % DAY_MS || DAY_MS
 }
 
 /**
@@ -72,13 +89,13 @@ export function trialDaysRemaining(org) {
  * past_due is deliberately absent from both, because Stripe retries a failed
  * card for about two weeks before giving up.
  */
-export function isPlanEnded(org) {
+export function isPlanEnded(org, now = new Date()) {
   if (!org) return false
   if (org.plan === 'expired') return true
   if (['canceled', 'unpaid'].includes(org.subscription_status)) return true
   if (org.plan === 'trial' && org.trial_expires_at) {
     const expiry = new Date(org.trial_expires_at)
-    if (!isNaN(expiry) && expiry <= new Date()) return true
+    if (!isNaN(expiry) && expiry <= now) return true
   }
   return false
 }
