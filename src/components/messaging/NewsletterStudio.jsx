@@ -259,7 +259,19 @@ function BlockEditor({ block, orgId, primary, open, onOpen, onChange, onRemove, 
   )
 }
 
+// Perceived brightness, as the email itself decides header text colour.
+const isLightHex = (hex) => {
+  const h = String(hex || '').replace('#', '')
+  if (!/^[0-9a-f]{6}$/i.test(h)) return false
+  const [r, g, b] = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16))
+  return (r * 299 + g * 587 + b * 114) / 1000 > 170
+}
+
 function Preview({ subject, preheader, blocks, org, compact }) {
+  // The same rule the send uses: branding_enabled follows the plan.
+  const branded = org?.branding_enabled === true
+  const senderName = org?.email_sender_name || org?.name || 'Your organisation'
+  const fromName = branded ? senderName : `${org?.name || 'Your organisation'} via LaunchSession`
   const primary = org?.primary_color || '#3B82F6'
   const fill = (t) => String(t || '').replaceAll('{{first_name}}', 'Sam')
 
@@ -274,11 +286,13 @@ function Preview({ subject, preheader, blocks, org, compact }) {
       </div>
 
       <div style={{ maxWidth: 560, margin: '0 auto', background: 'var(--surface)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 10px rgba(15,23,42,0.10)' }}>
-        <div style={{ background: '#0F172A', padding: '26px 30px', textAlign: 'center', borderTop: `4px solid ${primary}` }}>
+        {/* Mirrors send-volunteer-broadcast: a plan with branding sends in the
+            organisation's own colour with no LaunchSession line. */}
+        <div style={{ background: branded ? primary : '#0F172A', padding: '26px 30px', textAlign: 'center', borderTop: `4px solid ${primary}` }}>
           {org?.logo_url
             ? <img src={org.logo_url} alt="" style={{ maxHeight: 44, maxWidth: 150, objectFit: 'contain' }} />
-            : <div style={{ fontSize: 21, fontWeight: 900, color: '#fff' }}>{org?.name}</div>}
-          <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.4)', marginTop: 6, letterSpacing: 1, textTransform: 'uppercase' }}>Powered by LaunchSession</div>
+            : <div style={{ fontSize: 21, fontWeight: 900, color: branded && isLightHex(primary) ? '#0F172A' : '#fff' }}>{org?.name}</div>}
+          {!branded && <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.4)', marginTop: 6, letterSpacing: 1, textTransform: 'uppercase' }}>Powered by LaunchSession</div>}
         </div>
         <div style={{ height: 4, background: primary }} />
         <div style={{ padding: '30px 30px 34px' }}>
@@ -317,7 +331,8 @@ function Preview({ subject, preheader, blocks, org, compact }) {
       </div>
 
       <div style={{ textAlign: 'center', fontSize: 11.5, color: 'var(--text3)', marginTop: 12, lineHeight: 1.6 }}>
-        <strong style={{ color: 'var(--text2)' }}>{subject || 'No subject yet'}</strong>
+        From <strong style={{ color: 'var(--text2)' }}>{fromName}</strong>
+        <br /><strong style={{ color: 'var(--text2)' }}>{subject || 'No subject yet'}</strong>
         {preheader ? <> — {preheader}</> : null}
         <br />Personalisation is shown as "Sam".
       </div>
