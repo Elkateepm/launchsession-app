@@ -2,8 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import SignedImg from '../shared/SignedImg'
-import { forgetSignedUrl } from '../../lib/storageUrl'
-import shrinkImage from '../../lib/shrinkImage'
+import { uploadStaffPhoto } from '../../lib/staffPhoto'
 import Icon from '../../lib/icons'
 
 const ROLE_CONFIG = {
@@ -79,6 +78,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
   const [activeSection, setActiveSection] = useState('profile')
   const [saved, setSaved] = useState(false)
   const [photoUploading, setPhotoUploading] = useState(false)
+  const [photoError, setPhotoError] = useState('')
   const [editField, setEditField] = useState(null)
   const [showPassword, setShowPassword] = useState(false)
   const fileInputRef = useRef(null)
@@ -95,19 +95,20 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
 
   const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0]
+    e.target.value = ''
     if (!file || !userId) return
     setPhotoUploading(true)
-    const ext = file.name.split('.').pop()
-    const filePath = `${userId}.${ext}`
-    const up = await shrinkImage(file, { maxDimension: 900 })
-    const { error: uploadError } = await supabase.storage.from('staff-photos').upload(filePath, up, { upsert: true, contentType: up.type })
-    if (!uploadError) {
-      // Store the object path: the bucket is private, so signed URLs are
-      // minted at read time and a stored URL would only go stale.
-      await supabase.from('user_profiles').update({ photo_url: filePath }).eq('id', userId)
-      forgetSignedUrl('staff-photos', filePath)
-      setProfile(p => ({ ...p, photo_url: filePath }))
+    setPhotoError('')
+    try {
+      // The object path (plus a version), never a URL: the bucket is private,
+      // so signed URLs are minted at read time and a stored one would expire.
+      const stored = await uploadStaffPhoto({ userId, file, previous: profile?.photo_url })
+      const { error } = await supabase.from('user_profiles').update({ photo_url: stored }).eq('id', userId)
+      if (error) throw new Error('Your photo uploaded but could not be saved to your profile. Please try again.')
+      setProfile(p => ({ ...p, photo_url: stored }))
       if (onProfileUpdate) onProfileUpdate()
+    } catch (err) {
+      setPhotoError(err.message)
     }
     setPhotoUploading(false)
   }
@@ -167,6 +168,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
               <div style={{ position: 'absolute', bottom: 2, left: 2, width: 12, height: 12, borderRadius: '50%', background: '#10B981', border: '2px solid #fff' }} />
               <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoUpload} />
             </div>
+            {photoError && <div role="alert" style={{ fontSize: 12, lineHeight: 1.45, color: 'var(--danger-text)', background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 10, padding: '7px 10px', margin: '0 0 10px' }}>{photoError}</div>}
             <div style={{ fontSize: 16, fontWeight: 800, color: '#111' }}>{profile?.full_name || 'Your Name'}</div>
             <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 2 }}>{role.label}</div>
             <div style={{ marginTop: 6, display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>

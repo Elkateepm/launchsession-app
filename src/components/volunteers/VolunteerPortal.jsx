@@ -10,7 +10,7 @@ import VPMessages from './VPMessages'
 import VPProfile from './VPProfile'
 import VPQuickActionMenu from './VPQuickActionMenu'
 import { signOne } from '../../lib/storageUrl'
-import shrinkImage from '../../lib/shrinkImage'
+import { uploadStaffPhoto } from '../../lib/staffPhoto'
 import Icon from '../../lib/icons'
 import { withAlpha } from '../../lib/withAlpha'
 
@@ -102,17 +102,16 @@ function OnboardingWizard({ user, org, onComplete }) {
   async function uploadPhoto(e) {
     const file = e.target.files?.[0]; if(!file) return
     setPhotoUploading(true)
-    const ext = file.name.split('.').pop()
-    // Flat `<user id>.<ext>`, matching every existing object and the upload
-    // policy. The previous `<user id>/avatar.<ext>` form matched neither.
-    const path = `${user.id}.${ext}`
-    const up = await shrinkImage(file, { maxDimension: 900 })
-    await supabase.storage.from('staff-photos').upload(path, up, { upsert: true, contentType: up.type })
-    // Keep the path for the profile row and the signed URL only for the
-    // preview: writing the signed URL to photo_url would persist something
-    // that expires in ten minutes.
-    setPhotoPath(path)
-    setPhotoUrl(await signOne('staff-photos', path))
+    try {
+      // Keep the path for the profile row and the signed URL only for the
+      // preview: writing the signed URL to photo_url would persist something
+      // that expires in ten minutes.
+      const stored = await uploadStaffPhoto({ userId: user.id, file, previous: photoPath })
+      setPhotoPath(stored)
+      setPhotoUrl(await signOne('staff-photos', stored))
+    } catch (err) {
+      alert(err.message)
+    }
     setPhotoUploading(false)
   }
 

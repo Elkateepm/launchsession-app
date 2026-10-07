@@ -17,6 +17,7 @@ import { orgFilename } from '../../lib/orgExport'
 import HistoricalAttendanceModal from '../shared/HistoricalAttendanceModal'
 import { useTerms } from '../../context/OrgContext'
 import shrinkImage from '../../lib/shrinkImage'
+import { uploadChildPhoto } from '../../lib/childPhoto'
 import Icon from '../../lib/icons'
 import { withAlpha } from '../../lib/withAlpha'
 
@@ -942,7 +943,7 @@ function SectionHeading({ children, action }) {
 }
 
 // ─── CHILD DRAWER ─────────────────────────────────────────────
-function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], onClose, primary, org, hasSession, onGroupChange, onChildUpdated }) {
+function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], onClose, primary, org, hasSession, onGroupChange, onChildUpdated, onPhotoChanged }) {
   const isMobile = useIsMobile()
   const dragControls = useDragControls()
   const [drawerTab, setDrawerTab] = useState('overview')
@@ -1053,6 +1054,8 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
   }, [menuOpen])
 
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [photoError, setPhotoError] = useState('')
+  const [photoPath, setPhotoPath] = useState(child.photo_url || null)
   const currentGroup = child.group_name || ''
   const photoInputRef = React.useRef()
 
@@ -1084,17 +1087,18 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
 
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0]
+    e.target.value = ''
     if (!file) return
     setUploadingPhoto(true)
-    const ext = file.name.split('.').pop()
-    const path = `${org?.id}/children/${child.id}/photo.${ext}`
-    const up = await shrinkImage(file, { maxDimension: 900 })
-    const { error: upErr } = await supabase.storage.from('gallery').upload(path, up, { upsert: true, contentType: up.type })
-    if (!upErr) {
-      // Store the object path, not a URL: the bucket is private, so the only
-      // durable reference is the path and signed URLs are minted at read time.
-      await supabase.from('children').update({ photo_url: path }).eq('id', child.id)
+    setPhotoError('')
+    try {
+      const path = await uploadChildPhoto({ orgId: org?.id, childId: child.id, file, previous: photoPath })
+      setPhotoPath(path)
       setPhotoUrl(await signOne('gallery', path))
+      // The register row shows the photo straight away, without closing this.
+      onPhotoChanged?.(child.id, path)
+    } catch (err) {
+      setPhotoError(err.message)
     }
     setUploadingPhoto(false)
   }
@@ -1232,6 +1236,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
                 style={{ position: 'absolute', bottom: -4, right: -4, width: 26, height: 26, borderRadius: '50%', background: 'var(--surface)', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, boxShadow: '0 2px 6px rgba(15,23,42,0.12)' }}><Icon name="📷" /></button>
               <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
             </div>
+            {photoError && <div role="alert" style={{ maxWidth: 320, margin: '0 0 10px', fontSize: 12, lineHeight: 1.45, color: 'var(--danger-text)', background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 10, padding: '7px 10px', textAlign: 'center' }}>{photoError}</div>}
 
             <h2 style={{ fontSize: 21, fontWeight: 800, color: 'var(--text)', letterSpacing: -0.4, lineHeight: 1.2, margin: '0 0 7px', textAlign: 'center' }}>{name}</h2>
 
@@ -1679,6 +1684,7 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
           onGroupChange={(childId, groupName) => {
             setChildren(prev => prev.map(ch => ch.id === childId ? { ...ch, group_name: groupName } : ch))
           }}
+          onPhotoChanged={(childId, path) => setChildren(prev => prev.map(ch => (ch.id === childId ? { ...ch, photo_url: path } : ch)))}
           onChildUpdated={async (childId) => {
             const { data } = await supabase.from('children').select('*').eq('org_id', orgId).eq('id', childId).single()
             if (data) setChildren(prev => prev.map(ch => ch.id === childId ? data : ch))
