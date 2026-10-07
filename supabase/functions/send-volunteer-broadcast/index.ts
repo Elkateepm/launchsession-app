@@ -30,6 +30,23 @@ function fromHeader(displayName: unknown, branded: boolean) {
     : `${safeName} via LaunchSession <hello@launchsession.co.uk>`
 }
 
+// Only LaunchSession's own server may send through this function. Its API
+// routes call with the service role key; the gateway (verify_jwt) has already
+// checked the token's signature, so its role claim can be trusted. Without
+// this, the public anon key -- shipped in every browser -- could send any
+// email, to anyone, from hello@launchsession.co.uk under any display name.
+function calledByServer(req: Request) {
+  const token = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '')
+  const part = token.split('.')[1]
+  if (!part) return false
+  try {
+    const b64 = part.replace(/-/g, '+').replace(/_/g, '/')
+    return JSON.parse(atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4))).role === 'service_role'
+  } catch {
+    return false
+  }
+}
+
 serve(async (req) => {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -38,6 +55,10 @@ serve(async (req) => {
 
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
+  }
+
+  if (!calledByServer(req)) {
+    return new Response(JSON.stringify({ error: 'Not allowed' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   }
 
   try {
