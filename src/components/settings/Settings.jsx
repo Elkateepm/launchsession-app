@@ -1113,7 +1113,9 @@ const CYCLES = [
 // keeps one spelling of "Impact & Outcomes" rather than two.
 const MODULE_LABEL = Object.fromEntries(ACCESS_MODULES.map(m => [m.key, m.label]))
 
-const poundsPerMonth = (pence) => `£${Math.round(pence / 100)}`
+// Pence shown when there are any: the plans are priced at £49.99, and
+// rounding to whole pounds quoted £50 for a plan that bills £49.99.
+const poundsPerMonth = (pence) => `£${(pence / 100).toFixed(pence % 100 ? 2 : 0)}`
 
 function BillingSection({ org, session, isAdmin, refreshOrg }) {
   const isMobile = useIsMobile()
@@ -1139,7 +1141,7 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
     ;(async () => {
       const { data, error: err } = await supabase
         .from('plan_entitlements')
-        .select('plan, label, blurb, modules, child_limit, price_monthly_pence, price_annual_pence, sort, self_serve')
+        .select('plan, label, blurb, modules, child_limit, price_monthly_pence, price_annual_pence, sort, self_serve, includes_branding')
         .order('sort')
       if (cancelled) return
       if (err) { setPlansError('Could not load the plans right now.'); setPlans([]); return }
@@ -1303,7 +1305,16 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
                         {cycle === 'annual' ? 'billed annually' : 'billed monthly'}
                         {p.child_limit ? ` · up to ${p.child_limit} children` : ' · unlimited children'}
                       </div>
-                      <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 14, minHeight: 48, lineHeight: 1.5 }}>{p.blurb}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10, minHeight: 48, lineHeight: 1.5 }}>{p.blurb}</div>
+                      {/* The two things that differ between plans; every plan has the rest. */}
+                      <ul aria-label={`What ${p.label} adds`} style={{ listStyle: 'none', margin: '0 0 14px', padding: 0, fontSize: 12, lineHeight: 1.9 }}>
+                        {[['Branding Centre & branded emails', p.includes_branding], ['HR Centre', (p.modules || []).includes('hr')]].map(([label, has]) => (
+                          <li key={label} style={{ color: has ? 'var(--text)' : 'var(--text-faint)', fontWeight: has ? 700 : 500 }}>
+                            <span aria-hidden="true" style={{ color: has ? 'var(--ok-text)' : 'var(--text-faint)', marginRight: 6 }}>{has ? '✓' : '–'}</span>
+                            {label}<span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' }}>{has ? ' included' : ' not included'}</span>
+                          </li>
+                        ))}
+                      </ul>
                       {isCurrent ? (
                         <div style={{ textAlign: 'center', padding: '12px 0', borderRadius: 8, background: 'var(--ok-bg)', color: 'var(--ok-text)', fontWeight: 700, fontSize: 13 }}>Current Plan</div>
                       ) : (
@@ -1319,7 +1330,7 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
 
               <p style={{ fontSize: 12, color: 'var(--text3)', margin: '14px 0 0', lineHeight: 1.6 }}>
                 Registered charity? <a href="mailto:hello@launchsession.co.uk?subject=Charity%20discount" style={{ color: 'var(--org-ink)', fontWeight: 600 }}>Ask about our discount</a>.
-                {' '}Need more than Pro+? <a href="mailto:hello@launchsession.co.uk?subject=Enterprise%20Plan" style={{ color: 'var(--org-ink)', fontWeight: 600 }}>Talk to us</a>.
+                {' '}Need something bespoke? <a href="mailto:hello@launchsession.co.uk?subject=Bespoke%20plan" style={{ color: 'var(--org-ink)', fontWeight: 600 }}>Talk to us</a>.
               </p>
             </>
           )}

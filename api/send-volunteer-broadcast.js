@@ -51,6 +51,22 @@ function renderBlocks(blocks, primary) {
   }).join('')
 }
 
+// What an organisation's emails carry, decided here from its own row and never
+// from anything the browser sent. branding_enabled follows the plan (see
+// trg_branding_follows_plan): a plan with the Branding Centre, or a trial,
+// sends under the organisation's own name, footer and colours with no
+// LaunchSession marks; the rest send as "<Org> via LaunchSession".
+const ORG_EMAIL_COLUMNS = 'name, primary_color, logo_url, email_logo_url, branding_enabled, email_sender_name, email_footer_text, contact_email'
+const isEmail = v => typeof v === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
+function orgEmailIdentity(org) {
+  return {
+    branded: org?.branding_enabled === true,
+    org_sender_name: org?.email_sender_name || '',
+    org_footer_text: org?.email_footer_text || '',
+    ...(isEmail(org?.contact_email) ? { reply_to: org.contact_email } : {}),
+  }
+}
+
 async function handleNewsletter(req, res, { adminClient, user, profile }) {
   const { newsletterId, testTo } = req.body || {}
 
@@ -61,7 +77,7 @@ async function handleNewsletter(req, res, { adminClient, user, profile }) {
   if (nl.status === 'sent') return res.status(400).json({ error: 'This newsletter has already been sent' })
 
   const { data: org } = await adminClient
-    .from('organisations').select('name, primary_color, logo_url, email_logo_url').eq('id', nl.org_id).single()
+    .from('organisations').select(ORG_EMAIL_COLUMNS).eq('id', nl.org_id).single()
 
   // Test send. Deliberately touches nothing: no recipient rows, no status
   // change, no claim. It exists so you can look at the real thing in a real
@@ -88,6 +104,7 @@ async function handleNewsletter(req, res, { adminClient, user, profile }) {
           org_color: primaryT,
           org_logo: org?.email_logo_url || org?.logo_url,
           sender_name: profile.full_name,
+          ...orgEmailIdentity(org),
         },
       })
       if (e) throw e
@@ -169,6 +186,7 @@ async function handleNewsletter(req, res, { adminClient, user, profile }) {
         org_color: primary,
         org_logo: org?.email_logo_url || org?.logo_url,
         sender_name: profile.full_name,
+        ...orgEmailIdentity(org),
       },
     })
     if (fnError) throw fnError
@@ -286,7 +304,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, recipient_count: recipients.length, sent: recipients.length, failed: 0 })
     }
 
-    const { data: org } = await adminClient.from('organisations').select('name, primary_color, logo_url, email_logo_url').eq('id', org_id).single()
+    const { data: org } = await adminClient.from('organisations').select(ORG_EMAIL_COLUMNS).eq('id', org_id).single()
 
     let sent = 0, failed = 0
     try {
@@ -299,6 +317,7 @@ export default async function handler(req, res) {
           org_color: org?.primary_color,
           org_logo: org?.email_logo_url || org?.logo_url,
           sender_name: profile.full_name,
+          ...orgEmailIdentity(org),
         }
       })
       if (fnError) throw fnError
