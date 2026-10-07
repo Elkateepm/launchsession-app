@@ -13,9 +13,9 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 // prompt.
 const URGENT_DAYS = 3
 
-export function TrialBanner({ org, isAdmin, onChoosePlan }) {
+export function TrialBanner({ org, now, isAdmin, onChoosePlan }) {
   const isMobile = useIsMobile()
-  const days = trialDaysRemaining(org)
+  const days = trialDaysRemaining(org, now)
   if (days === null || days <= 0) return null
 
   const urgent = days <= URGENT_DAYS

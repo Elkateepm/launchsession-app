@@ -54,7 +54,8 @@ import {
 import {
   SidebarItem, SidebarSection, SidebarCollapsibleGroup, CreateMenu, ProfileMenu,
 } from './sidebar/SidebarParts'
-import { makeHasModule, isTrialActive, isPlanEnded } from '../../lib/moduleAccess'
+import { makeHasModule, isTrialActive, isPlanEnded, trialDaysRemaining } from '../../lib/moduleAccess'
+import { useTrialClock } from '../../hooks/useTrialClock'
 import { TrialBanner, ReadOnlyBanner, PlanEndedWall } from '../billing/TrialStatus'
 import SignedImg from '../shared/SignedImg'
 import Icon from '../../lib/icons'
@@ -312,6 +313,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
   const [searchFocused, setSearchFocused] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [showNotifs, setShowNotifs] = useState(false)
+  const trialNow = useTrialClock(org)
 
   useEffect(() => {
     const el = document.getElementById('ls-main-scroll')
@@ -323,8 +325,9 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
 
   const moduleLabel = tab === 'children' ? terms.People : tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : tab === 'branding' ? 'Branding' : tab === 'office' ? 'Office' : ALL_MODULES.find(m => m.key === tab)?.label || tab
 
-  const daysLeft = org?.trial_expires_at ? Math.max(0, Math.ceil((new Date(org.trial_expires_at) - new Date()) / (1000 * 60 * 60 * 24))) : null
-  const isTrial = org?.plan === 'starter' && daysLeft !== null
+  // Was gated on plan === 'starter', a paid plan, so a trial never saw it.
+  const daysLeft = trialDaysRemaining(org, trialNow)
+  const isTrial = daysLeft !== null && daysLeft > 0
 
   return (
     <motion.div
@@ -669,10 +672,13 @@ export default function Dashboard({ session, org }) {
   const tabLevel = tabAccessKey ? moduleLevel(tabAccessKey) : 'edit'
   const effectiveTab = tabLevel === 'none' ? '__no_access' : rawTab
 
-  const onTrial = isTrialActive(org)
+  // Re-read at each day's step and at expiry, so a session left open counts
+  // down and meets the read-only wall without needing a reload.
+  const trialNow = useTrialClock(org)
+  const onTrial = isTrialActive(org, trialNow)
   // Mirrors org_write_locked() in the database, which is what actually refuses
   // the writes. This only decides what we explain and when.
-  const planEnded = isPlanEnded(org)
+  const planEnded = isPlanEnded(org, trialNow)
   const [wallDismissed, setWallDismissed] = useState(false)
   // Settings opens on whichever section sent the user there, so "Choose a
   // plan" lands on Billing rather than on the organisation form.
@@ -1059,7 +1065,7 @@ export default function Dashboard({ session, org }) {
           )}
           {planEnded
             ? <ReadOnlyBanner isAdmin={isAdmin} onChoosePlan={goToBilling} />
-            : <TrialBanner org={org} isAdmin={isAdmin} onChoosePlan={goToBilling} />}
+            : <TrialBanner org={org} now={trialNow} isAdmin={isAdmin} onChoosePlan={goToBilling} />}
           {effectiveTab === '__no_access' && (
             <NoModuleAccess
               label={(ACCESS_MODULES.find(m => m.key === tabAccessKey) || {}).label || 'This area'}

@@ -15,7 +15,8 @@ import AddVolunteersToSessionModal from "../volunteers/AddVolunteersToSessionMod
 import HistoricalAttendanceModal from "../shared/HistoricalAttendanceModal";
 import { isPushSupported, getNotificationPermission, subscribeToPush } from "../../services/pushNotifications";
 import { notifyEvent } from "../../services/notifyEvent";
-import { makeModuleLevel } from '../../lib/moduleAccess'
+import { makeModuleLevel, trialDaysRemaining } from '../../lib/moduleAccess'
+import { useTrialClock } from '../../hooks/useTrialClock'
 import { useModuleAccess } from '../../context/ModuleAccessContext'
 import { todayOverview, monthReflectionCount } from './homeOverview'
 import { DaySpine, ActionRow, AllClear, GlanceStats, QuickJump, LearningBrief, WeatherStrip, hubHomeKeyframes } from './HubHomeSections'
@@ -2603,6 +2604,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   // Home was the one module page still hardcoding "Young People" / "Sessions",
   // so a sports club saw Players everywhere else and Young People here.
   const terms = useTerms()
+  const trialNow = useTrialClock(org)
   // Folded into the existing Needs Attention list rather than given a card of
   // its own -- a second attention area on the same screen is how people learn
   // to ignore both.
@@ -2963,9 +2965,11 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     })
   }, [todaySessions]);
   const liveHeroSession = todaySessions[0];
-  const trialDaysLeft = (org?.status === 'trial' && org?.created_at)
-    ? Math.max(0, 7 - Math.floor((Date.now() - new Date(org.created_at).getTime()) / 86400000))
-    : null;
+  // From trial_expires_at, like every other trial countdown. This used to
+  // count a 7-day trial from created_at and was gated on status === 'trial',
+  // a value organisations never have, so it never showed.
+  const trialDaysLeft = trialDaysRemaining(org, trialNow);
+  const showTrialDays = trialDaysLeft !== null && trialDaysLeft > 0;
 
   // ── Home hero helpers ──────────────────────────────────────────────────
   // Attendance grades itself rather than taking a brand tint, matching the
@@ -3118,8 +3122,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 )}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#fff', background: `linear-gradient(90deg, ${primary}, ${secondary})`, borderRadius: 5, padding: '3px 9px', boxShadow: `0 2px 8px var(--org-a20)` }}>{org?.plan || 'Starter'} Plan</span>
-                  {org?.status === 'trial' && trialDaysLeft !== null && (
-                    <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.04em', color: trialDaysLeft <= 2 ? '#DC2626' : 'var(--warn-text)', background: trialDaysLeft <= 2 ? 'var(--danger-bg)' : 'var(--warn-bg)', borderRadius: 5, padding: '3px 8px', border: `1px solid ${trialDaysLeft <= 2 ? 'var(--danger-border)' : 'var(--warn-border)'}` }}>
+                  {showTrialDays && (
+                    <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.04em', color: trialDaysLeft <= 3 ? '#DC2626' : 'var(--warn-text)', background: trialDaysLeft <= 3 ? 'var(--danger-bg)' : 'var(--warn-bg)', borderRadius: 5, padding: '3px 8px', border: `1px solid ${trialDaysLeft <= 3 ? 'var(--danger-border)' : 'var(--warn-border)'}` }}>
                       ⭐ {trialDaysLeft}d left
                     </span>
                   )}
@@ -3130,8 +3134,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text, #111)', lineHeight: 1.25, fontFamily: 'var(--font-display, sans-serif)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>{orgName}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2, fontSize: 10.5, fontWeight: 700, color: todayHasLiveSession ? '#DC2626' : '#16A34A' }}>
                   <span style={{ fontSize: 7 }}>●</span>
-                  {org?.status === 'trial' && trialDaysLeft !== null
-                    ? <span style={{ color: trialDaysLeft <= 2 ? '#DC2626' : 'var(--text3, #6b7280)' }}>Trial · {trialDaysLeft}d left</span>
+                  {showTrialDays
+                    ? <span style={{ color: trialDaysLeft <= 3 ? '#DC2626' : 'var(--text3, #6b7280)' }}>Trial · {trialDaysLeft}d left</span>
                     : (todayHasLiveSession ? 'Live now' : 'Online')}
                 </div>
               </div>
