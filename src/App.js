@@ -156,29 +156,74 @@ function AwaitingApproval({ org, status, note, email }) {
   )
 }
 
-function AuthedApp({ session, org, onReady }) {
+// Shown when the signed-in account is not a member of the organisation on
+// screen: someone signed in on another organisation's page, or an account with
+// no profile at all. The database already refuses every read and write here,
+// so without this the app showed the organisation's name and menus over empty
+// pages, and the first save failed with a raw "row-level security" error.
+function NotThisOrganisation({ org, home, email }) {
+  const signOut = async () => {
+    try { await supabase.auth.signOut() } catch (e) { /* best effort */ }
+    redirectToSignIn()
+  }
+  const goHome = () => {
+    try { localStorage.setItem('launchsession_org_slug', home.slug) } catch (e) { /* storage may be blocked */ }
+    window.location.replace(window.location.origin + '/dashboard?org=' + encodeURIComponent(home.slug))
+  }
+  const button = { width: '100%', padding: 14, borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }
+  return (
+    <div style={{ minHeight: '100dvh', background: '#0A0A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <div role="alert" style={{ maxWidth: 440, width: '100%', textAlign: 'center' }}>
+        <div style={{ fontSize: 44, marginBottom: 16 }}>🔀</div>
+        <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', marginBottom: 10 }}>
+          {home ? `This account belongs to ${home.name}` : `This account isn't part of ${org?.name || 'this organisation'}`}
+        </div>
+        <div style={{ fontSize: 14.5, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, marginBottom: 26 }}>
+          {home
+            ? <>You're signed in as <strong style={{ color: '#fff' }}>{email}</strong>, which is a member of {home.name}, not {org?.name || 'this organisation'}. Go to {home.name}, or sign out and sign in with your {org?.name || 'other'} account.</>
+            : <>You're signed in as <strong style={{ color: '#fff' }}>{email}</strong>, but it hasn't been added to {org?.name || 'an organisation'} yet. Ask one of its admins to invite you.</>}
+        </div>
+        {home && <button onClick={goHome} style={{ ...button, border: 'none', background: org?.primary_color || '#1B9AAA', color: '#fff', marginBottom: 10 }}>Go to {home.name}</button>}
+        <button onClick={signOut} style={{ ...button, border: '1px solid rgba(255,255,255,0.25)', background: 'transparent', color: '#fff' }}>Sign out</button>
+      </div>
+    </div>
+  )
+}
+
+export function AuthedApp({ session, org, onReady }) {
   const [onboardingDone, setOnboardingDone] = React.useState(null)
   const [userRole, setUserRole] = React.useState(null)
   const [approval, setApproval] = React.useState(null)
+  // { ok: true } once the account is confirmed to belong to this organisation;
+  // { ok: false, home } when it belongs elsewhere (home) or nowhere (null).
+  const [membership, setMembership] = React.useState(null)
   const { locked, unlock } = useBiometricLock(session?.user?.id)
 
   React.useEffect(() => {
     supabase.from('user_profiles')
-      .select('onboarding_complete, role, approval_status, approval_note')
+      .select('org_id, onboarding_complete, role, approval_status, approval_note')
       .eq('id', session.user.id)
       .maybeSingle()
       .then(async ({ data, error }) => {
         if (error) console.warn('user_profiles fetch error:', error.message)
 
-        if (!data) {
-          // No profile row — create one so future queries work
-          await supabase.from('user_profiles').upsert({
-            id: session.user.id,
-            email: session.user.email,
-            org_id: org?.id || null,
-            role: 'admin',
-            onboarding_complete: false,
-          }, { onConflict: 'id', ignoreDuplicates: true })
+        // Membership comes from an invitation, never from which organisation's
+        // page someone signed in on. This used to create a missing profile as
+        // { org_id: <org on screen>, role: 'admin' } -- an admin account in any
+        // organisation for anyone who could sign up. trg_guard_profile_insert
+        // now refuses that in the database as well.
+        if (!error) {
+          if (!data) {
+            setMembership({ ok: false, home: null })
+          } else if (org?.id && data.org_id !== org.id) {
+            const { data: home } = await supabase.from('organisations_safe')
+              .select('name, slug').eq('id', data.org_id).maybeSingle()
+            setMembership({ ok: false, home: home?.slug ? home : null })
+          } else {
+            setMembership({ ok: true })
+          }
+        } else {
+          setMembership({ ok: true })
         }
 
         const role = data?.role || 'admin'
@@ -195,8 +240,8 @@ function AuthedApp({ session, org, onReady }) {
   }, [session.user.id, session.user.email, org?.id, org?.onboarding_complete])
 
   React.useEffect(() => {
-    if (onboardingDone !== null && userRole !== null && approval !== null && onReady) onReady()
-  }, [onboardingDone, userRole, approval, onReady])
+    if (onboardingDone !== null && userRole !== null && approval !== null && membership !== null && onReady) onReady()
+  }, [onboardingDone, userRole, approval, membership, onReady])
 
   // Gate before anything else renders, including the role redirects below --
   // otherwise a locked device would still bounce a volunteer into their portal.
@@ -215,7 +260,11 @@ function AuthedApp({ session, org, onReady }) {
     )
   }
 
-  if (onboardingDone === null || userRole === null || approval === null) return null
+  if (onboardingDone === null || userRole === null || approval === null || membership === null) return null
+
+  // Before approval, roles and onboarding: none of them mean anything for an
+  // account that is not a member of this organisation.
+  if (!membership.ok) return <NotThisOrganisation org={org} home={membership.home} email={session?.user?.email} />
 
   // Ahead of the role redirects below: an account still waiting on a decision
   // must not be bounced into a portal either.
