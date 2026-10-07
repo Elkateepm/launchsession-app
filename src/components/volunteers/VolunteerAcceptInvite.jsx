@@ -82,18 +82,20 @@ export default function VolunteerAcceptInvite() {
     const { error: pwErr } = await supabase.auth.updateUser({ password })
     if (pwErr) { setError(pwErr.message); setSaving(false); return }
 
+    // The profile was created with the invitation (api/invite-volunteer), so
+    // this only fills it in. It used to upsert one, taking org_id from
+    // user_metadata -- which any signed-in user can rewrite for themselves --
+    // and the database now refuses browser-created profiles outright.
     const meta = user.user_metadata || {}
-    const { error: profileErr } = await supabase.from('user_profiles').upsert({
-      id: user.id,
-      email: user.email,
+    const { data: updated, error: profileErr } = await supabase.from('user_profiles').update({
       full_name: meta.full_name || user.email.split('@')[0],
-      org_id: meta.org_id,
-      role: 'volunteer',
       status: 'pending', // still goes through normal approval, matches existing volunteer flow
-    }, { onConflict: 'id' })
+    }).eq('id', user.id).select('id')
 
-    if (profileErr) {
-      setError('Password set, but we could not finish setting up your profile: ' + profileErr.message)
+    if (profileErr || !updated?.length) {
+      setError(profileErr
+        ? 'Password set, but we could not finish setting up your profile: ' + profileErr.message
+        : 'Password set, but this invitation has no profile behind it. Ask the organisation to send the invite again.')
       setSaving(false)
       return
     }
