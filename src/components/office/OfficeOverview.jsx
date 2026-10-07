@@ -19,6 +19,7 @@ import Icon from '../../lib/icons'
 const COPY = {
   forms:            { blurb: 'Build a form, send it out, read what comes back.' },
   newsletter:       { blurb: 'Write and send the round-up to parents and volunteers.' },
+  hr:               { blurb: 'Staff records, DBS and training checks, onboarding and leave.' },
   payments:         { blurb: 'Fees, invoices and what has actually been paid.' },
   resource_booking: { blurb: 'Rooms, kit and vehicles — who has what, and when.' },
   templates:        { blurb: 'Reusable email and register templates.' },

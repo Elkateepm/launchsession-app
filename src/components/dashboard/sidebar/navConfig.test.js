@@ -110,9 +110,11 @@ describe('Office', () => {
   const officeIds = OFFICE_TABS.map(t => t.id)
 
   it('holds the desk-work modules and nothing else', () => {
-    // HR left Office to become its own sidebar destination; Office is the
-    // desk work you do between sessions, not a system you open on purpose.
-    expect(officeIds).toEqual(['forms', 'newsletter', 'payments', 'resource_booking', 'templates', 'parent_portal'])
+    // HR came back into Office on 8 Oct 2026, when Office became what the
+    // middle plan sells (Platform + Office: HR, resource booking, payments).
+    // It had been moved out to its own row; the pricing is the reason to undo
+    // that, so the sidebar matches what an organisation buys.
+    expect(officeIds).toEqual(['forms', 'newsletter', 'hr', 'payments', 'resource_booking', 'templates', 'parent_portal'])
   })
 
   it('opens on Forms, the one with work arriving in it', () => {
@@ -139,11 +141,12 @@ describe('Office', () => {
     // People is the people themselves now: the young people, the team and the
     // volunteers. Writing to them is a desk job and sits with the other ones.
     const people = NAV_SECTIONS.find(s => s.label === 'People')
-    expect(people.items.map(i => i.id)).toEqual(['children', 'team', 'hr', 'volunteers'])
+    expect(people.items.map(i => i.id)).toEqual(['children', 'team', 'volunteers'])
   })
 
-  it('gives HR its own destination, gated on the module and the grant', () => {
-    const hr = NAV_SECTIONS.find(s => s.label === 'People').items.find(i => i.id === 'hr')
+  it('puts HR in Office, gated on the module and the grant', () => {
+    const hr = OFFICE_TABS.find(i => i.id === 'hr')
+    expect(NAV_SECTIONS.flatMap(s => s.items).find(i => i.id === 'office').matchTabs).toContain('hr')
     const base = { isAdmin: true, hiddenItems: [] }
     expect(isItemVisible(hr, { ...base, hasModule: () => true, moduleLevel: () => 'edit' })).toBe(true)
     // The organisation has not bought HR.
@@ -196,7 +199,7 @@ describe('Office', () => {
 
   it('shows an admin every module', () => {
     const ctx = { hasModule: () => true, isAdmin: true, moduleLevel: () => 'edit', hiddenItems: [] }
-    expect(visibleItems(OFFICE_TABS, ctx)).toHaveLength(6)
+    expect(visibleItems(OFFICE_TABS, ctx)).toHaveLength(7)
   })
 
   it('hides the admin-only modules from everyone else', () => {
@@ -223,19 +226,16 @@ describe('Office', () => {
 })
 
 
-describe('People & HR navigation', () => {
+describe('People navigation', () => {
   const peopleItems = NAV_SECTIONS.find(s => s.id === 'people').items
-  it('combines account and volunteer entry points only for an enabled HR workspace', () => {
-    const combined = visibleItems(peopleItems, { ...ctx(), combinePeopleHR: true })
-    expect(combined.map(i => i.id)).toEqual(['children', 'hr'])
-    expect(combined.find(i => i.id === 'hr').label).toBe('People & HR')
+  it('shows Team and Volunteers on their own, whatever the plan', () => {
+    // They used to fold into a "People & HR" row when HR was bought. HR is in
+    // Office now, so an organisation on any plan sees the same People section.
+    expect(visibleItems(peopleItems, ctx()).map(i => i.id)).toEqual(['children', 'team', 'volunteers'])
+    expect(visibleItems(peopleItems, { ...ctx(), hasModule: key => key !== 'hr' }).map(i => i.id)).toEqual(['children', 'team', 'volunteers'])
   })
-  it('keeps account and volunteer management available without HR', () => {
-    const fallback = visibleItems(peopleItems, { ...ctx(), hasModule: key => key !== 'hr', combinePeopleHR: false })
-    expect(fallback.map(i => i.id)).toEqual(['children', 'team', 'volunteers'])
-  })
-  it('keeps ordinary staff away from HR while preserving volunteer module access', () => {
-    const staff = visibleItems(peopleItems, { ...ctx(), isAdmin: false, isManager: false, combinePeopleHR: false })
+  it('keeps ordinary staff to the people they work with', () => {
+    const staff = visibleItems(peopleItems, { ...ctx(), isAdmin: false, isManager: false })
     expect(staff.map(i => i.id)).toEqual(['children', 'volunteers'])
   })
 })

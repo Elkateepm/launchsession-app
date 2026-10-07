@@ -28,10 +28,10 @@ export const NAV_SECTIONS = [
       // Label comes from the org's own terminology (People / Young People /
       // Members / Players), resolved at render.
       { id: 'children', label: null, termKey: 'People', icon: 'children', tab: 'children', accessKey: 'people' },
-      // Account and volunteer routes remain available without HR. Viewers
-      // with the combined workspace reach them through People & HR.
+      // Team and Volunteers stand on their own for every plan. HR used to
+      // absorb them into a combined "People & HR" row; it now lives in Office,
+      // the add-on it is sold as (Platform + Office, 8 Oct 2026).
       { id: 'team', label: 'Team', icon: 'team', tab: 'team', managerOnly: true },
-      { id: 'hr', label: 'People & HR', icon: 'hr', tab: 'hr', matchTabs: ['hr', 'team', 'volunteers'], moduleKey: 'hr', managerOnly: true },
       { id: 'volunteers', label: 'Volunteers', icon: 'volunteers', tab: 'volunteers', moduleKey: 'volunteers' },
     ],
   },
@@ -44,7 +44,7 @@ export const NAV_SECTIONS = [
       // does between sessions, not things anybody opens on a phone mid-
       // delivery. Its own visibility is decided by its contents -- see
       // OFFICE_TABS and visibleOfficeTabs.
-      { id: 'office', label: 'Office', icon: 'operations', tab: 'office', badgeKey: 'forms', matchTabs: ['office', 'forms', 'newsletter', 'payments', 'resource_booking', 'templates', 'parent_portal'] },
+      { id: 'office', label: 'Office', icon: 'operations', tab: 'office', badgeKey: 'forms', matchTabs: ['office', 'forms', 'newsletter', 'hr', 'payments', 'resource_booking', 'templates', 'parent_portal'] },
     ],
   },
   {
@@ -123,8 +123,7 @@ export const CREATE_ACTIONS = [
  * screen and its routes still exist, so upgrade prompts elsewhere and any
  * existing deep link continue to work.
  */
-export function isItemVisible(item, { hasModule, isAdmin, isManager, moduleLevel, hiddenItems, combinePeopleHR }) {
-  if (combinePeopleHR && ['team', 'volunteers'].includes(item.id)) return false
+export function isItemVisible(item, { hasModule, isAdmin, isManager, moduleLevel, hiddenItems }) {
   if (item.adminOnly && !isAdmin) return false
   // Managers sit between staff and admin: they approve people and set module
   // access, but cannot reach the admin-only screens. Admins pass this too --
@@ -155,6 +154,9 @@ export const OFFICE_TABS = [
   // Gated on 'messaging', not a module of its own -- the newsletter and the
   // messaging screens are the same purchase.
   { id: 'newsletter', label: 'Newsletter', icon: 'newsletter', tab: 'newsletter', moduleKey: 'messaging' },
+  // HR, resource booking and payments are what the Office add-on buys. Forms,
+  // the newsletter and templates sit here too but come with every plan.
+  { id: 'hr', label: 'HR', icon: 'hr', tab: 'hr', moduleKey: 'hr', managerOnly: true },
   { id: 'payments', label: 'Payments', icon: 'payments', tab: 'payments', moduleKey: 'payments' },
   { id: 'resource_booking', label: 'Resource Booking', icon: 'resources', tab: 'resource_booking', moduleKey: 'resource_booking' },
   { id: 'templates', label: 'Templates', icon: 'templates', tab: 'templates', adminOnly: true },
