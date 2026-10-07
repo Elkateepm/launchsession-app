@@ -11,6 +11,8 @@ import RegisterWorkspace from './RegisterWorkspace'
 import { TemplatePicker, AVAILABLE_FIELDS, SAMPLE_ROW } from './TemplateCreator'
 import OverlayPortal from '../shared/OverlayPortal'
 import { parseDelimited, detectMapping, buildImport } from '../../lib/childImport'
+import { buildTemplateWorkbook } from '../../lib/importTemplateWorkbook'
+import FillInRegister, { SCREEN_FIELD_KEYS } from './FillInRegister'
 import { orgFilename } from '../../lib/orgExport'
 import HistoricalAttendanceModal from '../shared/HistoricalAttendanceModal'
 import { useTerms } from '../../context/OrgContext'
@@ -317,8 +319,18 @@ export function InlineChildImport({ org, template, existingChildren = [], groups
   const [importing, setImporting] = useState(false)
   const [fileError, setFileError] = useState('')
   const [includeDuplicates, setIncludeDuplicates] = useState(false)
+  const [fillingIn, setFillingIn] = useState(false)
   const inputRef = useRef(null)
   const primary = org?.primary_color || '#1B9AAA'
+  // The template's columns: a chosen import template's fields, else all of them.
+  const templateFields = useMemo(() => {
+    const keys = template?.fields?.length ? template.fields.map(f => f.key) : CSV_COLS
+    return keys.map(key => AVAILABLE_FIELDS.find(f => f.key === key)).filter(Boolean)
+  }, [template])
+  const screenFields = useMemo(
+    () => (template?.fields?.length ? templateFields : templateFields.filter(f => SCREEN_FIELD_KEYS.includes(f.key))),
+    [template, templateFields]
+  )
 
   const load = useCallback((rows, source) => {
     if (!rows.length) { setFileError('That file has no rows in it.'); return }
@@ -405,16 +417,21 @@ export function InlineChildImport({ org, template, existingChildren = [], groups
     }
   }
 
-  const downloadTemplate = () => {
-    const cols = template?.fields?.length ? template.fields.map(f => f.key) : CSV_COLS
-    const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`
-    const row = cols.map(c => q(SAMPLE_ROW[c] ?? '')).join(',')
-    const blob = new Blob([`${cols.join(',')}\n${row}\n`], { type: 'text/csv' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = orgFilename(org, `${template?.name || 'children'}-import-template`, 'csv', { date: false })
-    a.click()
-    URL.revokeObjectURL(a.href)
+  const downloadTemplate = async () => {
+    setFileError('')
+    try {
+      // Same lazy load as reading a spreadsheet: most visits never need it.
+      const XLSX = await import('xlsx')
+      const bytes = buildTemplateWorkbook(XLSX, { fields: templateFields, groups, orgName: org?.name, person: terms.person, people: terms.people, sample: SAMPLE_ROW })
+      const url = URL.createObjectURL(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }))
+      const a = document.createElement('a')
+      a.href = url
+      a.download = orgFilename(org, `${template?.name || 'register'}-template`, 'xlsx', { date: false })
+      a.click()
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    } catch {
+      setFileError('Could not create the template. Please try again.')
+    }
   }
 
   // ── The drop target stays in the sidebar; the mapping and review happen in a
@@ -538,6 +555,11 @@ export function InlineChildImport({ org, template, existingChildren = [], groups
     </div></OverlayPortal>
   }
 
+  if (fillingIn) {
+    return <FillInRegister fields={screenFields} allFields={templateFields} groups={groups} terms={terms} primary={primary}
+      onBack={() => setFillingIn(false)} onCheck={rows => load(rows, 'Filled in on screen')} />
+  }
+
   return (
     <div>
       <button type="button" disabled={reading} onClick={() => inputRef.current?.click()} onDragOver={e => { e.preventDefault(); setDragging(true) }} onDragLeave={() => setDragging(false)}
@@ -566,10 +588,16 @@ export function InlineChildImport({ org, template, existingChildren = [], groups
 
       {fileError && <div style={{ fontSize: 11, color: 'var(--danger-text)', marginTop: 6 }}>{fileError}</div>}
 
-      <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-        <button onClick={downloadTemplate} style={{ flex: 1, minHeight: 44, padding: '10px', borderRadius: 8, border: '1px solid var(--org-a20)', background: primary + '10', color: 'var(--org-ink)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}><Icon name="⬇" /> Template</button>
-        <button onClick={() => load(parseDelimited(pasted), 'pasted rows')} disabled={!pasted.trim()}
-          style={{ flex: 1, minHeight: 44, padding: '10px', borderRadius: 8, border: 'none', background: pasted.trim() ? primary : 'var(--text-faint)', color: '#fff', fontSize: 11, fontWeight: 700, cursor: pasted.trim() ? 'pointer' : 'not-allowed' }}>Check <Icon name="→" /></button>
+      <button onClick={() => load(parseDelimited(pasted), 'pasted rows')} disabled={!pasted.trim()}
+        style={{ width: '100%', marginTop: 8, minHeight: 44, padding: '10px', borderRadius: 8, border: 'none', background: pasted.trim() ? primary : 'var(--text-faint)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: pasted.trim() ? 'pointer' : 'not-allowed' }}>Check pasted rows <Icon name="→" /></button>
+
+      <div style={{ marginTop: 18, padding: 14, borderRadius: 14, border: '1px solid var(--org-a20)', background: 'var(--org-a05)' }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>No spreadsheet yet?</div>
+        <div style={{ fontSize: 12, color: 'var(--text3)', margin: '3px 0 10px', lineHeight: 1.5 }}>Fill in the template here, or download it to fill in Excel, Numbers or Google Sheets and upload it above.</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button type="button" onClick={() => { setFileError(''); setFillingIn(true) }} style={{ flex: '1 1 180px', minHeight: 44, padding: '10px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}><Icon name="✏️" /> Fill in on screen</button>
+          <button type="button" onClick={downloadTemplate} style={{ flex: '1 1 180px', minHeight: 44, padding: '10px', borderRadius: 10, border: '1px solid var(--org-a35)', background: 'var(--surface)', color: 'var(--org-ink)', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}><Icon name="⬇" /> Download Excel template</button>
+        </div>
       </div>
     </div>
   )
