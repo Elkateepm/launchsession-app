@@ -52,3 +52,13 @@ The gate was applied live in two steps (`..._all_modules` then
 DELETE. The file here is the corrected end state and is the only one a fresh
 environment needs; there is deliberately no separate file for the correction.
 
+
+Founding admins skip approval, applied 7 Oct 2026:
+
+- `20261007_founding_admin_skips_approval.sql`
+
+The full definition of `claim_invite_profile()`, which until now existed only
+in the live project. An owner or admin invite into an organisation with no
+approved owner, admin or manager is approved on claim, because nobody could
+ever approve it. The same file approves the one account already stranded that
+way.
