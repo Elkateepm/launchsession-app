@@ -8,7 +8,8 @@ import SessionPlanner from '../sessions/SessionPlanner'
 import ProjectOverview from '../projects/ProjectOverview'
 import ProjectsList from '../projects/ProjectsList'
 import Hub from '../hub/Hub'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, lazy, Suspense } from 'react'
+import { pendingTour, clearTour } from '../tour/tourStorage'
 import { supabase } from '../../lib/supabase'
 import { redirectToSignIn } from '../../lib/authRedirect'
 import { makeModuleLevel, ACCESS_MODULES } from '../../lib/moduleAccess'
@@ -502,6 +503,9 @@ const PROFILE_MENU_ITEMS = [
   { id: 'signout', label: 'Sign out', icon: '↪️', danger: true, dividerBefore: true },
 ]
 
+// Only the people who are shown the welcome tour pay for loading it.
+const WelcomeTour = lazy(() => import('../tour/WelcomeTour'))
+
 export default function Dashboard({ session, org }) {
   const [tab, setTab] = useState(() => {
     // A page reload fully remounts this component, wiping any in-memory
@@ -706,6 +710,10 @@ export default function Dashboard({ session, org }) {
   const userEmail = session?.user?.email || ''
   const [userProfile, setUserProfile] = useState(null)
   const [showProfile, setShowProfile] = useState(false)
+  // Set by the setup wizard when the founder finishes it, or by Take the
+  // tour in their profile.
+  const [tourRole, setTourRole] = useState(() => pendingTour())
+  const closeTour = () => { clearTour(); setTourRole(null) }
   const [sessionVersion, setSessionVersion] = useState(0)
   const bumpSessions = () => setSessionVersion(v => v + 1)
 
@@ -1330,7 +1338,21 @@ export default function Dashboard({ session, org }) {
           onClose={() => setShowProfile(false)}
           onSignOut={() => { setShowProfile(false); handleSignOut() }}
           onProfileUpdate={refreshUserProfile}
+          onStartTour={isAdmin ? () => { setShowProfile(false); setTourRole('owner') } : undefined}
         />
+      )}
+      {/* The owner tour is for whoever runs the organisation. Waits for the
+          profile so it can greet them by name. */}
+      {tourRole && userProfile && (tourRole !== 'owner' || isAdmin) && (
+        <Suspense fallback={null}>
+          <WelcomeTour
+            role={tourRole}
+            org={org}
+            firstName={(userProfile.full_name || '').trim().split(/\s+/)[0]}
+            onClose={closeTour}
+            onNavigate={t => { closeTour(); handleSetTab(t) }}
+          />
+        </Suspense>
       )}
     </div>
   )

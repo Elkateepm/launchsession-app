@@ -9,6 +9,7 @@ import BiometricLockScreen from './components/auth/BiometricLockScreen'
 import { redirectToSignIn } from './lib/authRedirect'
 import { ModuleAccessProvider } from './context/ModuleAccessContext'
 import { applyTheme, watchSystemTheme } from './lib/theme'
+import { startTour } from './components/tour/tourStorage'
 
 // Route-level code splitting: each of these becomes its own JS chunk, only
 // downloaded when that route is actually visited, instead of all being
@@ -291,7 +292,9 @@ export function AuthedApp({ session, org, onReady }) {
     return null
   }
 
-  if (!onboardingDone) return <Onboarding session={session} org={org} onComplete={() => setOnboardingDone(true)} />
+  // Only the founder sets the organisation up (invited admins arrive after
+  // it is done), so finishing this is the moment to show the owner tour.
+  if (!onboardingDone) return <Onboarding session={session} org={org} onComplete={() => { startTour('owner'); setOnboardingDone(true) }} />
   return (
     <ModuleAccessProvider userId={session.user.id}>
       <Dashboard session={session} org={org} />

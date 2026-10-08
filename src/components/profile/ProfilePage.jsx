@@ -71,7 +71,7 @@ function ChangePasswordModal({ onClose }) {
   )
 }
 
-export default function ProfilePage({ session, org, onClose, onSignOut, onProfileUpdate }) {
+export default function ProfilePage({ session, org, onClose, onSignOut, onProfileUpdate, onStartTour }) {
   const isMobile = useIsMobile()
   const userId = session?.user?.id
   const userEmail = session?.user?.email || ''
@@ -206,6 +206,15 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
 
           {/* Sign out */}
           <div style={{ padding: '12px 16px', borderTop: '1px solid #f0f0f0' }}>
+            {onStartTour && (
+              <button onClick={onStartTour} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', color: 'var(--text2)', marginBottom: 2 }}>
+                <span style={{ fontSize: 16 }}><Icon name="🧭" /></span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>Take the tour</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>A one-minute look around</div>
+                </div>
+              </button>
+            )}
             <button onClick={() => { onSignOut && onSignOut() }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', color: 'var(--danger-text)' }}>
               <span style={{ fontSize: 16 }}><Icon name="🚪" /></span>
               <div>
