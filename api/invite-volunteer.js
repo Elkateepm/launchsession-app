@@ -37,6 +37,31 @@ export default async function handler(req, res) {
     // Use service role for all admin operations
     const adminClient = createClient(REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY)
 
+    // Only an approved member of org_id may invite into it, and only into a
+    // role below their own (owners and admins may invite admins). This route
+    // used to check only that the caller was signed in, then wrote org_id and
+    // role from the request body with the service key. Any account at all --
+    // a volunteer, a parent, a trial sign-up -- could name another
+    // organisation's id with role 'admin' and its own email, and be moved
+    // into that organisation as an admin.
+    const { data: caller } = await adminClient
+      .from('user_profiles')
+      .select('org_id, role, approval_status')
+      .eq('id', user.id)
+      .maybeSingle()
+    if (!caller || caller.org_id !== org_id || (caller.approval_status && caller.approval_status !== 'approved')) {
+      return res.status(403).json({ error: 'You do not have access to this organisation' })
+    }
+    const canInvite = {
+      owner: ['admin', 'manager', 'staff', 'volunteer'],
+      admin: ['admin', 'manager', 'staff', 'volunteer'],
+      manager: ['staff', 'volunteer'],
+      staff: ['volunteer'],
+    }[caller.role] || []
+    if (!canInvite.includes(inviteRole)) {
+      return res.status(403).json({ error: `Your role can't invite someone as ${inviteRole}` })
+    }
+
     // ── Check for an existing account up front. This applies the same way ──
     // regardless of which invite path (volunteer vs staff/admin) we take below.
     let existingUserId = null
@@ -82,6 +107,22 @@ export default async function handler(req, res) {
       } catch (orgFetchErr) {
         console.error('invite-volunteer: org lookup failed (non-fatal)', orgFetchErr)
         return null
+      }
+    }
+
+    if (existingUserId === user.id) {
+      return res.status(400).json({ error: "You can't change your own role here" })
+    }
+
+    // An account belongs to one organisation. Moving someone else's account
+    // into this one would take it from the organisation it belongs to, so an
+    // invite can only add someone who is not yet a member anywhere, or update
+    // a member of this organisation.
+    if (existingUserId) {
+      const { data: existingProfile } = await adminClient
+        .from('user_profiles').select('org_id').eq('id', existingUserId).maybeSingle()
+      if (existingProfile?.org_id && existingProfile.org_id !== org_id) {
+        return res.status(409).json({ error: 'This email already has a LaunchSession account with another organisation, so it cannot be added here.' })
       }
     }
 
