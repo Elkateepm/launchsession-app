@@ -1401,8 +1401,8 @@ function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, pr
       </div>
       <div style={{ position: 'relative', flexShrink: 0 }}><button aria-label={`Actions for ${s.title}`} aria-expanded={menuOpen} onClick={() => setMenuOpen(v => !v)} style={{ ...flowButton, width: 44, padding: 0, border: 0, fontSize: 18 }}>•••</button>{menuOpen && <CardMenu status={status} onClose={() => setMenuOpen(false)} onView={onView} onEdit={onEdit} onDuplicate={onDuplicate} onDelete={onDelete} onSaveTemplate={onSaveTemplate} />}</div>
     </div>
-    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', padding: '14px 0', marginTop: 10, borderTop: '1px solid var(--border-soft)' }}><MetaStat value={status === 'live' || past ? counts?.signedIn || 0 : counts?.total || 0} label={status === 'live' ? 'signed in' : past ? 'attended' : 'expected'} />{status === 'live' && <MetaStat value={counts?.expected || 0} label="to arrive" />}<MetaStat value={volCount} label="volunteers" />{past && <MetaStat value={counts?.absent || 0} label="absent" />}</div>
-    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: issues?.length || needsVols || s.risk_assessment_required ? 12 : 0 }}>{(issues || []).map((issue, i) => <span key={i} style={{ fontSize: 12, color: (REVIEW_TONES[issue.kind] || REVIEW_TONES.admin).color, background: (REVIEW_TONES[issue.kind] || REVIEW_TONES.admin).bg, padding: '5px 8px', borderRadius: 6 }}>{issue.label}</span>)}{!past && needsVols && <StatusPill tone="amber">{s.volunteer_limit - volCount} volunteers needed</StatusPill>}{!past && s.risk_assessment_required && !hasRiskAssessment && <StatusPill tone="amber">Risk assessment needed</StatusPill>}</div>
+    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', padding: '14px 0', marginTop: 10, borderTop: '1px solid var(--border-soft)' }}><MetaStat value={status === 'live' || past ? counts?.signedIn || 0 : counts?.total || 0} label={status === 'live' ? 'signed in' : past ? 'attended' : 'expected'} />{status === 'live' && <MetaStat value={counts?.expected || 0} label="to arrive" />}<MetaStat value={volCount} label={volCount === 1 ? 'volunteer' : 'volunteers'} />{past && <MetaStat value={counts?.absent || 0} label="absent" />}</div>
+    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: issues?.length || needsVols || s.risk_assessment_required ? 12 : 0 }}>{(issues || []).map((issue, i) => <span key={i} style={{ fontSize: 12, color: (REVIEW_TONES[issue.kind] || REVIEW_TONES.admin).color, background: (REVIEW_TONES[issue.kind] || REVIEW_TONES.admin).bg, padding: '5px 8px', borderRadius: 6 }}>{issue.label}</span>)}{!past && needsVols && <StatusPill tone="amber">{s.volunteer_limit - volCount} {s.volunteer_limit - volCount === 1 ? 'volunteer' : 'volunteers'} needed</StatusPill>}{!past && s.risk_assessment_required && !hasRiskAssessment && <StatusPill tone="amber">Risk assessment needed</StatusPill>}</div>
     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{status !== 'cancelled' && <button onClick={action} style={{ ...flowButton, flex: isMobile ? '1 1 auto' : undefined, background: brandGradient || primary, borderColor: 'transparent', color: '#fff' }}>{actionLabel} →</button>}<button onClick={onView} aria-label={`View ${terms.session} details for ${s.title}`} style={flowButton}>Details</button>{!isMobile && !past && needsVols && <button onClick={onVolunteers} style={flowButton}>Assign volunteers</button>}</div>
   </article>
 }
@@ -2066,7 +2066,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
               style={{ minHeight: 48, padding: isMobile ? '10px 6px' : '10px 14px', flex: isMobile ? '1 0 auto' : undefined, justifyContent: 'center', border: 'none', borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent', background: 'none', color: tab === t.key ? 'var(--org-ink)' : 'var(--text3)', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: isMobile ? 5 : 6 }}>
               {t.live && t.count > 0 && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16A34A', animation: 'sp-live-pulse 1.6s ease-in-out infinite' }} />}
               {t.label}
-              <span style={{ fontSize: 11, fontWeight: 800, color: tab === t.key ? 'var(--org-ink)' : 'var(--text-faint)', background: tab === t.key ? 'var(--org-a10)' : 'var(--border-soft)', borderRadius: 99, padding: isMobile ? '1px 6px' : '1px 7px' }}>{t.count}</span>
+              <span style={{ fontSize: 11, fontWeight: 800, color: tab === t.key ? 'var(--text)' : 'var(--text3)', background: tab === t.key ? 'var(--org-a10)' : 'var(--border-soft)', borderRadius: 99, padding: isMobile ? '1px 6px' : '1px 7px' }}>{t.count}</span>
             </button>
           ))}
           {isMobile && <span aria-hidden="true" style={{ flex: '0 0 24px' }} />}
@@ -2099,7 +2099,8 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
             <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}>
               {EMPTY_COPY.icon
                 ? <span style={{ fontSize: 40 }}><Icon name={EMPTY_COPY.icon} /></span>
-                : <img src="/assets/rockets/rocket-hero.png" alt="" style={{ height: 84, width: 'auto' }} />}
+                // The organisation's colour rather than LaunchSession's purple rocket.
+                : <span aria-hidden="true" style={{ width: 84, height: 84, borderRadius: 26, display: 'grid', placeItems: 'center', fontSize: 38, background: 'var(--org-a10)', color: 'var(--org-ink)' }}><Icon name="🚀" /></span>}
             </div>
             <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)', marginBottom: 6 }}>{activeFilterChips.length ? 'No matching results' : EMPTY_COPY.title}</div>
             <div style={{ fontSize: 13.5, color: 'var(--text3)', marginBottom: EMPTY_COPY.showCta ? 20 : 0, maxWidth: 420, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>{activeFilterChips.length ? 'Try another search or clear the filters to see more.' : EMPTY_COPY.text}</div>
@@ -2107,7 +2108,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
             {EMPTY_COPY.showCta && activeFilterChips.length === 0 && (
               <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
                 <button onClick={() => openNew()}
-                  style={{ padding: '11px 22px', borderRadius: 12, border: 'none', background: brand.gradient, color: '#fff', fontSize: 13.5, fontWeight: 800, cursor: 'pointer', boxShadow: `0 5px 14px ${withAlpha(primary, '26')}` }}>
+                  style={{ minHeight: 44, padding: '11px 22px', borderRadius: 12, border: 'none', background: brand.gradient, color: '#fff', fontSize: 13.5, fontWeight: 800, cursor: 'pointer', boxShadow: `0 5px 14px ${withAlpha(primary, '26')}` }}>
                   + Create a {terms.session}
                 </button>
                 {templates.length > 0 && (
@@ -2249,7 +2250,8 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
               style={{ ...flowButton, border: 0, width: 44, padding: 0, fontSize: 20 }}>×</button>
           </div>
         )}
-        <footer style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '22px 0 4px', fontSize: 11, color: 'var(--text3)' }}><Icon name="🚀" />Powered by <span style={{ fontWeight: 800, color: 'var(--org-ink)' }}>LaunchSession</span></footer>
+        {/* Hidden when the plan includes branding, as in the emails. */}
+        {!org?.branding_enabled && <footer style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '22px 0 4px', fontSize: 11, color: 'var(--text3)' }}><Icon name="🚀" />Powered by <span style={{ fontWeight: 800, color: 'var(--org-ink)' }}>LaunchSession</span></footer>}
       </div>
 
       {/* ═══ FILTERS DRAWER / BOTTOM SHEET ═══ */}
