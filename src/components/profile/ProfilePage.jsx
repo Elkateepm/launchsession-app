@@ -4,6 +4,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import SignedImg from '../shared/SignedImg'
 import { uploadStaffPhoto } from '../../lib/staffPhoto'
 import Icon from '../../lib/icons'
+import { planLabel } from '../../lib/moduleAccess'
 
 const ROLE_CONFIG = {
   admin:     { label: 'Administrator', badge: 'Admin',     color: '#4F6EF7', light: 'var(--info-bg)' },
@@ -184,7 +185,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
                 : <div style={{ width: 28, height: 28, borderRadius: 6, background: primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: '#fff' }}>{(org?.name || 'O')[0]}</div>}
               <div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>{org?.name || 'Organisation'}</div>
-                <div style={{ fontSize: 10, color: 'var(--text-faint)', textTransform: 'capitalize' }}>{org?.plan || 'Starter'} Plan</div>
+                <div style={{ fontSize: 10, color: 'var(--text-faint)' }}>{planLabel(org?.plan)}</div>
               </div>
             </div>
           </div>
