@@ -15,7 +15,9 @@ import AddVolunteersToSessionModal from "../volunteers/AddVolunteersToSessionMod
 import HistoricalAttendanceModal from "../shared/HistoricalAttendanceModal";
 import { isPushSupported, getNotificationPermission, subscribeToPush } from "../../services/pushNotifications";
 import { notifyEvent } from "../../services/notifyEvent";
-import { makeModuleLevel, trialDaysRemaining } from '../../lib/moduleAccess'
+import { makeModuleLevel, trialDaysRemaining, planLabel } from '../../lib/moduleAccess'
+import { orgBrand, OrgLogo } from '../shared/OrgPageHero'
+import { darken } from '../../lib/brandColors'
 import { useTrialClock } from '../../hooks/useTrialClock'
 import { useModuleAccess } from '../../context/ModuleAccessContext'
 import { todayOverview, monthReflectionCount } from './homeOverview'
@@ -29,8 +31,6 @@ import { carryAssessmentToSession } from '../../lib/sessionRiskAssessment'
 import { withAlpha } from '../../lib/withAlpha'
 import { todayInLondon } from '../../lib/today'
 
-// Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
-const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
 
 const ANNOUNCEMENT_EMOJIS = ['📣', '🎉', '⭐', '🔥', '💡', '📌', '🚨', '🙌', '❤️', '🏆']
 
@@ -964,12 +964,10 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
 
       {/* ═══ HEADER — same shape in every state: logo, actions, title, time/location, status chip ═══ */}
       <div style={{ padding: '20px 22px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'relative' }}>
-        <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={org?.name || ''} style={{
-          position: 'absolute', top: 20, left: 22, zIndex: 1,
-          width: isMobile ? 52 : 58, height: isMobile ? 52 : 58, borderRadius: 15, objectFit: 'contain',
-          background: 'var(--logo-backdrop)', padding: 2, border: '1.5px solid rgba(255,255,255,0.25)',
-          boxShadow: '0 1px 0 rgba(255,255,255,0.5) inset, 0 6px 16px -6px rgba(0,0,0,0.4)',
-        }} />
+        {/* The logo at its own proportions: in the corner on a desktop, where
+            the title is inset 130px either side, and centred above the title
+            on a phone, where a corner logo would sit under a long title. */}
+        {!isMobile && <span style={{ position: 'absolute', top: 20, left: 22, zIndex: 1 }}><OrgLogo org={org} height={52} maxWidth={104} /></span>}
 
         {!isMobile && (
           <div style={{ position: 'absolute', top: 20, right: 22, display: 'flex', gap: 8, zIndex: 3 }}>
@@ -1019,6 +1017,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
         )}
 
         <div style={{ textAlign: 'center', marginBottom: sessionPhase !== 'closed' && isMobile ? 14 : 0, padding: isMobile ? '0 56px' : '0 130px' }}>
+          {isMobile && <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><OrgLogo org={org} height={38} maxWidth={150} /></div>}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 7 }}>
             {sessionPhase === 'closed' ? (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(148,163,184,0.16)', border: '1px solid rgba(148,163,184,0.35)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 900, color: 'var(--text-faint)', letterSpacing: 0.8 }}>
@@ -2653,6 +2652,12 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const hasModule = (key) => moduleLevel(key) !== 'none';
   const canEdit = (key) => moduleLevel(key) === 'edit';
   const orgName = org?.name || "LaunchSession";
+  // The same colours, logo and type as the banners on Registers and Sessions,
+  // so Home reads as the organisation's rather than LaunchSession's.
+  const brand = orgBrand(org);
+  // Today's session cards, in a deep shade of the same colour. They used the
+  // sidebar's near-black, which made them read as LaunchSession's own.
+  const brandCardBg = `linear-gradient(160deg, ${darken(brand.base, .38)} 0%, ${darken(brand.base, .64)} 100%)`;
 
   const [sessions, setSessions] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -3097,8 +3102,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       {/* ── HEADER ── */}
       <header style={{ background: `linear-gradient(120deg, var(--org-a10) 0%, ${withAlpha(secondary, '10')} 55%, var(--surface, #fff) 100%)`, borderBottom: `2px solid var(--org-a10)`, padding: `0 ${pad}px`, flexShrink: 0, position: 'relative', overflow: 'visible', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 12px 28px -20px var(--org-a35)` }}>
 
-        {/* Brand gradient top strip — two-tone */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${primary}, ${secondary}, var(--org-a10), transparent)` }} />
+        {/* Brand stripe: primary, secondary and accent, edge to edge */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: brand.stripe }} />
 
         {/* Ambient brand glow */}
         <div style={{ position: 'absolute', top: -40, right: '15%', width: 260, height: 140, borderRadius: '50%', background: `radial-gradient(circle, ${withAlpha(secondary, '14')}, transparent 70%)`, pointerEvents: 'none' }} />
@@ -3108,10 +3113,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
           {/* Org identity */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0, padding: '4px 0' }}>
-            <div style={{ position: 'relative' }}>
-              <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={orgName} style={{ width: 48, height: 48, borderRadius: 13, objectFit: 'contain', border: `1.5px solid var(--org-a20)`, background: 'var(--logo-backdrop)', padding: 3, boxShadow: `0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 20px -6px var(--org-a20)` }} />
-              <div style={{ position: 'absolute', bottom: -2, right: -2, width: 12, height: 12, borderRadius: '50%', background: '#22C55E', border: '2px solid #fff' }} />
-            </div>
+            {/* At the logo's own proportions. The 48px square tile shrank a
+                wordmark to a smudge, which is most organisations' logo. */}
+            <OrgLogo org={org} height={isMobile ? 40 : 54} maxWidth={isMobile ? 96 : 210} />
             {!isMobile ? (
               <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5 }}>
                 <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text, #111)', lineHeight: 1.25, fontFamily: 'var(--font-display, sans-serif)', whiteSpace: 'nowrap' }}>{orgName}</div>
@@ -3121,7 +3125,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   </div>
                 )}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#fff', background: `linear-gradient(90deg, ${primary}, ${secondary})`, borderRadius: 5, padding: '3px 9px', boxShadow: `0 2px 8px var(--org-a20)` }}>{org?.plan || 'Starter'} Plan</span>
+                  <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#fff', background: brand.ink, borderRadius: 5, padding: '3px 9px', boxShadow: `0 2px 8px var(--org-a20)` }}>{planLabel(org?.plan)}</span>
                   {showTrialDays && (
                     <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.04em', color: trialDaysLeft <= 3 ? '#DC2626' : 'var(--warn-text)', background: trialDaysLeft <= 3 ? 'var(--danger-bg)' : 'var(--warn-bg)', borderRadius: 5, padding: '3px 8px', border: `1px solid ${trialDaysLeft <= 3 ? 'var(--danger-border)' : 'var(--warn-border)'}` }}>
                       ⭐ {trialDaysLeft}d left
@@ -3131,7 +3135,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               </div>
             ) : (
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text, #111)', lineHeight: 1.25, fontFamily: 'var(--font-display, sans-serif)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>{orgName}</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text, #111)', lineHeight: 1.25, fontFamily: 'var(--font-display, sans-serif)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120 }}>{orgName}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2, fontSize: 10.5, fontWeight: 700, color: todayHasLiveSession ? '#DC2626' : '#16A34A' }}>
                   <span style={{ fontSize: 7 }}>●</span>
                   {showTrialDays
@@ -3335,15 +3339,19 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             block. Replaces the old greeting row plus the "N sessions today" and
             "Next session" tiles, which all pointed at the same session. ── */}
         <div className="ls-rise" style={{
-          background: 'linear-gradient(125deg, var(--org-hero-start), var(--org-hero-end))',
+          // One hue, the organisation's own. This used to run from the
+          // primary into a darkened secondary, which for a violet and sage
+          // brand ended in a muddy olive corner.
+          background: brand.hero,
           borderRadius: 'var(--radius-lg)', padding: isMobile ? '16px' : '20px 24px',
           color: '#fff', position: 'relative', overflow: 'hidden', margin: '10px 0 4px',
-          boxShadow: `0 1px 0 rgba(255,255,255,0.14) inset, 0 18px 40px -24px var(--org-a60)`,
+          boxShadow: `0 1px 0 rgba(255,255,255,0.14) inset, 0 18px 40px -24px ${withAlpha(brand.primary, 'CC')}`,
         }}>
-          {/* Same two soft blooms as the Projects hero, so the block doesn't
-              read as a flat slab and Home matches the rest of the product. */}
+          {/* A soft bloom, and the secondary and accent colours as fine rings,
+              as on the Registers and Sessions banners. */}
           <div aria-hidden="true" style={{ position: 'absolute', top: -70, right: -40, width: 260, height: 260, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.16), transparent 70%)', pointerEvents: 'none' }} />
-          <div aria-hidden="true" style={{ position: 'absolute', bottom: -90, left: '30%', width: 300, height: 220, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.12), transparent 70%)', pointerEvents: 'none' }} />
+          <div aria-hidden="true" style={{ position: 'absolute', width: 300, height: 300, right: isMobile ? -170 : -60, top: -170, borderRadius: '50%', border: `2px solid ${withAlpha(brand.secondary, 'A6')}`, pointerEvents: 'none' }} />
+          <div aria-hidden="true" style={{ position: 'absolute', width: 260, height: 260, right: isMobile ? -160 : 300, bottom: -205, borderRadius: '50%', border: `2px solid ${withAlpha(brand.accent, 'B3')}`, pointerEvents: 'none' }} />
 
           <div style={{
             display: 'flex', alignItems: isMobile ? 'stretch' : 'flex-start',
@@ -3351,7 +3359,11 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             gap: isMobile ? 14 : 18, flexWrap: 'wrap', position: 'relative', zIndex: 2,
           }}>
             <div style={{ minWidth: 0, width: isMobile ? '100%' : 'auto' }}>
-              <h1 style={{ margin: 0, fontSize: isMobile ? 19 : 26, fontWeight: 900, lineHeight: 1.12, fontFamily: 'var(--font-display, sans-serif)', letterSpacing: '-0.4px', color: '#fff' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <span aria-hidden="true" style={{ width: 22, height: 3, borderRadius: 3, background: brand.accent, flexShrink: 0 }} />
+                <span style={{ fontSize: isMobile ? 10.5 : 11.5, fontWeight: 800, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(255,255,255,0.88)', overflowWrap: 'anywhere' }}>{orgName}</span>
+              </div>
+              <h1 style={{ margin: 0, fontSize: isMobile ? 21 : 30, fontWeight: 900, lineHeight: 1.12, fontFamily: 'var(--font-display, sans-serif)', letterSpacing: '-0.4px', color: '#fff' }}>
                 {getGreeting()}, {hubUserName.split(' ')[0]} <span style={{ display: 'inline-block', animation: 'lsWave 2.6s ease-in-out infinite', transformOrigin: '70% 70%' }}><Icon name="👋" /></span>
               </h1>
               <p style={{ margin: '7px 0 0', fontSize: isMobile ? 12 : 13, color: 'rgba(255,255,255,0.9)', lineHeight: 1.6 }}>{heroSummary}</p>
@@ -3572,7 +3584,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   style={{
                     textAlign: 'left', width: '100%', boxSizing: 'border-box', cursor: 'pointer', border: 'none',
                     borderRadius: 20, padding: 0, position: 'relative', overflow: 'hidden',
-                    background: 'linear-gradient(160deg, var(--org-sidebar), var(--org-sidebar-end))',
+                    background: brandCardBg,
                     boxShadow: `0 1px 0 rgba(255,255,255,0.07) inset, 0 16px 34px -14px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06)`,
                   }}>
                   <div style={{ height: 3, width: '100%', position: 'relative', overflow: 'hidden', background: primary }}>
@@ -3858,7 +3870,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   return (
                     <button key={s.id} onClick={() => toggleEndedExpanded(s.id)} style={{
                       flex: '1 1 100%', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', cursor: 'pointer',
-                      background: 'linear-gradient(160deg, var(--org-sidebar), var(--org-sidebar-end))',
+                      background: brandCardBg,
                       border: isClosed ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(248,113,113,0.35)', borderRadius: 14, padding: '10px 14px', boxSizing: 'border-box',
                     }}>
                       <span style={{ width: 30, height: 30, borderRadius: 9, background: isClosed ? 'rgba(148,163,184,0.16)' : 'rgba(248,113,113,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>{isClosed ? '🔒' : '🔺'}</span>

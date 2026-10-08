@@ -42,6 +42,25 @@ export const BASE_MODULE_KEYS = [
  * have no expiry set, and locking them out because a column is empty would be
  * the wrong way to resolve that ambiguity.
  */
+// The plan's name as people see it. organisations.plan holds the
+// plan_entitlements key, and showing that raw put "PLATFORM_OFFICE_BRANDING
+// PLAN" on the home screen. Mirrors plan_entitlements.label; anything not
+// listed is tidied rather than shown as a key.
+const PLAN_LABELS = {
+  trial: 'Free trial',
+  expired: 'Trial ended',
+  platform: 'Complete Platform',
+  platform_office: 'Platform + Office',
+  platform_office_branding: 'Platform + Office + Branding',
+  starter: 'Starter',
+  advanced: 'Advanced',
+  pro_plus: 'Pro+',
+}
+export function planLabel(plan) {
+  if (!plan) return 'Free trial'
+  return PLAN_LABELS[plan] || String(plan).replace(/_/g, ' ').replace(/^./, c => c.toUpperCase())
+}
+
 export function isTrialActive(org, now = new Date()) {
   if (!org) return false
   if (org.plan !== 'trial') return false
