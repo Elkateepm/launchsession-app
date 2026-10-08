@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import AttendanceCorrectionModal from './AttendanceCorrectionModal'
+import RegisterHero, { BandPill } from './RegisterHero'
 import SignedImg from '../shared/SignedImg'
 import Icon from '../../lib/icons'
 import { orgFilename } from '../../lib/orgExport'
@@ -10,6 +11,8 @@ function fmtTime(d) {
   if (!d) return ''
   return new Date(d).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })
 }
+// Session times come back from Postgres as 12:00:00.
+const hhmm = t => String(t || '').slice(0, 5)
 function fmtDateTime(d) {
   if (!d) return ''
   return new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit' })
@@ -118,49 +121,30 @@ export default function PastSessionRegister({
     <div style={{
       position: 'fixed', inset: 0, background: 'var(--surface2)', zIndex: 10200,
       display: 'flex', flexDirection: 'column',
-      // Same notch problem as LiveRegister: inset 0 puts the back button under
-      // the status bar once the app is on a home screen.
-      paddingTop: 'env(safe-area-inset-top, 0px)',
+      // The top safe-area inset is RegisterHero's, as on the open register.
       paddingBottom: 'env(safe-area-inset-bottom, 0px)',
     }}>
       <style>{`@media print { .no-print { display: none !important; } }`}</style>
 
       {/* HEADER */}
-      <div className="no-print" style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: isMobile ? '10px 14px 12px' : '14px 18px' }}>
-        <button onClick={onClose} style={{ minHeight: 44, background: 'none', border: 'none', fontSize: 13, fontWeight: 700, color: 'var(--text3)', cursor: 'pointer', marginBottom: 10 }}><Icon name="←" /> {backLabel}</button>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {/* The org logo is dropped on a phone. It is the one thing on this
-                header the reader definitely already knows, and it was costing
-                56px of width from a title that needs it. It still prints,
-                because a printed register should identify the organisation. */}
-            {!isMobile && (
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: `linear-gradient(135deg, ${primary}, ${secondary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
-                {org?.logo_url ? <img src={org.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', background: 'var(--logo-backdrop)', padding: 4, boxSizing: 'border-box' }} /> : <span style={{ color: '#fff', fontWeight: 900, fontSize: 18 }}>{(org?.name || 'L')[0]}</span>}
-              </div>
-            )}
-            <div>
-              <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 900, color: 'var(--text)' }}>{session.title}</div>
-              <div style={{ fontSize: isMobile ? 11.5 : 12.5, color: 'var(--text3)' }}>
-                {new Date(session.session_date).toLocaleDateString('en-GB', isMobile
-                  ? { day: 'numeric', month: 'short' }
-                  : { weekday: 'long', day: 'numeric', month: 'long' })} · {session.start_time}–{session.end_time}
-                {session.location ? ` · ${session.location}` : (isMobile ? '' : ' · No location set')}
-              </div>
-            </div>
+      <RegisterHero org={org} mobile={isMobile} backLabel={backLabel} onBack={onClose} title={session.title}
+        status={<BandPill><Icon name="🔒" /> Attendance closed</BandPill>}
+        meta={<span>
+          {new Date(session.session_date).toLocaleDateString('en-GB', isMobile
+            ? { day: 'numeric', month: 'short' }
+            : { weekday: 'long', day: 'numeric', month: 'long' })} · {hhmm(session.start_time)}–{hhmm(session.end_time)}
+          {session.location ? ` · ${session.location}` : (isMobile ? '' : ' · No location set')}
+        </span>}
+        aside={session.closed_at && (
+          <div style={{ textAlign: isMobile ? 'left' : 'right', background: '#0000002e', border: '1px solid #ffffff26', borderRadius: 12, padding: isMobile ? '7px 11px' : '9px 13px', flexShrink: 0 }}>
+            <div style={{ fontSize: 10, fontWeight: 800, color: '#ffffffcc', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 2 }}>Final outcome</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>Closed {fmtDateTime(session.closed_at)}{isMobile ? ` by ${closedByName}` : ''}</div>
+            {!isMobile && <div style={{ fontSize: 11.5, color: '#ffffffcc' }}>by {closedByName}</div>}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', background: 'var(--surface3)', borderRadius: 99, padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="🔒" /> Attendance closed</span>
-            {session.closed_at && (
-              <div style={{ textAlign: 'right', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, padding: '8px 12px' }}>
-                <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase' }}>Final outcome</div>
-                <div style={{ fontSize: 12, color: 'var(--text2)' }}>Closed {fmtDateTime(session.closed_at)}</div>
-                <div style={{ fontSize: 11.5, color: 'var(--text3)' }}>by {closedByName}</div>
-              </div>
-            )}
-          </div>
-        </div>
-        {/* Says the same thing as the "Attendance closed" pill two lines up.
+        )} />
+
+      <div className="no-print" style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: isMobile ? '0 14px 12px' : '0 18px 14px' }}>
+        {/* Says the same thing as the "Attendance closed" pill on the banner.
             Worth the words on a desktop; not worth a row of the viewport on a
             phone. */}
         {!isMobile && <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 8 }}>This session has ended and the final attendance record is locked.</div>}
