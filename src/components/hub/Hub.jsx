@@ -21,6 +21,7 @@ import { darken } from '../../lib/brandColors'
 import { useTrialClock } from '../../hooks/useTrialClock'
 import { useModuleAccess } from '../../context/ModuleAccessContext'
 import { todayOverview, monthReflectionCount } from './homeOverview'
+import GettingStarted from './GettingStarted'
 import { DaySpine, ActionRow, AllClear, GlanceStats, QuickJump, LearningBrief, WeatherStrip, hubHomeKeyframes } from './HubHomeSections'
 import { monthAttendance as calcMonthAttendance, reachedThisMonth as calcReachedThisMonth } from './glanceStats'
 import { useTerms } from '../../context/OrgContext'
@@ -1811,6 +1812,7 @@ export function SessionQuickActions({ session, org, orgId, authUserId, onNavigat
     <>
       {linkedRA === undefined ? null : linkedRA ? (
         <button
+          className="ls-tap"
           onClick={(e) => { e.stopPropagation(); setViewingRA(true) }}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 800, color: 'var(--ok-text)',
@@ -1821,6 +1823,7 @@ export function SessionQuickActions({ session, org, orgId, authUserId, onNavigat
       ) : (
         <button
           onClick={openRAPicker}
+          className="ls-tap"
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 800, color: '#FCD34D',
             background: 'rgba(251,191,36,0.1)', border: '1px dashed rgba(251,191,36,0.4)', borderRadius: 99, padding: '5px 10px', cursor: 'pointer', whiteSpace: 'nowrap',
@@ -2484,7 +2487,7 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
     <div ref={ref} style={{ position: 'relative' }}>
       <button
         onClick={() => setOpen(o => !o)}
-        style={{ position: 'relative', width: 40, height: 40, borderRadius: 12, border: `1.5px solid var(--org-a10)`, background: open ? primary + '10' : 'var(--surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, transition: 'all 0.2s', boxShadow: open ? `0 1px 0 rgba(255,255,255,0.7) inset, 0 4px 12px -4px var(--org-a20)` : `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px var(--org-a10)` }}
+        style={{ position: 'relative', width: 44, height: 44, borderRadius: 12, border: `1.5px solid var(--org-a10)`, background: open ? primary + '10' : 'var(--surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, transition: 'all 0.2s', boxShadow: open ? `0 1px 0 rgba(255,255,255,0.7) inset, 0 4px 12px -4px var(--org-a20)` : `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px var(--org-a10)` }}
         onMouseEnter={e => { if (!open) { e.currentTarget.style.borderColor = primary + '50'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 6px 16px -6px var(--org-a20)` } }}
         onMouseLeave={e => { if (!open) { e.currentTarget.style.borderColor = primary + '22'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px var(--org-a10)` } }}
         aria-label="Notifications"
@@ -3112,7 +3115,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: isMobile ? '12px 0 10px' : '18px 0 14px', borderBottom: `1px solid var(--org-a10)`, position: 'relative' }}>
 
           {/* Org identity */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0, padding: '4px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 14, flexShrink: isMobile ? 1 : 0, minWidth: 0, padding: '4px 0' }}>
             {/* At the logo's own proportions. The 48px square tile shrank a
                 wordmark to a smudge, which is most organisations' logo. */}
             <OrgLogo org={org} height={isMobile ? 40 : 54} maxWidth={isMobile ? 96 : 210} />
@@ -3213,7 +3216,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               <button
                 onClick={() => setShowMobileSearch(v => !v)}
                 aria-label={showMobileSearch ? 'Close search' : 'Search'}
-                style={{ width: 34, height: 34, borderRadius: 10, border: `1.5px solid ${primary}${showMobileSearch ? '55' : '22'}`, background: showMobileSearch ? 'var(--org-a05)' : 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, cursor: 'pointer', flexShrink: 0, color: 'var(--org-ink)', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset`, position: 'relative', overflow: 'hidden', transition: 'background 0.2s, border-color 0.2s' }}>
+                style={{ width: 44, height: 44, borderRadius: 12, border: `1.5px solid ${primary}${showMobileSearch ? '55' : '22'}`, background: showMobileSearch ? 'var(--org-a05)' : 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, cursor: 'pointer', flexShrink: 0, color: 'var(--org-ink)', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset`, position: 'relative', overflow: 'hidden', transition: 'background 0.2s, border-color 0.2s' }}>
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.span
                     key={showMobileSearch ? 'close' : 'search'}
@@ -3471,6 +3474,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           </div>
         </div>
       )}
+      <GettingStarted org={org} userRole={userProfile?.role} onNavigate={go} pad={pad} />
       {/* ── LIVE SESSION HERO ── */}
       <div style={{ padding: `${pad}px ${pad}px 0` }}>
       {liveHeroSession ? (
@@ -3572,13 +3576,14 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                   @keyframes lsOrbDrift{0%{transform:translate(0,0) scale(1)}50%{transform:translate(-10px,8px) scale(1.08)}100%{transform:translate(0,0) scale(1)}}
                   @keyframes lsArrowNudge{0%,100%{transform:translateX(0)}50%{transform:translateX(3px)}}
                   .ls-livecard:hover .ls-card-arrow{animation:lsArrowNudge .7s ease-in-out infinite}
-                  .ls-livecard:focus-visible{outline:2px solid rgba(255,255,255,0.4);outline-offset:2px}
+                  .ls-livecard-title:focus-visible{outline:2px solid rgba(255,255,255,0.7);outline-offset:3px;border-radius:6px}
                 `}</style>
+                {/* Clickable for a mouse or a thumb, but not a button itself: it
+                    holds buttons of its own, and a button inside a button is
+                    announced as one control by a screen reader. The title is
+                    the keyboard's way in. */}
                 <motion.div
                   onClick={() => setOpenLiveSessionId(s.id)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setOpenLiveSessionId(s.id) } }}
                   className="ls-livecard"
                   initial={{ opacity: 0, y: 18, scale: 0.97 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -3616,11 +3621,11 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                           <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.7, textTransform: 'uppercase', color: cardStatus === 'live' ? 'var(--danger-border)' : cardStatus === 'upcoming' ? 'var(--warn-border)' : (hasEnded && !isClosed) ? 'var(--danger-border)' : 'var(--text-faint)' }}>{statusLabel}</span>
                         </div>
                         {cardStatus === 'ended' && (
-                          <button onClick={() => toggleEndedExpanded(s.id)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 8, marginBottom: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.55)', cursor: 'pointer' }}>
+                          <button className="ls-tap" onClick={() => toggleEndedExpanded(s.id)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 8, marginBottom: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 99, padding: '3px 10px', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.55)', cursor: 'pointer' }}>
                             ▲ Collapse
                           </button>
                         )}
-                        <div style={{ fontSize: 17, fontWeight: 900, color: '#fff', lineHeight: 1.25, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
+                        <button className="ls-livecard-title" onClick={(e) => { e.stopPropagation(); setOpenLiveSessionId(s.id) }} style={{ display: 'block', maxWidth: '100%', padding: 0, border: 'none', background: 'none', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer', fontSize: 17, fontWeight: 900, color: '#fff', lineHeight: 1.25, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</button>
                         {(s.start_time || s.location) && (
                           <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 10px' }}>
                             {s.start_time && (
@@ -3678,6 +3683,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                         <button
                           onClick={(e) => { e.stopPropagation(); setKioskRequestSessionId(s.id); setOpenLiveSessionId(s.id) }}
                           title="Self sign-in kiosk (PIN to exit)"
+                          className="ls-tap"
                           style={{
                             display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 800, color: 'rgba(255,255,255,0.7)',
                             background: 'transparent', border: '1px dashed rgba(255,255,255,0.24)', borderRadius: 99, padding: '5px 10px',
@@ -3712,6 +3718,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       )}
                       {volunteerList.length > 0 ? (
                         <button
+                          className="ls-tap"
                           onClick={(e) => { e.stopPropagation(); setAddVolunteersSessionId(s.id) }}
                           style={{
                             display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 800, color: '#FDA4AF',
@@ -3721,6 +3728,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                         </button>
                       ) : (
                         <button
+                          className="ls-tap"
                           onClick={(e) => { e.stopPropagation(); setAddVolunteersSessionId(s.id) }}
                           style={{
                             display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 800, color: 'rgba(255,255,255,0.65)',
@@ -3959,7 +3967,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             }
 
             if (items.length === 0) {
-              return <AllClear label="No outstanding items in your available Home checks" />
+              return <AllClear label="Nothing needs you right now." />
             }
             return <ActionRow items={items} isMobile={isMobile} />
           })()}
@@ -4185,7 +4193,7 @@ function OperationalPulse({ items, isMobile, primary }) {
               <strong style={{ fontSize: 24, lineHeight: 1, fontWeight: 950, fontFamily: 'var(--font-display, sans-serif)', fontVariantNumeric: 'tabular-nums' }}>{item.value}</strong>
             </span>
             <span>
-              <span style={{ display: 'block', fontSize: 12, fontWeight: 900, color: 'var(--text, #0F172A)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
+              <span style={{ display: 'block', fontSize: 12, fontWeight: 900, lineHeight: 1.3, color: 'var(--text, #0F172A)' }}>{item.label}</span>
               <span style={{ display: 'block', fontSize: 11, lineHeight: 1.45, marginTop: 4, color: 'var(--text3, #64748B)' }}>{item.detail}</span>
             </span>
           </button>
