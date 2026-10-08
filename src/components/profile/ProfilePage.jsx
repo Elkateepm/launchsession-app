@@ -5,82 +5,56 @@ import SignedImg from '../shared/SignedImg'
 import { uploadStaffPhoto } from '../../lib/staffPhoto'
 import Icon from '../../lib/icons'
 import { planLabel } from '../../lib/moduleAccess'
+import { orgBrand, OrgLogo } from '../shared/OrgPageHero'
+import { withAlpha } from '../../lib/withAlpha'
 
-const ROLE_CONFIG = {
-  admin:     { label: 'Administrator', badge: 'Admin',     color: '#4F6EF7', light: 'var(--info-bg)' },
-  staff:     { label: 'Staff Member',  badge: 'Staff',     color: '#1B9AAA', light: '#F0FDFA' },
-  volunteer: { label: 'Volunteer',     badge: 'Volunteer', color: '#10B981', light: '#ECFDF5' },
-  parent:    { label: 'Parent/Carer',  badge: 'Parent',    color: '#F59E0B', light: 'var(--warn-bg)' },
+// Your own profile: one scrolling sheet in the organisation's colours, full
+// screen on a phone and a centred card on a desktop. It replaced a desktop
+// sidebar that a phone squeezed into the top 40% of the screen, in
+// LaunchSession blue whatever the organisation's brand.
+//
+// Everything here says only what is true. The old version had an Enable
+// button for two-factor sign-in that did nothing, "Your account is secure",
+// and "Last changed recently" for a date it never knew.
+
+const ROLE_LABELS = {
+  owner: 'Owner', admin: 'Administrator', manager: 'Manager', staff: 'Staff member',
+  volunteer: 'Volunteer', parent: 'Parent or carer',
 }
 
-function EditFieldModal({ label, value, onClose, onSave }) {
-  const [val, setVal] = useState(value || '')
-  const [saving, setSaving] = useState(false)
-  return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 16, width: '100%', maxWidth: 400, padding: 24, boxShadow: '0 24px 60px rgba(0,0,0,0.2)' }}>
-        <div style={{ fontSize: 16, fontWeight: 800, color: '#111', marginBottom: 16 }}>Change {label}</div>
-        <input autoFocus value={val} onChange={e => setVal(e.target.value)}
-          style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', marginBottom: 16 }} />
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: 10, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>Cancel</button>
-          <button onClick={async () => { setSaving(true); await onSave(val); setSaving(false); onClose() }}
-            style={{ flex: 2, padding: 10, borderRadius: 8, border: 'none', background: '#4F6EF7', color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>
-            {saving ? 'Saving...' : 'Save'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
+const FIELDS = {
+  full_name: { label: 'Full name', icon: '👤', autoComplete: 'name', placeholder: 'e.g. Sam Taylor' },
+  phone: { label: 'Phone number', icon: '📱', type: 'tel', autoComplete: 'tel', placeholder: 'e.g. 07700 900123' },
+  location: { label: 'Location', icon: '📍', autoComplete: 'address-level2', placeholder: 'Town or city' },
+  emergency_contact_name: { label: 'Contact name', icon: '❤️', placeholder: 'Who should we call?' },
+  emergency_contact_phone: { label: 'Contact phone', icon: '📞', type: 'tel', placeholder: 'e.g. 07700 900456' },
+  dbs_number: { label: 'Certificate number', icon: '🛡️', placeholder: '12-digit number on the certificate' },
+  dbs_expiry: { label: 'Renewal date', icon: '📅', type: 'date' },
 }
 
-function ChangePasswordModal({ onClose }) {
-  const [newPw, setNewPw] = useState('')
-  const [confirm, setConfirm] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
-  const inp = { width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 14, outline: 'none', marginBottom: 12 }
+// What makes your profile useful to the people you run sessions with.
+const CHECKLIST = [
+  { done: p => !!p?.photo_url, label: 'Add a photo', why: 'so families and colleagues recognise you', action: 'photo' },
+  { done: p => !!p?.phone, label: 'Add your phone number', why: 'so your team can reach you on the day', action: 'phone' },
+  { done: p => !!(p?.emergency_contact_name && p?.emergency_contact_phone), label: 'Add an emergency contact', why: 'in case something happens to you during a session', action: p => p?.emergency_contact_name ? 'emergency_contact_phone' : 'emergency_contact_name' },
+  { done: p => !!p?.dbs_number, label: 'Add your DBS details', why: 'so your organisation can keep its checks up to date', action: 'dbs_number' },
+]
 
-  const handleSave = async () => {
-    if (newPw !== confirm) { setError('Passwords do not match.'); return }
-    if (newPw.length < 8) { setError('Min. 8 characters.'); return }
-    setSaving(true); setError('')
-    const { error: err } = await supabase.auth.updateUser({ password: newPw })
-    if (err) { setError(err.message); setSaving(false); return }
-    setSuccess(true); setSaving(false)
-    setTimeout(onClose, 1500)
-  }
-
-  return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 16, width: '100%', maxWidth: 400, padding: 24, boxShadow: '0 24px 60px rgba(0,0,0,0.2)' }}>
-        <div style={{ fontSize: 16, fontWeight: 800, color: '#111', marginBottom: 16 }}>Change Password</div>
-        {error && <div style={{ background: 'var(--danger-bg)', borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontSize: 13, color: 'var(--danger-text)', fontWeight: 600 }}>{error}</div>}
-        {success && <div style={{ background: 'var(--ok-bg)', borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontSize: 13, color: 'var(--ok-text)', fontWeight: 600 }}><Icon name="✓" /> Password updated!</div>}
-        <input style={inp} type="password" placeholder="New password (min. 8 chars)" value={newPw} onChange={e => setNewPw(e.target.value)} />
-        <input style={{ ...inp, marginBottom: 16 }} type="password" placeholder="Confirm new password" value={confirm} onChange={e => setConfirm(e.target.value)} />
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: 10, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>Cancel</button>
-          <button onClick={handleSave} disabled={saving} style={{ flex: 2, padding: 10, borderRadius: 8, border: 'none', background: '#4F6EF7', color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>
-            {saving ? 'Updating...' : 'Update Password'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
+const formatDate = iso => {
+  const d = iso ? new Date(iso) : null
+  return d && !isNaN(d) ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
 }
 
 export default function ProfilePage({ session, org, onClose, onSignOut, onProfileUpdate, onStartTour }) {
   const isMobile = useIsMobile()
   const userId = session?.user?.id
   const userEmail = session?.user?.email || ''
+  const brand = orgBrand(org)
   const [profile, setProfile] = useState(null)
-  const [activeSection, setActiveSection] = useState('profile')
-  const [saved, setSaved] = useState(false)
+  const [toast, setToast] = useState('')
   const [photoUploading, setPhotoUploading] = useState(false)
   const [photoError, setPhotoError] = useState('')
-  const [editField, setEditField] = useState(null)
+  const [editing, setEditing] = useState(null) // a FIELDS key
   const [showPassword, setShowPassword] = useState(false)
   const fileInputRef = useRef(null)
 
@@ -90,9 +64,13 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
       .then(({ data }) => { if (data) setProfile(data) })
   }, [userId])
 
-  const role = ROLE_CONFIG[profile?.role] || ROLE_CONFIG.staff
-  const initials = (profile?.full_name || userEmail).split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-  const primary = org?.primary_color || '#4F6EF7'
+  useEffect(() => {
+    const onKey = e => { if (e.key === 'Escape' && !editing && !showPassword) onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [editing, showPassword, onClose])
+
+  const flash = message => { setToast(message); setTimeout(() => setToast(''), 2200) }
 
   const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0]
@@ -108,221 +86,285 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
       if (error) throw new Error('Your photo uploaded but could not be saved to your profile. Please try again.')
       setProfile(p => ({ ...p, photo_url: stored }))
       if (onProfileUpdate) onProfileUpdate()
+      flash('Photo updated')
     } catch (err) {
       setPhotoError(err.message)
     }
     setPhotoUploading(false)
   }
 
+  // Resolves to an error message, or null once saved.
   const saveField = async (field, value) => {
-    const { error } = await supabase.from('user_profiles').update({ [field]: value }).eq('id', userId)
-    if (!error) {
-      setProfile(p => ({ ...p, [field]: value }))
-      if (onProfileUpdate) onProfileUpdate()
-      setSaved(true)
-      setTimeout(() => setSaved(false), 2000)
-    }
+    const clean = typeof value === 'string' ? value.trim() : value
+    const { error } = await supabase.from('user_profiles').update({ [field]: clean || null }).eq('id', userId)
+    if (error) return 'That did not save. Check your connection and try again.'
+    setProfile(p => ({ ...p, [field]: clean || null }))
+    if (onProfileUpdate) onProfileUpdate()
+    flash('Saved')
+    return null
   }
 
+  const name = profile?.full_name || userEmail.split('@')[0] || 'You'
+  const firstName = name.trim().split(/\s+/)[0]
+  const initials = name.split(/\s+/).filter(Boolean).map(n => n[0]).join('').toUpperCase().slice(0, 2)
+  const roleLabel = ROLE_LABELS[profile?.role] || 'Team member'
+  const done = CHECKLIST.filter(c => c.done(profile)).length
+  const next = CHECKLIST.find(c => !c.done(profile))
+  const startNext = () => {
+    const action = typeof next.action === 'function' ? next.action(profile) : next.action
+    if (action === 'photo') fileInputRef.current?.click()
+    else setEditing(action)
+  }
 
+  const expiry = profile?.dbs_expiry ? new Date(profile.dbs_expiry) : null
+  const daysLeft = expiry && !isNaN(expiry) ? Math.ceil((expiry - new Date()) / 86400000) : null
+  const dbsStatus = daysLeft === null ? null
+    : daysLeft < 0 ? { tone: 'danger', text: 'Expired' }
+    : daysLeft < 60 ? { tone: 'warn', text: `Renew in ${daysLeft} day${daysLeft === 1 ? '' : 's'}` }
+    : { tone: 'ok', text: 'In date' }
 
-  const NAV = [
-    { key: 'profile',   icon: '👤', label: 'My Profile',        sub: 'View and edit your details' },
-    { key: 'security',  icon: '🔒', label: 'Account & Security', sub: 'Password, 2FA and login' },
-    { key: 'dbs',       icon: '🪪', label: 'DBS & Compliance',   sub: 'DBS check and expiry' },
-    { key: 'emergency', icon: '🚨', label: 'Emergency Contact',  sub: 'Next of kin details' },
-  ]
-
-  const InfoRow = ({ icon, label, value, actionLabel, onAction }) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px', borderBottom: '1px solid var(--border-soft)' }}>
-      <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--surface2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{icon}</div>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 500 }}>{label}</div>
-        <div style={{ fontSize: 14, fontWeight: 600, color: value ? '#111' : 'var(--text-faint)', marginTop: 1 }}>{value || 'Not set'}</div>
-      </div>
-      {onAction && (
-        <button onClick={onAction} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: 'var(--text2)', flexShrink: 0 }}>{actionLabel || 'Change'}</button>
-      )}
-    </div>
+  const row = (field, extra) => (
+    <Row key={field} icon={FIELDS[field].icon} label={FIELDS[field].label}
+      value={field === 'dbs_expiry' ? formatDate(profile?.dbs_expiry) : profile?.[field]}
+      onClick={() => setEditing(field)} {...extra} />
   )
 
-  const dbsExpiry = profile?.dbs_expiry ? new Date(profile.dbs_expiry) : null
-  const daysUntilExpiry = dbsExpiry ? Math.ceil((dbsExpiry - new Date()) / (1000 * 60 * 60 * 24)) : null
-  const dbsWarning = daysUntilExpiry !== null && daysUntilExpiry < 60
-
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isMobile ? 0 : 24 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: isMobile ? 0 : 20, width: '100%', maxWidth: isMobile ? '100%' : 860, height: isMobile ? '100%' : 'auto', maxHeight: isMobile ? '100%' : '90vh', overflow: 'hidden', display: 'flex', flexDirection: isMobile ? 'column' : 'row', boxShadow: '0 32px 80px rgba(0,0,0,0.25)' }}>
+    <div onClick={onClose} style={{
+      position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(8,12,24,0.55)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'center', padding: isMobile ? 0 : 24,
+    }}>
+      <div role="dialog" aria-modal="true" aria-label="Your profile" onClick={e => e.stopPropagation()} style={{
+        position: 'relative', width: '100%', maxWidth: isMobile ? 'none' : 560, height: isMobile ? '100%' : 'auto', maxHeight: isMobile ? 'none' : '92vh',
+        background: 'var(--surface2)', borderRadius: isMobile ? 0 : 26, overflow: 'hidden', display: 'flex', flexDirection: 'column',
+        boxShadow: '0 40px 90px -30px rgba(0,0,0,0.55)',
+      }}>
+        <div className="ls-scroll" style={{ flex: 1, overflowY: 'auto', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
 
-        {/* LEFT SIDEBAR */}
-        <div style={{ width: isMobile ? '100%' : 260, background: 'var(--surface2)', borderRight: isMobile ? 'none' : '1px solid #f0f0f0', borderBottom: isMobile ? '1px solid #f0f0f0' : 'none', display: 'flex', flexDirection: 'column', flexShrink: 0, maxHeight: isMobile ? '40vh' : 'none', overflowY: isMobile ? 'auto' : 'visible' }}>
+          {/* HERO: the organisation's colours, your photo and name */}
+          <div style={{ position: 'relative', background: brand.hero, color: '#fff', padding: `calc(env(safe-area-inset-top, 0px) + ${isMobile ? 14 : 18}px) 18px ${isMobile ? 46 : 50}px`, textAlign: 'center', overflow: 'hidden' }}>
+            <div aria-hidden="true" style={{ position: 'absolute', width: 300, height: 300, right: -120, top: -160, borderRadius: '50%', border: `2px solid ${withAlpha(brand.secondary, '99')}` }} />
+            <div aria-hidden="true" style={{ position: 'absolute', width: 240, height: 240, left: -120, bottom: -150, borderRadius: '50%', border: `2px solid ${withAlpha(brand.accent, 'A6')}` }} />
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 14 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                <OrgLogo org={org} height={34} maxWidth={110} />
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: '#ffffffd9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{org?.name}</span>
+              </span>
+              <button onClick={onClose} aria-label="Close profile" style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 99, border: '1px solid #ffffff40', background: '#ffffff1f', color: '#fff', fontSize: 20, cursor: 'pointer', display: 'grid', placeItems: 'center' }}>×</button>
+            </div>
 
-          {/* Avatar */}
-          <div style={{ padding: '28px 20px 20px', borderBottom: '1px solid #f0f0f0', textAlign: 'center' }}>
-            <div style={{ position: 'relative', display: 'inline-block', marginBottom: 12 }}>
-              <div onClick={() => fileInputRef.current?.click()} style={{ width: 72, height: 72, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}, #6366F1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 900, color: '#fff', cursor: 'pointer', overflow: 'hidden', margin: '0 auto' }}>
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              <button onClick={() => fileInputRef.current?.click()} aria-label={profile?.photo_url ? 'Change your photo' : 'Add a photo'} style={{
+                position: 'relative', width: 108, height: 108, borderRadius: '50%', padding: 0, border: '4px solid #ffffff', cursor: 'pointer', overflow: 'hidden',
+                background: '#fff', color: brand.ink, fontSize: 36, fontWeight: 800,
+                fontFamily: 'var(--font-display, inherit)', boxShadow: '0 16px 34px -12px rgba(0,0,0,0.5)', display: 'grid', placeItems: 'center',
+              }}>
                 {profile?.photo_url
                   ? <SignedImg bucket="staff-photos" src={profile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : photoUploading ? '...' : initials}
-              </div>
-              <div onClick={() => fileInputRef.current?.click()} style={{ position: 'absolute', bottom: 0, right: 0, width: 22, height: 22, borderRadius: '50%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '2px solid #fff', fontSize: 10 }}><Icon name="📷" /></div>
-              <div style={{ position: 'absolute', bottom: 2, left: 2, width: 12, height: 12, borderRadius: '50%', background: '#10B981', border: '2px solid #fff' }} />
+                  : <span>{initials}</span>}
+                {photoUploading && <span style={{ position: 'absolute', inset: 4, borderRadius: '50%', background: 'rgba(0,0,0,0.45)', display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 700 }}>Uploading…</span>}
+              </button>
+              <span aria-hidden="true" style={{ position: 'absolute', right: 0, bottom: 4, width: 36, height: 36, borderRadius: '50%', background: brand.ink, color: '#fff', border: '3px solid #fff', boxSizing: 'border-box', display: 'grid', placeItems: 'center', fontSize: 15, boxShadow: '0 6px 14px rgba(0,0,0,0.25)', pointerEvents: 'none' }}><Icon name="📷" /></span>
               <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoUpload} />
             </div>
-            {photoError && <div role="alert" style={{ fontSize: 12, lineHeight: 1.45, color: 'var(--danger-text)', background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 10, padding: '7px 10px', margin: '0 0 10px' }}>{photoError}</div>}
-            <div style={{ fontSize: 16, fontWeight: 800, color: '#111' }}>{profile?.full_name || 'Your Name'}</div>
-            <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 2 }}>{role.label}</div>
-            <div style={{ marginTop: 6, display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: role.color, background: role.light, borderRadius: 20, padding: '3px 10px' }}>{role.badge}</span>
+
+            <h2 style={{ position: 'relative', margin: '12px 0 6px', fontFamily: 'var(--font-display, inherit)', fontSize: isMobile ? 26 : 28, fontWeight: 800, letterSpacing: -0.5, color: '#fff', overflowWrap: 'anywhere' }}>Hi, {firstName}</h2>
+            <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 6 }}>
+              <span style={heroPill}><span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: 99, background: brand.accent }} />{roleLabel}</span>
+              <span style={heroPill}>{planLabel(org?.plan)}</span>
             </div>
           </div>
 
-          {/* Org info */}
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, background: 'var(--surface)', border: '1px solid #f0f0f0' }}>
-              {org?.logo_url
-                ? <img src={org.logo_url} alt="" style={{ width: 28, height: 28, borderRadius: 6, objectFit: 'contain' }} />
-                : <div style={{ width: 28, height: 28, borderRadius: 6, background: primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: '#fff' }}>{(org?.name || 'O')[0]}</div>}
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>{org?.name || 'Organisation'}</div>
-                <div style={{ fontSize: 10, color: 'var(--text-faint)' }}>{planLabel(org?.plan)}</div>
-              </div>
-            </div>
-          </div>
+          {/* BODY: a card that overlaps the hero */}
+          <div style={{ position: 'relative', marginTop: -28, padding: isMobile ? '0 14px 24px' : '0 22px 26px', display: 'grid', gap: 14 }}>
+            {photoError && <div role="alert" style={{ fontSize: 13, lineHeight: 1.5, color: 'var(--danger-text)', background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 14, padding: '10px 14px' }}>{photoError}</div>}
 
-          {/* Nav */}
-          <div style={{ flex: 1, padding: '8px 12px', overflowY: 'auto' }}>
-            {NAV.map(n => (
-              <button key={n.key} onClick={() => setActiveSection(n.key)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', background: activeSection === n.key ? 'var(--info-bg)' : 'transparent', cursor: 'pointer', textAlign: 'left', marginBottom: 2, transition: 'background 0.15s' }}>
-                <span style={{ fontSize: 16, width: 24, textAlign: 'center' }}><Icon name={n.icon} /></span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: activeSection === n.key ? '#4F6EF7' : 'var(--text2)' }}>{n.label}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{n.sub}</div>
+            {next ? (
+              <div style={{ ...card, padding: 16, display: 'grid', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <ProgressRing value={done / CHECKLIST.length} color={brand.ink} />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>Your profile is {done} of {CHECKLIST.length} done</div>
+                    <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>Next: {next.label.toLowerCase()}, {next.why}.</div>
+                  </div>
                 </div>
-                {activeSection === n.key && <span style={{ color: '#4F6EF7', fontSize: 16 }}>›</span>}
-              </button>
-            ))}
-          </div>
-
-          {/* Sign out */}
-          <div style={{ padding: '12px 16px', borderTop: '1px solid #f0f0f0' }}>
-            {onStartTour && (
-              <button onClick={onStartTour} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', color: 'var(--text2)', marginBottom: 2 }}>
-                <span style={{ fontSize: 16 }}><Icon name="🧭" /></span>
+                <button onClick={startNext} style={{ ...primaryButton(brand), width: '100%' }}>{next.label}</button>
+              </div>
+            ) : (
+              <div style={{ ...card, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span aria-hidden="true" style={{ width: 38, height: 38, borderRadius: 12, display: 'grid', placeItems: 'center', background: 'var(--org-a10)', color: 'var(--org-ink)', fontSize: 18 }}><Icon name="🎉" /></span>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>Take the tour</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>A one-minute look around</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>Your profile is complete</div>
+                  <div style={{ fontSize: 13, color: 'var(--text3)' }}>Thanks, {firstName}. Your team has what they need.</div>
                 </div>
-              </button>
-            )}
-            <button onClick={() => { onSignOut && onSignOut() }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', color: 'var(--danger-text)' }}>
-              <span style={{ fontSize: 16 }}><Icon name="🚪" /></span>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 700 }}>Sign Out</div>
-                <div style={{ fontSize: 11, color: 'var(--danger-text)' }}>Sign out of your account</div>
               </div>
-            </button>
+            )}
+
+            <Section title="About you">
+              <Row icon="✉️" label="Email" value={userEmail} hint="You sign in with this" />
+              {row('full_name')}
+              {row('phone')}
+              {row('location')}
+            </Section>
+
+            <Section title="Emergency contact" note="Who to call if something happens to you during a session.">
+              {row('emergency_contact_name')}
+              {row('emergency_contact_phone')}
+            </Section>
+
+            <Section title="DBS check">
+              {row('dbs_number')}
+              {row('dbs_expiry', { badge: dbsStatus })}
+            </Section>
+
+            <Section title="Account">
+              <Row icon="🔑" label="Password" value="Change your password" onClick={() => setShowPassword(true)} plain />
+              {onStartTour && <Row icon="🧭" label="Take the tour" value="A one-minute look around the app" onClick={onStartTour} plain />}
+              <Row icon="🚪" label="Sign out" value={`Signed in as ${userEmail}`} onClick={() => onSignOut && onSignOut()} danger plain />
+            </Section>
           </div>
         </div>
 
-        {/* RIGHT CONTENT */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          {/* Header */}
-          <div style={{ padding: '20px 28px 16px', borderBottom: '1px solid var(--border-soft)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexShrink: 0 }}>
-            <div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: '#111' }}>{NAV.find(n => n.key === activeSection)?.label}</div>
-              <div style={{ fontSize: 13, color: 'var(--text-faint)', marginTop: 2 }}>Manage your personal information and account details.</div>
-            </div>
-            <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-faint)', flexShrink: 0 }}>×</button>
+        {toast && (
+          <div role="status" style={{ position: 'absolute', left: '50%', bottom: 'calc(18px + env(safe-area-inset-bottom, 0px))', transform: 'translateX(-50%)', background: 'var(--text)', color: 'var(--surface)', borderRadius: 99, padding: '10px 18px', fontSize: 14, fontWeight: 700, boxShadow: '0 12px 30px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
+            <Icon name="✓" /> {toast}
           </div>
-
-          {/* Content */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '20px 28px 28px' }}>
-
-            {activeSection === 'profile' && (
-              <div>
-                <div style={{ background: 'var(--surface)', border: '1px solid #f0f0f0', borderRadius: 16, overflow: 'hidden', marginBottom: 16 }}>
-                  <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-soft)', fontSize: 13, fontWeight: 700, color: 'var(--text2)' }}>Personal Information</div>
-                  <InfoRow icon="✉️" label="Email address" value={userEmail} />
-                  <InfoRow icon="👤" label="Full name" value={profile?.full_name} onAction={() => setEditField({ field: 'full_name', label: 'Full Name', value: profile?.full_name })} />
-                  <InfoRow icon="📱" label="Phone number" value={profile?.phone} onAction={() => setEditField({ field: 'phone', label: 'Phone Number', value: profile?.phone })} />
-                  <InfoRow icon="📍" label="Location" value={profile?.location} onAction={() => setEditField({ field: 'location', label: 'Location', value: profile?.location })} />
-                </div>
-
-                <div style={{ background: 'linear-gradient(135deg, var(--info-bg), var(--violet-bg))', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: '#4F6EF7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}><Icon name="✅" /></div>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--info-text)' }}>Your account is active</div>
-                    <div style={{ fontSize: 12, color: '#6366F1' }}>LaunchSession · {role.badge} Account · {org?.name || ''}</div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeSection === 'security' && (
-              <div>
-                <div style={{ background: 'var(--surface)', border: '1px solid #f0f0f0', borderRadius: 16, overflow: 'hidden', marginBottom: 16 }}>
-                  <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-soft)', fontSize: 13, fontWeight: 700, color: 'var(--text2)' }}>Account Security</div>
-                  <InfoRow icon="🔒" label="Password" value="Last changed recently" onAction={() => setShowPassword(true)} actionLabel="Update" />
-                  <InfoRow icon="🛡️" label="Two-factor authentication" value="Not enabled" onAction={() => {}} actionLabel="Enable" />
-                </div>
-                <div style={{ background: 'var(--ok-bg)', border: '1px solid var(--ok-border)', borderRadius: 16, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <span style={{ fontSize: 28 }}>🔐</span>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ok-text)' }}>Your account is secure</div>
-                    <div style={{ fontSize: 12, color: 'var(--ok-text)' }}>We'll notify you if we see any suspicious activity.</div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeSection === 'dbs' && (
-              <div>
-                {dbsWarning && (
-                  <div style={{ background: 'var(--warn-bg)', border: '1.5px solid var(--warn-border)', borderRadius: 12, padding: '14px 16px', marginBottom: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
-                    <span style={{ fontSize: 22 }}><Icon name="⚠️" /></span>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--warn-text)' }}>DBS Expiring Soon</div>
-                      <div style={{ fontSize: 12, color: 'var(--warn-text)' }}>Your DBS check expires in {daysUntilExpiry} days. Please renew it.</div>
-                    </div>
-                  </div>
-                )}
-                <div style={{ background: 'var(--surface)', border: '1px solid #f0f0f0', borderRadius: 16, overflow: 'hidden' }}>
-                  <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-soft)', fontSize: 13, fontWeight: 700, color: 'var(--text2)' }}>DBS Check</div>
-                  <InfoRow icon="🪪" label="DBS Number" value={profile?.dbs_number} onAction={() => setEditField({ field: 'dbs_number', label: 'DBS Number', value: profile?.dbs_number })} />
-                  <InfoRow icon="📅" label="Expiry Date" value={profile?.dbs_expiry} onAction={() => setEditField({ field: 'dbs_expiry', label: 'DBS Expiry Date', value: profile?.dbs_expiry })} />
-                </div>
-              </div>
-            )}
-
-            {activeSection === 'emergency' && (
-              <div style={{ background: 'var(--surface)', border: '1px solid #f0f0f0', borderRadius: 16, overflow: 'hidden' }}>
-                <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-soft)', fontSize: 13, fontWeight: 700, color: 'var(--text2)' }}>Emergency Contact</div>
-                <InfoRow icon="👤" label="Contact Name" value={profile?.emergency_contact_name} onAction={() => setEditField({ field: 'emergency_contact_name', label: 'Emergency Contact Name', value: profile?.emergency_contact_name })} />
-                <InfoRow icon="📱" label="Contact Phone" value={profile?.emergency_contact_phone} onAction={() => setEditField({ field: 'emergency_contact_phone', label: 'Emergency Contact Phone', value: profile?.emergency_contact_phone })} />
-              </div>
-            )}
-          </div>
-
-          {/* Footer */}
-          <div style={{ padding: '12px 28px', borderTop: '1px solid var(--border-soft)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-            {saved
-              ? <span style={{ fontSize: 13, fontWeight: 700, color: '#10B981' }}><Icon name="✓" /> Saved!</span>
-              : <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>LaunchSession · {role.badge} Account · {org?.name || ''}</div>}
-            <button onClick={onClose} style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: 'var(--text2)' }}>Close</button>
-          </div>
-        </div>
+        )}
       </div>
 
-      {editField && (
-        <EditFieldModal
-          label={editField.label}
-          value={editField.value}
-          onClose={() => setEditField(null)}
-          onSave={val => saveField(editField.field, val)}
-        />
+      {editing && (
+        <EditSheet field={editing} value={profile?.[editing]} isMobile={isMobile} brand={brand}
+          onClose={() => setEditing(null)} onSave={value => saveField(editing, value)} />
       )}
-      {showPassword && <ChangePasswordModal onClose={() => setShowPassword(false)} />}
+      {showPassword && <PasswordSheet isMobile={isMobile} brand={brand} onClose={() => setShowPassword(false)} onDone={() => flash('Password changed')} />}
     </div>
   )
 }
+
+function Section({ title, note, children }) {
+  return (
+    <section>
+      <h3 style={{ margin: '4px 6px 8px', fontSize: 12, fontWeight: 800, letterSpacing: 0.8, textTransform: 'uppercase', color: 'var(--text3)' }}>{title}</h3>
+      <div style={{ ...card, overflow: 'hidden' }}>{children}</div>
+      {note && <p style={{ margin: '8px 6px 0', fontSize: 12.5, lineHeight: 1.5, color: 'var(--text3)' }}>{note}</p>}
+    </section>
+  )
+}
+
+// One line of your profile. The whole row is the button, so it is an easy
+// tap on a phone; a missing value says "Add" in the brand colour.
+function Row({ icon, label, value, hint, onClick, badge, danger, plain }) {
+  const content = (
+    <>
+      <span aria-hidden="true" style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: 'grid', placeItems: 'center', fontSize: 17, background: danger ? 'var(--danger-bg)' : 'var(--org-a10)', color: danger ? 'var(--danger-text)' : 'var(--org-ink)' }}><Icon name={icon} /></span>
+      <span style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+        <span style={{ display: 'block', fontSize: plain ? 15 : 12.5, fontWeight: plain ? 700 : 600, color: danger ? 'var(--danger-text)' : plain ? 'var(--text)' : 'var(--text3)' }}>{label}</span>
+        <span style={{ display: 'block', fontSize: plain ? 12.5 : 15, fontWeight: plain ? 500 : 700, marginTop: 1, overflowWrap: 'anywhere', color: plain ? 'var(--text3)' : value ? 'var(--text)' : 'var(--org-ink)' }}>
+          {value || (onClick ? 'Add' : 'Not set')}
+        </span>
+        {hint && <span style={{ display: 'block', fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{hint}</span>}
+      </span>
+      {badge && <span style={{ fontSize: 12, fontWeight: 800, padding: '4px 9px', borderRadius: 99, flexShrink: 0, background: `var(--${badge.tone}-bg)`, color: `var(--${badge.tone}-text)` }}>{badge.text}</span>}
+      {onClick && <span aria-hidden="true" style={{ color: 'var(--text-faint)', fontSize: 20, flexShrink: 0 }}>›</span>}
+    </>
+  )
+  const style = { width: '100%', minHeight: 64, display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', border: 'none', borderBottom: '1px solid var(--border-soft)', background: 'transparent', fontFamily: 'inherit', boxSizing: 'border-box' }
+  return onClick
+    ? <button onClick={onClick} aria-label={`${label}: ${value || 'not set'}`} style={{ ...style, cursor: 'pointer' }}>{content}</button>
+    : <div style={style}>{content}</div>
+}
+
+function ProgressRing({ value, color }) {
+  const r = 22, c = 2 * Math.PI * r
+  return (
+    <svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true" style={{ flexShrink: 0 }}>
+      <circle cx="28" cy="28" r={r} fill="none" stroke="var(--border)" strokeWidth="6" />
+      <circle cx="28" cy="28" r={r} fill="none" stroke={color} strokeWidth="6" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - value)} transform="rotate(-90 28 28)" style={{ transition: 'stroke-dashoffset 0.4s ease' }} />
+      <text x="28" y="32.5" textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--text)">{Math.round(value * 100)}%</text>
+    </svg>
+  )
+}
+
+// A bottom sheet on a phone, a small dialog on a desktop.
+function Sheet({ title, isMobile, onClose, children }) {
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 600, background: 'rgba(8,12,24,0.45)', display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', padding: isMobile ? 0 : 24 }}>
+      <div role="dialog" aria-modal="true" aria-label={title} onClick={e => e.stopPropagation()} style={{
+        width: '100%', maxWidth: isMobile ? 'none' : 420, background: 'var(--surface)', borderRadius: isMobile ? '24px 24px 0 0' : 20,
+        padding: `${isMobile ? 10 : 22}px 20px calc(20px + env(safe-area-inset-bottom, 0px))`, boxShadow: '0 -10px 40px rgba(0,0,0,0.2)', boxSizing: 'border-box',
+      }}>
+        {isMobile && <div aria-hidden="true" style={{ width: 40, height: 5, borderRadius: 99, background: 'var(--border)', margin: '0 auto 14px' }} />}
+        <h3 style={{ margin: '0 0 14px', fontSize: 18, fontWeight: 800, color: 'var(--text)' }}>{title}</h3>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function EditSheet({ field, value, isMobile, brand, onClose, onSave }) {
+  const config = FIELDS[field]
+  const [val, setVal] = useState(value || '')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const submit = async e => {
+    e.preventDefault()
+    setSaving(true)
+    const problem = await onSave(val)
+    setSaving(false)
+    if (problem) setError(problem)
+    else onClose()
+  }
+  return (
+    <Sheet title={value ? `Change ${config.label.toLowerCase()}` : `Add ${config.label.toLowerCase()}`} isMobile={isMobile} onClose={onClose}>
+      <form onSubmit={submit}>
+        <label htmlFor="profile-edit" style={{ display: 'block', fontSize: 13, fontWeight: 700, color: 'var(--text2)', marginBottom: 6 }}>{config.label}</label>
+        <input id="profile-edit" autoFocus type={config.type || 'text'} autoComplete={config.autoComplete} placeholder={config.placeholder}
+          value={val} onChange={e => setVal(e.target.value)} style={inputStyle} />
+        {error && <div role="alert" style={{ marginTop: 10, fontSize: 13, color: 'var(--danger-text)' }}>{error}</div>}
+        <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+          <button type="button" onClick={onClose} style={secondaryButton}>Cancel</button>
+          <button type="submit" disabled={saving} style={{ ...primaryButton(brand), flex: 2, opacity: saving ? 0.7 : 1 }}>{saving ? 'Saving…' : 'Save'}</button>
+        </div>
+      </form>
+    </Sheet>
+  )
+}
+
+function PasswordSheet({ isMobile, brand, onClose, onDone }) {
+  const [newPw, setNewPw] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const submit = async e => {
+    e.preventDefault()
+    if (newPw.length < 8) { setError('Use at least 8 characters.'); return }
+    if (newPw !== confirm) { setError('The two passwords do not match.'); return }
+    setSaving(true); setError('')
+    const { error: err } = await supabase.auth.updateUser({ password: newPw })
+    setSaving(false)
+    if (err) { setError(err.message); return }
+    onDone()
+    onClose()
+  }
+  return (
+    <Sheet title="Change your password" isMobile={isMobile} onClose={onClose}>
+      <form onSubmit={submit} style={{ display: 'grid', gap: 10 }}>
+        <label htmlFor="pw-new" style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2)' }}>New password</label>
+        <input id="pw-new" type="password" autoComplete="new-password" placeholder="At least 8 characters" value={newPw} onChange={e => setNewPw(e.target.value)} style={inputStyle} />
+        <label htmlFor="pw-confirm" style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2)' }}>Type it again</label>
+        <input id="pw-confirm" type="password" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} style={inputStyle} />
+        {error && <div role="alert" style={{ fontSize: 13, color: 'var(--danger-text)' }}>{error}</div>}
+        <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+          <button type="button" onClick={onClose} style={secondaryButton}>Cancel</button>
+          <button type="submit" disabled={saving} style={{ ...primaryButton(brand), flex: 2, opacity: saving ? 0.7 : 1 }}>{saving ? 'Changing…' : 'Change password'}</button>
+        </div>
+      </form>
+    </Sheet>
+  )
+}
+
+const card = { background: 'var(--surface)', borderRadius: 20, border: '1px solid var(--border-soft, var(--border))', boxShadow: '0 10px 30px -22px rgba(15,23,42,0.45)' }
+const heroPill = { display: 'inline-flex', alignItems: 'center', gap: 7, padding: '6px 12px', borderRadius: 99, background: '#ffffff24', border: '1px solid #ffffff38', fontSize: 12.5, fontWeight: 700, color: '#fff' }
+const inputStyle = { width: '100%', boxSizing: 'border-box', minHeight: 50, padding: '12px 14px', borderRadius: 14, border: '1.5px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', fontSize: 16, fontFamily: 'inherit', outline: 'none' }
+const secondaryButton = { flex: 1, minHeight: 50, borderRadius: 14, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }
+const primaryButton = brand => ({ minHeight: 50, borderRadius: 14, border: 'none', background: brand.ink, color: '#fff', fontSize: 15, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 12px 26px -14px ${withAlpha(brand.primary, 'CC')}` })
