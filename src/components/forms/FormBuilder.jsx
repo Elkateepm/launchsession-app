@@ -158,6 +158,9 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
       multi_step: !!snapshot.multi_step,
       updates_child: !!snapshot.updates_child,
       update_mode: snapshot.update_mode === 'auto' ? 'auto' : 'review',
+      // Only sent once the form has the setting, so saving still works on a
+      // database without the column (20261009_public_reports.sql).
+      ...(snapshot.creates_record !== undefined ? { creates_record: snapshot.creates_record || 'none' } : {}),
       status: snapshot.status || 'draft',
       is_active: (snapshot.status || 'draft') === 'active',
       updated_at: new Date().toISOString(),
@@ -992,6 +995,21 @@ function SettingsPanel({ form, setForm, primary }) {
         {form.visibility === 'public' && (
           <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 6 }}>
             Anyone with the link can respond. No sign-in required.
+          </div>
+        )}
+      </div>
+
+      <div>
+        <label style={label} htmlFor="fb-creates-record">ALSO CREATES A RECORD</label>
+        <select id="fb-creates-record" value={form.creates_record || 'none'} onChange={e => set({ creates_record: e.target.value })} style={input}>
+          <option value="none">Nothing else</option>
+          <option value="injury">An accident book entry</option>
+          <option value="concern">A safeguarding concern</option>
+        </select>
+        {form.creates_record && form.creates_record !== 'none' && (
+          <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 6, lineHeight: 1.5 }}>
+            Every submission becomes {form.creates_record === 'injury' ? 'an entry in the accident book' : 'a concern in the safeguarding log'}, even from someone without an account.
+            The standard report forms (Share, on Home) fill in its details; answers to other questions stay on the response, which the record links to.
           </div>
         )}
       </div>

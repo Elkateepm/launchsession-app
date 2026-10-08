@@ -149,7 +149,9 @@ export default function InjuryLog({ org, session, isAdmin }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {shown.map(r => {
-          const name = r.child ? `${r.child.first_name} ${r.child.last_name}` : `Unknown ${terms.person}`
+          // A report from someone with no account carries a typed name until a
+          // person matches it to a young person.
+          const name = r.child ? `${r.child.first_name} ${r.child.last_name}` : r.child_name || `Unknown ${terms.person}`
           const isOpen = openId === r.id
           const editable = canEdit(r)
           const days = differenceInDays(new Date(), new Date(r.occurred_at))
@@ -179,7 +181,13 @@ export default function InjuryLog({ org, session, isAdmin }) {
                   </span>
                   {r.follow_up_needed && <span style={flag('#FDF0D5', '#8A5A00')}>Follow-up open</span>}
                   {r.session?.title && <span style={flag('var(--info-bg)', '#4338CA')}>{r.session.title}</span>}
+                  {!r.child && r.child_name && <span style={flag('var(--warn-bg)', 'var(--warn-text)')}>Not matched to a {terms.person} yet</span>}
                 </div>
+                {!r.reported_by && (
+                  <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 7 }}>
+                    Reported without an account{r.reported_name ? ` by ${r.reported_name}` : ''}{r.reported_contact ? ` · ${r.reported_contact}` : ''}
+                  </div>
+                )}
               </button>
 
               {/* The two things that get left undone, actionable from the list

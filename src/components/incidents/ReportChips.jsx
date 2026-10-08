@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import InjuryForm from './InjuryForm'
+import ReportShareSheet from './ReportShareSheet'
 import Icon from '../../lib/icons'
 
 // ─── REPORT CHIPS ─────────────────────────────────────────────
@@ -21,15 +22,17 @@ import Icon from '../../lib/icons'
 // surface is a translucent white rather than a solid one, since both the hero
 // and the session card are dark.
 //
-// The hub's third chip, Share, is not ported: it hands out a public link and
-// code for someone with no account, and it depends on public forms carrying a
-// creates_record of 'injury' or 'concern', which this app's forms do not have.
+// The third chip, Share, is the hub's too: the same two reports for someone
+// with no account, as a link to send or a code to print. It opens
+// ReportShareSheet; public forms marked creates_record = 'injury' or 'concern'
+// turn each submission into the matching record (20261009_public_reports.sql).
 
 export default function ReportChips({
   org, userProfile, people, linkedSession = null,
   onRaiseConcern, canRaiseConcern = true, isMobile, variant = 'onDark', compact = false,
 }) {
   const [injuryOpen, setInjuryOpen] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
 
   // The database lets owner, admin, manager and staff write to the accident
   // book and refuses volunteers. Showing a volunteer a button that will fail is
@@ -76,7 +79,18 @@ export default function ReportChips({
             {compact ? 'Injury' : 'Log an injury'}
           </button>
         )}
+        {/* Staff and up, the same people who can log an injury. Handing out a
+            public link is harmless; setting the forms up is admin-only, and the
+            sheet says so. */}
+        {canLogInjury && (
+          <button onClick={stop(() => setShareOpen(true))} className="ls-tap" style={chip} title="A link or QR code for people without an account">
+            <span style={{ fontSize: compact ? 13 : 15, display: 'inline-flex', opacity: 0.85 }}><Icon name="🔗" /></span>
+            Share
+          </button>
+        )}
       </div>
+
+      {shareOpen && <ReportShareSheet org={org} userProfile={userProfile} onClose={() => setShareOpen(false)} />}
 
       {injuryOpen && (
         <div onClick={e => e.stopPropagation()}>
