@@ -3426,7 +3426,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             </div>
           )}
 
-          <div style={{ marginTop: 18 }}>
+          {/* Positioned so it paints above the rings: the accent ring was
+              drawing across the white stat cards. */}
+          <div style={{ marginTop: 18, position: 'relative', zIndex: 2 }}>
             <OperationalPulse isMobile={isMobile} primary={primary} items={[
               { key: 'today', icon: '📅', value: dayOverview.sessions, label: `${terms.Sessions} today`, detail: 'Your delivery schedule', onClick: () => go('calendar') },
               { key: 'expected', icon: '🧒', value: dayOverview.people, label: `${terms.People} booked`, detail: 'Unique people across today', onClick: () => go('registers') },
@@ -3434,15 +3436,17 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               { key: 'staff', icon: '🤝', value: dayOverview.staff, label: 'Team assigned', detail: 'Unique staff and volunteers', onClick: () => go('planner') },
             ].filter(item => !['expected', 'arrived'].includes(item.key) || hasModule('registers'))} />
           </div>
-          <DaySpine
-            sessions={strictlyTodaySessions}
-            statsFor={getLiveSessionStats}
-            primary={primary}
-            secondary={secondary}
-            isMobile={isMobile}
-            todayStr={today}
-            onOpenSession={(s) => hasModule('registers') ? openRegisterForSession(s.id) : setInfoModalSession(s)}
-          />
+          <div style={{ position: 'relative', zIndex: 2 }}>
+            <DaySpine
+              sessions={strictlyTodaySessions}
+              statsFor={getLiveSessionStats}
+              primary={primary}
+              secondary={secondary}
+              isMobile={isMobile}
+              todayStr={today}
+              onOpenSession={(s) => hasModule('registers') ? openRegisterForSession(s.id) : setInfoModalSession(s)}
+            />
+          </div>
         </div>
       </header>
 
