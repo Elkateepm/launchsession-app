@@ -102,7 +102,7 @@ export default function RegisterWorkspace({ org, terms, people, sessions, sessio
             </div>
           </div>
         </div> : <div style={{ display: 'flex', gap: 22, justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
-          <div style={{ flex: '1 1 240px' }}><div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--org-ink)', marginBottom: 8 }}>Plan your next {terms.session}</div><h2 style={{ fontSize: mobile ? 20 : 26, letterSpacing: -.6, margin: '0 0 8px' }}>Ready for your next {terms.session}.</h2><p style={{ margin: 0, fontSize: 14, color: 'var(--text3)', lineHeight: 1.6 }}>No {terms.session} scheduled for today. Your directory is ready below — choose a plan to start taking attendance.</p></div>
+          <div style={{ flex: '1 1 240px' }}><div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--org-ink)', marginBottom: 8 }}>Plan your next {terms.session}</div><h2 style={{ fontSize: mobile ? 20 : 26, letterSpacing: -.6, margin: '0 0 8px' }}>Ready for your next {terms.session}.</h2><p style={{ margin: 0, fontSize: 14, color: 'var(--text3)', lineHeight: 1.6 }}>No {terms.session} scheduled for today. Your directory is ready below. Plan a {terms.session} to start taking attendance.</p></div>
           <button onClick={onPlan} style={{ ...actionStyle, width: mobile ? '100%' : undefined }}><Icon name="📅" /> Open {terms.session} planner</button>
         </div>}
         </div>

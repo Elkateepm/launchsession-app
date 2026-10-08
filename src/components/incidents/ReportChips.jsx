@@ -40,7 +40,8 @@ export default function ReportChips({
 
   const onDark = variant === 'onDark'
   const chip = {
-    minHeight: compact ? 30 : 40,
+    // Compact chips grow to 44px on touch screens through .ls-tap.
+    minHeight: compact ? 30 : 44,
     padding: compact ? '5px 11px 5px 9px' : '8px 14px 8px 11px',
     borderRadius: compact ? 99 : 10,
     cursor: 'pointer', fontFamily: 'inherit',
@@ -64,13 +65,13 @@ export default function ReportChips({
     <>
       <div style={{ display: 'flex', gap: compact ? 6 : 8, flexWrap: 'wrap' }}>
         {canRaiseConcern && (
-          <button onClick={stop(() => onRaiseConcern(linkedSession))} style={chip}>
+          <button onClick={stop(() => onRaiseConcern(linkedSession))} className="ls-tap" style={chip}>
             <span style={{ fontSize: compact ? 13 : 15, color: concernColour, display: 'inline-flex' }}><Icon name="🛡" /></span>
             {compact ? 'Concern' : 'Raise a concern'}
           </button>
         )}
         {canLogInjury && (
-          <button onClick={stop(() => setInjuryOpen(true))} style={chip}>
+          <button onClick={stop(() => setInjuryOpen(true))} className="ls-tap" style={chip}>
             <span style={{ fontSize: compact ? 13 : 15, color: injuryColour, display: 'inline-flex' }}><Icon name="🩹" /></span>
             {compact ? 'Injury' : 'Log an injury'}
           </button>

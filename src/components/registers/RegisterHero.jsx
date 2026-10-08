@@ -6,7 +6,8 @@ import { withAlpha } from '../../lib/withAlpha'
 // Status colours for things that sit on the banner. Fixed rather than theme
 // tokens: the banner is the organisation's colour in both themes, and a token
 // like --text3 turns pale grey in dark mode, which vanished on a white pill.
-export const ON_BAND = { muted: '#475569', open: '#2563EB', live: '#16A34A', ending: '#D97706', absent: '#DC2626' }
+// Each passes 4.5:1 as text on the white status pill.
+export const ON_BAND = { muted: '#475569', open: '#2563EB', live: '#15803D', ending: '#B45309', absent: '#DC2626' }
 
 // The register's progress bar in the organisation's accent, unless the accent
 // is too close to the banner to see, in which case white.
