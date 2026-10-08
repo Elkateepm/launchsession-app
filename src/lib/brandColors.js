@@ -68,9 +68,13 @@ export const darken = (hex, amount) => mix(hex, '#000000', amount)
 export function brandPalette(primary, dark = isDarkTheme()) {
   const base = hexToRgb(primary) ? primary : '#1B9AAA'
 
+  // Ink must read on white and on the brand's own 10% tint, where it sits in
+  // chips, date tiles and icon wells. Against white alone it came out at
+  // 4.33:1 on the tint for a teal brand.
+  const tint = lighten(base, 0.9)
   let ink = base
   let guard = 0
-  while (contrastRatio(ink, '#ffffff') < 4.5 && guard < 20) {
+  while ((contrastRatio(ink, '#ffffff') < 4.5 || contrastRatio(ink, tint) < 4.5) && guard < 20) {
     ink = darken(ink, 0.1)
     guard++
   }

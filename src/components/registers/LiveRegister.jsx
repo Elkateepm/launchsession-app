@@ -789,7 +789,7 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
           <button onClick={onCorrect} title="Correct this record" style={correctBtn}>Correct</button>
         ) : (
           <>
-            <button onClick={onSignIn} style={actionBtn('#16A34A', isMobile)}>Sign in</button>
+            <button onClick={onSignIn} style={actionBtn('#15803D', isMobile)}>Sign in</button>
             <button onClick={onMarkAbsent} style={{ ...actionBtn('var(--text3)', isMobile), background: 'var(--surface)', color: 'var(--text3)', border: '1.5px solid var(--border)', boxShadow: 'none' }}>Absent</button>
           </>
         )}

@@ -310,4 +310,4 @@ const tourKeyframes = `
   100% { transform: translate(var(--drift), var(--fall)) rotate(var(--spin)); opacity: 0 }
 }`
 
-const quietButton = { background: 'none', border: 'none', borderRadius: 12, padding: '8px 10px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }
+const quietButton = { minHeight: 44, background: 'none', border: 'none', borderRadius: 12, padding: '8px 10px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }

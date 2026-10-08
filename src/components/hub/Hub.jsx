@@ -3625,7 +3625,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                             ▲ Collapse
                           </button>
                         )}
-                        <button className="ls-livecard-title" onClick={(e) => { e.stopPropagation(); setOpenLiveSessionId(s.id) }} style={{ display: 'block', maxWidth: '100%', padding: 0, border: 'none', background: 'none', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer', fontSize: 17, fontWeight: 900, color: '#fff', lineHeight: 1.25, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</button>
+                        <button className="ls-livecard-title" onClick={(e) => { e.stopPropagation(); setOpenLiveSessionId(s.id) }} style={{ display: 'block', maxWidth: '100%', minHeight: 44, padding: '11px 0', margin: '-11px 0 -8px', border: 'none', background: 'none', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer', fontSize: 17, fontWeight: 900, color: '#fff', lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</button>
                         {(s.start_time || s.location) && (
                           <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 10px' }}>
                             {s.start_time && (
