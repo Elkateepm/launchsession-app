@@ -363,6 +363,189 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
     )
   }
 
+  // Pieces of the register, arranged differently on a phone below.
+  const header = (
+    <RegisterHero org={org} mobile={isMobile} backLabel={backLabel} onBack={onClose} title={session.title}
+      status={<BandPill color={STATE_BAND_COLOR[registerState]} pulse={registerState === 'live' && (
+        <motion.span
+          animate={{ opacity: [1, 0.35, 1], scale: [1, 1.25, 1] }}
+          transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+          style={{ width: 6, height: 6, borderRadius: 99, background: STATE_BAND_COLOR[registerState], display: 'inline-block' }}
+        />
+      )}>{STATE_LABEL[registerState]}</BandPill>}
+      // On a phone this line wrapped to three rows before you could see a
+      // single child. The long weekday and the full month name are the first
+      // things to go: if you are standing at the door running this register,
+      // you know what day it is.
+      meta={<>
+        <span>{new Date(session.session_date).toLocaleDateString('en-GB', isMobile
+          ? { day: 'numeric', month: 'short' }
+          : { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+        <span style={{ color: '#ffffff80' }}>•</span>
+        <span>{hhmm(session.start_time)}–{hhmm(session.end_time)}</span>
+        {session.location && <><span style={{ color: '#ffffff80' }}>•</span><span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.location}</span></>}
+      </>}>
+      {/* Four pills wrapped onto two rows at phone width. A fixed four-column
+          grid keeps them on one line and keeps the numbers comparable. */}
+      <div style={{ display: isMobile ? 'grid' : 'flex', gridTemplateColumns: isMobile ? 'repeat(4, minmax(0,1fr))' : undefined, gap: isMobile ? 6 : 8, flexWrap: 'wrap', marginTop: isMobile ? 12 : 16 }}>
+        <MiniStat icon="👥" compact={isMobile} label="On site" value={signedInCount} color={ON_BAND.live} />
+        <MiniStat icon="⏳" compact={isMobile} label="Expected" value={grouped.expected.length} color={ON_BAND.muted} />
+        <MiniStat icon="✕" compact={isMobile} label="Absent" value={grouped.absent.length} color={ON_BAND.absent} />
+        <MiniStat icon="✓" compact={isMobile} label="Signed out" value={grouped.signed_out.length} color={ON_BAND.open} />
+      </div>
+      {ratioBreached && (
+        <div style={{ marginTop: 12, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 12, padding: '10px 13px', fontSize: 12, fontWeight: 700, color: 'var(--danger-text)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 14 }}><Icon name="⚠" /></span> {signedInStaffCount ? `Current staffing ratio 1:${currentRatio.toFixed(1)}. Required ratio: 1:${requiredRatio}.` : 'No team members are signed in. Check the team attendance below.'}
+        </div>
+      )}
+      {totalExpected > 0 && (
+        <div style={{ marginTop: 13 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#ffffffcc', fontWeight: 700, marginBottom: 5 }}>
+            <span>Register progress</span>
+            <span>{processedCount} / {totalExpected}</span>
+          </div>
+          <div style={{ height: 6, borderRadius: 99, background: '#ffffff2b', overflow: 'hidden' }}>
+            <motion.div
+              initial={false}
+              animate={{ width: `${totalExpected ? (processedCount / totalExpected) * 100 : 0}%` }}
+              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+              style={{ height: '100%', borderRadius: 99, background: bandBar(orgBrand(org)) }}
+            />
+          </div>
+        </div>
+      )}
+    </RegisterHero>
+  )
+  const intro = (
+    <>
+      {loadError && <div role="alert" style={{ padding: 12, background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>{loadError} <button onClick={load} style={{ minHeight: 44 }}>Retry</button></div>}
+      <div style={{ padding: '12px 16px', background: 'var(--surface, #fff)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ fontSize: 13, lineHeight: 1.5 }}>
+          <strong>{!session.opened_at ? 'Ready for arrivals' : grouped.expected.length ? `${grouped.expected.length} arrivals to resolve` : signedInCount ? 'Delivery in progress' : 'Ready to finish'}</strong>
+          <div style={{ color: 'var(--text3)', fontSize: 12 }}>{!session.opened_at ? `Check your team and plan, then start the ${terms.session}.` : 'Record arrivals and departures here. Changes save as you go.'}</div>
+        </div>
+        {!session.opened_at && canCloseRegister && <button disabled={starting || !!loadError} onClick={startSession} style={{ ...ghostBtn, minHeight: 44, background: 'var(--org-primary, #2563EB)', color: 'var(--org-on-primary, #fff)' }}>{starting ? 'Starting…' : `Start ${terms.session}`}</button>}
+      </div>
+    </>
+  )
+  const tabStrip = (
+    <div style={{ padding: '10px 14px 0', background: 'var(--surface)', borderBottom: '1px solid var(--border-soft)' }}>
+      <div style={{ display: 'flex', gap: 4, background: 'var(--surface2)', borderRadius: 12, padding: 4, overflowX: 'auto', marginBottom: 10 }}>
+        {[
+          { key: 'all', label: 'All', count: rows.length },
+          { key: 'expected', label: 'Expected', count: grouped.expected.length },
+          { key: 'signed_in', label: 'Signed in', count: grouped.signed_in.length },
+          { key: 'absent', label: 'Absent', count: grouped.absent.length },
+          { key: 'signed_out', label: 'Signed out', count: grouped.signed_out.length },
+        ].map(t => (
+          <button key={t.key} aria-pressed={tab === t.key} onClick={() => setTab(t.key)} style={{
+            position: 'relative', flex: '1 0 auto', minHeight: 44, minWidth: 44, padding: '9px 8px', border: 'none', borderRadius: 9,
+            background: tab === t.key ? 'var(--surface)' : 'transparent',
+            boxShadow: tab === t.key ? '0 1px 4px rgba(15,23,42,0.12)' : 'none',
+            color: tab === t.key ? 'var(--text)' : 'var(--text3)', fontSize: 12.5, fontWeight: 700,
+            cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s ease',
+          }}>
+            {t.label} <span style={{ color: tab === t.key ? 'var(--org-ink)' : 'var(--text-faint)', fontWeight: 800 }}>{t.count}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+  const searchBox = (
+    <div style={{ position: 'relative', flex: '1 1 160px' }}>
+      <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--text-faint)', pointerEvents: 'none' }}><Icon name="🔍" /></span>
+      <input value={search} onChange={e => setSearch(e.target.value)}
+        onKeyDown={e => {
+          if (e.key !== 'Enter') return
+          // Type a name, press Enter, next child. Only when the search has
+          // narrowed to exactly one person still to be marked: acting on
+          // the first of several would sign in the wrong child, and this
+          // is the record of who was actually there.
+          const q = search.trim().toLowerCase()
+          if (!q) return
+          const hits = grouped.expected.filter(({ child }) =>
+            `${child.first_name} ${child.last_name}`.toLowerCase().includes(q))
+          if (hits.length === 1) { handleSignIn(hits[0].child); setSearch('') }
+        }}
+        aria-label={`Search ${terms.people}`} placeholder={`Search ${terms.people}, then press Enter`} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px 10px 32px', borderRadius: 10, border: '1.5px solid var(--border)', minHeight: 44, fontSize: isMobile ? 16 : 14, color: 'var(--text)', background: 'var(--surface2)', outline: 'none', transition: 'border-color 0.15s ease' }} onFocus={e => e.target.style.borderColor = org?.primary_color || 'var(--org-primary)'} onBlur={e => e.target.style.borderColor = 'var(--border)'} />
+    </div>
+  )
+  const quickActions = (
+    <>
+      {registerGroups.length > 1 && <select aria-label="Filter register by group" value={groupFilter} onChange={e => setGroupFilter(e.target.value)} style={{ ...ghostBtn, maxWidth: '100%' }}>
+        <option value="all">All groups</option>{registerGroups.map(name => <option key={name} value={name}>{name}</option>)}
+      </select>}
+      {(search || groupFilter !== 'all') && <button style={ghostBtn} onClick={() => { setSearch(''); setGroupFilter('all') }}>Clear filters</button>}
+      <button onClick={() => setShowWalkIn(true)} style={ghostBtn}>+ Walk-in</button>
+      <button onClick={() => setShowNotes(true)} style={ghostBtn}>📝 Notes {notes.length > 0 && <span style={{ color: 'var(--violet-text)' }}>({notes.length})</span>}</button>
+      {/* Not gated to staff: volunteers can sign children in and out here, so
+          they are the most likely to mis-tap. Locking corrections to staff
+          would leave the register knowingly wrong until someone else is free.
+          Every correction is audited with changed_by and a reason. */}
+      <button onClick={() => setCorrectChildId('')} style={ghostBtn}>✎ Correct</button>
+    </>
+  )
+  const listBody = (
+    <>
+      {activeList.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text-faint)', fontSize: 13 }}>
+          <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.5 }}><Icon name="✓" /></div>
+          {search || groupFilter !== 'all' ? 'No matches. Try another name or clear your filters.' : tab === 'expected' && rows.length ? 'All arrivals accounted for. Switch to Signed in to record departures.' : rows.length ? 'Nobody in this list yet.' : `No ${terms.people} on this register yet. Add a walk-in or update the plan.`}
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {/* Signing someone in moves them out of this list. Animating the
+              exit and letting the rest slide up makes that legible: on a
+              busy door the list used to just silently reshuffle under your
+              thumb, which is how you lose your place in it. */}
+          <AnimatePresence initial={false}>
+            {activeList.map(({ child, att }, i) => (
+              <RegisterRow key={child.id} child={child} att={att} onOpen={() => setSelectedChild(child)} groupLabel={groupLabel}
+                org={org} authUserId={authUserId} paymentBalance={paymentBalances[child.id]} onPaymentChanged={loadPaymentBalances}
+                onSignIn={() => handleSignIn(child)} onSignOut={() => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)} onMarkAbsent={() => setAbsentChild(child)} onCorrect={() => setCorrectChildId(child.id)} isMobile={isMobile}
+                index={i} />
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
+      
+      {/* STAFF PANEL */}
+      <div style={{ marginTop: 20, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 16, boxShadow: '0 1px 3px rgba(15,23,42,0.04)' }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ width: 22, height: 22, borderRadius: 7, background: 'var(--violet-bg)', color: 'var(--violet-text)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}><Icon name="👤" /></span>
+          Session team
+        </div>
+        {staffRows.length === 0 ? (
+          <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>No staff assigned to this session.</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+            {staffRows.map(s => {
+              const pid = s.user_id || s.volunteer_id
+              return (
+                <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12.5, paddingBottom: 9, borderBottom: '1px solid var(--border-soft)' }}>
+                  <span style={{ fontWeight: 700, color: 'var(--text2)' }}>{staffProfiles[pid] || (s.volunteer_id ? 'Volunteer' : 'Team member')} <span style={{ color: 'var(--text-faint)', fontWeight: 500 }}>· {s.role}</span></span>
+                  {s.signed_out_at ? (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ color: 'var(--text-faint)', fontWeight: 700 }}>Signed out {fmtTime(s.signed_out_at)}</span>
+                      <button onClick={() => handleStaffSignIn(s)} style={{ ...ghostBtn, padding: '5px 10px', fontSize: 11 }}>Sign back in</button>
+                    </span>
+                  ) : s.signed_in_at ? (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ color: 'var(--ok-text)', fontWeight: 700 }}>Signed in {fmtTime(s.signed_in_at)}</span>
+                      <button onClick={() => handleStaffSignOut(s)} style={{ ...ghostBtn, padding: '5px 10px', fontSize: 11 }}>Sign out</button>
+                    </span>
+                  ) : (
+                    <button onClick={() => handleStaffSignIn(s)} style={{ ...ghostBtn, padding: '5px 10px', fontSize: 11 }}>Sign in</button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </>
+  )
+
   return (
     <OverlayPortal>
     <motion.div
@@ -376,182 +559,41 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
         // under the status bar when the app is installed to the home screen.
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}>
-      {/* HEADER */}
-      <RegisterHero org={org} mobile={isMobile} backLabel={backLabel} onBack={onClose} title={session.title}
-        status={<BandPill color={STATE_BAND_COLOR[registerState]} pulse={registerState === 'live' && (
-          <motion.span
-            animate={{ opacity: [1, 0.35, 1], scale: [1, 1.25, 1] }}
-            transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-            style={{ width: 6, height: 6, borderRadius: 99, background: STATE_BAND_COLOR[registerState], display: 'inline-block' }}
-          />
-        )}>{STATE_LABEL[registerState]}</BandPill>}
-        // On a phone this line wrapped to three rows before you could see a
-        // single child. The long weekday and the full month name are the first
-        // things to go: if you are standing at the door running this register,
-        // you know what day it is.
-        meta={<>
-          <span>{new Date(session.session_date).toLocaleDateString('en-GB', isMobile
-            ? { day: 'numeric', month: 'short' }
-            : { weekday: 'long', day: 'numeric', month: 'long' })}</span>
-          <span style={{ color: '#ffffff80' }}>•</span>
-          <span>{hhmm(session.start_time)}–{hhmm(session.end_time)}</span>
-          {session.location && <><span style={{ color: '#ffffff80' }}>•</span><span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.location}</span></>}
-        </>}>
-        {/* Four pills wrapped onto two rows at phone width. A fixed four-column
-            grid keeps them on one line and keeps the numbers comparable. */}
-        <div style={{ display: isMobile ? 'grid' : 'flex', gridTemplateColumns: isMobile ? 'repeat(4, minmax(0,1fr))' : undefined, gap: isMobile ? 6 : 8, flexWrap: 'wrap', marginTop: isMobile ? 12 : 16 }}>
-          <MiniStat icon="👥" compact={isMobile} label="On site" value={signedInCount} color={ON_BAND.live} />
-          <MiniStat icon="⏳" compact={isMobile} label="Expected" value={grouped.expected.length} color={ON_BAND.muted} />
-          <MiniStat icon="✕" compact={isMobile} label="Absent" value={grouped.absent.length} color={ON_BAND.absent} />
-          <MiniStat icon="✓" compact={isMobile} label="Signed out" value={grouped.signed_out.length} color={ON_BAND.open} />
-        </div>
-        {ratioBreached && (
-          <div style={{ marginTop: 12, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 12, padding: '10px 13px', fontSize: 12, fontWeight: 700, color: 'var(--danger-text)', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 14 }}><Icon name="⚠" /></span> {signedInStaffCount ? `Current staffing ratio 1:${currentRatio.toFixed(1)}. Required ratio: 1:${requiredRatio}.` : 'No team members are signed in. Check the team attendance below.'}
+      {isMobile ? (
+        // On a phone the whole register scrolls as one page: the banner and
+        // counters move out of the way and the list gets the screen, with the
+        // tabs and search pinned at the top. Pinned, they took half the screen
+        // and about one child fitted below them.
+        <div className="ls-scroll" style={{ flex: 1, overflowY: 'auto', background: 'var(--surface2)' }}>
+          {header}
+          {intro}
+          {/* Walk-in, Notes and Correct as one even row. Beside the search
+              box they cut it to "Search young peo…" and pushed Correct onto a
+              row of its own. */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(72px, 1fr))', gap: 8, padding: '10px 12px', background: 'var(--surface)', borderBottom: '1px solid var(--border-soft)' }}>
+            {quickActions}
           </div>
-        )}
-        {totalExpected > 0 && (
-          <div style={{ marginTop: 13 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#ffffffcc', fontWeight: 700, marginBottom: 5 }}>
-              <span>Register progress</span>
-              <span>{processedCount} / {totalExpected}</span>
-            </div>
-            <div style={{ height: 6, borderRadius: 99, background: '#ffffff2b', overflow: 'hidden' }}>
-              <motion.div
-                initial={false}
-                animate={{ width: `${totalExpected ? (processedCount / totalExpected) * 100 : 0}%` }}
-                transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-                style={{ height: '100%', borderRadius: 99, background: bandBar(orgBrand(org)) }}
-              />
-            </div>
+          <div style={{ position: 'sticky', top: 0, zIndex: 3, background: 'var(--surface)', boxShadow: '0 8px 16px -14px rgba(15,23,42,0.35)' }}>
+            {tabStrip}
+            <div style={{ padding: '0 12px 10px', borderBottom: '1px solid var(--border-soft)' }}>{searchBox}</div>
           </div>
-        )}
-      </RegisterHero>
-
-      {loadError && <div role="alert" style={{ padding: 12, background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>{loadError} <button onClick={load} style={{ minHeight: 44 }}>Retry</button></div>}
-      <div style={{ padding: '12px 16px', background: 'var(--surface, #fff)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-        <div style={{ fontSize: 13, lineHeight: 1.5 }}>
-          <strong>{!session.opened_at ? 'Ready for arrivals' : grouped.expected.length ? `${grouped.expected.length} arrivals to resolve` : signedInCount ? 'Delivery in progress' : 'Ready to finish'}</strong>
-          <div style={{ color: 'var(--text3)', fontSize: 12 }}>{!session.opened_at ? `Check your team and plan, then start the ${terms.session}.` : 'Record arrivals and departures here. Changes save as you go.'}</div>
+          <div style={{ padding: 12 }}>{listBody}</div>
         </div>
-        {!session.opened_at && canCloseRegister && <button disabled={starting || !!loadError} onClick={startSession} style={{ ...ghostBtn, minHeight: 44, background: 'var(--org-primary, #2563EB)', color: 'var(--org-on-primary, #fff)' }}>{starting ? 'Starting…' : `Start ${terms.session}`}</button>}
-      </div>
-      {/* TABS */}
-      <div style={{ padding: '10px 14px 0', background: 'var(--surface)', borderBottom: '1px solid var(--border-soft)' }}>
-        <div style={{ display: 'flex', gap: 4, background: 'var(--surface2)', borderRadius: 12, padding: 4, overflowX: 'auto', marginBottom: 10 }}>
-          {[
-            { key: 'all', label: 'All', count: rows.length },
-            { key: 'expected', label: 'Expected', count: grouped.expected.length },
-            { key: 'signed_in', label: 'Signed in', count: grouped.signed_in.length },
-            { key: 'absent', label: 'Absent', count: grouped.absent.length },
-            { key: 'signed_out', label: 'Signed out', count: grouped.signed_out.length },
-          ].map(t => (
-            <button key={t.key} aria-pressed={tab === t.key} onClick={() => setTab(t.key)} style={{
-              position: 'relative', flex: '1 0 auto', minHeight: 44, padding: '9px 8px', border: 'none', borderRadius: 9,
-              background: tab === t.key ? 'var(--surface)' : 'transparent',
-              boxShadow: tab === t.key ? '0 1px 4px rgba(15,23,42,0.12)' : 'none',
-              color: tab === t.key ? 'var(--text)' : 'var(--text3)', fontSize: 12.5, fontWeight: 700,
-              cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s ease',
-            }}>
-              {t.label} <span style={{ color: tab === t.key ? 'var(--org-ink)' : 'var(--text-faint)', fontWeight: 800 }}>{t.count}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* SEARCH + QUICK ACTIONS */}
-      <div style={{ padding: '0 14px 12px', background: 'var(--surface)', borderBottom: '1px solid var(--border-soft)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <div style={{ position: 'relative', flex: '1 1 160px' }}>
-          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--text-faint)', pointerEvents: 'none' }}><Icon name="🔍" /></span>
-          <input value={search} onChange={e => setSearch(e.target.value)}
-            onKeyDown={e => {
-              if (e.key !== 'Enter') return
-              // Type a name, press Enter, next child. Only when the search has
-              // narrowed to exactly one person still to be marked: acting on
-              // the first of several would sign in the wrong child, and this
-              // is the record of who was actually there.
-              const q = search.trim().toLowerCase()
-              if (!q) return
-              const hits = grouped.expected.filter(({ child }) =>
-                `${child.first_name} ${child.last_name}`.toLowerCase().includes(q))
-              if (hits.length === 1) { handleSignIn(hits[0].child); setSearch('') }
-            }}
-            aria-label={`Search ${terms.people}`} placeholder={`Search ${terms.people}, then press Enter`} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px 10px 32px', borderRadius: 10, border: '1.5px solid var(--border)', minHeight: 44, fontSize: isMobile ? 16 : 14, color: 'var(--text)', background: 'var(--surface2)', outline: 'none', transition: 'border-color 0.15s ease' }} onFocus={e => e.target.style.borderColor = org?.primary_color || 'var(--org-primary)'} onBlur={e => e.target.style.borderColor = 'var(--border)'} />
-        </div>
-        {registerGroups.length > 1 && <select aria-label="Filter register by group" value={groupFilter} onChange={e => setGroupFilter(e.target.value)} style={{ ...ghostBtn, maxWidth: '100%' }}>
-          <option value="all">All groups</option>{registerGroups.map(name => <option key={name} value={name}>{name}</option>)}
-        </select>}
-        {(search || groupFilter !== 'all') && <button style={ghostBtn} onClick={() => { setSearch(''); setGroupFilter('all') }}>Clear filters</button>}
-        <button onClick={() => setShowWalkIn(true)} style={ghostBtn}>+ Walk-in</button>
-        <button onClick={() => setShowNotes(true)} style={ghostBtn}>📝 Notes {notes.length > 0 && <span style={{ color: 'var(--violet-text)' }}>({notes.length})</span>}</button>
-        {/* Not gated to staff: volunteers can sign children in and out here, so
-            they are the most likely to mis-tap. Locking corrections to staff
-            would leave the register knowingly wrong until someone else is free.
-            Every correction is audited with changed_by and a reason. */}
-        <button onClick={() => setCorrectChildId('')} style={ghostBtn}>✎ Correct</button>
-      </div>
-
-      {/* LIST */}
-      {/* ls-scroll gives momentum scrolling and stops a flick at the end of the
-          list rubber-banding the page behind this overlay. */}
-      <div className="ls-scroll" style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 12 : 14, background: 'var(--surface2)' }}>
-        {activeList.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text-faint)', fontSize: 13 }}>
-            <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.5 }}><Icon name="✓" /></div>
-            {search || groupFilter !== 'all' ? 'No matches. Try another name or clear your filters.' : tab === 'expected' && rows.length ? 'All arrivals accounted for. Switch to Signed in to record departures.' : rows.length ? 'Nobody in this list yet.' : `No ${terms.people} on this register yet. Add a walk-in or update the plan.`}
+      ) : (
+        <>
+          {header}
+          {intro}
+          {tabStrip}
+          {/* SEARCH + QUICK ACTIONS */}
+          <div style={{ padding: '0 14px 12px', background: 'var(--surface)', borderBottom: '1px solid var(--border-soft)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {searchBox}
+            {quickActions}
           </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {/* Signing someone in moves them out of this list. Animating the
-                exit and letting the rest slide up makes that legible: on a
-                busy door the list used to just silently reshuffle under your
-                thumb, which is how you lose your place in it. */}
-            <AnimatePresence initial={false}>
-              {activeList.map(({ child, att }, i) => (
-                <RegisterRow key={child.id} child={child} att={att} onOpen={() => setSelectedChild(child)} groupLabel={groupLabel}
-                  org={org} authUserId={authUserId} paymentBalance={paymentBalances[child.id]} onPaymentChanged={loadPaymentBalances}
-                  onSignIn={() => handleSignIn(child)} onSignOut={() => org?.collection_recording_required === false ? handleQuickSignOut(child) : setSignOutChild(child)} onMarkAbsent={() => setAbsentChild(child)} onCorrect={() => setCorrectChildId(child.id)} isMobile={isMobile}
-                  index={i} />
-              ))}
-            </AnimatePresence>
-          </div>
-        )}
-
-        {/* STAFF PANEL */}
-        <div style={{ marginTop: 20, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 16, boxShadow: '0 1px 3px rgba(15,23,42,0.04)' }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 22, height: 22, borderRadius: 7, background: 'var(--violet-bg)', color: 'var(--violet-text)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}><Icon name="👤" /></span>
-            Session team
-          </div>
-          {staffRows.length === 0 ? (
-            <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>No staff assigned to this session.</div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-              {staffRows.map(s => {
-                const pid = s.user_id || s.volunteer_id
-                return (
-                  <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12.5, paddingBottom: 9, borderBottom: '1px solid var(--border-soft)' }}>
-                    <span style={{ fontWeight: 700, color: 'var(--text2)' }}>{staffProfiles[pid] || (s.volunteer_id ? 'Volunteer' : 'Team member')} <span style={{ color: 'var(--text-faint)', fontWeight: 500 }}>· {s.role}</span></span>
-                    {s.signed_out_at ? (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ color: 'var(--text-faint)', fontWeight: 700 }}>Signed out {fmtTime(s.signed_out_at)}</span>
-                        <button onClick={() => handleStaffSignIn(s)} style={{ ...ghostBtn, padding: '5px 10px', fontSize: 11 }}>Sign back in</button>
-                      </span>
-                    ) : s.signed_in_at ? (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ color: 'var(--ok-text)', fontWeight: 700 }}>Signed in {fmtTime(s.signed_in_at)}</span>
-                        <button onClick={() => handleStaffSignOut(s)} style={{ ...ghostBtn, padding: '5px 10px', fontSize: 11 }}>Sign out</button>
-                      </span>
-                    ) : (
-                      <button onClick={() => handleStaffSignIn(s)} style={{ ...ghostBtn, padding: '5px 10px', fontSize: 11 }}>Sign in</button>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      </div>
+          {/* ls-scroll gives momentum scrolling and stops a flick at the end of
+              the list rubber-banding the page behind this overlay. */}
+          <div className="ls-scroll" style={{ flex: 1, overflowY: 'auto', padding: 14, background: 'var(--surface2)' }}>{listBody}</div>
+        </>
+      )}
 
       {/* STICKY BOTTOM BAR */}
       <div style={{
@@ -566,7 +608,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
         </button>
         {registerState !== 'closed' && (
           canCloseRegister ? (
-            <button onClick={() => setShowClosure(true)} style={{ padding: '11px 22px', borderRadius: 11, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px -3px rgba(124,58,237,0.5)' }}>Finish {terms.session}</button>
+            <button onClick={() => setShowClosure(true)} style={{ minHeight: 46, padding: '0 22px', borderRadius: 12, border: 'none', background: 'var(--org-primary, #2563EB)', color: 'var(--org-on-primary, #fff)', fontSize: 14, fontWeight: 800, cursor: 'pointer', boxShadow: '0 6px 16px -6px var(--org-a35, rgba(37,99,235,0.45))' }}>Finish {terms.session}</button>
           ) : (
             <span title="Only a staff member can close this register" style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-faint)' }}><Icon name="🔒" /> Staff only to close</span>
           )
@@ -577,7 +619,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
         <div style={{ position: 'fixed', bottom: 70, left: '50%', transform: 'translateX(-50%)', background: '#111827', color: '#fff', padding: '9px 10px 9px 18px', borderRadius: 10, fontSize: 12.5, fontWeight: 600, zIndex: 10300, display: 'flex', alignItems: 'center', gap: 12, maxWidth: 'calc(100vw - 32px)' }}>
           <span>{toast.msg}</span>
           {toast.undo && (
-            <button onClick={toast.undo} style={{ border: 'none', background: 'rgba(255,255,255,0.16)', color: '#fff', fontSize: 12.5, fontWeight: 800, padding: '7px 13px', minHeight: 36, borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>Undo</button>
+            <button onClick={toast.undo} style={{ border: 'none', background: 'rgba(255,255,255,0.16)', color: '#fff', fontSize: 12.5, fontWeight: 800, padding: '7px 13px', minHeight: 44, minWidth: 60, borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>Undo</button>
           )}
         </div>
       )}
@@ -686,14 +728,14 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
         // below already carries the row's own corner radius, and clipping here
         // would cut off anything a child badge legitimately overhangs.
         position: 'relative',
-        // Actions drop below the name on a phone. Side by side, the two buttons
-        // and the avatar left about 110px for a name, so anything longer than
-        // "Hana Al-Rashid" truncated -- on the one screen where identifying the
-        // right child matters most.
-        display: 'flex', alignItems: isMobile ? 'stretch' : 'center',
-        flexDirection: isMobile ? 'column' : 'row',
+        // One compact row on a phone too: photo, name, then the buttons.
+        // Stacking the buttons under the name made each child about 190px
+        // tall, so one fitted on screen at the door. Names wrap onto a second
+        // line rather than truncate, because identifying the right child is
+        // the point of this screen.
+        display: 'flex', alignItems: 'center',
         gap: isMobile ? 10 : 12, background: 'var(--surface)',
-        border: '1px solid var(--border)', borderRadius: 16, padding: 12,
+        border: '1px solid var(--border)', borderRadius: isMobile ? 14 : 16, padding: isMobile ? '10px 10px 10px 12px' : 12,
         boxShadow: hover ? '0 6px 18px -10px rgba(15,23,42,0.18)' : '0 1px 2px rgba(15,23,42,0.04)',
         // Transform is left to framer here — an inline transform would be
         // overwritten by the layout animation the moment the list reorders.
@@ -710,7 +752,7 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
         />
       )}
       <div onClick={onOpen} style={{
-        width: 46, height: 46, borderRadius: 14, flexShrink: 0, cursor: 'pointer', overflow: 'hidden',
+        width: isMobile ? 38 : 46, height: isMobile ? 38 : 46, borderRadius: isMobile ? 12 : 14, flexShrink: 0, cursor: 'pointer', overflow: 'hidden',
         display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 15, color: '#fff',
         background: 'linear-gradient(135deg,#8B5CF6,#3B82F6)',
         boxShadow: '0 3px 8px -2px rgba(124,58,237,0.4)',
@@ -718,7 +760,7 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
         {child.photo_url ? <SignedImg bucket="gallery" src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
       </div>
       <div onClick={onOpen} style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', overflowWrap: 'anywhere', lineHeight: 1.25 }}>
           {child.first_name} {child.last_name}
           {child.is_walk_in && child.profile_incomplete && <span style={{ fontSize: 9.5, fontWeight: 800, color: 'var(--warn-text)', background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 6, padding: '1px 6px' }}>WALK-IN · PROFILE INCOMPLETE</span>}
           <RegisterPaymentBadge org={org} session={{ user: { id: authUserId } }} childId={child.id} balance={paymentBalance} onChanged={onPaymentChanged} />
@@ -731,16 +773,13 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
         </div>
         <div style={{ display: 'flex', gap: 5, marginTop: 5, flexWrap: 'wrap' }}>
           {(child.has_epipen || child.has_asthma || child.has_diabetes || child.takes_medication || child.has_medication || child.medical_notes) && (
-            <span style={alertPill('#DC2626', 'var(--danger-bg)')}>⚕ Medical</span>
+            <span style={alertPill('danger')}>⚕ Medical</span>
           )}
-          {child.allergies && <span style={alertPill('#D97706', 'var(--warn-bg)')}><Icon name="⚠" /> Allergy</span>}
-          {child.collection_restricted && <span style={alertPill('#D97706', 'var(--warn-bg)')}><Icon name="⚠" /> Collection restriction</span>}
+          {child.allergies && <span style={alertPill('warn')}><Icon name="⚠" /> Allergy</span>}
+          {child.collection_restricted && <span style={alertPill('warn')}><Icon name="⚠" /> Collection restriction</span>}
         </div>
       </div>
-      <div style={{
-        flexShrink: 0, display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 6,
-        ...(isMobile ? { borderTop: '1px solid var(--border-soft)', paddingTop: 10 } : null),
-      }}>
+      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
         {status === 'signed_in' ? (
           <>
             <button onClick={onSignOut} style={actionBtn('#2563EB', isMobile)}>Sign out</button>
@@ -763,16 +802,19 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
 // needs the seconds, and "10:00:00 – 16:00:00" is harder to read at a glance.
 function hhmm(t) { return (t || '').slice(0, 5) }
 
-function alertPill(color, bg) { return { fontSize: 9.5, fontWeight: 800, color, background: bg, border: `1px solid ${withAlpha(color, '30')}`, borderRadius: 6, padding: '1px 6px' } }
+// The theme's warning and danger text colours, which pass contrast in both
+// themes. The literal amber this used was 3.07:1 at 9.5px, on the one label
+// staff must never miss.
+function alertPill(tone) { return { fontSize: 11, fontWeight: 800, lineHeight: 1.4, color: `var(--${tone}-text)`, background: `var(--${tone}-bg)`, border: `1px solid var(--${tone}-border)`, borderRadius: 6, padding: '1px 7px' } }
 // 9px of vertical padding around 12px text is a 33px target. Anything under
 // ~44px is genuinely hard to hit on a phone, and this is the button somebody
 // presses fifty times in a row with a child waiting in front of them.
 function actionBtn(color, isMobile) {
   return {
-    padding: isMobile ? '13px 14px' : '9px 14px', borderRadius: 10, border: 'none',
-    background: color, color: '#fff', fontSize: isMobile ? 13.5 : 12, fontWeight: 700,
+    padding: isMobile ? '0 12px' : '9px 14px', borderRadius: 10, border: 'none',
+    background: color, color: '#fff', fontSize: 13, fontWeight: 700,
     cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: `0 3px 8px -2px ${withAlpha(color, '55')}`,
-    ...(isMobile ? { flex: 1, minHeight: 46 } : null),
+    ...(isMobile ? { minHeight: 46 } : null),
   }
 }
 // Matches actionBtn's mobile floor via the wrapper's stretch.

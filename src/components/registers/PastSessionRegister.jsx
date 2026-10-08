@@ -38,7 +38,10 @@ export default function PastSessionRegister({
   // Collapsed by default on a phone, where the summary was occupying the
   // viewport ahead of the list it summarises.
   const [summaryOpen, setSummaryOpen] = useState(false)
-  const [tab, setTab] = useState('expected')
+  // Open on the list that has people in it. Expected is empty on most
+  // closed registers, and opening on 'Nobody in this list' read as if the
+  // register itself were empty.
+  const [tab, setTab] = useState(() => grouped.expected.length ? 'expected' : grouped.signed_in.length ? 'signed_in' : grouped.signed_out.length ? 'signed_out' : grouped.absent.length ? 'absent' : 'expected')
   const [search, setSearch] = useState('')
   const [showCorrection, setShowCorrection] = useState(false)
   const [showReopen, setShowReopen] = useState(false)
@@ -162,7 +165,7 @@ export default function PastSessionRegister({
             behind a toggle on mobile, open by default everywhere else. */}
         {isMobile && (
           <button onClick={() => setSummaryOpen(v => !v)} style={{
-            marginTop: 10, width: '100%', minHeight: 40, display: 'flex', alignItems: 'center',
+            marginTop: 10, width: '100%', minHeight: 44, display: 'flex', alignItems: 'center',
             justifyContent: 'space-between', padding: '0 12px', borderRadius: 10,
             border: '1px solid var(--border)', background: 'var(--surface2)', cursor: 'pointer',
             fontSize: 12.5, fontWeight: 800, color: 'var(--text2)', fontFamily: 'inherit',
@@ -205,7 +208,7 @@ export default function PastSessionRegister({
       {/* TABS */}
       <div className="no-print" style={{ display: 'flex', background: 'var(--surface)', borderBottom: '1px solid var(--border)', overflowX: 'auto' }}>
         {TABS.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{ flex: '1 0 auto', padding: '11px 14px', border: 'none', borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent', background: 'none', color: tab === t.key ? 'var(--org-ink)' : 'var(--text3)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          <button key={t.key} onClick={() => setTab(t.key)} style={{ flex: '1 0 auto', minHeight: 44, padding: '11px 14px', border: 'none', borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent', background: 'none', color: tab === t.key ? 'var(--org-ink)' : 'var(--text3)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
             {t.label} {t.count}
           </button>
         ))}
@@ -245,7 +248,7 @@ export default function PastSessionRegister({
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => setShowSummary(true)} style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>View summary</button>
-          <button onClick={() => setShowMore(v => !v)} style={{ ...ghostBtn, padding: '10px 12px' }}>⋯</button>
+          <button onClick={() => setShowMore(v => !v)} aria-label="More options" style={{ ...ghostBtn, minWidth: 44, padding: '10px 12px' }}>⋯</button>
         </div>
         {showMore && (
           <div style={{ position: 'absolute', bottom: 56, right: 16, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 12px 32px rgba(0,0,0,0.12)', overflow: 'hidden', minWidth: 200 }}>
@@ -320,10 +323,10 @@ function HistoricalRow({ child, att, groupLabel, peopleProfiles, isCorrected, on
         </div>
         {recordedBy && <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginTop: 2 }}>Recorded by {recordedBy}</div>}
         <div style={{ display: 'flex', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
-          {(child.has_epipen || child.has_asthma || child.has_diabetes || child.takes_medication || child.medical_notes) && <span style={alertPill('#DC2626', 'var(--danger-bg)')}>⚕ Medical</span>}
-          {child.allergies && <span style={alertPill('#D97706', 'var(--warn-bg)')}><Icon name="⚠" /> Allergy</span>}
+          {(child.has_epipen || child.has_asthma || child.has_diabetes || child.takes_medication || child.medical_notes) && <span style={alertPill('danger')}>⚕ Medical</span>}
+          {child.allergies && <span style={alertPill('warn')}><Icon name="⚠" /> Allergy</span>}
           {isCorrected && (
-            <span onClick={onViewAudit} style={{ ...alertPill('var(--warn-text)', 'var(--warn-bg)'), cursor: 'pointer', textDecoration: 'underline' }}>Corrected — view audit history</span>
+            <span onClick={onViewAudit} style={{ ...alertPill('warn'), cursor: 'pointer', textDecoration: 'underline' }}>Corrected — view audit history</span>
           )}
         </div>
       </div>
@@ -334,8 +337,9 @@ function HistoricalRow({ child, att, groupLabel, peopleProfiles, isCorrected, on
   )
 }
 
-function alertPill(color, bg) { return { fontSize: 9.5, fontWeight: 800, color, background: bg, borderRadius: 6, padding: '1px 6px' } }
-const ghostBtn = { padding: '8px 12px', borderRadius: 9, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }
+// Theme colours that pass contrast in both themes, as on the live register.
+function alertPill(tone) { return { fontSize: 11, fontWeight: 800, lineHeight: 1.4, color: `var(--${tone}-text)`, background: `var(--${tone}-bg)`, border: `1px solid var(--${tone}-border)`, borderRadius: 6, padding: '1px 7px' } }
+const ghostBtn = { minHeight: 44, padding: '8px 12px', borderRadius: 9, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }
 
 function MenuItem({ children, onClick, danger }) {
   return (
