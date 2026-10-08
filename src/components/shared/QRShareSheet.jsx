@@ -16,7 +16,8 @@ function loadQRLib() {
   return qrLoadPromise
 }
 
-function QRCard({ icon, title, subtitle, url, primary }) {
+// Also used by the Share sheet for public report forms (incidents/ReportShareSheet).
+export function QRCard({ icon, title, subtitle, url, primary }) {
   const qrRef = useRef(null)
   const [copied, setCopied] = useState(false)
 
@@ -51,10 +52,10 @@ function QRCard({ icon, title, subtitle, url, primary }) {
       <div style={{ fontSize: 12, color: 'var(--text-faint)', textAlign: 'center', marginBottom: 16 }}>{subtitle}</div>
       <div ref={qrRef} style={{ padding: 12, background: 'var(--surface)', borderRadius: 14, border: '1px solid var(--border-soft)', marginBottom: 16 }} />
       <div style={{ display: 'flex', gap: 8, width: '100%', maxWidth: 260 }}>
-        <button onClick={copyLink} style={{ flex: 1, padding: '10px 8px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+        <button onClick={copyLink} style={{ flex: 1, minHeight: 44, padding: '10px 8px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
           {copied ? '✓ Copied' : 'Copy link'}
         </button>
-        <button onClick={share} style={{ flex: 1, padding: '10px 8px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+        <button onClick={share} style={{ flex: 1, minHeight: 44, padding: '10px 8px', borderRadius: 10, border: 'none', background: primary, color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
           Share
         </button>
       </div>
