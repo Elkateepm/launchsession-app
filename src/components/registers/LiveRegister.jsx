@@ -13,7 +13,8 @@ import Icon from '../../lib/icons'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { withAlpha } from '../../lib/withAlpha'
 import { todayInLondon } from '../../lib/today'
-import RegisterBrandMark from './RegisterBrandMark'
+import RegisterHero, { BandPill, ON_BAND, bandBar } from './RegisterHero'
+import { orgBrand } from '../shared/OrgPageHero'
 
 const COLLECTION_TYPES = [
   { key: 'approved_adult', label: 'Approved adult' },
@@ -56,7 +57,7 @@ function computeRegisterState(session, attendanceRows) {
 }
 
 const STATE_LABEL = { upcoming: 'Upcoming', register_open: 'Register open', live: 'Live', ending: 'Ending', closed: 'Closed' }
-const STATE_COLOR = { upcoming: 'var(--text3)', register_open: '#2563EB', live: '#16A34A', ending: '#D97706', closed: 'var(--text3)' }
+const STATE_BAND_COLOR = { upcoming: ON_BAND.muted, register_open: ON_BAND.open, live: ON_BAND.live, ending: ON_BAND.ending, closed: ON_BAND.muted }
 
 function fmtTime(d) {
   if (!d) return ''
@@ -371,60 +372,38 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
       style={{
         position: 'fixed', inset: 0, background: 'var(--surface2)', zIndex: 10200,
         display: 'flex', flexDirection: 'column',
-        // inset: 0 puts the top of this overlay behind the status bar and notch
-        // when the app is installed to the home screen, which is how staff
-        // actually run a register. The back button was under the clock.
-        paddingTop: 'env(safe-area-inset-top, 0px)',
+        // The top safe-area inset is RegisterHero's, so the banner runs up
+        // under the status bar when the app is installed to the home screen.
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}>
       {/* HEADER */}
-      <div style={{
-        background: `linear-gradient(120deg, var(--org-a10), var(--surface) 70%)`,
-        borderTop: `3px solid ${org?.primary_color || 'var(--org-primary)'}`,
-        backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
-        borderBottom: '1px solid var(--border)', padding: isMobile ? '12px 14px 11px' : '16px 18px 14px',
-        boxShadow: '0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 24px -18px rgba(15,23,42,0.25)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-          <button aria-label={backLabel} onClick={onClose} style={{ minHeight: 44, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', fontSize: 15.5, fontWeight: 800, color: 'var(--text)', cursor: 'pointer', padding: '4px 6px 4px 2px', borderRadius: 8, letterSpacing: '-0.01em' }}>
-            <span style={{ fontSize: 20, color: 'var(--org-ink)' || '#1B9AAA' }}>‹</span><RegisterBrandMark org={org} size={isMobile ? 32 : 42} /><span style={{ textAlign: 'left', minWidth: 0 }}><span style={{ display: 'block', color: 'var(--text3)', fontSize: 11, fontWeight: 600, marginBottom: 4 }}>{backLabel}</span><span style={{ display: 'block', overflowWrap: 'anywhere' }}>{session.title}</span></span>
-          </button>
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800,
-            letterSpacing: '0.02em', color: STATE_COLOR[registerState],
-            background: `linear-gradient(135deg, ${withAlpha(STATE_COLOR[registerState], '1c')}, ${withAlpha(STATE_COLOR[registerState], '0c')})`,
-            border: `1px solid ${withAlpha(STATE_COLOR[registerState], '30')}`,
-            borderRadius: 99, padding: '5px 12px 5px 10px', textTransform: 'uppercase',
-          }}>
-            {registerState === 'live' && (
-              <motion.span
-                animate={{ opacity: [1, 0.35, 1], scale: [1, 1.25, 1] }}
-                transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-                style={{ width: 6, height: 6, borderRadius: 99, background: STATE_COLOR[registerState], display: 'inline-block' }}
-              />
-            )}
-            {STATE_LABEL[registerState]}
-          </span>
-        </div>
-        {/* On a phone this line wrapped to three rows of grey text before you
-            could see a single child. The long weekday and the full month name
-            are the first things to go: if you are standing at the door running
-            this register, you know what day it is. */}
-        <div style={{ fontSize: isMobile ? 11.5 : 12.5, color: 'var(--text3)', marginBottom: isMobile ? 10 : 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+      <RegisterHero org={org} mobile={isMobile} backLabel={backLabel} onBack={onClose} title={session.title}
+        status={<BandPill color={STATE_BAND_COLOR[registerState]} pulse={registerState === 'live' && (
+          <motion.span
+            animate={{ opacity: [1, 0.35, 1], scale: [1, 1.25, 1] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ width: 6, height: 6, borderRadius: 99, background: STATE_BAND_COLOR[registerState], display: 'inline-block' }}
+          />
+        )}>{STATE_LABEL[registerState]}</BandPill>}
+        // On a phone this line wrapped to three rows before you could see a
+        // single child. The long weekday and the full month name are the first
+        // things to go: if you are standing at the door running this register,
+        // you know what day it is.
+        meta={<>
           <span>{new Date(session.session_date).toLocaleDateString('en-GB', isMobile
             ? { day: 'numeric', month: 'short' }
             : { weekday: 'long', day: 'numeric', month: 'long' })}</span>
-          <span style={{ color: 'var(--text-faint)' }}>•</span>
+          <span style={{ color: '#ffffff80' }}>•</span>
           <span>{hhmm(session.start_time)}–{hhmm(session.end_time)}</span>
-          {session.location && <><span style={{ color: 'var(--text-faint)' }}>•</span><span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.location}</span></>}
-        </div>
+          {session.location && <><span style={{ color: '#ffffff80' }}>•</span><span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.location}</span></>}
+        </>}>
         {/* Four pills wrapped onto two rows at phone width. A fixed four-column
             grid keeps them on one line and keeps the numbers comparable. */}
-        <div style={{ display: isMobile ? 'grid' : 'flex', gridTemplateColumns: isMobile ? 'repeat(4, minmax(0,1fr))' : undefined, gap: isMobile ? 6 : 8, flexWrap: 'wrap' }}>
-          <MiniStat icon="👥" label="On site" value={signedInCount} color="#16A34A" />
-          <MiniStat icon="⏳" label="Expected" value={grouped.expected.length} color="var(--text3)" />
-          <MiniStat icon="✕" label="Absent" value={grouped.absent.length} color="#DC2626" />
-          <MiniStat icon="✓" label="Signed out" value={grouped.signed_out.length} color="#2563EB" />
+        <div style={{ display: isMobile ? 'grid' : 'flex', gridTemplateColumns: isMobile ? 'repeat(4, minmax(0,1fr))' : undefined, gap: isMobile ? 6 : 8, flexWrap: 'wrap', marginTop: isMobile ? 12 : 16 }}>
+          <MiniStat icon="👥" compact={isMobile} label="On site" value={signedInCount} color={ON_BAND.live} />
+          <MiniStat icon="⏳" compact={isMobile} label="Expected" value={grouped.expected.length} color={ON_BAND.muted} />
+          <MiniStat icon="✕" compact={isMobile} label="Absent" value={grouped.absent.length} color={ON_BAND.absent} />
+          <MiniStat icon="✓" compact={isMobile} label="Signed out" value={grouped.signed_out.length} color={ON_BAND.open} />
         </div>
         {ratioBreached && (
           <div style={{ marginTop: 12, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 12, padding: '10px 13px', fontSize: 12, fontWeight: 700, color: 'var(--danger-text)', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -433,21 +412,21 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
         )}
         {totalExpected > 0 && (
           <div style={{ marginTop: 13 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text3)', fontWeight: 700, marginBottom: 5 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#ffffffcc', fontWeight: 700, marginBottom: 5 }}>
               <span>Register progress</span>
               <span>{processedCount} / {totalExpected}</span>
             </div>
-            <div style={{ height: 6, borderRadius: 99, background: 'var(--border-soft)', overflow: 'hidden' }}>
+            <div style={{ height: 6, borderRadius: 99, background: '#ffffff2b', overflow: 'hidden' }}>
               <motion.div
                 initial={false}
                 animate={{ width: `${totalExpected ? (processedCount / totalExpected) * 100 : 0}%` }}
                 transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-                style={{ height: '100%', borderRadius: 99, background: org?.primary_color || 'var(--org-primary)' }}
+                style={{ height: '100%', borderRadius: 99, background: bandBar(orgBrand(org)) }}
               />
             </div>
           </div>
         )}
-      </div>
+      </RegisterHero>
 
       {loadError && <div role="alert" style={{ padding: 12, background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>{loadError} <button onClick={load} style={{ minHeight: 44 }}>Retry</button></div>}
       <div style={{ padding: '12px 16px', background: 'var(--surface, #fff)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
@@ -638,19 +617,35 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
   )
 }
 
-function MiniStat({ icon, label, value, color }) {
+// Frosted on the banner so the organisation's colour shows through. The icon
+// keeps its status colour on a white chip; the number is white to be read at
+// arm's length. On a phone the four share one row at about 80px each, so the
+// chip becomes a dot and the label goes under the number: side by side,
+// "Expected" ran into the next pill.
+function MiniStat({ icon, label, value, color, compact }) {
+  if (compact) return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, minWidth: 0,
+      background: '#ffffff1c', border: '1px solid #ffffff33', borderRadius: 12, padding: '7px 4px',
+    }}>
+      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+        <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: 99, background: color, boxShadow: '0 0 0 1.5px #fff' }} />
+        <span style={{ fontSize: 16, fontWeight: 900, color: '#fff', lineHeight: 1 }}>{value}</span>
+      </span>
+      <span style={{ fontSize: 10, color: '#ffffffcc', fontWeight: 700, lineHeight: 1.1, whiteSpace: 'nowrap' }}>{label}</span>
+    </div>
+  )
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 8,
-      background: `linear-gradient(135deg, ${withAlpha(color, '14')}, ${withAlpha(color, '08')})`,
-      border: `1px solid ${withAlpha(color, '22')}`, borderRadius: 12, padding: '7px 12px 7px 10px',
+      background: '#ffffff1c', border: '1px solid #ffffff33', borderRadius: 12, padding: '7px 12px 7px 10px',
     }}>
       <span style={{
-        width: 22, height: 22, borderRadius: 7, background: `${withAlpha(color, '1c')}`, color,
+        width: 22, height: 22, borderRadius: 7, background: '#fff', color,
         display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0,
       }}>{icon}</span>
-      <span style={{ fontSize: 15.5, fontWeight: 900, color, lineHeight: 1 }}>{value}</span>
-      <span style={{ fontSize: 10.5, color: 'var(--text3)', fontWeight: 700 }}>{label}</span>
+      <span style={{ fontSize: 15.5, fontWeight: 900, color: '#fff', lineHeight: 1 }}>{value}</span>
+      <span style={{ fontSize: 10.5, color: '#ffffffcc', fontWeight: 700 }}>{label}</span>
     </div>
   )
 }

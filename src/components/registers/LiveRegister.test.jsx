@@ -39,3 +39,17 @@ test('group filtering and the on-site shortcut preserve the full headcount', asy
   expect(await screen.findByText('Sam Example')).toBeInTheDocument()
   expect(screen.getByText('No team members are signed in. Check the team attendance below.')).toBeInTheDocument()
 })
+
+test('the register opens under the organisation’s own banner, logo and name', async () => {
+  const onClose = jest.fn()
+  render(<LiveRegister session={session} org={{ id: 'o1', name: 'Solidarity Sports', primary_color: '#4714ff', logo_url: 'https://example.test/logo.png' }}
+    userRole="admin" authUserId="u1" backLabel="Back to planner" onClose={onClose} />)
+  await screen.findByText('Alex Example')
+  const banner = screen.getByLabelText('Solidarity Sports register')
+  expect(banner).toHaveTextContent('Solidarity Sports')
+  expect(banner.querySelector('h1')).toHaveTextContent('Sports')
+  // At the logo's own proportions, not squeezed into a square tile.
+  expect(banner.querySelector('[data-org-logo] img')).toHaveAttribute('src', 'https://example.test/logo.png')
+  fireEvent.click(screen.getByRole('button', { name: 'Back to planner' }))
+  expect(onClose).toHaveBeenCalled()
+})

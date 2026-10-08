@@ -23,6 +23,7 @@ export function orgBrand(org) {
     secondary,
     accent,
     ink,
+    base,
     gradient: `linear-gradient(120deg, ${ink}, ${darken(ink, .22)})`,
     // Starts at the brand colour rather than a near-black version of it, so
     // the banner reads as the organisation's colour at a glance. One hue
