@@ -171,7 +171,8 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
             <h2 style={{ position: 'relative', margin: '12px 0 6px', fontFamily: 'var(--font-display, inherit)', fontSize: isMobile ? 26 : 28, fontWeight: 800, letterSpacing: -0.5, color: '#fff', overflowWrap: 'anywhere' }}>Hi, {firstName}</h2>
             <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 6 }}>
               <span style={heroPill}><span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: 99, background: brand.accent }} />{roleLabel}</span>
-              <span style={heroPill}>{planLabel(org?.plan)}</span>
+              {/* The plan is the owner's business, not a session lead's. */}
+              {['owner', 'admin'].includes(profile?.role) && <span style={heroPill}>{planLabel(org?.plan)}</span>}
             </div>
           </div>
 

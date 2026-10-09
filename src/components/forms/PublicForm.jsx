@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import Icon from '../../lib/icons'
 import { withAlpha } from '../../lib/withAlpha'
+import { orgBrand } from '../shared/OrgPageHero'
 
 // Public form experience.
 //
@@ -10,9 +11,8 @@ import { withAlpha } from '../../lib/withAlpha'
 // the organisation's branding rather than ours, asks one section at a time when
 // a form is long, and never shows a raw validation error.
 
-const PARTS = window.location.pathname.split('/forms/')[1]?.split('/').filter(Boolean) || []
-const ORG_SLUG = PARTS[0]
-const FORM_ID = PARTS[1]
+// /forms/<org slug>/<form id>, read when the form loads.
+const formPath = () => window.location.pathname.split('/forms/')[1]?.split('/').filter(Boolean) || []
 
 // Invite links carry ?r=<recipient_id>, which ties the response to the invite
 // that produced it. The shape is checked here rather than left to the database:
@@ -166,6 +166,32 @@ function Shell({ org, primary, secondary, children }) {
   )
 }
 
+// About how long a form takes on a phone. Written answers take the longest;
+// counting every question as twelve seconds promised a parent two minutes for
+// the injury form's three written answers and eight more.
+const SECONDS = { textarea: 60, select: 10, radio: 10, checkbox: 8, date: 15 }
+export function minutesFor(fields) {
+  const seconds = fields.reduce((sum, f) => sum + (SECONDS[f.type] || 20), 0)
+  return Math.max(1, Math.ceil(seconds / 60))
+}
+
+// A safeguarding form says this before the first question, not in the
+// thank-you message after the last.
+function EmergencyNote() {
+  return (
+    <div role="note" style={{
+      display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 14, marginBottom: 18,
+      background: 'var(--danger-bg)', border: '1.5px solid var(--danger-border)', color: 'var(--danger-text)',
+    }}>
+      <span style={{ flex: 1, fontSize: 15, fontWeight: 800, lineHeight: 1.45 }}>If a child is in immediate danger, call 999 now.</span>
+      <a href="tel:999" style={{
+        flexShrink: 0, minHeight: 44, padding: '0 14px', borderRadius: 11, display: 'inline-flex', alignItems: 'center',
+        background: 'var(--danger-text)', color: '#fff', fontSize: 14.5, fontWeight: 900, textDecoration: 'none',
+      }}>Call 999</a>
+    </div>
+  )
+}
+
 function Card({ children, pad = 24 }) {
   return (
     <div style={{
@@ -185,6 +211,7 @@ export default function PublicForm() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    const [ORG_SLUG, FORM_ID] = formPath()
     if (!ORG_SLUG || !FORM_ID) { setStatus('notfound'); return }
     let cancelled = false
     ;(async () => {
@@ -212,6 +239,11 @@ export default function PublicForm() {
   }, [])
 
   const primary = org?.primary_color || '#7C5CFC'
+  // Buttons carry white text, so they take the organisation's ink, which
+  // orgBrand keeps dark enough for it. The primary-to-secondary fade they used
+  // fell to about 1.8:1 against white at an amber end.
+  const buttonColour = orgBrand({ primary_color: primary }).ink
+  const isConcern = form?.creates_record === 'concern'
   const secondary = (org?.secondary_color && org.secondary_color.toLowerCase() !== primary.toLowerCase())
     ? org.secondary_color : '#6366F1'
 
@@ -343,10 +375,11 @@ export default function PublicForm() {
   }
 
   if (status === 'intro') {
-    const mins = Math.max(1, Math.round(fields.length / 5))
+    const mins = minutesFor(fields)
     return (
       <Shell org={org} primary={primary} secondary={secondary}>
         <Card pad={28}>
+          {isConcern && <EmergencyNote />}
           <h1 style={{ fontSize: 25, fontWeight: 900, color: 'var(--text)', margin: '0 0 10px', lineHeight: 1.25 }}>
             {form.name}
           </h1>
@@ -365,7 +398,7 @@ export default function PublicForm() {
           </div>
           <button onClick={() => setStatus('ready')} style={{
             width: '100%', padding: '16px', borderRadius: 14, border: 'none',
-            background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff',
+            background: buttonColour, color: '#fff',
             fontSize: 16.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
             boxShadow: `0 10px 26px -12px ${primary}`,
           }}>Start</button>
@@ -398,6 +431,7 @@ export default function PublicForm() {
           </div>
         )}
 
+        {isConcern && step === 0 && <EmergencyNote />}
         {pct === null && (
           <h1 style={{ fontSize: 21, fontWeight: 900, color: 'var(--text)', margin: '0 0 18px' }}>{form.name}</h1>
         )}
@@ -457,7 +491,7 @@ export default function PublicForm() {
             disabled={status === 'submitting'}
             style={{
               flex: 1, padding: '16px', borderRadius: 14, border: 'none',
-              background: status === 'submitting' ? 'var(--text-faint)' : `linear-gradient(135deg, ${primary}, ${secondary})`,
+              background: status === 'submitting' ? 'var(--text-faint)' : buttonColour,
               color: '#fff', fontSize: 16.5, fontWeight: 800,
               cursor: status === 'submitting' ? 'wait' : 'pointer', fontFamily: 'inherit',
               boxShadow: status === 'submitting' ? 'none' : `0 10px 26px -12px ${primary}`,

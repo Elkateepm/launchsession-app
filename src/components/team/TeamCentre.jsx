@@ -29,7 +29,7 @@ const card = {
 }
 
 const input = {
-  width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
+  width: '100%', boxSizing: 'border-box', minHeight: 46, padding: '11px 13px', borderRadius: 11,
   border: '1px solid var(--border)', fontSize: 15, fontFamily: 'inherit', outline: 'none',
 }
 
@@ -148,7 +148,8 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
   }
 
   const TABS = [
-    ['people', `Staff (${filtered.length})`],
+    // Everyone on the team, volunteers included, so not "Staff".
+    ['people', `Everyone (${filtered.length})`],
     ['mail', 'Internal mail'],
   ]
 
@@ -284,7 +285,7 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
         />
       )}
       {inviting && (
-        <InviteStaffModal org={org} primary={primary} onClose={() => setInviting(false)}
+        <InviteStaffModal org={org} primary={primary} inviterRole={userProfile?.role} title="Invite someone" onClose={() => setInviting(false)}
           onSent={() => { setInviting(false); flash('Invite sent'); load() }} />
       )}
     </div>
