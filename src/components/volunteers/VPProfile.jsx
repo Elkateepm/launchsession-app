@@ -1,81 +1,85 @@
-import React, { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import React, { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
-import { tierFor, computeAchievements, glassCard, DAYS, SLOTS } from './vp_shared'
+import { glassCard, DAYS, SLOTS } from './vp_shared'
 import SignedImg from '../shared/SignedImg'
 import Icon from '../../lib/icons'
+import { orgBrand } from '../shared/OrgPageHero'
+import { formatHours, summariseHours } from '../../lib/volunteerHours'
 
+// The volunteer's own details. Hours here are the register's count, the same
+// figure as the Hours tab.
+//
+// Two segments went. Badges credited "100 young people supported" by
+// multiplying sessions by eight; the Hours tab's milestones now do the
+// encouraging with numbers that are true. Settings had a notifications switch
+// that saved nothing and three rows that opened nothing; Sign out lives on
+// Overview.
 const SEGMENTS = [
   { key: 'overview', label: 'Overview' },
   { key: 'availability', label: 'Availability' },
   { key: 'training', label: 'Training' },
   { key: 'documents', label: 'Documents' },
-  { key: 'badges', label: 'Badges' },
-  { key: 'settings', label: 'Settings' },
 ]
 
-export default function VPProfile({ org, user, profile, attendance, primary, initialSub, onSignOut, onProfileUpdated }) {
+export default function VPProfile({ org, user, profile, teamRows = [], sessionsById = {}, primary, initialSub, onSignOut, onProfileUpdated, onNavigate }) {
   const [seg, setSeg] = useState(initialSub || 'overview')
   useEffect(() => { if (initialSub) setSeg(initialSub) }, [initialSub])
 
-  const totalHours = attendance.reduce((s, a) => s + (a.hours_logged || 0), 0)
-  const sessionsCompleted = attendance.filter(a => a.status === 'completed' || a.signed_out_at).length
-  const tier = tierFor(totalHours)
+  const brand = orgBrand(org)
+  const hours = useMemo(() => summariseHours(teamRows, sessionsById), [teamRows, sessionsById])
   const initials = (profile?.full_name || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 
   return (
-    <div style={{ padding: '0 0 100px' }}>
-      <div style={{ background: `linear-gradient(150deg, ${primary}, var(--org-a85))`, padding: '20px 18px 24px', color: '#fff', textAlign: 'center' }}>
+    <div style={{ padding: '0 0 24px' }}>
+      <div style={{ background: brand.hero, padding: '22px 18px 24px', color: '#fff', textAlign: 'center' }}>
         <div style={{ width: 72, height: 72, borderRadius: '50%', background: profile?.photo_url ? 'transparent' : 'rgba(255,255,255,0.2)', border: '3px solid rgba(255,255,255,0.35)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
           {profile?.photo_url ? <SignedImg bucket="staff-photos" src={profile.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 24, fontWeight: 900 }}>{initials}</span>}
         </div>
-        <div style={{ fontSize: 18, fontWeight: 900 }}>{profile?.full_name}</div>
-        <div style={{ fontSize: 12, opacity: 0.85, marginTop: 2 }}>{org?.name} Volunteer</div>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.18)', borderRadius: 99, padding: '5px 14px', marginTop: 10 }}>
-          <span style={{ fontSize: 12, fontWeight: 800, color: tier.color }}>{tier.name}</span>
-          <span style={{ fontSize: 11, opacity: 0.8 }}>· {totalHours.toFixed(1)}h · {sessionsCompleted} sessions</span>
-        </div>
+        <h1 style={{ margin: 0, fontSize: 21, fontWeight: 900 }}>{profile?.full_name}</h1>
+        <div style={{ fontSize: 13.5, color: '#ffffffd9', marginTop: 2 }}>Volunteer at {org?.name}</div>
+        <button onClick={() => onNavigate?.('hours')}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, background: '#ffffff1f', border: '1px solid #ffffff40', color: '#fff', borderRadius: 99, padding: '0 16px', marginTop: 12, fontSize: 13.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
+          {formatHours(hours.totalMinutes)} hours · {hours.sessionCount} session{hours.sessionCount === 1 ? '' : 's'} <span aria-hidden="true">›</span>
+        </button>
       </div>
 
-      <div style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '14px 16px 0' }}>
+      <div role="tablist" aria-label="Your details" style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '14px 16px 0' }}>
         {SEGMENTS.map(s => (
-          <button key={s.key} onClick={() => setSeg(s.key)}
-            style={{ padding: '7px 14px', borderRadius: 99, border: 'none', background: seg === s.key ? primary : 'var(--border-soft)', color: seg === s.key ? '#fff' : 'var(--text3)', fontWeight: 700, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
+          <button key={s.key} role="tab" aria-selected={seg === s.key} onClick={() => setSeg(s.key)}
+            style={{ minHeight: 44, padding: '0 16px', borderRadius: 99, border: seg === s.key ? 'none' : '1px solid var(--border)', background: seg === s.key ? 'var(--org-primary, #1B9AAA)' : 'var(--surface)', color: seg === s.key ? 'var(--org-on-primary, #fff)' : 'var(--text2)', fontWeight: 800, fontSize: 13.5, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, fontFamily: 'inherit' }}>
             {s.label}
           </button>
         ))}
       </div>
 
       <div style={{ padding: '16px' }}>
-        {seg === 'overview' && <Overview profile={profile} org={org} attendance={attendance} primary={primary} onSignOut={onSignOut} />}
+        {seg === 'overview' && <Overview profile={profile} hours={hours} onSignOut={onSignOut} onNavigate={onNavigate} />}
         {seg === 'availability' && <Availability profile={profile} org={org} user={user} primary={primary} onProfileUpdated={onProfileUpdated} />}
         {seg === 'training' && <Training org={org} user={user} primary={primary} />}
         {seg === 'documents' && <Documents org={org} profile={profile} primary={primary} />}
-        {seg === 'badges' && <Badges attendance={attendance} profile={profile} primary={primary} />}
-        {seg === 'settings' && <Settings profile={profile} onSignOut={onSignOut} />}
       </div>
     </div>
   )
 }
 
-function Overview({ profile, org, attendance, primary, onSignOut }) {
-  const totalHours = attendance.reduce((s, a) => s + (a.hours_logged || 0), 0)
+function Overview({ profile, hours, onSignOut, onNavigate }) {
   return (
     <div>
       <div style={{ ...glassCard({ padding: 16, marginBottom: 12 }) }}>
-        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', marginBottom: 10 }}>My Impact</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          {[['Hours Volunteered', totalHours.toFixed(1)], ['Sessions Delivered', attendance.length], ['Emergency Contact', profile?.emergency_contact_name || 'Not set'], ['DBS Status', profile?.dbs_number ? 'Verified' : 'Pending']].map(([l, v]) => (
-            <div key={l}><div style={{ fontSize: 10.5, color: 'var(--text-faint)', fontWeight: 700 }}>{l}</div><div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>{v}</div></div>
+        <h2 style={{ margin: '0 0 10px', fontSize: 12.5, fontWeight: 900, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6 }}>Your volunteering</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {[['Hours volunteered', formatHours(hours.totalMinutes)], ['Sessions', hours.sessionCount], ['Emergency contact', profile?.emergency_contact_name || 'Not added'], ['DBS', profile?.dbs_number ? 'On file' : 'Not added yet']].map(([l, v]) => (
+            <div key={l}><div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 700 }}>{l}</div><div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginTop: 2 }}>{v}</div></div>
           ))}
         </div>
+        <button onClick={() => onNavigate?.('hours')} style={{ marginTop: 14, width: '100%', minHeight: 44, borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>See your hours</button>
       </div>
       <div style={{ ...glassCard({ padding: 16, marginBottom: 12 }) }}>
-        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', marginBottom: 10 }}>Contact</div>
-        <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 4 }}>{profile?.email}</div>
-        <div style={{ fontSize: 13, color: 'var(--text2)' }}>{profile?.phone || 'No phone on file'}</div>
+        <h2 style={{ margin: '0 0 10px', fontSize: 12.5, fontWeight: 900, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6 }}>Contact</h2>
+        <div style={{ fontSize: 14, color: 'var(--text2)', marginBottom: 4, overflowWrap: 'anywhere' }}>{profile?.email}</div>
+        <div style={{ fontSize: 14, color: 'var(--text2)' }}>{profile?.phone || 'No phone number on file'}</div>
       </div>
-      <button onClick={onSignOut} style={{ width: '100%', padding: 13, borderRadius: 14, border: '1.5px solid var(--danger-border)', background: 'var(--surface)', color: 'var(--danger-text)', fontWeight: 800, fontSize: 13.5, cursor: 'pointer' }}>Sign Out</button>
+      <button onClick={onSignOut} style={{ width: '100%', minHeight: 48, borderRadius: 14, border: '1.5px solid var(--danger-border)', background: 'var(--surface)', color: 'var(--danger-text)', fontWeight: 800, fontSize: 14.5, cursor: 'pointer', fontFamily: 'inherit' }}>Sign out</button>
     </div>
   )
 }
@@ -93,12 +97,15 @@ function Availability({ profile, org, user, primary, onProfileUpdated }) {
     })
   }
 
+  const [savedNote, setSavedNote] = useState('')
   const save = async () => {
     setSaving(true)
     const availability = { ...(profile?.availability || {}), grid }
-    await supabase.from('user_profiles').update({ availability }).eq('id', user.id)
+    const { error } = await supabase.from('user_profiles').update({ availability }).eq('id', user.id)
     setSaving(false)
-    onProfileUpdated && onProfileUpdated({ ...profile, availability })
+    setSavedNote(error ? 'Not saved. Try again' : 'Saved')
+    setTimeout(() => setSavedNote(''), 2200)
+    if (!error) onProfileUpdated && onProfileUpdated({ ...profile, availability })
   }
 
   return (
@@ -115,14 +122,14 @@ function Availability({ profile, org, user, primary, onProfileUpdated }) {
             {SLOTS.map(([slotKey]) => {
               const on = (grid[day] || []).includes(slotKey)
               return (
-                <button key={slotKey} onClick={() => toggle(day, slotKey)}
-                  style={{ height: 36, borderRadius: 10, border: 'none', background: on ? primary : 'var(--border-soft)', cursor: 'pointer' }} />
+                <button key={slotKey} onClick={() => toggle(day, slotKey)} aria-pressed={on} aria-label={`${day} ${slotKey}`}
+                  style={{ height: 44, borderRadius: 10, border: on ? 'none' : '1px solid var(--border)', background: on ? 'var(--org-primary, #1B9AAA)' : 'var(--surface)', color: on ? 'var(--org-on-primary, #fff)' : 'var(--text-faint)', cursor: 'pointer', fontSize: 15, fontWeight: 900 }}>{on ? '✓' : ''}</button>
               )
             })}
           </div>
         ))}
       </div>
-      <button onClick={save} disabled={saving} style={{ width: '100%', marginTop: 14, padding: 13, borderRadius: 14, border: 'none', background: primary, color: '#fff', fontWeight: 800, fontSize: 13.5, cursor: 'pointer' }}>{saving ? 'Saving…' : 'Save Availability'}</button>
+      <button onClick={save} disabled={saving} style={{ width: '100%', marginTop: 14, minHeight: 48, borderRadius: 14, border: 'none', background: 'var(--org-primary, #1B9AAA)', color: 'var(--org-on-primary, #fff)', fontWeight: 800, fontSize: 14.5, cursor: 'pointer', fontFamily: 'inherit' }}>{saving ? 'Saving…' : savedNote || 'Save availability'}</button>
     </div>
   )
 }
@@ -193,49 +200,6 @@ function Documents({ org, profile, primary }) {
           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{d.title}</div>
         </a>
       ))}
-    </div>
-  )
-}
-
-function Badges({ attendance, profile, primary }) {
-  const totalHours = attendance.reduce((s, a) => s + (a.hours_logged || 0), 0)
-  const sessionsCompleted = attendance.filter(a => a.status === 'completed' || a.signed_out_at).length
-  const achievements = computeAchievements({ sessionsCompleted, totalHours, youngPeopleSupported: sessionsCompleted * 8, streakWeeks: 0, dbsVerified: !!profile?.dbs_number, safeguardingTrained: false })
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-      {achievements.map(a => (
-        <motion.div key={a.key} whileTap={{ scale: 0.95 }} style={{ ...glassCard({ padding: '16px 8px' }), textAlign: 'center', opacity: a.earned ? 1 : 0.4 }}>
-          <div style={{ fontSize: 28, marginBottom: 6, filter: a.earned ? 'none' : 'grayscale(1)' }}><Icon name={a.icon} /></div>
-          <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--text2)', lineHeight: 1.2, marginBottom: 3 }}>{a.label}</div>
-          <div style={{ fontSize: 9, color: 'var(--text-faint)', lineHeight: 1.2 }}>{a.desc}</div>
-        </motion.div>
-      ))}
-    </div>
-  )
-}
-
-function Settings({ profile, onSignOut }) {
-  const [notifs, setNotifs] = useState(true)
-  return (
-    <div>
-      {[
-        ['🔔', 'Notifications', notifs, () => setNotifs(n => !n)],
-      ].map(([icon, label, val, toggle]) => (
-        <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, border: '1.5px solid rgba(15,23,42,0.06)', marginBottom: 8 }}>
-          <span style={{ fontSize: 18 }}>{icon}</span>
-          <div style={{ flex: 1, fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>{label}</div>
-          <button onClick={toggle} style={{ width: 42, height: 24, borderRadius: 99, border: 'none', background: val ? '#7C5CFC' : 'var(--border)', position: 'relative', cursor: 'pointer' }}>
-            <motion.div animate={{ x: val ? 20 : 2 }} style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--surface)', position: 'absolute', top: 2 }} />
-          </button>
-        </div>
-      ))}
-      {['Help & Support', 'Privacy Policy', 'Volunteer Handbook'].map(label => (
-        <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, border: '1.5px solid rgba(15,23,42,0.06)', marginBottom: 8, cursor: 'pointer' }}>
-          <div style={{ flex: 1, fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>{label}</div>
-          <span style={{ color: 'var(--text-faint)' }}>›</span>
-        </div>
-      ))}
-      <button onClick={onSignOut} style={{ width: '100%', marginTop: 8, padding: 13, borderRadius: 14, border: '1.5px solid var(--danger-border)', background: 'var(--surface)', color: 'var(--danger-text)', fontWeight: 800, fontSize: 13.5, cursor: 'pointer' }}>Sign Out</button>
     </div>
   )
 }

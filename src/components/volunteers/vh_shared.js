@@ -114,15 +114,6 @@ export function daysUntil(dateStr) {
   return Math.ceil(diff / (1000 * 60 * 60 * 24))
 }
 
-export function sessionHours(s) {
-  if (!s?.start_time || !s?.end_time) return 0
-  const [sh, sm] = s.start_time.split(':').map(Number)
-  const [eh, em] = s.end_time.split(':').map(Number)
-  const start = sh + (sm || 0) / 60
-  const end = eh + (em || 0) / 60
-  return Math.max(0, end - start)
-}
-
 export const inputStyle = {
   width: '100%', padding: '9px 12px', borderRadius: 10, border: '1.5px solid rgba(15,23,42,0.1)',
   fontSize: 13.5, outline: 'none', boxSizing: 'border-box', background: 'var(--surface)', color: 'var(--text)',

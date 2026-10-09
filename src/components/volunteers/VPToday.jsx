@@ -1,6 +1,8 @@
-import React from 'react'
-import { motion } from 'framer-motion'
+import React, { useMemo } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 import Icon from '../../lib/icons'
+import { useNow } from '../../hooks/useNow'
+import { formatDuration, formatHours, summariseHours } from '../../lib/volunteerHours'
 
 // The volunteer's home screen.
 //
@@ -31,6 +33,10 @@ import Icon from '../../lib/icons'
 //   A checklist whose first item, "Confirm attendance for today", was pushed
 //   with done: true hardcoded — struck through on arrival, every day, wired to
 //   nothing.
+//
+// Hours earn a single line rather than a dashboard: the running total, and
+// while the volunteer is signed in on a register, the time ticking up. The
+// full picture is on the Hours tab.
 //
 // Safeguarding stays, deliberately, and stays reachable without scrolling. It
 // is styled as a plain high-contrast row rather than the red alarm banner it
@@ -66,7 +72,7 @@ function Row({ icon, title, detail, action, onClick, tone }) {
       onClick={onClick}
       style={{
         ...CARD, width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-        padding: '13px 14px', cursor: 'pointer', textAlign: 'left', font: 'inherit',
+        padding: '13px 14px', minHeight: 56, cursor: 'pointer', textAlign: 'left', font: 'inherit',
         borderColor: tone === 'danger' ? 'var(--danger-border)' : 'var(--border)',
         background: tone === 'danger' ? 'var(--danger-bg)' : 'var(--surface)',
       }}
@@ -81,10 +87,21 @@ function Row({ icon, title, detail, action, onClick, tone }) {
   )
 }
 
+const actionBtn = {
+  flex: 1, minHeight: 46, padding: '0 12px', borderRadius: 12, border: 'none',
+  background: 'var(--org-primary, #1B9AAA)', color: 'var(--org-on-primary, #fff)', fontSize: 14, fontWeight: 800,
+  cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none',
+}
+const quietBtn = { ...actionBtn, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)' }
+
 export default function VPToday({
   org, profile, todaySessions = [], futureSessions = [], announcements = [],
-  primary, onOpenSession, onNavigate, onRaiseConcern,
+  teamRows = [], sessionsById = {}, onOpenSession, onOpenRegister, onNavigate, onRaiseConcern,
 }) {
+  const reduceMotion = useReducedMotion()
+  const signedIn = teamRows.some(row => row.signed_in_at && !row.signed_out_at)
+  const now = useNow(signedIn, 1000)
+  const hours = useMemo(() => summariseHours(teamRows, sessionsById, now), [teamRows, sessionsById, now])
   const firstName = profile?.first_name || profile?.full_name?.split(' ')[0] || 'there'
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
@@ -106,13 +123,13 @@ export default function VPToday({
   const recent = announcements.filter(a => !a.pinned).slice(0, 3)
 
   return (
-    <div style={{ padding: '18px 14px 112px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+    <div style={{ padding: '18px 16px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
       <header>
-        <div style={{ fontSize: 21, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.3 }}>
+        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.4 }}>
           {greeting}, {firstName}
-        </div>
-        <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>{org?.name}</div>
+        </h1>
+        <div style={{ fontSize: 13.5, color: 'var(--text3)', marginTop: 2 }}>Thank you for helping at {org?.name}.</div>
       </header>
 
       {next ? (
@@ -137,24 +154,11 @@ export default function VPToday({
 
           <div style={{ display: 'flex', gap: 8, padding: '0 16px 15px' }}>
             {next.location && (
-              <a
-                href={`https://maps.apple.com/?q=${encodeURIComponent(next.location)}`}
-                target="_blank" rel="noreferrer"
-                style={{
-                  flex: 1, padding: '11px', borderRadius: 11, textAlign: 'center',
-                  border: '1px solid var(--border)', background: 'var(--surface)',
-                  color: 'var(--text)', fontSize: 13.5, fontWeight: 700, textDecoration: 'none',
-                }}
-              >Directions</a>
+              <a href={`https://maps.apple.com/?q=${encodeURIComponent(next.location)}`} target="_blank" rel="noreferrer" style={quietBtn}>Directions</a>
             )}
-            <button
-              onClick={() => onOpenSession?.(next)}
-              style={{
-                flex: 1, padding: '11px', borderRadius: 11, border: 'none',
-                background: primary, color: '#fff', fontSize: 13.5, fontWeight: 800,
-                cursor: 'pointer', fontFamily: 'inherit',
-              }}
-            >View details</button>
+            {isToday && onOpenRegister
+              ? <button onClick={() => onOpenRegister(next)} style={actionBtn}>Open register</button>
+              : <button onClick={() => onOpenSession?.(next)} style={actionBtn}>View details</button>}
           </div>
         </motion.div>
       ) : (
@@ -163,14 +167,23 @@ export default function VPToday({
           <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 4 }}>
             Sessions you can help with appear under Sessions.
           </div>
-          <button
-            onClick={() => onNavigate?.('sessions')}
-            style={{
-              marginTop: 14, padding: '10px 18px', borderRadius: 11, border: 'none',
-              background: primary, color: '#fff', fontSize: 13.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
-            }}
-          >Find a session</button>
+          <button onClick={() => onNavigate?.('sessions')} style={{ ...actionBtn, flex: 'none', marginTop: 14, padding: '0 18px' }}>Find a session</button>
         </div>
+      )}
+
+      {hours.live ? (
+        <button onClick={() => onNavigate?.('hours')}
+          style={{ ...CARD, width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px', cursor: 'pointer', textAlign: 'left', font: 'inherit', borderColor: 'var(--ok-border, var(--border))', background: 'var(--ok-bg)' }}>
+          <motion.span aria-hidden="true" animate={reduceMotion ? undefined : { opacity: [1, 0.3, 1] }} transition={{ duration: 1.6, repeat: Infinity }}
+            style={{ width: 10, height: 10, borderRadius: 99, background: 'var(--ok-text)', flexShrink: 0 }} />
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: 'block', fontSize: 14, fontWeight: 800, color: 'var(--ok-text)' }}>You're signed in at {hours.live.session?.title || 'your session'}</span>
+            <span style={{ display: 'block', fontSize: 12.5, color: 'var(--text2)', marginTop: 1 }}>Your hours are counting</span>
+          </span>
+          <span style={{ fontSize: 18, fontWeight: 900, color: 'var(--ok-text)', fontVariantNumeric: 'tabular-nums' }}>{formatDuration(hours.live.minutes)}</span>
+        </button>
+      ) : (
+        <Row icon="⏱️" title={`${formatHours(hours.totalMinutes)} hours volunteered`} detail={hours.monthMinutes ? `${formatHours(hours.monthMinutes)} this month` : 'Counted from the register at each session'} action="See all" onClick={() => onNavigate?.('hours')} />
       )}
 
       {/* Always here, never below the fold, and never dressed as an emergency. */}

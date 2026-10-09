@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
-import { Card, SectionTitle, Badge, Avatar, CountUp, sessionHours, daysUntil, statusStyle, inputStyle, btnPrimary, btnGhost, glass, PURPLE, PAGE_BG } from './vh_shared'
+import { teamMinutes, isVolunteerRow, signedInMonth } from '../../lib/volunteerHours'
+import { Card, SectionTitle, Badge, Avatar, CountUp, daysUntil, statusStyle, inputStyle, btnPrimary, btnGhost, glass, PURPLE, PAGE_BG } from './vh_shared'
 import VolunteerDirectory from './VolunteerDirectory'
 import VolunteersApplications from './VolunteersApplications'
 import VolunteersCoverage from './VolunteersCoverage'
@@ -125,11 +126,11 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
   // ── KPIs ──────────────────────────────────────────────
   const today = todayInLondon()
   const sessionsById = Object.fromEntries(sessions.map(s => [s.id, s]))
-  const completedStaff = sessionStaff.filter(ss => sessionsById[ss.session_id]?.session_date <= today)
   const thisMonth = today.slice(0, 7)
-  const hoursThisMonth = Math.round(completedStaff
-    .filter(ss => sessionsById[ss.session_id]?.session_date?.slice(0, 7) === thisMonth)
-    .reduce((sum, ss) => sum + sessionHours(sessionsById[ss.session_id]), 0))
+  // Volunteers' register time this month, as on their own Hours tabs.
+  const hoursThisMonth = Math.round(sessionStaff
+    .filter(ss => isVolunteerRow(ss) && signedInMonth(ss) === thisMonth)
+    .reduce((sum, ss) => sum + teamMinutes(ss, sessionsById[ss.session_id]), 0) / 60)
   const upcomingSessionsList = sessions.filter(s => s.session_date >= today).sort((a, b) => a.session_date.localeCompare(b.session_date)).slice(0, 4)
 
   const todaySessions = sessions.filter(s => s.session_date === today)

@@ -1,6 +1,7 @@
 import React from 'react'
 import { orgFilename, csvPreamble } from '../../lib/orgExport'
-import { Card, SectionTitle, Avatar, sessionHours, PURPLE, btnGhost } from './vh_shared'
+import { Card, SectionTitle, Avatar, PURPLE, btnGhost } from './vh_shared'
+import { teamMinutes, isVolunteerRow, signedInMonth } from '../../lib/volunteerHours'
 import { todayInLondon } from '../../lib/today'
 
 function BarChart({ data, color, height = 140 }) {
@@ -39,10 +40,11 @@ export default function VolunteersReports({ org, volunteers, sessionStaff, sessi
   }))
 
   // Hours per month, last 6 months
+  // Volunteers' register time, by the month they were signed in.
   const hoursByMonth = months.map(key => ({
     label: monthLabel(key),
-    value: Math.round(completedStaff.filter(ss => sessionsById[ss.session_id]?.session_date?.slice(0, 7) === key)
-      .reduce((sum, ss) => sum + sessionHours(sessionsById[ss.session_id]), 0)),
+    value: Math.round(sessionStaff.filter(ss => isVolunteerRow(ss) && signedInMonth(ss) === key)
+      .reduce((sum, ss) => sum + teamMinutes(ss, sessionsById[ss.session_id]), 0) / 60),
   }))
 
   // Coverage per upcoming session
@@ -69,8 +71,8 @@ export default function VolunteersReports({ org, volunteers, sessionStaff, sessi
   function exportCsv() {
     const rows = [...csvPreamble(org, 'Volunteer programme report'), ['Name', 'Email', 'Status', 'Sessions Completed', 'Hours']]
     volunteers.forEach(v => {
-      const mine = completedStaff.filter(ss => ss.volunteer_id === v.id || ss.user_id === v.id)
-      const hrs = Math.round(mine.reduce((sum, ss) => sum + sessionHours(sessionsById[ss.session_id]), 0))
+      const mine = sessionStaff.filter(ss => (ss.volunteer_id === v.id || ss.user_id === v.id) && ss.signed_in_at)
+      const hrs = Math.round(mine.reduce((sum, ss) => sum + teamMinutes(ss, sessionsById[ss.session_id]), 0) / 60 * 10) / 10
       rows.push([v.full_name || '', v.email || '', v.status || '', mine.length, hrs])
     })
     const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')

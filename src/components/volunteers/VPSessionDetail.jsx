@@ -1,148 +1,105 @@
-import React, { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import React, { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { activityTheme } from './vp_shared'
-import SignedImg from '../shared/SignedImg'
+import { orgBrand } from '../shared/OrgPageHero'
+import { sessionPhase } from '../../lib/sessionPhase'
 import Icon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
-export default function VPSessionDetail({ session, org, onClose, onNavigateTab, primary }) {
+// One session, for a volunteer: when, where, who else is on the team, and
+// booking. On the day, "Open register" opens the same live register the staff
+// use (in its volunteer mode), where the volunteer's hours tick on the Team
+// tab. It used to open a cut-down copy of the register that showed no
+// allergies and recorded nothing in the audit trail.
+
+const hhmm = t => String(t || '').slice(0, 5)
+
+export default function VPSessionDetail({ session, org, booking, volunteerCount = 0, saving, onBook, onClose, onNavigateTab, onOpenRegister }) {
+  const brand = orgBrand(org)
   const theme = activityTheme(session.session_type)
-  const todayStr = new Date().toLocaleDateString('en-CA')
-  const isToday = session.session_date === todayStr
-  const isLiveNow = isToday && (() => {
-    const now = new Date()
-    const start = session.start_time ? new Date(`${session.session_date}T${session.start_time}`) : null
-    const end = session.end_time ? new Date(`${session.session_date}T${session.end_time}`) : null
-    return (!start || start <= now) && (!end || end >= now)
-  })()
-
-  const [showRegister, setShowRegister] = useState(false)
-  const [staff, setStaff] = useState([])
+  const phase = sessionPhase(session)
+  const [team, setTeam] = useState([])
 
   useEffect(() => {
-    supabase.from('session_staff').select('*, user_profiles(full_name, photo_url, role)').eq('session_id', session.id).then(({ data }) => setStaff(data || []))
+    supabase.from('session_staff').select('id, role, user_profiles(full_name)').eq('session_id', session.id)
+      .then(({ data }) => setTeam(data || []))
   }, [session.id])
 
+  useEffect(() => {
+    const onKey = e => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  const names = team.map(t => t.user_profiles?.full_name).filter(Boolean)
+  const limit = session.volunteer_limit || null
+  const full = !booking && limit && volunteerCount >= limit
+  const onTheDay = phase === 'live' || (phase === 'upcoming' && session.register_opened_at)
+
   const row = (icon, label, value) => value ? (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '10px 0', borderBottom: '1px solid rgba(15,23,42,0.05)' }}>
-      <span style={{ fontSize: 16, width: 22 }}>{icon}</span>
-      <div>
-        <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase' }}>{label}</div>
-        <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)', marginTop: 2 }}>{value}</div>
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--border-soft)' }}>
+      <span aria-hidden="true" style={{ fontSize: 17, width: 24, textAlign: 'center' }}><Icon name={icon} /></span>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text3)' }}>{label}</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginTop: 2, lineHeight: 1.45, overflowWrap: 'anywhere' }}>{value}</div>
       </div>
     </div>
   ) : null
 
-  return (
-    <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', stiffness: 300, damping: 32 }}
-      style={{ position: 'fixed', inset: 0, background: 'var(--surface)', zIndex: 600, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+  const btn = { minHeight: 48, borderRadius: 13, fontWeight: 800, fontSize: 14.5, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, textDecoration: 'none', boxSizing: 'border-box' }
 
-      <div style={{ background: theme.gradient, padding: '18px 18px 22px', color: '#fff', position: 'relative', flexShrink: 0 }}>
-        <button onClick={onClose} style={{ position: 'absolute', top: 16, left: 16, width: 32, height: 32, borderRadius: 10, background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer' }}><Icon name="←" /></button>
-        {isLiveNow && (
-          <motion.div animate={{ opacity: [1, 0.6, 1] }} transition={{ duration: 1.5, repeat: Infinity }}
-            style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.25)', borderRadius: 99, padding: '4px 11px', fontSize: 10, fontWeight: 900 }}>● LIVE</motion.div>
-        )}
-        <div style={{ textAlign: 'center', marginTop: 30 }}>
-          <div style={{ fontSize: 42, marginBottom: 8 }}><Icon name={theme.icon} /></div>
-          <div style={{ fontSize: 20, fontWeight: 900 }}>{session.title}</div>
-          <div style={{ fontSize: 12.5, opacity: 0.9, marginTop: 4 }}>{new Date(session.session_date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })} · {session.start_time}{session.end_time ? ` – ${session.end_time}` : ''}</div>
+  return (
+    <motion.div role="dialog" aria-modal="true" aria-label={session.title}
+      initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+      style={{ position: 'absolute', inset: 0, background: 'var(--surface2)', zIndex: 600, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+      <div style={{ background: brand.hero, padding: 'calc(env(safe-area-inset-top, 0px) + 10px) 16px 20px', color: '#fff', position: 'relative', flexShrink: 0, overflow: 'hidden' }}>
+        <div aria-hidden="true" style={{ position: 'absolute', width: 240, height: 240, right: -100, top: -120, borderRadius: '50%', border: `2px solid ${withAlpha(brand.secondary, '99')}` }} />
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <button onClick={onClose} style={{ minHeight: 44, padding: '0 14px 0 10px', borderRadius: 12, background: '#ffffff1f', border: '1px solid #ffffff40', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <Icon name="←" /> Back
+          </button>
+          {phase === 'live' && <span style={{ background: '#fff', color: '#15803D', borderRadius: 99, padding: '5px 12px', fontSize: 12, fontWeight: 900 }}>● Live now</span>}
+        </div>
+        <div style={{ position: 'relative', marginTop: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: '#ffffffd9' }}><Icon name={theme.icon} /> {theme.label}</div>
+          <h2 style={{ margin: '4px 0 0', fontSize: 24, fontWeight: 900, lineHeight: 1.15 }}>{session.title}</h2>
+          <div style={{ fontSize: 14, color: '#ffffffe6', marginTop: 6 }}>
+            {new Date(`${session.session_date}T12:00:00`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} · {hhmm(session.start_time)}{session.end_time ? `–${hhmm(session.end_time)}` : ''}
+          </div>
         </div>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '4px 20px 100px' }}>
-        {row('📍', 'Location', session.location)}
-        {row('🎫', 'Type', theme.label)}
-        {row('👥', 'Volunteer Staff', staff.length ? staff.map(s => s.user_profiles?.full_name).filter(Boolean).join(', ') : null)}
-        {row('🔢', 'Capacity', session.max_capacity ? `${session.max_capacity} young people` : null)}
-        {row('📝', 'Description', session.description)}
+      <div className="ls-scroll" style={{ flex: 1, overflowY: 'auto', padding: '6px 16px 24px' }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '2px 16px', marginTop: 10 }}>
+          {row('📍', 'Where', session.location)}
+          {row('👥', 'Team', names.length ? names.join(', ') : 'No one yet')}
+          {row('🙋', 'Volunteer places', limit ? `${Math.max(0, limit - volunteerCount)} of ${limit} left` : null)}
+          {row('📝', 'About this session', session.description)}
+        </div>
 
-        {isLiveNow && (
-          <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <button onClick={() => setShowRegister(true)} style={{ padding: '13px', borderRadius: 14, border: 'none', background: theme.gradient, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}><Icon name="📖" /> Open Register</button>
-            <button onClick={() => onNavigateTab('messages')} style={{ padding: '13px', borderRadius: 14, border: '1.5px solid rgba(15,23,42,0.1)', background: 'var(--surface)', color: 'var(--text2)', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}><Icon name="💬" /> Message Staff</button>
-          </div>
-        )}
-
-        <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: session.location ? '1fr 1fr' : '1fr', gap: 10 }}>
-          {session.location && (
-            <a href={`https://maps.google.com/?q=${encodeURIComponent(session.location)}`} target="_blank" rel="noreferrer"
-              style={{ padding: '13px', borderRadius: 14, border: '1.5px solid rgba(15,23,42,0.1)', textAlign: 'center', color: 'var(--text2)', fontWeight: 800, fontSize: 13, textDecoration: 'none' }}><Icon name="🧭" /> Navigate</a>
+        <div style={{ display: 'grid', gap: 10, marginTop: 14 }}>
+          {booking && onTheDay && (
+            <button onClick={onOpenRegister} style={{ ...btn, border: 'none', background: 'var(--org-primary, #1B9AAA)', color: 'var(--org-on-primary, #fff)' }}>
+              <Icon name="📖" /> Open register
+            </button>
           )}
-          <a href="tel:999" style={{ padding: '13px', borderRadius: 14, border: '1.5px solid var(--danger-border)', textAlign: 'center', color: 'var(--danger-text)', fontWeight: 800, fontSize: 13, textDecoration: 'none' }}><Icon name="📞" /> Emergency</a>
-        </div>
-      </div>
-
-      <AnimatePresence>
-        {showRegister && <VPRegister session={session} org={org} primary={primary} theme={theme} onClose={() => setShowRegister(false)} />}
-      </AnimatePresence>
-    </motion.div>
-  )
-}
-
-function VPRegister({ session, org, primary, theme, onClose }) {
-  const [rows, setRows] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [busy, setBusy] = useState(null)
-
-  const load = useCallback(async () => {
-    const { data } = await supabase.from('attendance').select('*, children(id, first_name, last_name, photo_url, has_epipen, has_asthma, takes_medication)').eq('session_id', session.id).order('created_at')
-    setRows(data || [])
-    setLoading(false)
-  }, [session.id])
-
-  useEffect(() => { load() }, [load])
-
-  const toggle = async (row) => {
-    setBusy(row.id)
-    const next = row.status === 'signed_in' ? 'signed_out' : 'signed_in'
-    const patch = next === 'signed_in' ? { status: 'signed_in', signed_in_at: new Date().toISOString() } : { status: 'signed_out', signed_out_at: new Date().toISOString() }
-    await supabase.from('attendance').update(patch).eq('id', row.id)
-    setRows(rs => rs.map(r => r.id === row.id ? { ...r, ...patch } : r))
-    setBusy(null)
-  }
-
-  const signedInCount = rows.filter(r => r.status === 'signed_in').length
-
-  return (
-    <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', stiffness: 300, damping: 32 }}
-      style={{ position: 'fixed', inset: 0, background: 'var(--surface)', zIndex: 650, display: 'flex', flexDirection: 'column' }}>
-      <div style={{ background: theme.gradient, padding: '16px 18px', color: '#fff', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-        <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: 15, cursor: 'pointer' }}><Icon name="✕" /></button>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 15, fontWeight: 900 }}>Register — {session.title}</div>
-          <div style={{ fontSize: 11.5, opacity: 0.85 }}>{signedInCount} / {rows.length} signed in</div>
-        </div>
-      </div>
-      <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-faint)' }}>Loading register…</div>
-        ) : rows.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-faint)' }}>No one on the register for this session yet.</div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {rows.map(r => {
-              const c = r.children
-              if (!c) return null
-              const alert = c.has_epipen || c.has_asthma || c.takes_medication
-              return (
-                <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 14, border: '1.5px solid rgba(15,23,42,0.08)' }}>
-                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--surface-hover)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: 'var(--text3)', flexShrink: 0 }}>
-                    {c.photo_url ? <SignedImg bucket="gallery" src={c.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : `${c.first_name?.[0] || ''}${c.last_name?.[0] || ''}`}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>{c.first_name} {c.last_name}</div>
-                    {alert && <div style={{ fontSize: 10.5, color: 'var(--danger-text)', fontWeight: 700 }}><Icon name="⚠" /> Medical alert</div>}
-                  </div>
-                  <button onClick={() => toggle(r)} disabled={busy === r.id}
-                    style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: r.status === 'signed_in' ? 'var(--danger-bg)' : theme.gradient, color: r.status === 'signed_in' ? '#DC2626' : 'var(--surface)', fontWeight: 800, fontSize: 11.5, cursor: 'pointer', flexShrink: 0 }}>
-                    {busy === r.id ? '…' : r.status === 'signed_in' ? 'Sign Out' : 'Sign In'}
-                  </button>
-                </div>
-              )
-            })}
+          {!booking?.signed_in_at && phase !== 'completed' && (
+            <button onClick={onBook} disabled={saving || full}
+              style={{ ...btn, border: booking ? '1.5px solid var(--border)' : 'none', background: booking ? 'var(--surface)' : full ? 'var(--surface)' : 'var(--org-primary, #1B9AAA)', color: booking ? 'var(--text2)' : full ? 'var(--text-faint)' : 'var(--org-on-primary, #fff)' }}>
+              {saving ? 'Saving…' : booking ? 'Cancel my booking' : full ? 'Volunteer places full' : 'Book onto this session'}
+            </button>
+          )}
+          <div style={{ display: 'grid', gridTemplateColumns: session.location ? '1fr 1fr' : '1fr', gap: 10 }}>
+            {session.location && (
+              <a href={`https://maps.google.com/?q=${encodeURIComponent(session.location)}`} target="_blank" rel="noreferrer"
+                style={{ ...btn, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)' }}><Icon name="🧭" /> Directions</a>
+            )}
+            <button onClick={() => onNavigateTab('messages')} style={{ ...btn, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)' }}><Icon name="💬" /> Message the team</button>
           </div>
-        )}
+          <a href="tel:999" style={{ ...btn, border: '1.5px solid var(--danger-border)', background: 'var(--danger-bg)', color: 'var(--danger-text)' }}><Icon name="📞" /> Emergency: call 999</a>
+        </div>
       </div>
     </motion.div>
   )

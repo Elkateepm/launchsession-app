@@ -9,6 +9,12 @@ import VPSessionDetail from './VPSessionDetail'
 import VPMessages from './VPMessages'
 import VPProfile from './VPProfile'
 import VPQuickActionMenu from './VPQuickActionMenu'
+import VPHours from './VPHours'
+import LiveRegister from '../registers/LiveRegister'
+import { OrgLogo, orgBrand } from '../shared/OrgPageHero'
+import { applyBrandPalette } from '../../lib/brandColors'
+import { applyBrandTheme } from '../../lib/brandTheme'
+import { todayInLondon } from '../../lib/today'
 import { signOne } from '../../lib/storageUrl'
 import { uploadStaffPhoto } from '../../lib/staffPhoto'
 import Icon from '../../lib/icons'
@@ -24,7 +30,7 @@ const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sun
 const TIMES = ['Morning','Afternoon','Evening']
 
 const s = {
-  wrap: { minHeight:'100dvh', background:'radial-gradient(circle at 15% 10%, #16283d 0%, #0A121D 45%, #060a11 100%)', display:'flex', alignItems:'center', justifyContent:'center', padding:20, fontFamily:'Inter,sans-serif', position:'relative', overflow:'hidden' },
+  wrap: (brand) => ({ minHeight:'100dvh', background: brand?.hero || 'radial-gradient(circle at 15% 10%, #16283d 0%, #0A121D 45%, #060a11 100%)', display:'flex', alignItems:'center', justifyContent:'center', padding:'calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 16px)', boxSizing:'border-box', fontFamily:'inherit', position:'relative', overflow:'hidden' }),
   card: { background: 'var(--surface)', borderRadius:28, width:'100%', maxWidth:480, overflow:'hidden', boxShadow:'0 40px 100px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06)', position:'relative', zIndex:1 },
   head: (color) => ({ background:`linear-gradient(135deg, ${color||'#1B9AAA'}, ${withAlpha(color||'#1B9AAA', 'dd')})`, padding:'28px 28px 20px', color:'#fff', position:'relative', overflow:'hidden' }),
   body: { padding:'28px 28px 24px' },
@@ -37,7 +43,7 @@ const s = {
 }
 
 // Ambient floating gradient orbs used behind auth/onboarding cards — purely decorative
-function AmbientOrbs({ color }) {
+function AmbientOrbs({ color, secondary }) {
   return (
     <>
       <motion.div
@@ -48,7 +54,7 @@ function AmbientOrbs({ color }) {
       <motion.div
         animate={{ y:[0,16,0], x:[0,-12,0] }}
         transition={{ duration:11, repeat:Infinity, ease:'easeInOut' }}
-        style={{ position:'absolute', bottom:'10%', right:'10%', width:260, height:260, borderRadius:'50%', background:'rgba(99,102,241,0.14)', filter:'blur(60px)', pointerEvents:'none' }}
+        style={{ position:'absolute', bottom:'10%', right:'10%', width:260, height:260, borderRadius:'50%', background: withAlpha(secondary || '#ffffff', '33'), filter:'blur(60px)', pointerEvents:'none' }}
       />
     </>
   )
@@ -75,7 +81,8 @@ function OnboardingWizard({ user, org, onComplete }) {
   const [photoUrl, setPhotoUrl] = useState(null)
   const [photoPath, setPhotoPath] = useState(null)
   const photoRef = useRef(null)
-  const primary = (org?.logo_url || (org?.primary_color && org.primary_color !== '#1B9AAA')) ? (org?.primary_color || '#1B9AAA') : '#7C5CFC'
+  const brand = orgBrand(org)
+  const primary = brand.ink
   const TOTAL = 12
 
   const [f, setF] = useState({
@@ -145,7 +152,7 @@ function OnboardingWizard({ user, org, onComplete }) {
     <div key={0} style={s.body}>
       <div style={{ textAlign:'center', padding:'20px 0' }}>
         <div style={{ fontSize:56, marginBottom:16 }}><Icon name="👋" /></div>
-        <div style={{ fontSize:24, fontWeight:900, color:'#111', marginBottom:10 }}>Welcome to {org?.name}!</div>
+        <div style={{ fontSize:24, fontWeight:900, color:'var(--text)', marginBottom:10 }}>Welcome to {org?.name}!</div>
         <div style={{ fontSize:15, color: 'var(--text3)', lineHeight:1.6, marginBottom:28 }}>Thanks for joining. Let's get you set up so we can match you with the right sessions.<br/><br/>This takes about 2–3 minutes.</div>
         <button onClick={()=>setStep(1)} style={s.btn(primary)}>Let's get started →</button>
       </div>
@@ -153,7 +160,7 @@ function OnboardingWizard({ user, org, onComplete }) {
 
     // 1: About You
     <div key={1} style={s.body}>
-      <div style={{ fontSize:18, fontWeight:900, color:'#111', marginBottom:4 }}>About You</div>
+      <div style={{ fontSize:18, fontWeight:900, color:'var(--text)', marginBottom:4 }}>About You</div>
       <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:20 }}>Tell us a bit about yourself</div>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
         <div><label style={s.label}>First name *</label><input style={s.inp} value={f.first_name} onChange={e=>set('first_name',e.target.value)} placeholder="Sarah" /></div>
@@ -178,7 +185,7 @@ function OnboardingWizard({ user, org, onComplete }) {
 
     // 2: Emergency Contact
     <div key={2} style={s.body}>
-      <div style={{ fontSize:18, fontWeight:900, color:'#111', marginBottom:4 }}>Emergency Contact</div>
+      <div style={{ fontSize:18, fontWeight:900, color:'var(--text)', marginBottom:4 }}>Emergency Contact</div>
       <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:20 }}>Essential for safeguarding — who should we contact in an emergency?</div>
       <label style={s.label}>Contact name *</label>
       <input style={s.inp} value={f.emergency_contact_name} onChange={e=>set('emergency_contact_name',e.target.value)} placeholder="Jane Jones" />
@@ -191,7 +198,7 @@ function OnboardingWizard({ user, org, onComplete }) {
 
     // 3: Address
     <div key={3} style={s.body}>
-      <div style={{ fontSize:18, fontWeight:900, color:'#111', marginBottom:4 }}>Your Address</div>
+      <div style={{ fontSize:18, fontWeight:900, color:'var(--text)', marginBottom:4 }}>Your Address</div>
       <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:20 }}>Useful for trips and emergencies</div>
       <label style={s.label}>Postcode</label>
       <input style={s.inp} value={f.postcode} onChange={e=>set('postcode',e.target.value)} placeholder="SW1A 1AA" />
@@ -204,7 +211,7 @@ function OnboardingWizard({ user, org, onComplete }) {
 
     // 4: Availability
     <div key={4} style={s.body}>
-      <div style={{ fontSize:18, fontWeight:900, color:'#111', marginBottom:4 }}>Your Availability</div>
+      <div style={{ fontSize:18, fontWeight:900, color:'var(--text)', marginBottom:4 }}>Your Availability</div>
       <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:16 }}>When are you usually free to volunteer?</div>
       <div style={{ fontSize:12, fontWeight:700, color: 'var(--text3)', textTransform:'uppercase', letterSpacing:0.6, marginBottom:8 }}>Days</div>
       <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:18 }}>
@@ -219,7 +226,7 @@ function OnboardingWizard({ user, org, onComplete }) {
 
     // 5: Interests
     <div key={5} style={s.body}>
-      <div style={{ fontSize:18, fontWeight:900, color:'#111', marginBottom:4 }}>Your Interests</div>
+      <div style={{ fontSize:18, fontWeight:900, color:'var(--text)', marginBottom:4 }}>Your Interests</div>
       <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:16 }}>What would you enjoy helping with?</div>
       <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:18 }}>
         {INTERESTS.map(i=><button key={i} onClick={()=>tog('interests',i)} style={s.chip(f.interests.includes(i),primary)}>{i}</button>)}
@@ -229,7 +236,7 @@ function OnboardingWizard({ user, org, onComplete }) {
 
     // 6: Experience
     <div key={6} style={s.body}>
-      <div style={{ fontSize:18, fontWeight:900, color:'#111', marginBottom:4 }}>Your Experience</div>
+      <div style={{ fontSize:18, fontWeight:900, color:'var(--text)', marginBottom:4 }}>Your Experience</div>
       <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:16 }}>Have you volunteered before?</div>
       <div style={{ display:'flex', gap:10, marginBottom:18 }}>
         {['Yes','No'].map(v=><button key={v} onClick={()=>set('volunteered_before',v==='Yes')} style={{ ...s.chip(f.volunteered_before===(v==='Yes'),primary), flex:1, textAlign:'center' }}>{v}</button>)}
@@ -243,13 +250,13 @@ function OnboardingWizard({ user, org, onComplete }) {
 
     // 7: Qualifications
     <div key={7} style={s.body}>
-      <div style={{ fontSize:18, fontWeight:900, color:'#111', marginBottom:4 }}>Qualifications</div>
+      <div style={{ fontSize:18, fontWeight:900, color:'var(--text)', marginBottom:4 }}>Qualifications</div>
       <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:16 }}>Select any you currently hold — you can upload documents later</div>
       <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:18 }}>
         {QUALIFICATIONS.map(q=>(
           <label key={q} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', borderRadius:12, border:`1.5px solid ${f.qualifications.includes(q)?primary:'var(--border)'}`, background:f.qualifications.includes(q)?primary+'08':'var(--surface2)', cursor:'pointer' }}>
             <input type="checkbox" checked={f.qualifications.includes(q)} onChange={()=>tog('qualifications',q)} style={{ accentColor:primary, width:16, height:16 }} />
-            <span style={{ fontSize:14, fontWeight:600, color:'#111' }}>{q}</span>
+            <span style={{ fontSize:14, fontWeight:600, color:'var(--text)' }}>{q}</span>
           </label>
         ))}
       </div>
@@ -258,7 +265,7 @@ function OnboardingWizard({ user, org, onComplete }) {
 
     // 8: Working Preferences
     <div key={8} style={s.body}>
-      <div style={{ fontSize:18, fontWeight:900, color:'#111', marginBottom:4 }}>Working Preferences</div>
+      <div style={{ fontSize:18, fontWeight:900, color:'var(--text)', marginBottom:4 }}>Working Preferences</div>
       <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:16 }}>What would you like to help with?</div>
       <div style={{ fontSize:12, fontWeight:700, color: 'var(--text3)', textTransform:'uppercase', letterSpacing:0.6, marginBottom:8 }}>Age groups</div>
       <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:18 }}>
@@ -275,7 +282,7 @@ function OnboardingWizard({ user, org, onComplete }) {
 
     // 9: Health & Accessibility
     <div key={9} style={s.body}>
-      <div style={{ fontSize:18, fontWeight:900, color:'#111', marginBottom:4 }}>Health & Accessibility</div>
+      <div style={{ fontSize:18, fontWeight:900, color:'var(--text)', marginBottom:4 }}>Health & Accessibility</div>
       <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:20 }}>All fields are optional — only share what you are comfortable with</div>
       <label style={s.label}>Medical conditions</label>
       <textarea style={{ ...s.inp, height:72, resize:'none' }} value={f.medical_conditions} onChange={e=>set('medical_conditions',e.target.value)} placeholder="e.g. Asthma, diabetes..." />
@@ -290,7 +297,7 @@ function OnboardingWizard({ user, org, onComplete }) {
 
     // 10: Communication
     <div key={10} style={s.body}>
-      <div style={{ fontSize:18, fontWeight:900, color:'#111', marginBottom:4 }}>Communication</div>
+      <div style={{ fontSize:18, fontWeight:900, color:'var(--text)', marginBottom:4 }}>Communication</div>
       <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:16 }}>How would you like to hear from us?</div>
       <div style={{ fontSize:12, fontWeight:700, color: 'var(--text3)', textTransform:'uppercase', letterSpacing:0.6, marginBottom:8 }}>Preferred contact</div>
       <div style={{ display:'flex', gap:8, marginBottom:18 }}>
@@ -300,7 +307,7 @@ function OnboardingWizard({ user, org, onComplete }) {
       <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:18 }}>
         {[['session_reminders','Session reminders'],['new_opportunities','New opportunities'],['announcements','Announcements'],['mentoring_updates','Mentoring updates']].map(([k,label])=>(
           <label key={k} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 14px', borderRadius:12, border:'1.5px solid var(--border)', background: 'var(--surface2)', cursor:'pointer' }}>
-            <span style={{ fontSize:14, fontWeight:600, color:'#111' }}>{label}</span>
+            <span style={{ fontSize:14, fontWeight:600, color:'var(--text)' }}>{label}</span>
             <input type="checkbox" checked={f.notification_prefs[k]} onChange={()=>togNotif(k)} style={{ accentColor:primary, width:16, height:16 }} />
           </label>
         ))}
@@ -310,13 +317,13 @@ function OnboardingWizard({ user, org, onComplete }) {
 
     // 11: Agreements
     <div key={11} style={s.body}>
-      <div style={{ fontSize:18, fontWeight:900, color:'#111', marginBottom:4 }}>Agreements</div>
+      <div style={{ fontSize:18, fontWeight:900, color:'var(--text)', marginBottom:4 }}>Agreements</div>
       <div style={{ fontSize:13, color: 'var(--text3)', marginBottom:16 }}>Please read and agree to the following</div>
       <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:18 }}>
         {[['volunteer_agreement','Volunteer agreement'],['safeguarding_policy','Safeguarding policy'],['privacy_policy','Privacy policy'],['photo_consent','Photo consent']].map(([k,label])=>(
           <label key={k} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', borderRadius:12, border:`1.5px solid ${f.agreements[k]?primary:'var(--border)'}`, background:f.agreements[k]?primary+'08':'var(--surface2)', cursor:'pointer' }}>
             <input type="checkbox" checked={f.agreements[k]} onChange={()=>togAgree(k)} style={{ accentColor:primary, width:16, height:16 }} />
-            <span style={{ fontSize:14, fontWeight:600, color:'#111' }}>{label}</span>
+            <span style={{ fontSize:14, fontWeight:600, color:'var(--text)' }}>{label}</span>
           </label>
         ))}
       </div>
@@ -328,8 +335,8 @@ function OnboardingWizard({ user, org, onComplete }) {
   ]
 
   return (
-    <div style={s.wrap}>
-      <AmbientOrbs color={primary} />
+    <div style={s.wrap(brand)}>
+      <AmbientOrbs color={primary} secondary={brand.secondary} />
       <motion.div
         initial={{ opacity:0, y:16, scale:0.98 }}
         animate={{ opacity:1, y:0, scale:1 }}
@@ -382,11 +389,17 @@ export default function VolunteerPortal() {
   const [error, setError] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const brandActivated = !!(org?.logo_url || (org?.primary_color && org.primary_color !== '#1B9AAA'))
-  const primary = brandActivated ? (org?.primary_color || '#1B9AAA') : '#7C5CFC'
+  const [forgotSent, setForgotSent] = useState(false)
+  const brand = orgBrand(org)
+  const primary = brand.ink
 
   useEffect(() => {
-    supabase.from('organisations').select('*').eq('slug', SLUG).single().then(({data}) => setOrg(data))
+    supabase.from('organisations').select('*').eq('slug', SLUG).single().then(({data}) => {
+      setOrg(data)
+      // The portal sits outside the dashboard, so it applies the
+      // organisation's palette and font itself.
+      if (data) { applyBrandPalette(data.primary_color || '#1B9AAA'); applyBrandTheme(data) }
+    })
     supabase.auth.getSession().then(({data:{session}}) => { setAuthUser(session?.user||null); if(!session) setView('login') })
     const {data:{subscription}} = supabase.auth.onAuthStateChange((_e,s) => setAuthUser(s?.user||null))
     return () => subscription.unsubscribe()
@@ -411,6 +424,22 @@ export default function VolunteerPortal() {
     setView('dashboard')
   }
 
+  // The same reset email as the main sign-in page, in the organisation's
+  // colours, landing back on its password page.
+  async function handleForgot() {
+    if (!email.trim()) { setError('Type your email address above first, then press Forgotten your password.'); return }
+    setError('')
+    const { error: err } = await supabase.functions.invoke('send-password-reset-email', {
+      body: {
+        email: email.trim(), org_name: org?.name, org_slug: org?.slug,
+        org_logo: org?.branding_enabled && org?.logo_url ? org.logo_url : window.location.origin + '/logo.png', org_color: org?.primary_color,
+        redirect_to: window.location.origin + '/reset-password' + (org?.slug ? '?org=' + encodeURIComponent(org.slug) : ''),
+      },
+    })
+    if (err) { setError('We could not send the reset link. Check your connection and try again.'); return }
+    setForgotSent(true)
+  }
+
   async function handleAuth(e) {
     e.preventDefault(); setAuthLoading(true); setError('')
     const {error:err} = await supabase.auth.signInWithPassword({email,password})
@@ -419,11 +448,11 @@ export default function VolunteerPortal() {
   }
 
   if(view==='loading') return (
-    <div style={{ minHeight:'100dvh', background:'radial-gradient(circle at 15% 10%, #16283d 0%, #0A121D 45%, #060a11 100%)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+    <div role="status" aria-label="Loading" style={{ minHeight:'100dvh', background: org ? brand.hero : 'var(--surface2)', display:'flex', alignItems:'center', justifyContent:'center' }}>
       <motion.div
         animate={{ rotate:360 }}
         transition={{ duration:0.8, repeat:Infinity, ease:'linear' }}
-        style={{ width:36, height:36, border:`3px solid ${primary}`, borderTop:'3px solid transparent', borderRadius:'50%' }}
+        style={{ width:36, height:36, border:`3px solid ${org ? '#fff' : primary}`, borderTop:'3px solid transparent', borderRadius:'50%' }}
       />
     </div>
   )
@@ -431,8 +460,8 @@ export default function VolunteerPortal() {
   if(view==='onboarding') return <OnboardingWizard user={authUser} org={org} onComplete={()=>{ validateAndLoad() }} />
 
   if(view==='pending') return (
-    <div style={s.wrap}>
-      <AmbientOrbs color={primary} />
+    <div style={s.wrap(brand)}>
+      <AmbientOrbs color={primary} secondary={brand.secondary} />
       <motion.div initial={{ opacity:0, y:16, scale:0.98 }} animate={{ opacity:1, y:0, scale:1 }} transition={{ duration:0.35 }} style={{ ...s.card, textAlign:'center' }}>
         <div style={s.head(primary)}><div style={{ fontSize:32 }}>⏳</div><div style={{ fontSize:20, fontWeight:900, marginTop:8 }}>Pending Approval</div></div>
         <div style={s.body}>
@@ -444,8 +473,8 @@ export default function VolunteerPortal() {
   )
 
   if(view==='rejected') return (
-    <div style={s.wrap}>
-      <AmbientOrbs color="#EF4444" />
+    <div style={s.wrap(brand)}>
+      <AmbientOrbs color="#EF4444" secondary={brand.secondary} />
       <motion.div initial={{ opacity:0, y:16, scale:0.98 }} animate={{ opacity:1, y:0, scale:1 }} transition={{ duration:0.35 }} style={{ ...s.card, textAlign:'center' }}>
         <div style={s.head('#EF4444')}><div style={{ fontSize:32 }}><Icon name="❌" /></div><div style={{ fontSize:20, fontWeight:900, marginTop:8 }}>Application Unsuccessful</div></div>
         <div style={s.body}>
@@ -457,57 +486,34 @@ export default function VolunteerPortal() {
   )
 
   if(view==='login') return (
-    <div style={s.wrap}>
-      <AmbientOrbs color={primary} />
+    <div style={s.wrap(brand)}>
+      <AmbientOrbs color={primary} secondary={brand.secondary} />
       <motion.div initial={{ opacity:0, y:16, scale:0.98 }} animate={{ opacity:1, y:0, scale:1 }} transition={{ duration:0.35, ease:'easeOut' }} style={s.card}>
-        <div style={{ background: `linear-gradient(135deg, ${primary}, var(--org-a85))`, padding:'28px 28px 22px', color:'#fff', position:'relative', overflow:'hidden' }}>
-          {/* subtle background glow */}
-          <div style={{ position:'absolute', top:-40, right:-40, width:140, height:140, borderRadius:'50%', background:'rgba(255,255,255,0.08)', pointerEvents:'none' }} />
-          <div style={{ position:'absolute', bottom:-30, left:-20, width:100, height:100, borderRadius:'50%', background:'rgba(0,0,0,0.08)', pointerEvents:'none' }} />
-          {/* Org logo or name */}
-          <div style={{ position:'relative', zIndex:1, marginBottom:16 }}>
-            {brandActivated ? (
-              org?.logo_url ? (
-                <div style={{ display:'inline-flex', alignItems:'center', background: 'var(--surface)', borderRadius:12, padding:'8px 14px', boxShadow:'0 4px 14px rgba(0,0,0,0.15)' }}>
-                  <img src={org.logo_url} alt={org.name} style={{ height:32, maxWidth:150, objectFit:'contain', display:'block' }}
-                    onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex' }} />
-                  <div style={{ display:'none', alignItems:'center', gap:8 }}>
-                    <div style={{ width:26, height:26, borderRadius:7, background:primary, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:900, color:'#fff' }}>{(org?.name||'?')[0].toUpperCase()}</div>
-                    <span style={{ fontSize:13, fontWeight:800, color:'#111' }}>{org?.name}</span>
-                  </div>
-                </div>
-              ) : (
-                <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.15)', borderRadius:10, padding:'6px 12px' }}>
-                  <div style={{ width:26, height:26, borderRadius:7, background:'rgba(255,255,255,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:900 }}>
-                    {(org?.name||'L')[0].toUpperCase()}
-                  </div>
-                  <span style={{ fontSize:13, fontWeight:800, letterSpacing:0.5, textTransform:'uppercase' }}>{org?.name}</span>
-                </div>
-              )
-            ) : (
-              <div style={{ display:'inline-flex', alignItems:'center', background: 'var(--surface)', borderRadius:12, padding:'7px 14px', boxShadow:'0 4px 14px rgba(0,0,0,0.15)' }}>
-                <img src="/logo.png" alt="LaunchSession" style={{ height:26, width:26, objectFit:'contain', marginRight:8 }} />
-                <span style={{ fontSize:14, fontWeight:900, color:'#111' }}>Launch<span style={{ color: 'var(--org-ink)' }}>Session</span></span>
-              </div>
-            )}
+        <div style={{ background: brand.hero, padding:'26px 24px 22px', color:'#fff', position:'relative', overflow:'hidden' }}>
+          <div aria-hidden="true" style={{ position:'absolute', width:220, height:220, right:-90, top:-120, borderRadius:'50%', border:`2px solid ${withAlpha(brand.secondary, '99')}`, pointerEvents:'none' }} />
+          <div style={{ position:'relative', display:'flex', alignItems:'center', gap:12, marginBottom:18 }}>
+            <OrgLogo org={org} height={48} maxWidth={170} />
+            <div style={{ fontSize:15, fontWeight:900, minWidth:0 }}>{org?.name || 'Your organisation'}</div>
           </div>
-          <div style={{ position:'relative', zIndex:1 }}>
-            <div style={{ fontSize:22, fontWeight:900, marginBottom:4 }}>Volunteer Sign In</div>
-            <div style={{ fontSize:13, color:'rgba(255,255,255,0.7)', fontWeight:600 }}>{brandActivated ? 'Welcome back' : `Welcome back to ${org?.name || 'your organisation'}`}</div>
-          </div>
+          <h1 style={{ position:'relative', margin:0, fontSize:24, fontWeight:900 }}>Volunteer sign in</h1>
+          <div style={{ position:'relative', fontSize:14, color:'#ffffffd9', fontWeight:600, marginTop:4 }}>Your sessions, your messages and your hours.</div>
         </div>
         <div style={s.body}>
-          {error && <div style={{ background: 'var(--danger-bg)', border:'1px solid var(--danger-border)', color:'#C00', borderRadius:10, padding:'10px 14px', fontSize:13, marginBottom:16, fontWeight:600 }}>{error}</div>}
+          {error && <div role="alert" style={{ background: 'var(--danger-bg)', border:'1px solid var(--danger-border)', color:'var(--danger-text)', borderRadius:10, padding:'10px 14px', fontSize:13, marginBottom:16, fontWeight:600 }}>{error}</div>}
           <form onSubmit={handleAuth}>
-            <label style={s.label}>Email address</label>
-            <input style={s.inp} type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@email.com" required autoFocus />
-            <label style={s.label}>Password</label>
-            <input style={s.inp} type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••" required />
-            <motion.button whileTap={{ scale:0.97 }} type="submit" disabled={authLoading} style={s.btn(primary)}>{authLoading?'Signing in...':'Sign in →'}</motion.button>
+            <label htmlFor="vp-email" style={s.label}>Email address</label>
+            <input id="vp-email" style={{ ...s.inp, minHeight:48, fontSize:16 }} type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@email.com" required autoFocus />
+            <label htmlFor="vp-password" style={s.label}>Password</label>
+            <input id="vp-password" style={{ ...s.inp, minHeight:48, fontSize:16 }} type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••" required />
+            <motion.button whileTap={{ scale:0.97 }} type="submit" disabled={authLoading} style={{ ...s.btn(primary), minHeight:50 }}>{authLoading?'Signing in...':'Sign in →'}</motion.button>
           </form>
-          <div style={{ textAlign:'center', marginTop:16, fontSize:12, color: 'var(--text-faint)', lineHeight:1.5 }}>
-            New volunteer? Ask {org?.name || 'your organisation'} to send you an invite.
+          <div style={{ textAlign:'center', marginTop:16, fontSize:13, color: 'var(--text3)', lineHeight:1.5 }}>
+            {forgotSent
+              ? <div role="status" style={{ color:'var(--text2)', fontWeight:700 }}>If {email.trim()} has a volunteer account, a link to set a new password is on its way.</div>
+              : <button type="button" onClick={handleForgot} style={{ minHeight:44, border:'none', background:'none', padding:'0 8px', color:'var(--org-ink)', fontWeight:800, fontSize:13, cursor:'pointer', fontFamily:'inherit', textDecoration:'underline' }}>Forgotten your password?</button>}
+            <div style={{ marginTop:8 }}>New volunteer? Ask {org?.name || 'your organisation'} to send you an invite.</div>
           </div>
+          {!org?.branding_enabled && <div style={{ textAlign:'center', marginTop:14, fontSize:11.5, color:'var(--text-faint)' }}>Powered by LaunchSession</div>}
         </div>
       </motion.div>
     </div>
@@ -517,138 +523,184 @@ export default function VolunteerPortal() {
 }
 
 // ─── VOLUNTEER DASHBOARD ──────────────────────────────────────────────────────
+//
+// Built for a phone in one hand: five tabs at the bottom within thumb reach,
+// every control at least 44px, and the organisation's own colours and logo
+// rather than LaunchSession's, as on the rest of the app.
 
-function VolunteerDashboard({ user, profile: initialProfile, org, onSignOut }) {
-  const primary = (org?.logo_url || (org?.primary_color && org.primary_color !== '#1B9AAA')) ? (org?.primary_color || '#1B9AAA') : '#7C5CFC'
+const TABS = [
+  { key: 'today', icon: '🏠', label: 'Today' },
+  { key: 'sessions', icon: '📅', label: 'Sessions' },
+  { key: 'hours', icon: '⏱️', label: 'Hours' },
+  { key: 'messages', icon: '💬', label: 'Messages' },
+  { key: 'profile', icon: '👤', label: 'Me' },
+]
+const tabFromHash = () => {
+  const key = (window.location.hash || '').replace('#', '')
+  return TABS.some(t => t.key === key) ? key : 'today'
+}
+
+export function VolunteerDashboard({ user, profile: initialProfile, org, onSignOut }) {
+  const brand = orgBrand(org)
+  // Buttons and banners carry white text, so they take the brand's ink, which
+  // orgBrand keeps dark enough for it.
+  const primary = brand.ink
   const [profile, setProfile] = useState(initialProfile)
   useEffect(() => { setProfile(initialProfile) }, [initialProfile])
 
-  const [tab, setTab] = useState('today')
+  const [tab, setTabState] = useState(tabFromHash)
+  const setTab = next => {
+    setTabState(next)
+    try { window.history.replaceState(null, '', `#${next}`) } catch (e) { /* ignore */ }
+    scrollRef.current?.scrollTo?.({ top: 0 })
+  }
+  const scrollRef = useRef(null)
   const [profileSub, setProfileSub] = useState(null)
   const [sessions, setSessions] = useState([])
-  const [myBookings, setMyBookings] = useState({})
-  const [attendance, setAttendance] = useState([])
+  const [teamRows, setTeamRows] = useState([])
+  const [sessionsById, setSessionsById] = useState({})
   const [volunteerCounts, setVolunteerCounts] = useState({})
   const [announcements, setAnnouncements] = useState([])
   const [saving, setSaving] = useState(null)
   const [viewingSession, setViewingSession] = useState(null)
+  const [registerSession, setRegisterSession] = useState(null)
   const [quickMenuOpen, setQuickMenuOpen] = useState(false)
   const [forceModal, setForceModal] = useState(null)
+  const [toast, setToast] = useState('')
 
-  // Local calendar date — NOT toISOString(), which converts to UTC and can roll
-  // the date back an hour or two early during BST.
-  const toLocalDateStr = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  const today = toLocalDateStr(new Date())
+  const today = todayInLondon()
 
   async function loadData() {
     if (!org?.id || !user?.id) return
-    const [{ data: sess }, { data: rota }, { data: att }, { data: myAtt }, { data: ann }] = await Promise.all([
-      supabase.from('sessions').select('*').eq('org_id', org.id).gte('session_date', today).order('session_date').order('start_time').limit(30),
+    const [{ data: sess }, { data: mine }, { data: rota }, { data: ann }] = await Promise.all([
+      supabase.from('sessions').select('*').eq('org_id', org.id).gte('session_date', today).order('session_date').order('start_time').limit(40),
       supabase.from('session_staff').select('*').eq('org_id', org.id).eq('user_id', user.id),
-      supabase.from('session_staff').select('session_id').eq('org_id', org.id),
-      supabase.from('volunteer_attendance').select('*').eq('volunteer_id', user.id).eq('org_id', org.id).order('created_at', { ascending: false }),
+      supabase.from('session_staff').select('session_id, role').eq('org_id', org.id),
       supabase.from('announcements').select('*').eq('org_id', org.id).order('pinned', { ascending: false }).order('created_at', { ascending: false }).limit(10),
     ])
-    setSessions(sess || [])
-    const bmap = {}
-    ;(rota || []).forEach(r => { bmap[r.session_id] = r.status || 'pending' })
-    setMyBookings(bmap)
+    const upcoming = sess || []
+    const byId = Object.fromEntries(upcoming.map(x => [x.id, x]))
+    // Past sessions the volunteer was on, for their hours.
+    const missing = [...new Set((mine || []).map(r => r.session_id))].filter(id => !byId[id])
+    if (missing.length) {
+      const { data: past } = await supabase.from('sessions').select('*').eq('org_id', org.id).in('id', missing)
+      ;(past || []).forEach(x => { byId[x.id] = x })
+    }
+    setSessions(upcoming)
+    setSessionsById(byId)
+    setTeamRows(mine || [])
     const counts = {}
-    ;(att || []).forEach(r => { counts[r.session_id] = (counts[r.session_id] || 0) + 1 })
+    ;(rota || []).forEach(r => { if (r.role === 'volunteer') counts[r.session_id] = (counts[r.session_id] || 0) + 1 })
     setVolunteerCounts(counts)
-    setAttendance(myAtt || [])
     setAnnouncements(ann || [])
   }
 
   useEffect(() => { loadData() }, [org?.id, user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  useRealtimeTable('sessions', loadData, { filter: org?.id ? `org_id=eq.${org.id}` : undefined, enabled: !!org?.id, pollInterval: 6000 })
-  useRealtimeTable('session_staff', loadData, { filter: org?.id ? `org_id=eq.${org.id}` : undefined, enabled: !!org?.id, pollInterval: 6000 })
-  useRealtimeTable('volunteer_attendance', loadData, { filter: org?.id ? `org_id=eq.${org.id}` : undefined, enabled: !!org?.id, pollInterval: 8000 })
+  useRealtimeTable('sessions', loadData, { filter: org?.id ? `org_id=eq.${org.id}` : undefined, enabled: !!org?.id, pollInterval: 15000 })
+  useRealtimeTable('session_staff', loadData, { filter: org?.id ? `org_id=eq.${org.id}` : undefined, enabled: !!org?.id, pollInterval: 10000 })
 
+  const flash = message => { setToast(message); setTimeout(() => setToast(''), 3200) }
+
+  const myBookings = Object.fromEntries(teamRows.map(r => [r.session_id, r]))
+
+  // Booking puts the volunteer on the session's team. Cancelling takes them
+  // off again, but only before they have been signed in: after that the row
+  // is their hours.
   async function handleBook(session) {
     setSaving(session.id)
-    const booked = myBookings[session.id]
-    if (booked) {
-      await supabase.from('session_staff').delete().eq('session_id', session.id).eq('user_id', user.id).eq('org_id', org.id)
-      setMyBookings(p => { const n = { ...p }; delete n[session.id]; return n })
-    } else {
-      await supabase.from('session_staff').insert({ session_id: session.id, user_id: user.id, org_id: org.id, role: 'volunteer', status: 'pending' })
-      setMyBookings(p => ({ ...p, [session.id]: 'pending' }))
-    }
+    const mineRow = myBookings[session.id]
+    const { error } = mineRow
+      ? await supabase.from('session_staff').delete().eq('id', mineRow.id).eq('user_id', user.id).is('signed_in_at', null)
+      : await supabase.from('session_staff').insert({ session_id: session.id, user_id: user.id, org_id: org.id, role: 'volunteer' })
     setSaving(null)
+    if (error) {
+      flash(/COMPLIANCE_EXPIRED/.test(error.message || '') ? 'Your checks have expired, so the team needs to update them before you can book.' : 'That did not save. Check your connection and try again.')
+      return
+    }
+    flash(mineRow ? `You are no longer down for ${session.title}.` : `You are down to help at ${session.title}. Thank you!`)
     loadData()
   }
 
-  const todaySessions = sessions.filter(s => s.session_date === today)
-  const futureSessions = sessions.filter(s => s.session_date > today)
+  const todaySessions = sessions.filter(x => x.session_date === today)
+  const futureSessions = sessions.filter(x => x.session_date > today)
+  const myToday = todaySessions.filter(x => myBookings[x.id])
 
-  const goTab = (t, sub) => { setTab(t); if (sub) setProfileSub(sub); }
+  const goTab = (t, sub) => { setTab(t); if (sub) setProfileSub(sub) }
   const openQuickModal = (key) => { setForceModal(key); setQuickMenuOpen(true) }
-
-  const NAV = [
-    { key: 'today', icon: '🏠', label: 'Today' },
-    { key: 'sessions', icon: '📅', label: 'Sessions' },
-    { key: '__plus', icon: '➕', label: '' },
-    { key: 'messages', icon: '💬', label: 'Messages' },
-    { key: 'profile', icon: '👤', label: 'Profile' },
-  ]
 
   return (
     <div style={{ minHeight: '100dvh', background: 'var(--surface-hover)', display: 'flex', justifyContent: 'center' }}>
-    <div style={{ width: '100%', maxWidth: 480, minHeight: '100dvh', background: 'var(--surface2)', display: 'flex', flexDirection: 'column', fontFamily: 'inherit', paddingTop: 'env(safe-area-inset-top)', overflow: 'hidden', position: 'relative', boxShadow: '0 0 70px rgba(15,23,42,0.10)' }}>
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+    <div style={{ width: '100%', maxWidth: 520, height: '100dvh', background: 'var(--surface2)', display: 'flex', flexDirection: 'column', fontFamily: 'inherit', overflow: 'hidden', position: 'relative', boxShadow: '0 0 70px rgba(15,23,42,0.10)' }}>
+      {/* Org bar: the organisation's logo and name, in its colour. */}
+      <header style={{ flexShrink: 0, background: brand.hero, color: '#fff', padding: 'calc(env(safe-area-inset-top, 0px) + 10px) 14px 10px', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <OrgLogo org={org} height={36} maxWidth={120} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 15, fontWeight: 900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{org?.name}</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#ffffffd9' }}>Volunteer</div>
+        </div>
+        <button onClick={() => { setForceModal(null); setQuickMenuOpen(true) }} aria-label="Quick actions"
+          style={{ width: 44, height: 44, borderRadius: 14, border: '1px solid #ffffff40', background: '#ffffff1f', color: '#fff', fontSize: 22, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>+</button>
+      </header>
+
+      <main ref={scrollRef} className="ls-scroll" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
         {tab === 'today' && (
           <VPToday
-            org={org} user={user} profile={profile} sessions={sessions} todaySessions={todaySessions} futureSessions={futureSessions}
-            attendance={attendance} announcements={announcements} volunteerCounts={volunteerCounts} primary={primary}
+            org={org} user={user} profile={profile} todaySessions={myToday} futureSessions={futureSessions.filter(x => myBookings[x.id])}
+            announcements={announcements} primary={primary} teamRows={teamRows} sessionsById={sessionsById}
             onOpenSession={setViewingSession} onNavigate={goTab} onRaiseConcern={() => openQuickModal('concern')}
-            onOpenRegister={setViewingSession}
+            onOpenRegister={setRegisterSession}
           />
         )}
         {tab === 'sessions' && (
-          <VPSessions sessions={sessions} myBookings={myBookings} todayStr={today} onOpenSession={setViewingSession} onBook={handleBook} saving={saving} primary={primary} />
+          <VPSessions sessions={sessions} myBookings={myBookings} volunteerCounts={volunteerCounts} todayStr={today} onOpenSession={setViewingSession} onBook={handleBook} saving={saving} />
         )}
+        {tab === 'hours' && <VPHours org={org} profile={profile} teamRows={teamRows} sessionsById={sessionsById} onNavigate={goTab} />}
         {tab === 'messages' && <VPMessages org={org} user={user} primary={primary} />}
         {tab === 'profile' && (
-          <VPProfile org={org} user={user} profile={profile} attendance={attendance} primary={primary} initialSub={profileSub}
-            onSignOut={onSignOut} onProfileUpdated={setProfile} />
+          <VPProfile org={org} user={user} profile={profile} teamRows={teamRows} sessionsById={sessionsById} primary={primary} initialSub={profileSub}
+            onSignOut={onSignOut} onProfileUpdated={setProfile} onNavigate={goTab} />
         )}
-      </div>
+        {!org?.branding_enabled && <div style={{ textAlign: 'center', padding: '0 0 20px', fontSize: 11.5, color: 'var(--text-faint)' }}>Powered by LaunchSession</div>}
+      </main>
 
-      {/* FLOATING BOTTOM NAV */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, display: 'flex', justifyContent: 'center', padding: '0 14px 14px', pointerEvents: 'none' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, background: 'rgba(20,26,38,0.94)', backdropFilter: 'blur(20px)', borderRadius: 26, padding: '8px 8px', boxShadow: '0 16px 40px rgba(0,0,0,0.3)', pointerEvents: 'auto', maxWidth: 420, width: '100%' }}>
-          {NAV.map(t => {
-            if (t.key === '__plus') {
-              return (
-                <button key="plus" onClick={() => { setForceModal(null); setQuickMenuOpen(true) }}
-                  style={{ width: 52, height: 52, borderRadius: '50%', border: 'none', background: `linear-gradient(135deg, ${primary}, var(--org-a85))`, color: '#fff', fontSize: 22, cursor: 'pointer', marginTop: -20, boxShadow: `0 8px 20px var(--org-a35)`, flexShrink: 0 }}>+</button>
-              )
-            }
-            const active = tab === t.key
-            return (
-              <button key={t.key} onClick={() => setTab(t.key)}
-                style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '9px 4px', border: 'none', background: 'none', cursor: 'pointer' }}>
-                {active && <motion.div layoutId="vpNavPill" style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.1)', borderRadius: 16 }} />}
-                <span style={{ position: 'relative', fontSize: 18 }}><Icon name={t.icon} /></span>
-                <span style={{ position: 'relative', fontSize: 10.5, fontWeight: 800, color: active ? '#fff' : 'rgba(255,255,255,0.72)' }}>{t.label}</span>
-              </button>
-            )
-          })}
-        </div>
-      </div>
+      {/* Tab bar */}
+      <nav aria-label="Volunteer portal" style={{ flexShrink: 0, background: 'var(--surface)', borderTop: '1px solid var(--border)', boxShadow: '0 -10px 24px -20px rgba(15,23,42,0.35)', padding: '6px 6px calc(env(safe-area-inset-bottom, 0px) + 6px)', display: 'grid', gridTemplateColumns: `repeat(${TABS.length}, minmax(0, 1fr))`, gap: 2 }}>
+        {TABS.map(t => {
+          const active = tab === t.key
+          return (
+            <button key={t.key} onClick={() => setTab(t.key)} aria-current={active ? 'page' : undefined}
+              style={{ position: 'relative', minHeight: 56, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, border: 'none', borderRadius: 14, background: 'none', cursor: 'pointer', color: active ? 'var(--org-ink)' : 'var(--text3)', fontFamily: 'inherit' }}>
+              {active && <motion.span layoutId="vpTabPill" aria-hidden="true" style={{ position: 'absolute', inset: '2px 4px', borderRadius: 14, background: 'var(--org-a10, #1B9AAA1a)' }} />}
+              <span aria-hidden="true" style={{ position: 'relative', fontSize: 20, lineHeight: 1 }}><Icon name={t.icon} /></span>
+              <span style={{ position: 'relative', fontSize: 11.5, fontWeight: 800 }}>{t.label}</span>
+            </button>
+          )
+        })}
+      </nav>
+
+      {toast && (
+        <div role="status" style={{ position: 'absolute', left: 16, right: 16, bottom: 'calc(env(safe-area-inset-bottom, 0px) + 84px)', background: '#111827', color: '#fff', borderRadius: 12, padding: '12px 14px', fontSize: 13.5, fontWeight: 600, zIndex: 400, boxShadow: '0 12px 30px -12px rgba(0,0,0,0.5)' }}>{toast}</div>
+      )}
 
       <AnimatePresence>
         {viewingSession && (
-          <VPSessionDetail session={viewingSession} org={org} user={user} primary={primary} onClose={() => setViewingSession(null)} onNavigateTab={goTab} />
+          <VPSessionDetail session={viewingSession} org={org} user={user} booking={myBookings[viewingSession.id]} volunteerCount={volunteerCounts[viewingSession.id] || 0}
+            saving={saving === viewingSession.id} onBook={() => handleBook(viewingSession)}
+            onClose={() => setViewingSession(null)} onNavigateTab={t => { setViewingSession(null); goTab(t) }}
+            onOpenRegister={() => { setRegisterSession(viewingSession); setViewingSession(null) }} />
         )}
       </AnimatePresence>
 
+      {registerSession && (
+        <LiveRegister session={registerSession} org={org} authUserId={user.id} userRole="volunteer"
+          backLabel="Back to the portal" onClose={() => { setRegisterSession(null); loadData() }} />
+      )}
+
       <VPQuickActionMenu
         open={quickMenuOpen} onClose={() => { setQuickMenuOpen(false); setForceModal(null) }} forceModal={forceModal}
-        org={org} user={user} todaySession={todaySessions[0]} onNavigate={goTab}
-        onGoRegister={() => setViewingSession(todaySessions[0])} onGoMessage={() => setTab('messages')}
+        org={org} user={user} profile={profile} todaySession={myToday[0] || null} onNavigate={goTab}
+        onGoRegister={myToday[0] ? () => setRegisterSession(myToday[0]) : null} onGoMessage={() => setTab('messages')}
       />
     </div>
     </div>

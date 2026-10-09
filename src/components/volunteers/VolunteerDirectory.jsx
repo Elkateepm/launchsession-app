@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
-import { Card, SectionTitle, Badge, Avatar, statusStyle, daysUntil, sessionHours, inputStyle, btnPrimary, btnGhost, PURPLE } from './vh_shared'
+import { Card, SectionTitle, Badge, Avatar, statusStyle, daysUntil, inputStyle, btnPrimary, btnGhost, PURPLE } from './vh_shared'
+import { teamMinutes } from '../../lib/volunteerHours'
 import Icon from '../../lib/icons'
 import { todayInLondon } from '../../lib/today'
 
@@ -16,18 +17,20 @@ const FILTERS = [
 function volunteerStats(v, sessionStaff, sessions) {
   const mine = sessionStaff.filter(ss => ss.volunteer_id === v.id || ss.user_id === v.id)
   const sessionsById = Object.fromEntries(sessions.map(s => [s.id, s]))
+  // Hours and attendance come from the register: a session counts when they
+  // were signed in on it (lib/volunteerHours.js), not because they were booked.
   const completed = mine.filter(ss => {
     const s = sessionsById[ss.session_id]
     return s && s.session_date <= todayInLondon()
   })
-  const attended = completed.filter(ss => ss.attended !== false)
-  const hours = completed.reduce((sum, ss) => sum + sessionHours(sessionsById[ss.session_id]), 0)
+  const attended = completed.filter(ss => ss.signed_in_at)
+  const hours = mine.reduce((sum, ss) => sum + teamMinutes(ss, sessionsById[ss.session_id]), 0) / 60
   const attendancePct = completed.length ? Math.round((attended.length / completed.length) * 100) : null
   const upcoming = mine
     .map(ss => sessionsById[ss.session_id])
     .filter(s => s && s.session_date >= todayInLondon())
     .sort((a, b) => a.session_date.localeCompare(b.session_date))[0]
-  return { sessionsCompleted: completed.length, hours: Math.round(hours), attendancePct, nextSession: upcoming }
+  return { sessionsCompleted: attended.length, hours: Math.round(hours), attendancePct, nextSession: upcoming }
 }
 
 export default function VolunteerDirectory({ org, volunteers, sessionStaff, sessions, training, recognition, onMessageVolunteer, onDataChange }) {
