@@ -6,6 +6,8 @@ import SignedImg from '../shared/SignedImg'
 import Icon from '../../lib/icons'
 import { orgFilename } from '../../lib/orgExport'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import RegisterTeam from './RegisterTeam'
+import { formatDuration, teamMinutes } from '../../lib/volunteerHours'
 
 function fmtTime(d) {
   if (!d) return ''
@@ -30,7 +32,7 @@ function downloadText(filename, text, mime = 'text/csv') {
 }
 
 export default function PastSessionRegister({
-  session, org, grouped, rows, staffRows, peopleProfiles, notes, auditLog,
+  session, org, grouped, rows, staffRows, peopleProfiles, teamPeople, notes, auditLog,
   userRole, authUserId, groupLabel, safeguardingCount,
   onClose, onOpenNotes, onOpenChild, onReload, backLabel = 'Back to registers',
 }) {
@@ -53,14 +55,9 @@ export default function PastSessionRegister({
   const canReopen = ['admin', 'owner'].includes(userRole)
   const canExport = ['admin', 'owner', 'staff'].includes(userRole)
 
-  const handleStaffSignIn = async (staffRow) => {
-    await supabase.from('session_staff').update({ signed_in_at: new Date().toISOString(), signed_out_at: null }).eq('id', staffRow.id)
-    onReload()
-  }
-  const handleStaffSignOut = async (staffRow) => {
-    await supabase.from('session_staff').update({ signed_out_at: new Date().toISOString() }).eq('id', staffRow.id)
-    onReload()
-  }
+  // Names with roles for the team, so volunteers are marked as volunteers.
+  const people = useMemo(() => teamPeople || Object.fromEntries(Object.entries(peopleProfiles || {}).map(([id, full_name]) => [id, { full_name }])), [teamPeople, peopleProfiles])
+  const [teamError, setTeamError] = useState('')
 
   const primary = org?.primary_color || '#3B82F6'
   const secondary = org?.secondary_color || '#8B5CF6'
@@ -237,7 +234,14 @@ export default function PastSessionRegister({
           </div>
         )}
 
-        <SessionTeamCard staffRows={staffRows} peopleProfiles={peopleProfiles} canEdit={canCorrect} onSignIn={handleStaffSignIn} onSignOut={handleStaffSignOut} />
+        {/* After the register closes, "sign in now" would stamp today's time
+            over the real one and wipe that person's hours. Corrections set
+            the times they were actually there instead. */}
+        <div style={{ marginTop: 20 }}>
+          {teamError && <div role="alert" style={{ marginBottom: 8, fontSize: 12.5, fontWeight: 700, color: 'var(--danger-text)' }}>{teamError}</div>}
+          <RegisterTeam session={session} staffRows={staffRows} people={people} authUserId={authUserId} closed
+            canManage={canCorrect} onChanged={() => { setTeamError(''); onReload() }} onError={setTeamError} />
+        </div>
       </div>
 
       {/* STICKY FOOTER */}
@@ -349,45 +353,6 @@ function MenuItem({ children, onClick, danger }) {
   )
 }
 
-function SessionTeamCard({ staffRows, peopleProfiles, canEdit, onSignIn, onSignOut }) {
-  return (
-    <div style={{ marginTop: 20, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 16 }}>
-      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Session team</div>
-      {staffRows.length === 0 ? (
-        <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>No staff assigned to this session.</div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {staffRows.map(s => (
-            <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-              <div style={{ minWidth: 0, fontSize: 12.5 }}>
-                <div style={{ fontWeight: 700, color: 'var(--text2)' }}>{peopleProfiles[s.user_id || s.volunteer_id] || (s.volunteer_id ? 'Volunteer' : 'Team member')} <span style={{ color: 'var(--text-faint)', fontWeight: 500 }}>· {s.role}</span></div>
-                <div style={{ color: 'var(--text-faint)', fontSize: 11 }}>
-                  {s.signed_in_at ? `Signed in ${fmtTime(s.signed_in_at)}` : 'Did not sign in'}
-                  {s.signed_out_at ? ` · Signed out ${fmtTime(s.signed_out_at)}` : ''}
-                </div>
-              </div>
-              {canEdit && (
-                <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                  {!s.signed_in_at ? (
-                    <button onClick={() => onSignIn(s)} style={teamPillBtn('#16A34A', 'var(--ok-bg)')}>Sign in</button>
-                  ) : !s.signed_out_at ? (
-                    <button onClick={() => onSignOut(s)} style={teamPillBtn('#2563EB', 'var(--info-bg)')}>Sign out</button>
-                  ) : (
-                    <button onClick={() => onSignIn(s)} style={teamPillBtn('var(--text3)', 'var(--border-soft)')}>Re-sign in</button>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function teamPillBtn(color, bg) {
-  return { fontSize: 10.5, fontWeight: 800, color, background: bg, border: 'none', borderRadius: 99, padding: '6px 11px', cursor: 'pointer', whiteSpace: 'nowrap' }
-}
 
 function ReopenRegisterModal({ session, authUserId, onClose, onDone }) {
   const [reason, setReason] = useState('')
@@ -444,6 +409,7 @@ function SessionSummaryDrawer({ session, org, grouped, rows, staffRows, peoplePr
   const medicalEvents = noteCounts.injury || 0
   const incidents = noteCounts.incident || 0
   const staffAttended = staffRows.filter(s => s.signed_in_at).length
+  const teamMinutesTotal = staffRows.reduce((sum, s) => sum + teamMinutes(s, session), 0)
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 10300, display: 'flex', justifyContent: 'flex-end' }} onClick={onClose}>
@@ -461,6 +427,7 @@ function SessionSummaryDrawer({ session, org, grouped, rows, staffRows, peoplePr
         <SummaryRow label="Absent" value={grouped.absent.length} />
         <SummaryRow label="Walk-ins" value={walkIns.length} />
         <SummaryRow label="Staff attendance" value={`${staffAttended} / ${staffRows.length}`} />
+        <SummaryRow label="Team time" value={formatDuration(teamMinutesTotal)} />
         <SummaryRow label="Late arrivals" value={lateArrivals} />
         <SummaryRow label="Early collections" value={earlyCollections} />
         <SummaryRow label="Medical / first-aid events" value={medicalEvents} />

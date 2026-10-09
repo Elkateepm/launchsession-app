@@ -15,6 +15,7 @@ import { withAlpha } from '../../lib/withAlpha'
 import { todayInLondon } from '../../lib/today'
 import RegisterHero, { BandPill, ON_BAND, bandBar } from './RegisterHero'
 import { orgBrand } from '../shared/OrgPageHero'
+import RegisterTeam from './RegisterTeam'
 
 const COLLECTION_TYPES = [
   { key: 'approved_adult', label: 'Approved adult' },
@@ -79,10 +80,15 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
   // Volunteers can still sign children in/out here — closing itself is the
   // one action that stays staff-only.
   const canCloseRegister = ['admin', 'owner', 'staff'].includes(userRole)
+  // Signing the team in and out sets volunteers' hours, so a volunteer can see
+  // the team and their own time but not change anyone's.
+  const canManageTeam = ['owner', 'admin', 'manager', 'staff'].includes(userRole)
+  const isVolunteerView = userRole === 'volunteer'
   const [children, setChildren] = useState([])
   const [attendance, setAttendance] = useState([])
   const [staffRows, setStaffRows] = useState([])
   const [staffProfiles, setStaffProfiles] = useState({})
+  const [teamPeople, setTeamPeople] = useState({})
   const [notes, setNotes] = useState([])
   const [auditLog, setAuditLog] = useState([])
   const [safeguardingCount, setSafeguardingCount] = useState(0)
@@ -150,10 +156,12 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
     if (session.closed_by) staffIds.add(session.closed_by)
     if (session.reopened_by) staffIds.add(session.reopened_by)
     if (staffIds.size) {
-      const { data: profiles } = await supabase.from('user_profiles').select('id, full_name').eq('org_id', org.id).in('id', [...staffIds])
+      const { data: profiles } = await supabase.from('user_profiles').select('id, full_name, role').eq('org_id', org.id).in('id', [...staffIds])
       const map = {}
-      ;(profiles || []).forEach(p => { map[p.id] = p.full_name })
+      const people = {}
+      ;(profiles || []).forEach(p => { map[p.id] = p.full_name; people[p.id] = p })
       setStaffProfiles(map)
+      setTeamPeople(people)
     }
     } catch (error) { setLoadError('Could not refresh the register. Check your connection and retry.') }
     finally { loadingRef.current = false; setLoading(false) }
@@ -286,16 +294,6 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
     await markWithUndo(child, { status: 'absent', absence_reason: reason }, `${child.first_name} marked absent`)
   }
 
-  const handleStaffSignIn = async (staffRow) => {
-    await supabase.from('session_staff').update({ signed_in_at: new Date().toISOString(), signed_out_at: null }).eq('id', staffRow.id)
-    load()
-  }
-
-  const handleStaffSignOut = async (staffRow) => {
-    await supabase.from('session_staff').update({ signed_out_at: new Date().toISOString() }).eq('id', staffRow.id)
-    load()
-  }
-
   const handleAddNote = async (noteType, content, childId) => {
     if (!content.trim()) return
     await supabase.from('session_notes').insert({ org_id: org.id, session_id: session.id, child_id: childId || null, note_type: noteType, content: content.trim(), created_by: authUserId })
@@ -313,6 +311,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
       session_id: session?.id || null,
       status: 'open', priority: 'medium',
     })
+    if (isVolunteerView) { showToast('Concern sent to your safeguarding lead.'); return }
     showToast('Safeguarding concern raised — complete details in Safeguarding.')
     if (onNavigate) onNavigate('safeguarding')
   }
@@ -344,7 +343,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
       <>
         <PastSessionRegister
           session={session} org={org} grouped={grouped} rows={rows} staffRows={staffRows}
-          peopleProfiles={staffProfiles} notes={notes} auditLog={auditLog}
+          peopleProfiles={staffProfiles} teamPeople={teamPeople} notes={notes} auditLog={auditLog}
           userRole={userRole} authUserId={authUserId} groupLabel={groupLabel}
           safeguardingCount={safeguardingCount}
           onClose={onClose}
@@ -395,7 +394,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
       </div>
       {ratioBreached && (
         <div style={{ marginTop: 12, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 12, padding: '10px 13px', fontSize: 12, fontWeight: 700, color: 'var(--danger-text)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 14 }}><Icon name="⚠" /></span> {signedInStaffCount ? `Current staffing ratio 1:${currentRatio.toFixed(1)}. Required ratio: 1:${requiredRatio}.` : 'No team members are signed in. Check the team attendance below.'}
+          <span style={{ fontSize: 14 }}><Icon name="⚠" /></span> {signedInStaffCount ? `Current staffing ratio 1:${currentRatio.toFixed(1)}. Required ratio: 1:${requiredRatio}.` : 'No team members are signed in. Sign them in under Team.'}
         </div>
       )}
       {totalExpected > 0 && (
@@ -437,6 +436,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
           { key: 'signed_in', label: 'Signed in', count: grouped.signed_in.length },
           { key: 'absent', label: 'Absent', count: grouped.absent.length },
           { key: 'signed_out', label: 'Signed out', count: grouped.signed_out.length },
+          { key: 'team', label: 'Team', count: `${signedInStaffCount}/${staffRows.length}` },
         ].map(t => (
           <button key={t.key} aria-pressed={tab === t.key} onClick={() => setTab(t.key)} style={{
             position: 'relative', flex: '1 0 auto', minHeight: 44, minWidth: 44, padding: '9px 8px', border: 'none', borderRadius: 9,
@@ -476,7 +476,10 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
         <option value="all">All groups</option>{registerGroups.map(name => <option key={name} value={name}>{name}</option>)}
       </select>}
       {(search || groupFilter !== 'all') && <button style={ghostBtn} onClick={() => { setSearch(''); setGroupFilter('all') }}>Clear filters</button>}
-      <button onClick={() => setShowWalkIn(true)} style={ghostBtn}>+ Walk-in</button>
+      {/* A walk-in makes a new young person's record, which stays with staff. */}
+      {!isVolunteerView && <button onClick={() => setShowWalkIn(true)} style={ghostBtn}>+ Walk-in</button>}
+      {/* On a phone the tab strip scrolls and Team sits at its far end. */}
+      {isMobile && <button onClick={() => { setTab('team'); setSearch('') }} aria-pressed={tab === 'team'} style={ghostBtn}>👥 Team {signedInStaffCount}/{staffRows.length}</button>}
       <button onClick={() => setShowNotes(true)} style={ghostBtn}>📝 Notes {notes.length > 0 && <span style={{ color: 'var(--violet-text)' }}>({notes.length})</span>}</button>
       {/* Not gated to staff: volunteers can sign children in and out here, so
           they are the most likely to mis-tap. Locking corrections to staff
@@ -485,7 +488,10 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
       <button onClick={() => setCorrectChildId('')} style={ghostBtn}>✎ Correct</button>
     </>
   )
-  const listBody = (
+  const listBody = tab === 'team' ? (
+    <RegisterTeam session={session} staffRows={staffRows} people={teamPeople} authUserId={authUserId}
+      canManage={canManageTeam} onChanged={load} onError={msg => showToast(msg)} />
+  ) : (
     <>
       {activeList.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text-faint)', fontSize: 13 }}>
@@ -508,41 +514,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
           </AnimatePresence>
         </div>
       )}
-      
-      {/* STAFF PANEL */}
-      <div style={{ marginTop: 20, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 16, boxShadow: '0 1px 3px rgba(15,23,42,0.04)' }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ width: 22, height: 22, borderRadius: 7, background: 'var(--violet-bg)', color: 'var(--violet-text)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}><Icon name="👤" /></span>
-          Session team
-        </div>
-        {staffRows.length === 0 ? (
-          <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>No staff assigned to this session.</div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-            {staffRows.map(s => {
-              const pid = s.user_id || s.volunteer_id
-              return (
-                <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12.5, paddingBottom: 9, borderBottom: '1px solid var(--border-soft)' }}>
-                  <span style={{ fontWeight: 700, color: 'var(--text2)' }}>{staffProfiles[pid] || (s.volunteer_id ? 'Volunteer' : 'Team member')} <span style={{ color: 'var(--text-faint)', fontWeight: 500 }}>· {s.role}</span></span>
-                  {s.signed_out_at ? (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ color: 'var(--text-faint)', fontWeight: 700 }}>Signed out {fmtTime(s.signed_out_at)}</span>
-                      <button onClick={() => handleStaffSignIn(s)} style={{ ...ghostBtn, padding: '5px 10px', fontSize: 11 }}>Sign back in</button>
-                    </span>
-                  ) : s.signed_in_at ? (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ color: 'var(--ok-text)', fontWeight: 700 }}>Signed in {fmtTime(s.signed_in_at)}</span>
-                      <button onClick={() => handleStaffSignOut(s)} style={{ ...ghostBtn, padding: '5px 10px', fontSize: 11 }}>Sign out</button>
-                    </span>
-                  ) : (
-                    <button onClick={() => handleStaffSignIn(s)} style={{ ...ghostBtn, padding: '5px 10px', fontSize: 11 }}>Sign in</button>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
+
     </>
   )
 
@@ -575,7 +547,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
           </div>
           <div style={{ position: 'sticky', top: 0, zIndex: 3, background: 'var(--surface)', boxShadow: '0 8px 16px -14px rgba(15,23,42,0.35)' }}>
             {tabStrip}
-            <div style={{ padding: '0 12px 10px', borderBottom: '1px solid var(--border-soft)' }}>{searchBox}</div>
+            {tab !== 'team' && <div style={{ padding: '0 12px 10px', borderBottom: '1px solid var(--border-soft)' }}>{searchBox}</div>}
           </div>
           <div style={{ padding: 12 }}>{listBody}</div>
         </div>
@@ -586,7 +558,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
           {tabStrip}
           {/* SEARCH + QUICK ACTIONS */}
           <div style={{ padding: '0 14px 12px', background: 'var(--surface)', borderBottom: '1px solid var(--border-soft)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {searchBox}
+            {tab !== 'team' && searchBox}
             {quickActions}
           </div>
           {/* ls-scroll gives momentum scrolling and stops a flick at the end of

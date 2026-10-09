@@ -1,16 +1,19 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
-import { Card, SectionTitle, Avatar, Badge, sessionHours, PURPLE } from './vh_shared'
+import { Card, SectionTitle, Avatar, Badge, PURPLE } from './vh_shared'
+import { HOUR_MILESTONES, teamMinutes } from '../../lib/volunteerHours'
 import Icon from '../../lib/icons'
 import { withAlpha } from '../../lib/withAlpha'
 
-const MILESTONES = [25, 50, 100, 250, 500]
+// The same milestones a volunteer sees on their Hours tab.
+const MILESTONES = HOUR_MILESTONES
 
+// Register time, as on the volunteer's own Hours tab (lib/volunteerHours.js).
 function totalHours(v, sessionStaff, sessions) {
   const sessionsById = Object.fromEntries(sessions.map(s => [s.id, s]))
-  const mine = sessionStaff.filter(ss => (ss.volunteer_id === v.id || ss.user_id === v.id) && ss.attended !== false)
-  return Math.round(mine.reduce((sum, ss) => sum + sessionHours(sessionsById[ss.session_id]), 0))
+  const mine = sessionStaff.filter(ss => ss.volunteer_id === v.id || ss.user_id === v.id)
+  return Math.round(mine.reduce((sum, ss) => sum + teamMinutes(ss, sessionsById[ss.session_id]), 0) / 60)
 }
 
 export default function VolunteersRecognition({ org, volunteers, sessionStaff, sessions, recognition, onDataChange }) {

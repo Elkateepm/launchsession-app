@@ -1,251 +1,288 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import Icon from '../../lib/icons'
-import { withAlpha } from '../../lib/withAlpha'
 import { todayInLondon } from '../../lib/today'
 
+// The volunteer's quick actions, from the + in the portal's header.
+//
+// What changed, and why:
+//
+//   Raise a concern used to write into Case management as a case called
+//   "Unspecified — raised via volunteer app", while telling the volunteer it
+//   had gone to the safeguarding lead. It now files a cause for concern, the
+//   record the safeguarding lead actually works from, as the register's own
+//   concern button does.
+//
+//   Incident report wrote a fake case too. It is now a note on today's
+//   register (accident, injury or anything else), which the session lead sees
+//   on the register as it happens.
+//
+//   Log hours is gone. Hours come from the register now (lib/volunteerHours.js):
+//   the time between the session lead signing someone in and signing them out.
+//   A number anyone could type for themselves made every total meaningless.
+
 const ACTIONS = [
-  { key: 'concern', icon: '🛡️', label: 'Raise Concern', color: '#EF4444' },
-  { key: 'hours', icon: '⏱️', label: 'Log Hours', color: 'var(--violet-text)' },
-  { key: 'incident', icon: '📋', label: 'Incident Report', color: '#F59E0B' },
-  { key: 'emergency', icon: '📞', label: 'Emergency Contact', color: 'var(--danger-text)' },
-  { key: 'register', icon: '📖', label: 'View Register', color: '#0EA5E9' },
-  { key: 'message', icon: '💬', label: 'Message Staff', color: 'var(--ok-text)' },
-  { key: 'document', icon: '📎', label: 'Upload Document', color: '#8B5CF6' },
+  { key: 'concern', icon: '🛡️', label: 'Raise a concern', detail: 'Goes to the safeguarding lead', tone: 'danger' },
+  { key: 'register', icon: '📖', label: 'Open today’s register', detail: 'Sign young people in and out', needsToday: true },
+  { key: 'note', icon: '📝', label: 'Note on the register', detail: 'An accident, injury or anything the lead should know', needsToday: true },
+  { key: 'message', icon: '💬', label: 'Message the team', detail: 'Questions, swaps, running late' },
+  { key: 'emergency', icon: '📞', label: 'Emergency numbers', detail: '999 and your organisation' },
+  { key: 'document', icon: '📎', label: 'Upload a certificate', detail: 'DBS, first aid, safeguarding' },
 ]
 
-export default function VPQuickActionMenu({ open, onClose, org, user, todaySession, onNavigate, onGoRegister, onGoMessage, forceModal }) {
+export default function VPQuickActionMenu({ open, onClose, org, user, profile, todaySession, onGoRegister, onGoMessage, forceModal }) {
   const [modal, setModal] = useState(null)
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (open && forceModal) setModal(forceModal)
     if (!open) setModal(null)
   }, [open, forceModal])
 
-  const showRadial = open && !forceModal
+  useEffect(() => {
+    if (!open) return undefined
+    const onKey = e => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onClose])
+
+  const showMenu = open && !modal
+  const actions = ACTIONS.filter(a => !a.needsToday || todaySession)
 
   const handlePick = (key) => {
     if (key === 'register') { onClose(); onGoRegister && onGoRegister(); return }
     if (key === 'message') { onClose(); onGoMessage && onGoMessage(); return }
     setModal(key)
   }
+  const closeAll = () => { setModal(null); onClose() }
 
   return (
     <>
       <AnimatePresence>
-        {showRadial && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.55)', backdropFilter: 'blur(6px)', zIndex: 500, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 110 }}>
-            <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }} transition={{ type: 'spring', stiffness: 340, damping: 28 }}
-              onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 420, padding: '0 16px' }}>
-              <div style={{ background: 'rgba(20,26,38,0.92)', backdropFilter: 'blur(20px)', borderRadius: 26, padding: 18, boxShadow: '0 30px 80px rgba(0,0,0,0.5)' }}>
-                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 14, textAlign: 'center' }}>Quick Actions</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-                  {ACTIONS.map((a, i) => (
-                    <motion.button key={a.key} onClick={() => handlePick(a.key)}
-                      initial={{ opacity: 0, scale: 0.7, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.035, type: 'spring', stiffness: 400, damping: 22 }}
-                      whileTap={{ scale: 0.92 }}
-                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '14px 6px', borderRadius: 18, border: 'none', background: 'rgba(255,255,255,0.06)', cursor: 'pointer' }}>
-                      <div style={{ width: 46, height: 46, borderRadius: 16, background: `${withAlpha(a.color, '25')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 21 }}><Icon name={a.icon} /></div>
-                      <span style={{ fontSize: 10.5, fontWeight: 700, color: '#fff', textAlign: 'center', lineHeight: 1.2 }}>{a.label}</span>
-                    </motion.button>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
+        {showMenu && (
+          <Sheet title="Quick actions" onClose={onClose}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {actions.map(a => (
+                <button key={a.key} onClick={() => handlePick(a.key)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, minHeight: 60, padding: '10px 12px', borderRadius: 14, border: `1px solid ${a.tone === 'danger' ? 'var(--danger-border)' : 'var(--border)'}`, background: a.tone === 'danger' ? 'var(--danger-bg)' : 'var(--surface)', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}>
+                  <span aria-hidden="true" style={{ width: 40, height: 40, borderRadius: 12, background: a.tone === 'danger' ? 'var(--surface)' : 'var(--org-a10, #1B9AAA1a)', display: 'grid', placeItems: 'center', fontSize: 19, flexShrink: 0 }}><Icon name={a.icon} /></span>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: 'block', fontSize: 15, fontWeight: 800, color: a.tone === 'danger' ? 'var(--danger-text)' : 'var(--text)' }}>{a.label}</span>
+                    <span style={{ display: 'block', fontSize: 12.5, color: 'var(--text3)', marginTop: 1 }}>{a.detail}</span>
+                  </span>
+                  <span aria-hidden="true" style={{ color: 'var(--text-faint)', fontSize: 18 }}>›</span>
+                </button>
+              ))}
+            </div>
+          </Sheet>
         )}
       </AnimatePresence>
 
       <AnimatePresence>
-        {modal === 'concern' && <ConcernModal org={org} user={user} onClose={() => { setModal(null); onClose() }} />}
-        {modal === 'hours' && <LogHoursModal org={org} user={user} todaySession={todaySession} onClose={() => { setModal(null); onClose() }} />}
-        {modal === 'incident' && <IncidentModal org={org} user={user} onClose={() => { setModal(null); onClose() }} />}
-        {modal === 'emergency' && <EmergencyModal org={org} onClose={() => { setModal(null); onClose() }} />}
-        {modal === 'document' && <UploadDocModal org={org} user={user} onClose={() => { setModal(null); onClose() }} />}
+        {modal === 'concern' && <ConcernModal org={org} user={user} profile={profile} todaySession={todaySession} onClose={closeAll} />}
+        {modal === 'note' && <RegisterNoteModal org={org} user={user} todaySession={todaySession} onClose={closeAll} />}
+        {modal === 'emergency' && <EmergencyModal org={org} onClose={closeAll} />}
+        {modal === 'document' && <UploadDocModal org={org} user={user} onClose={closeAll} />}
       </AnimatePresence>
     </>
   )
 }
 
-function ModalShell({ title, icon, color, onClose, children, footer }) {
+function Sheet({ title, onClose, children, footer }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(10,16,26,0.6)', backdropFilter: 'blur(4px)', zIndex: 700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-      <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-        onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 480, background: 'var(--surface)', borderRadius: '26px 26px 0 0', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ padding: '18px 20px', borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 12, background: `${withAlpha(color, '18')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>{icon}</div>
-          <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)', flex: 1 }}>{title}</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 18, color: 'var(--text-faint)', cursor: 'pointer' }}><Icon name="✕" /></button>
+      style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', zIndex: 700, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+      <motion.div role="dialog" aria-modal="true" aria-label={title}
+        initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+        onClick={e => e.stopPropagation()}
+        style={{ width: '100%', maxWidth: 520, background: 'var(--surface2)', borderRadius: '24px 24px 0 0', maxHeight: '90dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ padding: '14px 16px 12px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border-soft)', background: 'var(--surface)' }}>
+          <h2 style={{ margin: 0, fontSize: 17, fontWeight: 900, color: 'var(--text)', flex: 1 }}>{title}</h2>
+          <button onClick={onClose} aria-label="Close" style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: 'var(--surface2)', color: 'var(--text2)', fontSize: 18, cursor: 'pointer' }}>×</button>
         </div>
-        <div style={{ padding: 20, overflowY: 'auto', flex: 1 }}>{children}</div>
-        {footer && <div style={{ padding: '14px 20px', borderTop: '1px solid rgba(15,23,42,0.06)' }}>{footer}</div>}
+        <div className="ls-scroll" style={{ padding: 16, overflowY: 'auto', flex: 1 }}>{children}</div>
+        {footer && <div style={{ padding: '12px 16px calc(env(safe-area-inset-bottom, 0px) + 12px)', borderTop: '1px solid var(--border-soft)', background: 'var(--surface)' }}>{footer}</div>}
+        {!footer && <div style={{ height: 'env(safe-area-inset-bottom, 0px)' }} />}
       </motion.div>
     </motion.div>
   )
 }
 
-const inp = { width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: 12, border: '1.5px solid rgba(15,23,42,0.1)', fontSize: 14, outline: 'none', fontFamily: 'inherit' }
-const btnPrimary = (color) => ({ width: '100%', padding: '13px', borderRadius: 13, border: 'none', background: color, color: '#fff', fontWeight: 800, fontSize: 14.5, cursor: 'pointer' })
+const label = { display: 'grid', gap: 6, fontSize: 13, fontWeight: 800, color: 'var(--text2)', marginBottom: 14 }
+const inp = { width: '100%', boxSizing: 'border-box', minHeight: 48, padding: '12px 14px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 16, outline: 'none', fontFamily: 'inherit' }
+const mainBtn = (danger) => ({ width: '100%', minHeight: 50, borderRadius: 13, border: 'none', background: danger ? 'var(--danger-text)' : 'var(--org-primary, #1B9AAA)', color: danger ? '#fff' : 'var(--org-on-primary, #fff)', fontWeight: 800, fontSize: 15, cursor: 'pointer', fontFamily: 'inherit' })
 
-function ConcernModal({ org, user, onClose }) {
+function Done({ title, detail }) {
+  return (
+    <div role="status" style={{ textAlign: 'center', padding: '24px 8px' }}>
+      <div style={{ fontSize: 36, marginBottom: 10 }}><Icon name="✅" /></div>
+      <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)' }}>{title}</div>
+      {detail && <div style={{ fontSize: 13.5, color: 'var(--text3)', marginTop: 6, lineHeight: 1.5 }}>{detail}</div>}
+    </div>
+  )
+}
+
+function ConcernModal({ org, user, profile, todaySession, onClose }) {
+  const [about, setAbout] = useState('')
   const [body, setBody] = useState('')
+  const [where, setWhere] = useState(todaySession?.location || '')
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
+  const [error, setError] = useState('')
   const submit = async () => {
     if (!body.trim()) return
-    setSaving(true)
-    await supabase.from('cases').insert({
-      org_id: org.id, child_name: 'Unspecified — raised via volunteer app', status: 'open',
-      risk_level: 'medium', priority: 'medium', category: 'Other', summary: body.trim(), created_by: user?.id,
+    setSaving(true); setError('')
+    // No .select() after the insert: a volunteer can file a concern but is
+    // not able to read concerns back.
+    const { error: err } = await supabase.from('cause_for_concern').insert({
+      org_id: org.id, submitted_by: user.id,
+      submitter_name: profile?.full_name || user.email || 'Volunteer', submitter_role: 'Volunteer',
+      child_name: about.trim() || 'Not named', concern_type: 'other', description: body.trim(),
+      date_of_incident: todayInLondon(), location: where.trim() || 'Not given',
+      session_id: todaySession?.id || null, status: 'open', priority: 'medium',
     })
-    setSaving(false); setDone(true)
-    setTimeout(onClose, 1400)
+    setSaving(false)
+    if (err) { setError('That did not send. Check your connection and try again. If a child is in danger, call 999 now.'); return }
+    setDone(true)
   }
   return (
-    <ModalShell title="Raise a Safeguarding Concern" icon="🛡️" color="#EF4444" onClose={onClose}
-      footer={!done && <button onClick={submit} disabled={saving || !body.trim()} style={btnPrimary('#EF4444')}>{saving ? 'Submitting…' : 'Submit to DSL'}</button>}>
+    <Sheet title="Raise a concern" onClose={onClose}
+      footer={done ? <button onClick={onClose} style={mainBtn()}>Done</button>
+        : <button onClick={submit} disabled={saving || !body.trim()} style={{ ...mainBtn(true), opacity: body.trim() ? 1 : 0.55 }}>{saving ? 'Sending…' : 'Send to the safeguarding lead'}</button>}>
       {done ? (
-        <div style={{ textAlign: 'center', padding: '20px 0' }}>
-          <div style={{ fontSize: 36, marginBottom: 10 }}><Icon name="✅" /></div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>Sent to your Designated Safeguarding Lead</div>
-        </div>
+        <Done title="Sent to your safeguarding lead" detail="Thank you. They will follow it up. Tell your session lead too if it is about today." />
       ) : (
         <>
-          <div style={{ background: 'var(--danger-bg)', border: '1.5px solid var(--danger-border)', borderRadius: 12, padding: 12, marginBottom: 14, fontSize: 12.5, color: 'var(--danger-text)', lineHeight: 1.5 }}>
-            If a child is in immediate danger, call 999 first. This form goes straight to your DSL.
+          <div style={{ background: 'var(--danger-bg)', border: '1.5px solid var(--danger-border)', borderRadius: 12, padding: 12, marginBottom: 14, fontSize: 14, fontWeight: 700, color: 'var(--danger-text)', lineHeight: 1.5 }}>
+            If a child is in immediate danger, call 999 now.
           </div>
-          <textarea autoFocus value={body} onChange={e => setBody(e.target.value)} placeholder="What did you see or hear? Include names, times, and anything said…" rows={6} style={{ ...inp, resize: 'vertical' }} />
+          {error && <div role="alert" style={{ marginBottom: 12, fontSize: 13.5, fontWeight: 700, color: 'var(--danger-text)' }}>{error}</div>}
+          <label style={label}>Who is it about?
+            <input value={about} onChange={e => setAbout(e.target.value)} placeholder="A name, or describe who" style={inp} />
+          </label>
+          <label style={label}>What did you see or hear?
+            <textarea autoFocus value={body} onChange={e => setBody(e.target.value)} rows={6} placeholder="Use their words where you can. Include the time and anything already done." style={{ ...inp, resize: 'vertical' }} />
+          </label>
+          <label style={label}>Where?
+            <input value={where} onChange={e => setWhere(e.target.value)} style={inp} />
+          </label>
         </>
       )}
-    </ModalShell>
+    </Sheet>
   )
 }
 
-function LogHoursModal({ org, user, todaySession, onClose }) {
-  const [hours, setHours] = useState('')
-  const [notes, setNotes] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [done, setDone] = useState(false)
-  const submit = async () => {
-    const h = parseFloat(hours)
-    if (!h || h <= 0) return
-    setSaving(true)
-    await supabase.from('volunteer_attendance').insert({
-      org_id: org.id, volunteer_id: user.id, session_id: todaySession?.id || null,
-      hours_logged: h, status: 'completed', notes: notes.trim() || null,
-      signed_in_at: new Date().toISOString(), signed_out_at: new Date().toISOString(),
-    })
-    setSaving(false); setDone(true)
-    setTimeout(onClose, 1200)
-  }
-  return (
-    <ModalShell title="Log Volunteer Hours" icon="⏱️" color="#7C5CFC" onClose={onClose}
-      footer={!done && <button onClick={submit} disabled={saving || !hours} style={btnPrimary('#7C5CFC')}>{saving ? 'Saving…' : 'Log Hours'}</button>}>
-      {done ? (
-        <div style={{ textAlign: 'center', padding: '20px 0' }}>
-          <div style={{ fontSize: 36, marginBottom: 10 }}><Icon name="🎉" /></div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>Hours logged — thank you!</div>
-        </div>
-      ) : (
-        <>
-          {todaySession && <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 12 }}>For: <strong>{todaySession.title}</strong></div>}
-          <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 6 }}>Hours</label>
-          <input autoFocus type="number" step="0.5" min="0" value={hours} onChange={e => setHours(e.target.value)} placeholder="e.g. 2.5" style={{ ...inp, marginBottom: 14 }} />
-          <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 6 }}>Notes (optional)</label>
-          <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} style={{ ...inp, resize: 'vertical' }} />
-        </>
-      )}
-    </ModalShell>
-  )
-}
+const NOTE_TYPES = [
+  { key: 'incident', label: 'Accident or incident' },
+  { key: 'injury', label: 'Injury or first aid' },
+  { key: 'general', label: 'Something else' },
+]
 
-function IncidentModal({ org, user, onClose }) {
+function RegisterNoteModal({ org, user, todaySession, onClose }) {
+  const [type, setType] = useState('incident')
   const [body, setBody] = useState('')
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
+  const [error, setError] = useState('')
   const submit = async () => {
-    if (!body.trim()) return
-    setSaving(true)
-    await supabase.from('cases').insert({
-      org_id: org.id, child_name: 'Incident report — via volunteer app', status: 'open',
-      risk_level: 'low', priority: 'low', category: 'Other', summary: `[INCIDENT] ${body.trim()}`, created_by: user?.id,
+    if (!body.trim() || !todaySession) return
+    setSaving(true); setError('')
+    const { error: err } = await supabase.from('session_notes').insert({
+      org_id: org.id, session_id: todaySession.id, note_type: type, content: body.trim(), created_by: user.id,
     })
-    setSaving(false); setDone(true)
-    setTimeout(onClose, 1200)
+    setSaving(false)
+    if (err) { setError('That did not save. Check your connection and try again.'); return }
+    setDone(true)
   }
   return (
-    <ModalShell title="Submit Incident Report" icon="📋" color="#F59E0B" onClose={onClose}
-      footer={!done && <button onClick={submit} disabled={saving || !body.trim()} style={btnPrimary('#F59E0B')}>{saving ? 'Submitting…' : 'Submit Report'}</button>}>
+    <Sheet title={`Note on ${todaySession?.title || 'today’s register'}`} onClose={onClose}
+      footer={done ? <button onClick={onClose} style={mainBtn()}>Done</button>
+        : <button onClick={submit} disabled={saving || !body.trim()} style={{ ...mainBtn(), opacity: body.trim() ? 1 : 0.55 }}>{saving ? 'Saving…' : 'Add to the register'}</button>}>
       {done ? (
-        <div style={{ textAlign: 'center', padding: '20px 0' }}>
-          <div style={{ fontSize: 36, marginBottom: 10 }}><Icon name="✅" /></div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>Incident report submitted</div>
-        </div>
+        <Done title="Added to the register" detail="Your session lead can see it under Notes." />
       ) : (
-        <textarea autoFocus value={body} onChange={e => setBody(e.target.value)} placeholder="Describe what happened — injuries, near-misses, equipment issues…" rows={6} style={{ ...inp, resize: 'vertical' }} />
+        <>
+          {error && <div role="alert" style={{ marginBottom: 12, fontSize: 13.5, fontWeight: 700, color: 'var(--danger-text)' }}>{error}</div>}
+          <div role="radiogroup" aria-label="Type of note" style={{ display: 'grid', gap: 8, marginBottom: 14 }}>
+            {NOTE_TYPES.map(t => (
+              <button key={t.key} role="radio" aria-checked={type === t.key} onClick={() => setType(t.key)}
+                style={{ minHeight: 48, borderRadius: 12, textAlign: 'left', padding: '0 14px', fontSize: 15, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', border: `1.5px solid ${type === t.key ? 'var(--org-primary, #1B9AAA)' : 'var(--border)'}`, background: type === t.key ? 'var(--org-a10, #1B9AAA1a)' : 'var(--surface)', color: type === t.key ? 'var(--org-ink)' : 'var(--text2)' }}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+          <label style={label}>What happened?
+            <textarea autoFocus value={body} onChange={e => setBody(e.target.value)} rows={5} placeholder="Who, what, when, and anything already done." style={{ ...inp, resize: 'vertical' }} />
+          </label>
+        </>
       )}
-    </ModalShell>
+    </Sheet>
   )
 }
 
 function EmergencyModal({ org, onClose }) {
+  const link = { display: 'flex', alignItems: 'center', gap: 12, minHeight: 64, padding: '12px 14px', borderRadius: 14, textDecoration: 'none', boxSizing: 'border-box' }
   return (
-    <ModalShell title="Emergency Contacts" icon="📞" color="#DC2626" onClose={onClose}>
+    <Sheet title="Emergency numbers" onClose={onClose}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <a href="tel:999" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, background: 'var(--danger-bg)', textDecoration: 'none' }}>
-          <span style={{ fontSize: 22 }}><Icon name="🚨" /></span>
-          <div><div style={{ fontSize: 14, fontWeight: 800, color: 'var(--danger-text)' }}>999 — Emergency Services</div><div style={{ fontSize: 11.5, color: 'var(--danger-text)' }}>Life-threatening emergency</div></div>
+        <a href="tel:999" style={{ ...link, background: 'var(--danger-bg)', border: '1.5px solid var(--danger-border)' }}>
+          <span aria-hidden="true" style={{ fontSize: 22 }}><Icon name="🚨" /></span>
+          <div><div style={{ fontSize: 16, fontWeight: 900, color: 'var(--danger-text)' }}>999 · Emergency services</div><div style={{ fontSize: 13, color: 'var(--danger-text)' }}>Life-threatening emergency or a child in danger</div></div>
         </a>
         {org?.emergency_phone && (
-          <a href={`tel:${org.emergency_phone}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, background: 'var(--surface2)', textDecoration: 'none' }}>
-            <span style={{ fontSize: 22 }}><Icon name="🛡️" /></span>
-            <div><div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>Designated Safeguarding Lead</div><div style={{ fontSize: 11.5, color: 'var(--text3)' }}>{org.emergency_phone}</div></div>
+          <a href={`tel:${org.emergency_phone}`} style={{ ...link, background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <span aria-hidden="true" style={{ fontSize: 22 }}><Icon name="🛡️" /></span>
+            <div><div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>Safeguarding lead</div><div style={{ fontSize: 13, color: 'var(--text3)' }}>{org.emergency_phone}</div></div>
           </a>
         )}
-        <a href={org?.phone ? `tel:${org.phone}` : undefined} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, background: 'var(--surface2)', textDecoration: 'none', opacity: org?.phone ? 1 : 0.5, pointerEvents: org?.phone ? 'auto' : 'none' }}>
-          <span style={{ fontSize: 22 }}><Icon name="🏢" /></span>
-          <div><div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{org?.name || 'Your organisation'}</div><div style={{ fontSize: 11.5, color: 'var(--text3)' }}>{org?.phone || 'No number on file'}</div></div>
-        </a>
+        {org?.phone ? (
+          <a href={`tel:${org.phone}`} style={{ ...link, background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <span aria-hidden="true" style={{ fontSize: 22 }}><Icon name="🏢" /></span>
+            <div><div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>{org?.name || 'Your organisation'}</div><div style={{ fontSize: 13, color: 'var(--text3)' }}>{org.phone}</div></div>
+          </a>
+        ) : (
+          <div style={{ ...link, background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <span aria-hidden="true" style={{ fontSize: 22 }}><Icon name="🏢" /></span>
+            <div><div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>{org?.name || 'Your organisation'}</div><div style={{ fontSize: 13, color: 'var(--text3)' }}>No number on file. Message the team instead.</div></div>
+          </div>
+        )}
       </div>
-    </ModalShell>
+    </Sheet>
   )
 }
 
 function UploadDocModal({ org, user, onClose }) {
   const [uploading, setUploading] = useState(false)
   const [done, setDone] = useState(false)
+  const [error, setError] = useState('')
   const fileRef = useRef(null)
   const upload = async (file) => {
     if (!file) return
-    setUploading(true)
+    setUploading(true); setError('')
     const path = `certificates/${org.id}/${user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
-    const { error } = await supabase.storage.from('safeguarding-docs').upload(path, file)
-    if (!error) {
-      const urlData = { publicUrl: path } // private bucket: store the path, sign on open
-      await supabase.from('volunteer_training').insert({ org_id: org.id, volunteer_id: user.id, training_type: file.name, status: 'completed', completed_at: todayInLondon(), certificate_url: urlData?.publicUrl })
-      setDone(true)
-    }
+    const { error: upErr } = await supabase.storage.from('safeguarding-docs').upload(path, file)
+    // Private bucket: store the path, and sign it when it is opened.
+    const { error: rowErr } = upErr ? { error: upErr } : await supabase.from('volunteer_training').insert({ org_id: org.id, volunteer_id: user.id, training_type: file.name, status: 'completed', completed_at: todayInLondon(), certificate_url: path })
     setUploading(false)
-    setTimeout(onClose, 1200)
+    if (upErr || rowErr) { setError('That did not upload. Check your connection and try again.'); return }
+    setDone(true)
   }
   return (
-    <ModalShell title="Upload Document" icon="📎" color="#8B5CF6" onClose={onClose}>
+    <Sheet title="Upload a certificate" onClose={onClose} footer={done ? <button onClick={onClose} style={mainBtn()}>Done</button> : null}>
       {done ? (
-        <div style={{ textAlign: 'center', padding: '20px 0' }}>
-          <div style={{ fontSize: 36, marginBottom: 10 }}><Icon name="✅" /></div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>Uploaded</div>
-        </div>
+        <Done title="Uploaded" detail="The team will check it and update your record." />
       ) : (
-        <div onClick={() => fileRef.current?.click()} style={{ border: '2px dashed rgba(15,23,42,0.15)', borderRadius: 16, padding: '28px 16px', textAlign: 'center', cursor: 'pointer', background: 'var(--surface2)' }}>
-          <div style={{ fontSize: 28, marginBottom: 8 }}><Icon name="📎" /></div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{uploading ? 'Uploading…' : 'Tap to choose a file'}</div>
-          <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 4 }}>Certificates, ID, or other documents</div>
-          <input ref={fileRef} type="file" style={{ display: 'none' }} onChange={e => upload(e.target.files?.[0])} />
-        </div>
+        <>
+          {error && <div role="alert" style={{ marginBottom: 12, fontSize: 13.5, fontWeight: 700, color: 'var(--danger-text)' }}>{error}</div>}
+          <button onClick={() => fileRef.current?.click()} disabled={uploading}
+            style={{ width: '100%', border: '2px dashed var(--border)', borderRadius: 16, padding: '28px 16px', textAlign: 'center', cursor: 'pointer', background: 'var(--surface)', fontFamily: 'inherit' }}>
+            <div aria-hidden="true" style={{ fontSize: 28, marginBottom: 8 }}><Icon name="📎" /></div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>{uploading ? 'Uploading…' : 'Choose a file or take a photo'}</div>
+            <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 4 }}>DBS, first aid or safeguarding certificates</div>
+          </button>
+          <input ref={fileRef} type="file" accept="image/*,application/pdf" style={{ display: 'none' }} onChange={e => upload(e.target.files?.[0])} />
+        </>
       )}
-    </ModalShell>
+    </Sheet>
   )
 }
