@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import MemberAccess from '../hr/MemberAccess'
 import StaffHRProfile from '../hr/StaffHRProfile'
+import { InviteStaffModal } from '../hr/HRCentre'
 import Icon from '../../lib/icons'
 
 // The Team tab: who is in the organisation, what they are allowed to reach,
@@ -69,7 +70,9 @@ function Pill({ children, tone = 'var(--text3)', bg = 'var(--border-soft)' }) {
   )
 }
 
-export default function TeamCentre({ org, session, userProfile, onNavigate }) {
+// hasHR: whether this organisation's plan includes HR. Without it, Team is
+// where people are invited and approved; with it, approvals live in HR.
+export default function TeamCentre({ org, session, userProfile, onNavigate, hasHR = true }) {
   const isMobile = useIsMobile()
   const primary = org?.primary_color || '#3B82F6'
   const myRole = userProfile?.role
@@ -86,6 +89,7 @@ export default function TeamCentre({ org, session, userProfile, onNavigate }) {
   // replacing it, so closing HR returns you to where you were.
   const [hrPerson, setHrPerson] = useState(null)
   const [toast, setToast] = useState('')
+  const [inviting, setInviting] = useState(false)
 
   const load = useCallback(async () => {
     if (!org?.id) return
@@ -150,15 +154,27 @@ export default function TeamCentre({ org, session, userProfile, onNavigate }) {
 
   return (
     <div style={{ background: 'var(--surface2)', minHeight: '100%', padding: isMobile ? 16 : 24 }}>
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: isMobile ? 22 : 26, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.5 }}>Team</div>
-        <div style={{ fontSize: 13.5, color: 'var(--text3)', marginTop: 3 }}>
-          Approve new accounts, set what each person can reach, and message the team.
+      <div style={{ marginBottom: 16, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ minWidth: 0, flex: '1 1 260px' }}>
+          <div style={{ fontSize: isMobile ? 22 : 26, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.5 }}>Team</div>
+          <div style={{ fontSize: 13.5, color: 'var(--text3)', marginTop: 3 }}>
+            Invite and approve people, set what each person can reach, and message the team.
+          </div>
         </div>
+        {/* Inviting used to live only in HR, which the Complete Platform plan
+            does not include, so this page said "Invite staff from HR" to
+            organisations that could not open it. */}
+        {canDecide && (
+          <button onClick={() => setInviting(true)} style={{
+            minHeight: 44, padding: '0 16px', borderRadius: 12, border: 'none', cursor: 'pointer',
+            background: primary, color: '#fff', fontSize: 14, fontWeight: 800, fontFamily: 'inherit',
+            display: 'inline-flex', alignItems: 'center', gap: 8, flexShrink: 0,
+          }}><Icon name="✉️" /> Invite someone</button>
+        )}
       </div>
 
       {pending.length > 0 && (
-        <button onClick={() => onNavigate && onNavigate('hr')} style={{
+        <button onClick={() => hasHR ? onNavigate && onNavigate('hr') : setSelected(pending[0])} style={{
           width: '100%', textAlign: 'left', marginBottom: 12, cursor: 'pointer',
           background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 12,
           padding: '12px 14px', fontFamily: 'inherit', display: 'flex',
@@ -168,7 +184,7 @@ export default function TeamCentre({ org, session, userProfile, onNavigate }) {
           <span style={{ fontSize: 13.5, color: 'var(--warn-text)', fontWeight: 700, flex: 1, minWidth: 0 }}>
             {pending.length} {pending.length === 1 ? 'person is' : 'people are'} waiting for approval
             <span style={{ display: 'block', fontWeight: 500, fontSize: 12.5, marginTop: 1 }}>
-              Approvals moved to HR &amp; Staff, where approving someone starts their record
+              {hasHR ? 'Approvals are in HR, where approving someone starts their record' : 'Open them to approve or decline'}
             </span>
           </span>
           <span style={{ color: 'var(--warn-text)', fontSize: 18, flexShrink: 0 }}>›</span>
@@ -205,7 +221,7 @@ export default function TeamCentre({ org, session, userProfile, onNavigate }) {
           />
           {filtered.length === 0 && (
             <div style={{ ...card, color: 'var(--text3)', fontSize: 14 }}>
-              {search ? 'Nobody matches that search.' : 'No one here yet. Invite staff from HR.'}
+              {search ? 'Nobody matches that search.' : canDecide ? 'No one here yet. Press Invite someone to add your team.' : 'No one here yet.'}
             </div>
           )}
           {filtered.map(p => (
@@ -266,6 +282,10 @@ export default function TeamCentre({ org, session, userProfile, onNavigate }) {
           onDecide={decide}
           onOpenHR={() => setHrPerson(selected)}
         />
+      )}
+      {inviting && (
+        <InviteStaffModal org={org} primary={primary} onClose={() => setInviting(false)}
+          onSent={() => { setInviting(false); flash('Invite sent'); load() }} />
       )}
     </div>
   )

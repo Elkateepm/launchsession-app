@@ -1104,7 +1104,7 @@ export default function Dashboard({ session, org }) {
           {effectiveTab === 'medical_alerts' && <MedicalAlerts org={org} session={session} onNavigate={handleSetTab} />}
           {/* Rendered inside Office below. */}
           {effectiveTab === 'settings'   && (isAdmin ? <Settings key={settingsSection || 'default'} org={org} session={session} userProfile={userProfile} initialSection={settingsSection || undefined} /> : <RestrictedModule label="Settings" icon="⚙️" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {effectiveTab === 'team' && (isManager ? <TeamCentre org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} /> : <RestrictedModule label="Team" icon="👥" onNavigate={handleSetTab} />)}
+          {effectiveTab === 'team' && (isManager ? <TeamCentre org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} hasHR={canUsePeopleHR} /> : <RestrictedModule label="Team" icon="👥" onNavigate={handleSetTab} />)}
           {effectiveTab === 'branding'   && (isAdmin ? <Settings org={org} session={session} userProfile={userProfile} initialSection="branding" /> : <RestrictedModule label="Branding" icon="🎨" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── DELIVERY PACK ── */}

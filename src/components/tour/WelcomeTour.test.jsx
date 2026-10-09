@@ -1,6 +1,6 @@
 import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
-import WelcomeTour, { ownerTour } from './WelcomeTour'
+import WelcomeTour, { ownerTour, GUIDES } from './WelcomeTour'
 import { startTour, pendingTour, clearTour } from './tourStorage'
 
 jest.mock('../../hooks/useIsMobile', () => ({ useIsMobile: () => false }))
@@ -60,4 +60,36 @@ test('the tour waits in session storage until it is closed', () => {
   expect(pendingTour()).toBe('owner')
   clearTour()
   expect(pendingTour()).toBeNull()
+})
+
+test('each stop offers a step-by-step guide that opens the right screen', async () => {
+  const { onNavigate, onClose } = renderTour()
+  fireEvent.keyDown(window, { key: 'ArrowRight' })
+  fireEvent.keyDown(window, { key: 'ArrowRight' })
+  expect(await screen.findByRole('heading', { name: 'Plan it once, reuse it all term' })).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: /Show me step by step/ }))
+  expect(await screen.findByRole('heading', { name: 'Plan a session, step by step' })).toBeInTheDocument()
+  expect(screen.getAllByRole('listitem')).toHaveLength(GUIDES.sessions.steps.length)
+  expect(screen.getByText('Press + New session')).toBeInTheDocument()
+
+  // Arrows stay put while reading; Escape goes back to the tour, not out of it.
+  fireEvent.keyDown(window, { key: 'ArrowRight' })
+  expect(screen.getByRole('heading', { name: 'Plan a session, step by step' })).toBeInTheDocument()
+  fireEvent.keyDown(window, { key: 'Escape' })
+  expect(onClose).not.toHaveBeenCalled()
+  expect(await screen.findByRole('heading', { name: 'Plan it once, reuse it all term' })).toBeInTheDocument()
+
+  fireEvent.click(screen.getByRole('button', { name: /Show me step by step/ }))
+  fireEvent.click(await screen.findByRole('button', { name: /Open Sessions/ }))
+  expect(onNavigate).toHaveBeenCalledWith('planner')
+})
+
+test('every guide has steps, and opens a screen the dashboard knows', () => {
+  const tabs = ['home', 'planner', 'registers', 'team']
+  for (const [key, guide] of Object.entries(GUIDES)) {
+    expect(guide.steps.length).toBeGreaterThanOrEqual(4)
+    expect(tabs).toContain(guide.open.tab)
+    for (const step of guide.steps) expect(step.title && step.body).toBeTruthy()
+    expect(key).toBeTruthy()
+  }
 })
