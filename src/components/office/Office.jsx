@@ -1,5 +1,7 @@
 import React from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { useIsDarkTheme } from '../../hooks/useIsDarkTheme'
+import { getOfficeBranding } from './officeBranding'
 import Icon from '../../lib/icons'
 
 // ─── OFFICE ──────────────────────────────────────────────────
@@ -18,13 +20,16 @@ import Icon from '../../lib/icons'
 // left its children to scroll themselves and none of them did: the case list
 // was clipped at the fold for months.
 
-export default function Office({ tabs, subTab, onSelect, badges = {}, children }) {
+export default function Office({ org, tabs, subTab, onSelect, badges = {}, children }) {
   const isMobile = useIsMobile()
+  const dark = useIsDarkTheme()
+  const brand = getOfficeBranding(org, dark)
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{ ...brand.style, flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'radial-gradient(ellipse at 100% 0%, var(--office-glow), transparent 48%), var(--bg)' }}>
       <div style={{
-        display: 'flex', gap: 6, padding: isMobile ? '12px 12px 0' : '12px 16px 0',
+        display: 'flex', gap: 6, padding: isMobile ? '12px' : '14px 24px',
+        background: 'var(--surface)', borderBottom: '1px solid var(--border)',
         flexShrink: 0, overflowX: 'auto', WebkitOverflowScrolling: 'touch',
       }} role="tablist" aria-label="Office">
         {/* Overview first, and it is a real destination rather than a label:
@@ -36,16 +41,17 @@ export default function Office({ tabs, subTab, onSelect, badges = {}, children }
           return (
             <button
               key={t.id}
+              type="button"
               role="tab"
               aria-selected={active}
               onClick={() => onSelect(t.tab)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 7, whiteSpace: 'nowrap',
-                padding: '9px 16px', borderRadius: 11, cursor: 'pointer', minHeight: 42,
+                padding: '9px 16px', borderRadius: 11, cursor: 'pointer', minHeight: 44, outlineOffset: -3,
                 fontSize: 13.5, fontWeight: 800, fontFamily: 'inherit',
-                border: `1px solid ${active ? 'var(--org-a35)' : 'var(--border)'}`,
-                background: active ? 'var(--org-a10)' : 'transparent',
-                color: active ? 'var(--org-ink, #6D5DF6)' : 'var(--text3)',
+                border: `1px solid ${active ? 'var(--office-border)' : 'var(--border)'}`,
+                background: active ? 'var(--office-tint)' : 'transparent',
+                color: active ? 'var(--office-ink)' : 'var(--text3)',
                 transition: 'all 0.15s',
               }}
             >
@@ -66,7 +72,7 @@ export default function Office({ tabs, subTab, onSelect, badges = {}, children }
         })}
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', display: 'flex', flexDirection: 'column' }}>
         {children}
       </div>
     </div>
