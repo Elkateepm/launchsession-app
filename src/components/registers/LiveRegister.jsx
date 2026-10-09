@@ -16,6 +16,7 @@ import { todayInLondon } from '../../lib/today'
 import RegisterHero, { BandPill, ON_BAND, bandBar } from './RegisterHero'
 import { orgBrand } from '../shared/OrgPageHero'
 import RegisterTeam from './RegisterTeam'
+import { allergyLabel } from '../../lib/allergyLabel'
 
 const COLLECTION_TYPES = [
   { key: 'approved_adult', label: 'Approved adult' },
@@ -725,9 +726,8 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
       )}
       <div onClick={onOpen} style={{
         width: isMobile ? 38 : 46, height: isMobile ? 38 : 46, borderRadius: isMobile ? 12 : 14, flexShrink: 0, cursor: 'pointer', overflow: 'hidden',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 15, color: '#fff',
-        background: 'linear-gradient(135deg,#8B5CF6,#3B82F6)',
-        boxShadow: '0 3px 8px -2px rgba(124,58,237,0.4)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 15, color: 'var(--org-ink, #0E5E66)',
+        background: 'var(--org-a10, #1B9AAA1a)',
       }}>
         {child.photo_url ? <SignedImg bucket="gallery" src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
       </div>
@@ -747,7 +747,7 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
           {(child.has_epipen || child.has_asthma || child.has_diabetes || child.takes_medication || child.has_medication || child.medical_notes) && (
             <span style={alertPill('danger')}>⚕ Medical</span>
           )}
-          {child.allergies && <span style={alertPill('warn')}><Icon name="⚠" /> Allergy</span>}
+          {child.allergies && <span title={`Allergy: ${child.allergies}`} aria-label={`Allergy: ${child.allergies}`} style={alertPill('warn')}><Icon name="⚠" /> {allergyLabel(child.allergies)}</span>}
           {child.collection_restricted && <span style={alertPill('warn')}><Icon name="⚠" /> Collection restriction</span>}
         </div>
       </div>
@@ -817,18 +817,18 @@ function SignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
             {contacts.map((c, i) => (
               <button key={i} onClick={() => { setCollectionType('approved_adult'); setCollectedByName(`${c.name}${c.relationship ? ' · ' + c.relationship : ''}`) }}
-                style={{ padding: '8px 14px', borderRadius: 10, border: collectedByName.startsWith(c.name) ? '2px solid #7C3AED' : '1.5px solid #E5E7EB', background: collectedByName.startsWith(c.name) ? 'var(--violet-bg)' : 'var(--surface)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+                style={{ padding: '8px 14px', borderRadius: 10, border: collectedByName.startsWith(c.name) ? '2px solid var(--org-primary, #1B9AAA)' : '1.5px solid var(--border)', background: collectedByName.startsWith(c.name) ? 'var(--org-a10, #1B9AAA1a)' : 'var(--surface)', color: 'var(--text)', minHeight: 44, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
                 {c.name}{c.relationship ? ` · ${c.relationship}` : ''}
               </button>
             ))}
             <button onClick={() => { setCollectionType('independent'); setCollectedByName('') }}
-              style={{ padding: '8px 14px', borderRadius: 10, border: collectionType === 'independent' ? '2px solid #7C3AED' : '1.5px solid #E5E7EB', background: collectionType === 'independent' ? 'var(--violet-bg)' : 'var(--surface)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Leaving independently</button>
+              style={{ padding: '8px 14px', borderRadius: 10, border: collectionType === 'independent' ? '2px solid var(--org-primary, #1B9AAA)' : '1.5px solid var(--border)', background: collectionType === 'independent' ? 'var(--org-a10, #1B9AAA1a)' : 'var(--surface)', color: 'var(--text)', minHeight: 44, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>Leaving independently</button>
           </div>
         )}
         <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text3)', marginBottom: 8 }}>Or choose:</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
           {COLLECTION_TYPES.map(t => (
-            <button key={t.key} onClick={() => setCollectionType(t.key)} style={{ padding: '8px 14px', borderRadius: 10, border: collectionType === t.key ? '2px solid #7C3AED' : '1.5px solid #E5E7EB', background: collectionType === t.key ? 'var(--violet-bg)' : 'var(--surface)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>{t.label}</button>
+            <button key={t.key} onClick={() => setCollectionType(t.key)} style={{ padding: '8px 14px', borderRadius: 10, border: collectionType === t.key ? '2px solid var(--org-primary, #1B9AAA)' : '1.5px solid var(--border)', background: collectionType === t.key ? 'var(--org-a10, #1B9AAA1a)' : 'var(--surface)', color: 'var(--text)', minHeight: 44, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>{t.label}</button>
           ))}
         </div>
         {collectionType && collectionType !== 'independent' && (
@@ -839,7 +839,7 @@ function SignOutSheet({ child, onClose, onConfirm, identityCheckRequired }) {
           <input type="checkbox" checked={identityChecked} onChange={e => setIdentityChecked(e.target.checked)} /> Identity checked{identityCheckRequired && ' *'}
         </label>
         <button onClick={confirm}
-          disabled={cannotConfirm} style={{ width: '100%', padding: 13, borderRadius: 10, border: 'none', background: (cannotConfirm) ? 'var(--text-faint)' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: (cannotConfirm) ? 'not-allowed' : 'pointer' }}>
+          disabled={cannotConfirm} style={{ width: '100%', padding: 13, borderRadius: 10, border: 'none', background: (cannotConfirm) ? 'var(--text-faint)' : 'var(--org-primary, #1B9AAA)', color: 'var(--org-on-primary, #fff)', minHeight: 48, fontSize: 14, fontWeight: 700, cursor: (cannotConfirm) ? 'not-allowed' : 'pointer' }}>
           {saving ? 'Saving…' : 'Confirm Sign Out'}
         </button>
       </div>
@@ -920,7 +920,7 @@ function WalkInModal({ org, session, allChildren, onClose, onDone, onSignIn }) {
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, fontSize: 12.5 }}>
             <input type="checkbox" checked={form.consent} onChange={e => setForm({ ...form, consent: e.target.checked })} /> Consent confirmed for today's session
           </label>
-          <button onClick={handleCreateWalkIn} disabled={!form.first_name.trim() || !form.consent || saving} style={{ width: '100%', padding: 12, borderRadius: 10, border: 'none', background: (!form.first_name.trim() || !form.consent) ? 'var(--text-faint)' : 'linear-gradient(135deg,#7C3AED,#3B82F6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          <button onClick={handleCreateWalkIn} disabled={!form.first_name.trim() || !form.consent || saving} style={{ width: '100%', padding: 12, borderRadius: 10, border: 'none', background: (!form.first_name.trim() || !form.consent) ? 'var(--text-faint)' : 'var(--org-primary, #1B9AAA)', color: 'var(--org-on-primary, #fff)', minHeight: 48, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             {saving ? 'Adding...' : 'Create & Sign In'}
           </button>
         </div>
@@ -962,7 +962,7 @@ function NotesPanel({ notes, onClose, onAdd, onRaiseSafeguarding, children }) {
           {children.map(c => <option key={c.id} value={c.id}>{c.first_name} {c.last_name}</option>)}
         </select>
         <textarea value={content} onChange={e => setContent(e.target.value)} placeholder="Note..." style={{ ...inp, width: '100%', minHeight: 60, marginBottom: 10 }} />
-        <button onClick={handleAdd} disabled={!content.trim()} style={{ width: '100%', padding: 11, borderRadius: 9, border: 'none', background: !content.trim() ? 'var(--text-faint)' : '#7C3AED', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 18 }}>Add Note</button>
+        <button onClick={handleAdd} disabled={!content.trim()} style={{ width: '100%', padding: 11, borderRadius: 9, border: 'none', background: !content.trim() ? 'var(--text-faint)' : 'var(--org-primary, #1B9AAA)', color: 'var(--org-on-primary, #fff)', minHeight: 46, fontSize: 13, fontWeight: 700, cursor: 'pointer', marginBottom: 18 }}>Add Note</button>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {notes.map(n => {

@@ -28,9 +28,14 @@ export function QRCard({ icon, title, subtitle, url, primary }) {
       qrRef.current.innerHTML = ''
       // eslint-disable-next-line no-new
       new window.QRCode(qrRef.current, { text: url, width: 220, height: 220, colorDark: '#0f172a', colorLight: '#ffffff' })
+      // qrcodejs draws a canvas and an <img> with no alt text, so a screen
+      // reader announced nothing, or the image data. Name the image; the
+      // canvas is the same picture again.
+      qrRef.current.querySelectorAll('img').forEach(img => { img.alt = `QR code for ${title || url}` })
+      qrRef.current.querySelectorAll('canvas').forEach(canvas => canvas.setAttribute('aria-hidden', 'true'))
     })
     return () => { cancelled = true }
-  }, [url])
+  }, [url, title])
 
   const copyLink = () => {
     navigator.clipboard.writeText(url)

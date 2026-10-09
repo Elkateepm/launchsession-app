@@ -3429,16 +3429,25 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             </div>
           )}
 
-          {/* Positioned so it paints above the rings: the accent ring was
-              drawing across the white stat cards. */}
-          <div style={{ marginTop: 18, position: 'relative', zIndex: 2 }}>
-            <OperationalPulse isMobile={isMobile} primary={primary} items={[
+          {(() => {
+            const pulse = [
               { key: 'today', icon: '📅', value: dayOverview.sessions, label: `${terms.Sessions} today`, detail: 'Your delivery schedule', onClick: () => go('calendar') },
               { key: 'expected', icon: '🧒', value: dayOverview.people, label: `${terms.People} booked`, detail: 'Unique people across today', onClick: () => go('registers') },
               { key: 'arrived', icon: '✅', value: dayOverview.arrived, label: 'Arrived today', detail: 'Includes those signed out', onClick: () => go('registers') },
               { key: 'staff', icon: '🤝', value: dayOverview.staff, label: 'Team assigned', detail: 'Unique staff and volunteers', onClick: () => go('planner') },
-            ].filter(item => !['expected', 'arrived'].includes(item.key) || hasModule('registers'))} />
-          </div>
+            ].filter(item => !['expected', 'arrived'].includes(item.key) || hasModule('registers'))
+            // On a phone, four tiles that all read 0 filled the screen and
+            // pushed Getting started below it on day one. The banner already
+            // says nothing is on today.
+            if (isMobile && pulse.every(item => !item.value)) return null
+            return (
+              /* Positioned so it paints above the rings: the accent ring was
+                 drawing across the white stat cards. */
+              <div style={{ marginTop: 18, position: 'relative', zIndex: 2 }}>
+                <OperationalPulse isMobile={isMobile} primary={primary} items={pulse} />
+              </div>
+            )
+          })()}
           <div style={{ position: 'relative', zIndex: 2 }}>
             <DaySpine
               sessions={strictlyTodaySessions}

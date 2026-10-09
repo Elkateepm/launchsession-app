@@ -28,3 +28,17 @@ test('it still opens on Expected when someone was never resolved', () => {
   expect(screen.getByText('Ben Example')).toBeInTheDocument()
   expect(screen.queryByText('Amara Example')).not.toBeInTheDocument()
 })
+
+test('someone never signed out shows as that, not as a second count of "Attended"', () => {
+  renderClosed({
+    expected: [],
+    signed_in: [{ child: child('a', 'Amara', { allergies: 'Peanuts' }), att: { status: 'signed_in', signed_in_at: '2026-10-08T09:05:00Z' } }],
+    absent: [],
+    signed_out: [{ child: child('b', 'Ben'), att: { status: 'signed_out', signed_in_at: '2026-10-08T09:00:00Z', signed_out_at: '2026-10-08T11:00:00Z' } }],
+  })
+  expect(screen.getByRole('button', { name: /Not signed out 1/ })).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /^Attended/ })).not.toBeInTheDocument()
+  expect(screen.getByText(/^Signed in at .* · Not signed out$/)).toBeInTheDocument()
+  // The allergy itself, not just that there is one.
+  expect(screen.getByLabelText('Allergy: Peanuts')).toHaveTextContent('Peanuts')
+})
