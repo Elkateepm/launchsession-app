@@ -34,7 +34,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "build:native": "CI=true react-scripts build && cap sync",
+    "build:native": "CI=true PUBLIC_URL=. react-scripts build && cap sync",
     "ios": "cap open ios",
     "android": "cap open android",
     "ios:dev": "cap run ios --livereload --external",
@@ -57,6 +57,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "homepage": "."
+  }
 }
