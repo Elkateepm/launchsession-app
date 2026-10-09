@@ -1139,6 +1139,7 @@ export default function Dashboard({ session, org }) {
               <RestrictedModule label="Office" icon="🗂" onNavigate={handleSetTab} />
             ) : (
               <Office
+                org={org}
                 tabs={visibleOfficeTabs}
                 badges={{ forms: unreadSubs.length }}
                 subTab={effectiveTab}

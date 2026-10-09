@@ -1,29 +1,41 @@
-// What you see when you open Office.
-//
-// Office used to drop you straight into Forms: the sidebar said Office, the
-// header said Office, and you were looking at a form builder. There was no
-// moment where Office was a place, which made the tab row read as six
-// unrelated screens that happened to share a strip.
-//
-// So: one card per desk job, each answering "is there anything for me here?"
-// before you click. The counts are the point -- a grid of six links with no
-// numbers would be a worse menu, not a better one.
 import React, { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { useIsDarkTheme } from '../../hooks/useIsDarkTheme'
+import { useTerms } from '../../context/OrgContext'
+import { getOfficeBranding } from './officeBranding'
+import OfficeIllustration from './OfficeIllustration'
 import Icon from '../../lib/icons'
 
-// What each card says when it has nothing to report, and how to describe the
-// screen behind it. Descriptions name what is actually in there -- "Templates"
-// alone is ambiguous in this app, since Forms has templates of its own.
 const COPY = {
-  forms:            { blurb: 'Build a form, send it out, read what comes back.' },
-  newsletter:       { blurb: 'Write and send the round-up to parents and volunteers.' },
-  hr:               { blurb: 'Staff records, DBS and training checks, onboarding and leave.' },
-  payments:         { blurb: 'Fees, invoices and what has actually been paid.' },
-  resource_booking: { blurb: 'Rooms, kit and vehicles — who has what, and when.' },
-  templates:        { blurb: 'Reusable email and register templates.' },
-  parent_portal:    { blurb: 'A window for parents into their child’s journey.' },
+  forms:            'Create forms and keep track of the replies.',
+  newsletter:       'Keep families and your team in the loop.',
+  hr:               'Look after your team, training and leave.',
+  payments:         'Keep fees, invoices and payments organised.',
+  resource_booking: 'Find a space, book equipment and plan ahead.',
+  templates:        'Save time with ready-to-use emails and registers.',
+}
+
+const GROUPS = [
+  { title: 'Connect & communicate', description: 'Good communication starts here.', keys: ['forms', 'newsletter', 'templates'] },
+  { title: 'People & planning', description: 'The details that keep everything moving.', keys: ['hr', 'payments', 'resource_booking'] },
+]
+
+const actionStyle = {
+  fontFamily: 'inherit', cursor: 'pointer', textAlign: 'left', color: 'var(--text)',
+  border: '1px solid var(--border)', background: 'var(--surface)',
+  borderRadius: 16, minHeight: 44, outlineOffset: 4,
+}
+
+function OfficeMark({ brand }) {
+  const [failedLogo, setFailedLogo] = useState(null)
+  return (
+    <span style={{ width: 50, height: 50, borderRadius: 15, background: '#fff', border: '1px solid var(--office-border)', display: 'grid', placeItems: 'center', flexShrink: 0, overflow: 'hidden', color: 'var(--office-deep)', fontSize: 21, fontWeight: 800 }}>
+      {brand.logo && failedLogo !== brand.logo
+        ? <img src={brand.logo} alt="" onError={() => setFailedLogo(brand.logo)} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 6, boxSizing: 'border-box' }} />
+        : <span aria-hidden="true">{brand.name.trim().charAt(0).toUpperCase()}</span>}
+    </span>
+  )
 }
 
 const startOfMonthISO = () => {
@@ -100,89 +112,149 @@ export function statFor(key, counts, newResponses) {
 
 export default function OfficeOverview({ org, tabs, onSelect, newResponses = 0 }) {
   const isMobile = useIsMobile()
-  const [counts, setCounts] = useState({})
-  const [loaded, setLoaded] = useState(false)
+  const isCompact = useIsMobile(1100)
+  const dark = useIsDarkTheme()
+  const terms = useTerms()
+  const brand = getOfficeBranding(org, dark)
+  const [snapshot, setSnapshot] = useState(null)
+  const orgId = org?.id
+  const tabKeys = JSON.stringify(tabs.map(t => t.tab))
+  // Never display the previous organisation's counts, even during the render
+  // before the new request starts. Permission changes also invalidate them.
+  const loaded = !!orgId && snapshot?.orgId === orgId && snapshot?.tabKeys === tabKeys
+  const counts = loaded ? snapshot.counts : {}
 
   useEffect(() => {
     let cancelled = false
-    if (!org?.id) return undefined
-    ;(async () => {
-      const result = await loadCounts(org.id, tabs)
-      if (cancelled) return
-      setCounts(result)
-      setLoaded(true)
-    })()
+    if (!orgId) return undefined
+    loadCounts(orgId, JSON.parse(tabKeys).map(tab => ({ tab }))).then(result => {
+      if (!cancelled) setSnapshot({ orgId, tabKeys, counts: result })
+    })
     return () => { cancelled = true }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [org?.id, tabs.length])
+  }, [orgId, tabKeys])
+
+  const canOpen = key => tabs.some(t => t.tab === key)
+  const desk = [
+    canOpen('forms') && newResponses > 0 && {
+      tab: 'forms', icon: 'forms', number: newResponses,
+      title: `New response${newResponses === 1 ? '' : 's'}`, action: 'Review replies', urgent: true,
+    },
+    canOpen('newsletter') && counts.newsletter > 0 && {
+      tab: 'newsletter', icon: 'newsletter', number: counts.newsletter,
+      title: `Newsletter draft${counts.newsletter === 1 ? '' : 's'}`, action: 'Continue writing',
+    },
+    canOpen('resource_booking') && counts.resource_booking > 0 && {
+      tab: 'resource_booking', icon: 'resources', number: counts.resource_booking,
+      title: `Upcoming booking${counts.resource_booking === 1 ? '' : 's'}`, action: 'View bookings',
+    },
+  ].filter(Boolean)
+  const groups = GROUPS.map(group => ({ ...group, items: tabs.filter(t => group.keys.includes(t.tab)) })).filter(group => group.items.length)
+  const otherTabs = tabs.filter(t => t.tab !== 'parent_portal' && !GROUPS.some(group => group.keys.includes(t.tab)))
+  if (otherTabs.length) groups.push({ title: 'More tools', description: 'Everything else for your working day.', items: otherTabs })
+  const date = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())
 
   return (
-    <div style={{ padding: isMobile ? '18px 12px 28px' : '22px 16px 32px' }}>
-      <div style={{ marginBottom: isMobile ? 16 : 22 }}>
-        <h1 style={{ margin: '0 0 6px', fontSize: isMobile ? 22 : 26, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.4 }}>
-          Office
-        </h1>
-        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: 'var(--text3)', maxWidth: 520 }}>
-          The jobs that happen between sessions — paperwork, money, bookings and
-          the words you send out.
-        </p>
+    <div style={{ ...brand.style, width: '100%', maxWidth: 1440, margin: '0 auto', boxSizing: 'border-box', padding: isMobile ? '16px 12px 28px' : '22px 24px 36px' }}>
+      <section aria-labelledby="office-welcome" style={{
+        position: 'relative', overflow: 'hidden', borderRadius: isMobile ? 22 : 26,
+        padding: isMobile ? 22 : '30px 34px', border: '1px solid var(--office-border)',
+        background: 'radial-gradient(ellipse at 100% 0%, var(--office-glow), transparent 65%), linear-gradient(120deg, var(--surface), var(--office-tint))',
+        display: 'flex', alignItems: 'center', gap: 24,
+      }}>
+        <div style={{ flex: 1, minWidth: 0, position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+            <OfficeMark brand={brand} />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ color: 'var(--office-ink)', fontSize: 10, fontWeight: 800, letterSpacing: 1.8, textTransform: 'uppercase', marginBottom: 5 }}>Your shared workspace</div>
+              <div style={{ color: 'var(--text)', fontSize: 16, fontWeight: 800, overflowWrap: 'anywhere' }}>{brand.name}</div>
+            </div>
+          </div>
+          <h1 id="office-welcome" style={{ margin: '0 0 10px', fontFamily: brand.font.display, fontSize: isMobile ? 30 : 38, lineHeight: 1.16, fontWeight: 800, letterSpacing: -1.3, color: 'var(--text)' }}>
+            A little space to<br />make a big difference.
+          </h1>
+          <p style={{ margin: 0, maxWidth: 480, fontSize: 14, lineHeight: 1.7, color: 'var(--text2)' }}>
+            Welcome to your Office. Bring the everyday jobs together,<br style={{ display: isMobile ? 'none' : 'initial' }} /> and make more time for your {terms.people}.
+          </p>
+          <div style={{ marginTop: 22, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px 14px', fontSize: 12, color: 'var(--text3)' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><Icon name="calendar" size={14} />{date}</span>
+            {brand.slogan && <span style={{ color: 'var(--office-ink)', overflowWrap: 'anywhere' }}>{brand.slogan}</span>}
+          </div>
+        </div>
+        {!isCompact && <div style={{ width: '31%', maxWidth: 340, flexShrink: 0, paddingRight: 8 }}><OfficeIllustration /></div>}
+      </section>
+
+      <section aria-labelledby="office-desk" style={{ marginTop: 26, marginBottom: 30 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 12 }}>
+          <Icon name="today" size={17} style={{ color: 'var(--office-ink)' }} />
+          <h2 id="office-desk" style={{ margin: 0, color: 'var(--text)', fontSize: 16, fontWeight: 800 }}>On your desk</h2>
+          <span style={{ fontSize: 12, color: 'var(--text3)', marginLeft: 'auto' }}>A place to pick things up</span>
+        </div>
+        {desk.length > 0 ? (
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(210px, 1fr))', gap: 12 }}>
+            {desk.map(item => (
+              <button key={item.tab} type="button" onClick={() => onSelect(item.tab)} style={{ ...actionStyle, padding: '17px 18px', display: 'flex', alignItems: 'center', gap: 13, borderColor: item.urgent ? 'var(--danger-border)' : 'var(--office-border)' }}>
+                <span style={{ width: 44, height: 44, borderRadius: 13, display: 'grid', placeItems: 'center', flexShrink: 0, fontSize: 22, fontWeight: 800, color: item.urgent ? 'var(--danger-text)' : 'var(--office-ink)', background: item.urgent ? 'var(--danger-bg)' : 'var(--office-tint)' }}>{item.number}</span>
+                <span style={{ flex: 1 }}>
+                  <span style={{ display: 'block', fontSize: 13, fontWeight: 750, marginBottom: 5 }}>{item.title}</span>
+                  <span style={{ display: 'block', fontSize: 12, color: 'var(--text3)' }}>{item.action}</span>
+                </span>
+                <Icon name="→" size={16} style={{ color: 'var(--office-ink)' }} />
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 13, borderRadius: 16, border: '1px solid var(--border)', background: 'var(--surface)' }}>
+            <span style={{ display: 'grid', placeItems: 'center', width: 38, height: 38, borderRadius: 12, background: 'var(--office-tint)', color: 'var(--office-ink)', flexShrink: 0 }}><Icon name="☀️" size={20} /></span>
+            <div style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--text3)' }}>
+              <span style={{ display: 'block', color: 'var(--text)', fontWeight: 750 }}>{loaded ? 'Make yourself at home.' : 'Getting your desk ready…'}</span>
+              Choose a tool below to get started. Replies, drafts and upcoming bookings appear here when available.
+            </div>
+          </div>
+        )}
+      </section>
+
+      <div style={{ display: 'grid', gridTemplateColumns: isCompact || groups.length === 1 ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: isMobile ? 24 : 22 }}>
+        {groups.map((group, groupIndex) => (
+          <section key={group.title} aria-label={group.title} style={{ minWidth: 0 }}>
+            <div style={{ marginBottom: 13, paddingLeft: 2 }}>
+              <h2 style={{ margin: '0 0 4px', color: 'var(--text)', fontSize: 17, fontWeight: 800 }}>{group.title}</h2>
+              <p style={{ margin: 0, fontSize: 12.5, color: 'var(--text3)' }}>{group.description}</p>
+            </div>
+            <div style={{ display: 'grid', gap: 10 }}>
+              {group.items.map(t => {
+                const stat = statFor(t.tab, counts, t.tab === 'forms' ? newResponses : 0)
+                return (
+                  <button key={t.id} type="button" onClick={() => onSelect(t.tab)} style={{ ...actionStyle, width: '100%', padding: isMobile ? 16 : '19px 20px', display: 'flex', alignItems: 'center', gap: 14 }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--office-border)'; e.currentTarget.style.background = 'var(--surface2)' }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--surface)' }}
+                  >
+                    <span style={{ width: 46, height: 46, borderRadius: 14, display: 'grid', placeItems: 'center', flexShrink: 0, background: groupIndex === 0 ? 'var(--office-tint)' : 'var(--office-secondary-tint)', color: groupIndex === 0 ? 'var(--office-ink)' : 'var(--office-secondary-ink)' }}><Icon name={t.icon} size={21} /></span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: 'block', fontSize: 14, fontWeight: 800, marginBottom: 5 }}>{t.label}</span>
+                      <span style={{ display: 'block', fontSize: 12.5, lineHeight: 1.5, color: 'var(--text3)' }}>{COPY[t.tab] || 'Open your workspace tools.'}</span>
+                      {stat && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 8, fontSize: 11.5, fontWeight: 700, color: stat.urgent ? 'var(--danger-text)' : 'var(--office-ink)' }}>{stat.urgent && <Icon name="bell" size={12} />}{stat.text}</span>}
+                    </span>
+                    <Icon name="chevron" size={17} style={{ color: 'var(--text3)' }} />
+                  </button>
+                )
+              })}
+            </div>
+          </section>
+        ))}
       </div>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(268px, 1fr))',
-        gap: 12,
-      }}>
-        {tabs.map(t => {
-          const stat = loaded || t.tab === 'parent_portal' ? statFor(t.tab, counts, t.tab === 'forms' ? newResponses : 0) : null
-          const blurb = (COPY[t.tab] || {}).blurb
-          return (
-            <button
-              key={t.id}
-              onClick={() => onSelect(t.tab)}
-              style={{
-                textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit',
-                display: 'flex', flexDirection: 'column', gap: 10, minHeight: 132,
-                padding: '16px 16px 14px', borderRadius: 16,
-                border: '1px solid var(--border)', background: 'var(--surface)',
-                transition: 'border-color 0.15s, transform 0.15s, box-shadow 0.15s',
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.borderColor = 'var(--org-a35)'
-                e.currentTarget.style.transform = 'translateY(-2px)'
-                e.currentTarget.style.boxShadow = '0 10px 26px -14px rgba(15,23,42,0.35)'
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.borderColor = 'var(--border)'
-                e.currentTarget.style.transform = 'none'
-                e.currentTarget.style.boxShadow = 'none'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{
-                  width: 34, height: 34, borderRadius: 10, flexShrink: 0,
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'var(--org-a10)', color: 'var(--org-ink, #6D5DF6)',
-                }} aria-hidden="true"><Icon name={t.icon} /></span>
-                <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>{t.label}</span>
-              </div>
-
-              <div style={{ fontSize: 13, lineHeight: 1.55, color: 'var(--text3)', flex: 1 }}>{blurb}</div>
-
-              <div style={{ minHeight: 18, display: 'flex', alignItems: 'center', gap: 7 }}>
-                {stat && (
-                  <>
-                    {stat.urgent && <span style={{ width: 7, height: 7, borderRadius: 99, background: '#DC2626', flexShrink: 0 }} />}
-                    <span style={{
-                      fontSize: 12.5, fontWeight: stat.urgent ? 800 : 600,
-                      color: stat.urgent ? '#DC2626' : stat.muted ? 'var(--text3)' : 'var(--text2, #475569)',
-                    }}>{stat.text}</span>
-                  </>
-                )}
-              </div>
-            </button>
-          )
-        })}
+      {canOpen('parent_portal') && (
+        <button type="button" onClick={() => onSelect('parent_portal')} style={{ ...actionStyle, width: '100%', marginTop: 24, padding: '17px 20px', background: 'transparent', borderStyle: 'dashed', display: 'flex', alignItems: 'center', gap: 13 }}>
+          <Icon name="parents" size={22} style={{ color: 'var(--office-ink)' }} />
+          <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: 'var(--text3)', lineHeight: 1.6 }}>
+            <span style={{ color: 'var(--text)', fontWeight: 800, display: 'block' }}>Parent Portal <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: 'var(--office-ink)', background: 'var(--office-tint)', padding: '3px 7px', borderRadius: 6, whiteSpace: 'nowrap' }}>Coming soon</span></span>
+            A closer connection with the families you support.
+          </span>
+          <Icon name="chevron" size={16} style={{ color: 'var(--text3)' }} />
+        </button>
+      )}
+      <div style={{ marginTop: 26, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 7, fontSize: 11.5, color: 'var(--text3)' }}>
+        <Icon name="impact" size={15} /> Less admin. More time to make a difference.
       </div>
     </div>
   )
