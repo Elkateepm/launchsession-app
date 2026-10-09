@@ -83,7 +83,7 @@ export default function HRHome({ org, session, userProfile, onNavigate, section,
         {access.isAdmin && <button style={{ ...HR.button, background: 'transparent', border: 0, fontSize: 12 }} onClick={() => navigateTab('audit')}>Audit trail</button>}
       </footer>
       {openPerson && <StaffHRProfile key={openPerson.hr_staff_id || openPerson.id} org={org} userProfile={userProfile} person={openPerson} initialTab={openTab} onClose={() => { setOpenPerson(null); setOpenTab(null); refresh() }} />}
-      {inviting && <InviteStaffModal org={org} primary={primary} onClose={() => setInviting(false)} onSent={() => { setInviting(false); refresh() }} />}
+      {inviting && <InviteStaffModal org={org} primary={primary} inviterRole={userProfile?.role} onClose={() => setInviting(false)} onSent={() => { setInviting(false); refresh() }} />}
       {adding && <AddPersonModal org={org} primary={primary} canEdit={access.canEditEmployment} onClose={() => setAdding(false)} onSaved={(person, target) => { setAdding(false); onOpen(person, target); refresh() }} />}
     </div>
   </div>

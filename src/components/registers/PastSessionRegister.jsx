@@ -7,6 +7,7 @@ import Icon from '../../lib/icons'
 import { orgFilename } from '../../lib/orgExport'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import RegisterTeam from './RegisterTeam'
+import { allergyLabel } from '../../lib/allergyLabel'
 import { formatDuration, teamMinutes } from '../../lib/volunteerHours'
 
 function fmtTime(d) {
@@ -60,7 +61,7 @@ export default function PastSessionRegister({
   const [teamError, setTeamError] = useState('')
 
   const primary = org?.primary_color || '#3B82F6'
-  const secondary = org?.secondary_color || '#8B5CF6'
+  const secondary = org?.secondary_color || primary
 
   const walkIns = useMemo(() => rows.filter(r => r.child.is_walk_in), [rows])
   const correctedChildIds = useMemo(() => new Set((auditLog || []).map(a => a.child_id)), [auditLog])
@@ -78,7 +79,9 @@ export default function PastSessionRegister({
 
   const TABS = [
     { key: 'expected', label: 'Expected', count: grouped.expected.length },
-    { key: 'signed_in', label: 'Attended', count: grouped.signed_in.length },
+    // Still signed in when the register closed: never signed out. It used to
+    // say "Attended 1" under a header saying "5 of 6 attended".
+    { key: 'signed_in', label: 'Not signed out', count: grouped.signed_in.length, warn: grouped.signed_in.length > 0 },
     { key: 'absent', label: 'Absent', count: grouped.absent.length },
     { key: 'signed_out', label: 'Signed out', count: grouped.signed_out.length },
   ]
@@ -177,7 +180,7 @@ export default function PastSessionRegister({
           <Stat label="Attended" value={attendedTotal} color="#16A34A" />
           <Stat label="Absent" value={grouped.absent.length} color="#DC2626" />
           <Stat label="Signed out" value={grouped.signed_out.length} color="#2563EB" />
-          <Stat label="Walk-ins" value={walkIns.length} color="#7C3AED" />
+          <Stat label="Walk-ins" value={walkIns.length} color="var(--org-ink)" />
           <Stat label="Attendance rate" value={`${attendanceRate}%`} color="#111827" />
         </div>
         )}
@@ -205,8 +208,8 @@ export default function PastSessionRegister({
       {/* TABS */}
       <div className="no-print" style={{ display: 'flex', background: 'var(--surface)', borderBottom: '1px solid var(--border)', overflowX: 'auto' }}>
         {TABS.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{ flex: '1 0 auto', minHeight: 44, padding: '11px 14px', border: 'none', borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent', background: 'none', color: tab === t.key ? 'var(--org-ink)' : 'var(--text3)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-            {t.label} {t.count}
+          <button key={t.key} onClick={() => setTab(t.key)} style={{ flex: '1 0 auto', minHeight: 44, padding: '11px 14px', border: 'none', borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent', background: 'none', color: t.warn ? 'var(--warn-text)' : tab === t.key ? 'var(--org-ink)' : 'var(--text3)', fontSize: 12.5, fontWeight: t.warn ? 800 : 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            {t.warn && <Icon name="⚠" />} {t.label} {t.count}
           </button>
         ))}
       </div>
@@ -251,7 +254,7 @@ export default function PastSessionRegister({
           <div style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>Final attendance recorded: {attendedTotal} attended · {grouped.absent.length} absent · {grouped.signed_out.length} signed out</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => setShowSummary(true)} style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${primary}, ${secondary})`, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>View summary</button>
+          <button onClick={() => setShowSummary(true)} style={{ minHeight: 44, padding: '0 16px', borderRadius: 10, border: 'none', background: 'var(--org-primary, #1B9AAA)', color: 'var(--org-on-primary, #fff)', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>View summary</button>
           <button onClick={() => setShowMore(v => !v)} aria-label="More options" style={{ ...ghostBtn, minWidth: 44, padding: '10px 12px' }}>⋯</button>
         </div>
         {showMore && (
@@ -296,7 +299,7 @@ function Stat({ label, value, color }) {
 }
 
 const STATUS_PILL = {
-  signed_in: { label: 'Attended', color: 'var(--ok-text)', bg: 'var(--ok-bg)' },
+  signed_in: { label: 'Not signed out', color: 'var(--warn-text)', bg: 'var(--warn-bg)' },
   signed_out: { label: 'Signed out', color: 'var(--info-text)', bg: 'var(--info-bg)' },
   absent: { label: 'Absent', color: 'var(--danger-text)', bg: 'var(--danger-bg)' },
   walk_in: { label: 'Walk-in', color: 'var(--violet-text)', bg: 'var(--violet-bg)' },
@@ -310,7 +313,7 @@ function HistoricalRow({ child, att, groupLabel, peopleProfiles, isCorrected, on
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 12 }}>
-      <div onClick={onOpen} style={{ width: 46, height: 46, borderRadius: 14, background: '#7C3AED', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 15, flexShrink: 0, cursor: 'pointer', overflow: 'hidden' }}>
+      <div onClick={onOpen} style={{ width: 46, height: 46, borderRadius: 14, background: 'var(--org-a10, #1B9AAA1a)', color: 'var(--org-ink, #0E5E66)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 15, flexShrink: 0, cursor: 'pointer', overflow: 'hidden' }}>
         {child.photo_url ? <SignedImg bucket="gallery" src={child.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
       </div>
       <div onClick={onOpen} style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
@@ -320,7 +323,7 @@ function HistoricalRow({ child, att, groupLabel, peopleProfiles, isCorrected, on
         </div>
         <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2 }}>{groupLabel(child.group_name)}</div>
         <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2 }}>
-          {status === 'signed_in' && `Attended · Signed in at ${fmtTime(att.signed_in_at)}`}
+          {status === 'signed_in' && (att.signed_in_at ? `Signed in at ${fmtTime(att.signed_in_at)} · Not signed out` : 'Not signed out')}
           {status === 'signed_out' && `Attended · Signed in at ${fmtTime(att.signed_in_at)} · Signed out at ${fmtTime(att.signed_out_at)}${att.collected_by_name ? ` · Collected by ${att.collected_by_name}` : ''}`}
           {status === 'absent' && `Absent · Reason: ${att.absence_reason || 'Not specified'}`}
           {!status && 'No attendance recorded'}
@@ -328,7 +331,7 @@ function HistoricalRow({ child, att, groupLabel, peopleProfiles, isCorrected, on
         {recordedBy && <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginTop: 2 }}>Recorded by {recordedBy}</div>}
         <div style={{ display: 'flex', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
           {(child.has_epipen || child.has_asthma || child.has_diabetes || child.takes_medication || child.medical_notes) && <span style={alertPill('danger')}>⚕ Medical</span>}
-          {child.allergies && <span style={alertPill('warn')}><Icon name="⚠" /> Allergy</span>}
+          {child.allergies && <span title={`Allergy: ${child.allergies}`} aria-label={`Allergy: ${child.allergies}`} style={alertPill('warn')}><Icon name="⚠" /> {allergyLabel(child.allergies)}</span>}
           {isCorrected && (
             <span onClick={onViewAudit} style={{ ...alertPill('warn'), cursor: 'pointer', textDecoration: 'underline' }}>Corrected — view audit history</span>
           )}

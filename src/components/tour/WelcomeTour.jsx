@@ -150,6 +150,16 @@ export default function WelcomeTour({ role = 'owner', org, firstName, onClose, o
   // The step-by-step guide for the current stop, for anyone who wants more
   // than the one-line summary. Moving to another stop closes it.
   const [guideOpen, setGuideOpen] = useState(false)
+  // The stop's text scrolls in its own box on a laptop. It takes keyboard
+  // focus (the tour's arrow keys are off while a guide is open, so this is how
+  // a keyboard reaches steps 4 to 6), and fades at the bottom while there is
+  // more below, rather than cutting off mid-sentence.
+  const scrollRef = useRef(null)
+  const [moreBelow, setMoreBelow] = useState(false)
+  const checkMore = () => {
+    const el = scrollRef.current
+    setMoreBelow(!!el && el.scrollHeight - el.scrollTop - el.clientHeight > 8)
+  }
   // Full screen on a phone; picture above words on a tablet or narrow
   // window, where side by side squeezed the screenshot to a thumbnail.
   const isMobile = useIsMobile()
@@ -169,6 +179,13 @@ export default function WelcomeTour({ role = 'owner', org, firstName, onClose, o
     setIndex(clamped)
   }
   const guide = slide.guide
+
+  // Re-measure once the new stop has animated in, and when the window resizes.
+  useEffect(() => {
+    const timer = setTimeout(checkMore, 360)
+    window.addEventListener('resize', checkMore)
+    return () => { clearTimeout(timer); window.removeEventListener('resize', checkMore) }
+  }, [index, guideOpen]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const onKey = e => {
@@ -250,8 +267,11 @@ export default function WelcomeTour({ role = 'owner', org, firstName, onClose, o
             {!last && <button onClick={onClose} style={{ ...quietButton, color: 'var(--text3)' }}>Skip tour</button>}
           </div>
 
-          <div className="ls-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-            <AnimatePresence mode="wait" initial={false}>
+          <div style={{ position: 'relative', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+          <div ref={scrollRef} onScroll={checkMore} className="ls-scroll" tabIndex={0} role="region"
+            aria-label={guideOpen && guide ? guide.title : slide.title}
+            style={{ flex: 1, minHeight: 0, overflowY: 'auto', outlineOffset: 2 }}>
+            <AnimatePresence mode="wait" initial={false} onExitComplete={checkMore}>
               {guideOpen && guide ? (
                 <motion.div key={`${slide.key}-guide`} {...slideMotion}>
                   <GuideSteps guide={guide} icon={slide.icon} brand={brand} isMobile={isMobile} />
@@ -294,6 +314,8 @@ export default function WelcomeTour({ role = 'owner', org, firstName, onClose, o
               </motion.div>
               )}
             </AnimatePresence>
+          </div>
+          {moreBelow && <div aria-hidden="true" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 36, pointerEvents: 'none', background: 'linear-gradient(to bottom, transparent, var(--surface))' }} />}
           </div>
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', padding: isMobile ? '14px 0 calc(14px + env(safe-area-inset-bottom, 0px))' : stacked ? '16px 0 22px' : '18px 0 26px', borderTop: stacked ? '1px solid var(--border-soft, var(--border))' : 'none', marginTop: 12 }}>
