@@ -535,6 +535,10 @@ export default function Dashboard({ session, org }) {
   const [openAssessmentId, setOpenAssessmentId] = useState(null)
   const [openCaseId, setOpenCaseId] = useState(null)
   const [openConcernId, setOpenConcernId] = useState(null)
+  // A view inside the Safeguarding Hub to open on, e.g. 'injuries' for the
+  // accident book shortcut on Home. Cleared on every other navigation so the
+  // next shortcut press counts as a change and moves the hub again.
+  const [safeguardingSubTab, setSafeguardingSubTab] = useState(null)
   const [initialThreadId, setInitialThreadId] = useState(null)
   const [autoOpenWizard, setAutoOpenWizard] = useState(false)
   const [editSessionId, setEditSessionId] = useState(null)
@@ -612,6 +616,7 @@ export default function Dashboard({ session, org }) {
     // payload is what identifies a case deep link.
     setOpenCaseId(t === 'safeguarding' && payload?.openCaseId ? payload.openCaseId : null)
     setOpenConcernId(t === 'safeguarding' && payload?.openConcernId ? payload.openConcernId : null)
+    setSafeguardingSubTab(t === 'safeguarding' && payload?.subTab ? payload.subTab : null)
     setInitialThreadId(t === 'messaging' && payload?.initialThreadId ? payload.initialThreadId : null)
     setAutoOpenWizard(t === 'planner' && !!payload?.autoOpenWizard)
     setEditSessionId(t === 'planner' && payload?.editSessionId ? payload.editSessionId : null)
@@ -1126,7 +1131,7 @@ export default function Dashboard({ session, org }) {
           {/* Newsletter is rendered inside Office below. */}
 
           {/* ── SAFEGUARDING PACK ── */}
-          {effectiveTab === 'safeguarding'    && (hasModule('safeguarding')    ? <SafeguardingHub org={org} session={session} isAdmin={isAdmin} onNavigate={handleSetTab} initialOpenConcernId={openConcernId} initialOpenCaseId={openCaseId} />                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding Hub"    icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'safeguarding'    && (hasModule('safeguarding')    ? <SafeguardingHub org={org} session={session} isAdmin={isAdmin} onNavigate={handleSetTab} initialOpenConcernId={openConcernId} initialOpenCaseId={openCaseId} initialSubTab={safeguardingSubTab} />                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding Hub"    icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {/* Forms is rendered inside Office below. */}
           {effectiveTab === 'risk_assessments' && (hasModule('risk_assessments') ? <RiskAssessments org={org} session={session} initialOpenAssessmentId={openAssessmentId} userProfile={userProfile} />                    : <LockedModule moduleKey="risk_assessments" label="Risk Assessments" icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
 

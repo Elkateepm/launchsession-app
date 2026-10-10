@@ -41,6 +41,7 @@ const label = { fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransf
 // a form filled in one-handed beside an upset child cannot afford that.
 const input = { width: '100%', boxSizing: 'border-box', padding: '11px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 16, fontFamily: 'inherit', outline: 'none', background: 'var(--surface)' }
 const section = { background: 'var(--surface2)', borderRadius: 12, padding: '13px 14px', marginBottom: 12 }
+const bookLink = { minHeight: 36, padding: '0 10px', border: 'none', background: 'transparent', color: 'var(--org-ink)', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4 }
 const sectionTitle = { fontSize: 11.5, fontWeight: 800, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }
 
 // A datetime-local value for right now, in the browser's own time. An ISO
@@ -141,7 +142,7 @@ function PersonPicker({ options, value, onChange, terms, accent }) {
 // `people` rather than `children`: a prop of that name collides with the JSX
 // children slot, which is a confusing thing to leave in a component that never
 // renders any.
-export default function InjuryForm({ org, userProfile, session, people: providedPeople, onClose, onSaved, initialChildId = null }) {
+export default function InjuryForm({ org, userProfile, session, people: providedPeople, onClose, onSaved, initialChildId = null, onOpenBook = null }) {
   const terms = useTerms()
   const accent = org?.primary_color || '#6D5DF6'
   const [people, setPeople] = useState(providedPeople || [])
@@ -228,8 +229,21 @@ export default function InjuryForm({ org, userProfile, session, people: provided
           minHeight: 46, padding: '0 26px', borderRadius: 12, border: 'none',
           background: accent, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
         }}>Done</button>
+        {onOpenBook && (
+          <div>
+            <button onClick={onOpenBook} style={bookLink}>Open the accident book <Icon name="→" /></button>
+          </div>
+        )}
       </div>
     )
+  }
+
+  // Leaving for the accident book closes this form, so a half-written entry
+  // asks first rather than vanishing.
+  const openBook = () => {
+    const started = f.child_id || f.what_happened.trim() || f.injury_type || f.body_part || f.first_aid_given
+    if (started && !window.confirm('Leave this entry without saving it?')) return
+    onOpenBook()
   }
 
   return (
@@ -237,6 +251,7 @@ export default function InjuryForm({ org, userProfile, session, people: provided
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 4 }}>
         <span style={{ fontSize: 20, color: ALERT, display: 'inline-flex' }}><Icon name="🩹" /></span>
         <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)', flex: 1 }}>Log an injury</div>
+        {onOpenBook && <button onClick={openBook} style={bookLink}>Accident book <Icon name="→" /></button>}
         <button onClick={onClose} aria-label="Close" style={{
           width: 36, height: 36, borderRadius: 10, border: 'none', background: 'var(--surface-hover)',
           color: 'var(--text3)', cursor: 'pointer', fontSize: 17,

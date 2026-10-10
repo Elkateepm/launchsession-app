@@ -31,6 +31,7 @@ import Icon from '../../lib/icons'
 export default function ReportChips({
   org, userProfile, people, linkedSession = null,
   onRaiseConcern, canRaiseConcern = true, isMobile, variant = 'onDark', compact = false,
+  onOpenAccidentBook = null,
 }) {
   const [injuryOpen, setInjuryOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
@@ -116,6 +117,7 @@ export default function ReportChips({
               session={linkedSession}
               people={people}
               onClose={() => setInjuryOpen(false)}
+              onOpenBook={onOpenAccidentBook && (() => { setInjuryOpen(false); onOpenAccidentBook() })}
             />
           </div>
         </OverlayPortal>
