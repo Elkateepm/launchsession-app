@@ -1,451 +1,207 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-import { useHrAttention } from '../../lib/hrAccess'
-import { motion } from 'framer-motion'
-import { supabase } from '../../lib/supabase'
+import React, { useMemo, useState } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { useIsDarkTheme } from '../../hooks/useIsDarkTheme'
 import { useTerms } from '../../context/OrgContext'
+import { getAuthBranding } from '../auth/authBranding'
+import { brandPalette } from '../../lib/brandColors'
+import { OrgLogo, orgBrand } from '../shared/OrgPageHero'
+import Icon from '../../lib/icons'
+import { buildTodaySummary } from './todayModel'
+import useTodayData from './useTodayData'
 
-// "What is happening right now."
-//
-// Distinct from Home, which introduces the organisation. This is the view a
-// supervisor keeps open during a session: who is in the room, who was expected
-// and hasn't arrived, which registers were left open, and who is on duty.
-//
-// Admin only — it aggregates attendance and staffing across every session,
-// which is more than a volunteer running one group should see.
-
-const CARD = { background: 'var(--surface)', border: '1px solid #ECE9F5', borderRadius: 16 }
-
-const londonToday = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' })
-
-const nowMinutes = () => {
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hour12: false,
-  }).formatToParts(new Date())
-  const h = Number(parts.find(p => p.type === 'hour').value)
-  const m = Number(parts.find(p => p.type === 'minute').value)
-  return h * 60 + m
-}
-
-const toMinutes = t => {
-  if (!t) return null
-  const [h, m] = String(t).split(':').map(Number)
-  return Number.isFinite(h) ? h * 60 + (m || 0) : null
-}
-
-const hhmm = t => (t ? String(t).slice(0, 5) : '')
-
-/**
- * Where a session is in its day. Derived from the clock rather than stored,
- * because nothing writes a "running" flag and a stale one would be worse than
- * none.
- */
-function sessionPhase(session) {
-  const start = toMinutes(session.start_time)
-  const end = toMinutes(session.end_time)
-  const now = nowMinutes()
-  if (start === null) return 'scheduled'
-  if (end !== null && now > end) return 'finished'
-  if (now >= start) return 'running'
-  return 'upcoming'
-}
-
+const CARD = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18 }
+const BUTTON = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, minHeight: 44, padding: '10px 15px', borderRadius: 11, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 12.5, fontWeight: 750, fontFamily: 'inherit', cursor: 'pointer', outlineOffset: 3 }
 const PHASE = {
-  running: { label: 'Running now', dot: '#12B76A', bg: 'var(--ok-bg)', text: 'var(--ok-text)' },
-  upcoming: { label: 'Later today', dot: '#7C5CFC', bg: 'var(--violet-bg)', text: 'var(--violet-text)' },
-  finished: { label: 'Finished', dot: 'var(--text-faint)', bg: 'var(--surface2)', text: 'var(--text2)' },
-  scheduled: { label: 'No time set', dot: 'var(--text-faint)', bg: 'var(--surface2)', text: 'var(--text2)' },
+  live: { label: 'Running now', color: 'var(--ok-text)', bg: 'var(--ok-bg)' },
+  upcoming: { label: 'Later today', color: 'var(--today-ink)', bg: 'var(--today-tint)' },
+  completed: { label: 'Finished', color: 'var(--text3)', bg: 'var(--surface2)' },
+  scheduled: { label: 'Time to confirm', color: 'var(--warn-text)', bg: 'var(--warn-bg)' },
+  draft: { label: 'Draft', color: 'var(--text3)', bg: 'var(--surface2)' },
+}
+const show = n => n == null ? '—' : n
+const time = value => value ? String(value).slice(0, 5) : 'Time to confirm'
+const dateLabel = value => new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(`${value}T12:00:00Z`))
+
+function Stat({ icon, value, label, detail }) {
+  return <div style={{ ...CARD, padding: '17px 18px', minWidth: 0 }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
+      <span style={{ fontSize: 12, fontWeight: 650, color: 'var(--text3)' }}>{label}</span>
+      <Icon name={icon} size={17} style={{ color: 'var(--today-ink)' }} />
+    </div>
+    <div style={{ fontSize: 29, lineHeight: 1.1, fontWeight: 800, letterSpacing: -0.8, color: 'var(--text)' }}>{show(value)}</div>
+    <div style={{ fontSize: 11.5, lineHeight: 1.5, color: 'var(--text3)', marginTop: 6 }}>{detail}</div>
+  </div>
 }
 
-export default function Today({ org, session: authSession, userProfile, onNavigate }) {
+function SectionTitle({ icon, children, detail }) {
+  return <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+    <Icon name={icon} size={17} style={{ color: 'var(--today-ink)' }} />
+    <h2 style={{ margin: 0, color: 'var(--text)', fontSize: 16, fontWeight: 800 }}>{children}</h2>
+    {detail && <span style={{ marginLeft: 'auto', fontSize: 11.5, color: 'var(--text3)' }}>{detail}</span>}
+  </div>
+}
+
+export default function Today({ org, userProfile, onNavigate, access = {}, newResponses = 0 }) {
   const terms = useTerms()
-  const isMobile = useIsMobile()
-  const primary = org?.primary_color || '#6D5DF6'
-  // Renders nothing at all for anyone without HR access, and nothing when
-  // there is nothing waiting -- Today is about the session in front of you,
-  // and an HR row with a zero on it would just be furniture.
-  const hrAttention = useHrAttention(org?.id, userProfile?.role)
-
-  const [sessions, setSessions] = useState([])
-  const [attendance, setAttendance] = useState([])
-  const [staff, setStaff] = useState([])
-  const [expected, setExpected] = useState(0)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
-  const [tick, setTick] = useState(0)
-  const mounted = useRef(true)
-
-  const load = useCallback(async () => {
-    if (!org?.id) return
-    setError(false)
-    const today = londonToday()
-
-    const { data: sess, error: e1 } = await supabase.from('sessions')
-      .select('id, title, session_date, start_time, end_time, location, session_type, bubbles')
-      .eq('org_id', org.id).eq('session_date', today)
-      .order('start_time')
-
-    if (e1) { setError(true); setLoading(false); return }
-
-    const ids = (sess || []).map(s => s.id)
-
-    const [att, sst, kids] = await Promise.all([
-      ids.length
-        ? supabase.from('attendance')
-            .select('id, session_id, child_id, status, signed_in_at, signed_out_at')
-            .eq('org_id', org.id).in('session_id', ids)
-        : Promise.resolve({ data: [] }),
-      ids.length
-        ? supabase.from('session_staff')
-            .select('id, session_id, user_id, volunteer_id, role, attended, signed_in_at')
-            .eq('org_id', org.id).in('session_id', ids)
-        : Promise.resolve({ data: [] }),
-      supabase.from('children').select('id', { count: 'exact', head: true })
-        .eq('org_id', org.id),
-    ])
-
-    if (!mounted.current) return
-    setSessions(sess || [])
-    setAttendance(att.data || [])
-    setStaff(sst.data || [])
-    setExpected(kids.count || 0)
-    setLoading(false)
-  }, [org?.id])
-
-  useEffect(() => {
-    mounted.current = true
-    load()
-    return () => { mounted.current = false }
-  }, [load])
-
-  // Phase is clock-derived, so the page has to re-evaluate as time passes --
-  // otherwise a session that started five minutes ago still reads "Later
-  // today" until someone reloads. Polled rather than subscribed: Supabase
-  // Realtime crashes iOS WebKit in this app.
-  useEffect(() => {
-    const id = setInterval(() => {
-      if (document.visibilityState !== 'visible') return
-      setTick(t => t + 1)
-      load()
-    }, 60000)
-    const onVisible = () => { if (document.visibilityState === 'visible') load() }
-    document.addEventListener('visibilitychange', onVisible)
-    return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVisible) }
-  }, [load])
-
-  const perSession = useMemo(() => {
-    void tick
-    return sessions.map(s => {
-      const rows = attendance.filter(a => a.session_id === s.id)
-      const present = rows.filter(a => a.signed_in_at && !a.signed_out_at).length
-      const signedOut = rows.filter(a => a.signed_out_at).length
-      const absent = rows.filter(a => a.status === 'absent').length
-      const marked = rows.filter(a => a.status || a.signed_in_at).length
-      const staffRows = staff.filter(x => x.session_id === s.id)
-      return {
-        ...s,
-        phase: sessionPhase(s),
-        present, signedOut, absent, marked,
-        registerStarted: rows.length > 0,
-        staffOnSite: staffRows.filter(x => x.attended || x.signed_in_at).length,
-        staffAssigned: staffRows.length,
-      }
-    })
-  }, [sessions, attendance, staff, tick])
-
-  const running = perSession.filter(s => s.phase === 'running')
-  const upcoming = perSession.filter(s => s.phase === 'upcoming')
-  const finished = perSession.filter(s => s.phase === 'finished' || s.phase === 'scheduled')
-
-  // Held as the sessions themselves, not just counts, so a row about exactly
-  // one session can open that session rather than the list.
-  const notStartedSessions = useMemo(
-    () => perSession.filter(s => s.phase === 'running' && !s.registerStarted), [perSession])
-  const openRegisterSessions = useMemo(
-    () => perSession.filter(s => s.phase === 'finished' && s.present > 0), [perSession])
-
-  const totals = useMemo(() => ({
-    onSite: perSession.reduce((n, s) => n + s.present, 0),
-    staffOnSite: perSession.reduce((n, s) => n + s.staffOnSite, 0),
-    // A register left open after a session ends is the thing most worth
-    // surfacing: it usually means nobody signed the children out.
-    openRegisters: openRegisterSessions.length,
-    notStarted: notStartedSessions.length,
-  }), [perSession, openRegisterSessions, notStartedSessions])
-
-  const attention = []
-  if (totals.notStarted > 0) {
-    attention.push({
-      id: 'not-started', tone: 'var(--danger-text)',
-      title: `${totals.notStarted} register${totals.notStarted === 1 ? '' : 's'} not started`,
-      detail: totals.notStarted === 1
-        ? `${notStartedSessions[0].title || 'A session'} is running with nobody marked in`
-        : 'Sessions are running with nobody marked in',
-      cta: totals.notStarted === 1 ? 'Open register' : 'Open registers',
-      sessionId: totals.notStarted === 1 ? notStartedSessions[0].id : null,
-    })
+  const mobile = useIsMobile()
+  const compact = useIsMobile(1100)
+  const dark = useIsDarkTheme()
+  const brand = getAuthBranding(org)
+  const palette = brandPalette(brand.primary, dark)
+  const identity = { name: brand.name, logo_url: brand.logo, primary_color: brand.primary, secondary_color: brand.secondary, accent_color: brand.accent }
+  const colours = orgBrand(identity)
+  const { data, loading, refreshing, checkedAt, refresh } = useTodayData(org?.id, access)
+  const summary = useMemo(() => buildTodaySummary(data?.sessions || [], data?.attendance, data?.staff), [data])
+  const [filter, setFilter] = useState('all')
+  const heading = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())
+  const openRegister = id => onNavigate?.('registers', id ? { sessionId: id, returnTo: 'today' } : undefined)
+  const editPlan = s => onNavigate?.('planner', access.plannerEdit ? { editSessionId: s.id } : undefined)
+  const createPlan = () => onNavigate?.('planner', { autoOpenWizard: true })
+  const next = summary.running[0] || summary.today.find(s => s.phase === 'upcoming') || summary.next[0]
+  const errors = data?.errors || []
+  const deliveryUnknown = loading || !data?.sessions || (summary.delivery.length > 0 && (!data?.attendance || !data?.staff)) || errors.some(e => ['overview', 'schedule', 'attendance', 'staffing'].includes(e))
+  const priorities = []
+  const addRegisters = (rows, id, title, detail) => {
+    if (!rows.length || !access.registers) return
+    priorities.push({ id, icon: 'registers', title, detail, count: rows.length, label: access.registerEdit ? rows.length === 1 ? 'Open register' : 'Open registers' : 'View registers', action: () => openRegister(access.registerEdit && rows.length === 1 ? rows[0].id : null) })
   }
-  if (totals.openRegisters > 0) {
-    attention.push({
-      id: 'open', tone: '#F79009',
-      title: `${totals.openRegisters} register${totals.openRegisters === 1 ? '' : 's'} left open`,
-      detail: totals.openRegisters === 1
-        ? `${openRegisterSessions[0].title || 'A session'} has finished but ${terms.people} are still signed in`
-        : `Sessions have finished but ${terms.people} are still signed in`,
-      cta: totals.openRegisters === 1 ? 'Open register' : 'Open registers',
-      sessionId: totals.openRegisters === 1 ? openRegisterSessions[0].id : null,
-    })
-  }
+  addRegisters(summary.leftOpen, 'left-open', `${summary.leftOpen.length} register${summary.leftOpen.length === 1 ? '' : 's'} left open`, summary.leftOpen.length === 1 ? `${summary.leftOpen[0].title || terms.Session} has finished with ${summary.leftOpen[0].present} still signed in.` : `Check sign-outs for finished ${terms.sessions}.`)
+  addRegisters(summary.notStarted, 'not-started', `${summary.notStarted.length} register${summary.notStarted.length === 1 ? '' : 's'} not started`, summary.notStarted.length === 1 ? `${summary.notStarted[0].title || terms.Session} is running with nobody marked in` : `${terms.Sessions} are running with nobody marked in`)
+  if (summary.unstaffed.length && access.planner) priorities.push({ id: 'staffing', icon: 'team', count: summary.unstaffed.length, title: `${summary.unstaffed.length} ${summary.unstaffed.length === 1 ? terms.session : terms.sessions} with no team assigned`, detail: 'Review who is supporting delivery.', label: 'Review staffing', action: () => editPlan(summary.unstaffed[0]) })
+  if (summary.untimed.length && access.planner) priorities.push({ id: 'times', icon: 'clock', count: summary.untimed.length, title: 'Start times need confirming', detail: `${summary.untimed.length} ${summary.untimed.length === 1 ? terms.session : terms.sessions} without a start time.`, label: 'Review plans', action: () => editPlan(summary.untimed[0]) })
+  const priorityCount = priorities.reduce((n, p) => n + p.count, 0)
+  const filters = [{ key: 'all', label: 'All' }, ...Object.entries(PHASE).filter(([key]) => summary.today.some(s => s.phase === key)).map(([key, meta]) => ({ key, label: meta.label }))]
+  const activeFilter = filters.some(f => f.key === filter) ? filter : 'all'
+  const order = { live: 0, upcoming: 1, scheduled: 2, draft: 3, completed: 4 }
+  const visible = summary.today.filter(s => activeFilter === 'all' || s.phase === activeFilter).sort((a, b) => order[a.phase] - order[b.phase] || (a.start_time || '').localeCompare(b.start_time || ''))
+  const shortcuts = [
+    access.plannerEdit && { label: `Plan a ${terms.session}`, detail: 'Set up your next activity', icon: 'add', action: createPlan },
+    access.registers && { label: 'Registers', detail: 'Attendance and sign-outs', icon: 'registers', action: () => openRegister(null) },
+    access.risk && { label: 'Risk assessments', detail: 'Get ready for safe delivery', icon: 'safeguarding', action: () => onNavigate?.('risk_assessments') },
+    access.office && { label: 'Open Office', detail: 'Forms, communications and admin', icon: 'operations', action: () => onNavigate?.('office') },
+  ].filter(Boolean)
+  const primaryButton = { ...BUTTON, background: colours.ink, color: '#fff', borderColor: 'transparent' }
 
-  const heading = new Date().toLocaleDateString('en-GB', {
-    weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/London',
-  })
+  return <div style={{ '--today-ink': palette.ink, '--today-tint': palette.tint, '--today-border': palette.border, '--font': brand.font.body, '--font-display': brand.font.display, fontFamily: brand.font.body, padding: mobile ? '16px 12px 28px' : '22px 24px 36px', width: '100%', maxWidth: 1480, boxSizing: 'border-box', margin: '0 auto' }}>
+    <section aria-label="Today overview" style={{ background: colours.hero, color: '#fff', borderRadius: mobile ? 22 : 26, padding: mobile ? 22 : '26px 30px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap', position: 'relative', overflow: 'hidden' }}>
+      <div aria-hidden="true" style={{ position: 'absolute', width: 440, height: 440, border: '1px solid #ffffff20', borderRadius: '50%', right: -120, top: -220, pointerEvents: 'none' }} />
+      <div style={{ flex: '1 1 340px', minWidth: 0, position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+          <OrgLogo org={identity} height={46} maxWidth={150} />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.1, textTransform: 'uppercase', overflowWrap: 'anywhere' }}>{brand.name}</div>
+            <div style={{ marginTop: 4, fontSize: 12, color: '#ffffffd6' }}>{heading}</div>
+          </div>
+        </div>
+        <h1 style={{ margin: 0, fontFamily: brand.font.display, fontSize: mobile ? 30 : 36, letterSpacing: -0.9, fontWeight: 800, lineHeight: 1.15 }}>Today, at a glance.</h1>
+        <p style={{ margin: '9px 0 18px', fontSize: 13.5, lineHeight: 1.6, color: '#ffffffde' }}>{userProfile?.full_name ? `${userProfile.full_name.split(' ')[0]}, here's` : 'Here’s'} what’s happening, what needs you and what’s next.</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {access.calendar && <button type="button" onClick={() => onNavigate?.('calendar')} style={{ ...BUTTON, background: '#fff', borderColor: 'transparent', color: colours.ink }}><Icon name="calendar" size={16} />Open calendar</button>}
+          {access.plannerEdit && <button type="button" onClick={createPlan} style={{ ...BUTTON, color: '#fff', background: '#ffffff16', borderColor: '#ffffff55' }}><Icon name="add" size={16} />New {terms.session}</button>}
+        </div>
+      </div>
+      {!compact && <div style={{ flex: '0 1 330px', minWidth: 0, padding: '20px 22px', border: '1px solid #ffffff35', background: '#00000020', borderRadius: 18, position: 'relative' }}>
+        <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.4, color: '#ffffffcc', marginBottom: 10 }}>{loading ? 'Your day' : next?.phase === 'live' ? 'Happening now' : 'Next up'}</div>
+        <div style={{ fontSize: 18, lineHeight: 1.4, fontWeight: 800 }}>{loading ? 'Getting things ready…' : next ? next.title || terms.Session : data?.sessions ? 'A little room to plan ahead' : 'Your delivery overview'}</div>
+        <div style={{ fontSize: 12.5, color: '#ffffffde', marginTop: 9, lineHeight: 1.7 }}>{next ? `${dateLabel(next.session_date)} · ${time(next.start_time)}` : 'Keep your team prepared for the days ahead.'}</div>
+        {next?.location && <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#ffffffde', marginTop: 6 }}><Icon name="location" size={14} />{next.location}</div>}
+        {next?.phase === 'live' && access.registerEdit && <button type="button" onClick={() => openRegister(next.id)} style={{ ...BUTTON, marginTop: 14, width: '100%', color: colours.ink }}>Open live register<Icon name="→" size={14} /></button>}
+      </div>}
+    </section>
 
-  const Stat = ({ value, label }) => (
-    <div style={{ ...CARD, padding: '14px 16px', minWidth: 0 }}>
-      <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text)', lineHeight: 1.1 }}>{value}</div>
-      <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 3 }}>{label}</div>
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>
+      <span role="status" style={{ color: 'var(--text3)', fontSize: 11.5 }}>{loading ? 'Loading your day…' : checkedAt ? `Last checked ${new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit' }).format(checkedAt)} · updates every minute` : ''}</span>
+      <button type="button" onClick={refresh} disabled={refreshing} style={{ ...BUTTON, padding: '8px 12px', minHeight: 44, background: 'transparent', opacity: refreshing ? 0.6 : 1 }}><Icon name="🔄" size={14} />{refreshing ? 'Refreshing…' : 'Refresh'}</button>
     </div>
-  )
+    {errors.length > 0 && <div role="alert" style={{ ...CARD, borderColor: 'var(--warn-border)', background: 'var(--warn-bg)', color: 'var(--warn-text)', padding: '14px 18px', marginBottom: 16, fontSize: 13, lineHeight: 1.6 }}>
+      We couldn’t update {errors.join(', ')}. Unavailable figures are shown as —. Refresh to try again.
+    </div>}
+    <div style={{ display: 'grid', gridTemplateColumns: mobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))', gap: 12, marginBottom: 26 }}>
+      <Stat icon="sessions" value={data?.sessions ? summary.delivery.length : null} label={`${terms.Sessions} today`} detail={data?.sessions ? `${summary.running.length} running now${summary.today.some(s => s.phase === 'draft') ? ' · drafts below' : ''}` : access.schedule ? 'Waiting for the schedule' : 'Schedule access required'} />
+      <Stat icon="children" value={summary.onSite} label={`${terms.People} signed in`} detail={access.registers ? 'Unique people across today' : 'Register access required'} />
+      <Stat icon="team" value={summary.staffOnSite} label="Team on site" detail={access.planner ? 'Signed in and not signed out' : 'Planner access required'} />
+      <Stat icon="bell" value={deliveryUnknown ? null : priorityCount} label="Delivery checks" detail={deliveryUnknown ? 'Some checks unavailable' : priorityCount ? 'Follow up below' : 'No issues flagged'} />
+    </div>
 
-  const SessionCard = ({ s }) => {
-    const meta = PHASE[s.phase]
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.18 }}
-        style={{ ...CARD, padding: 16 }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            padding: '3px 10px', borderRadius: 999, fontSize: 11.5, fontWeight: 700,
-            background: meta.bg, color: meta.text,
-          }}>
-            <span style={{ width: 6, height: 6, borderRadius: 6, background: meta.dot }} />
-            {meta.label}
-          </span>
-          <span style={{ fontSize: 12.5, color: 'var(--text3)' }}>
-            {hhmm(s.start_time)}{s.end_time ? `–${hhmm(s.end_time)}` : ''}
-            {s.location ? ` · ${s.location}` : ''}
-          </span>
-        </div>
+    <div style={{ display: 'grid', gridTemplateColumns: compact ? 'minmax(0, 1fr)' : 'minmax(0, 1.65fr) minmax(300px, 1fr)', alignItems: 'start', gap: 22 }}>
+      <div style={{ minWidth: 0 }}>
+        <section aria-label="Delivery priorities" style={{ ...CARD, padding: mobile ? 17 : 21, marginBottom: 22 }}>
+          <SectionTitle icon="today">Needs attention</SectionTitle>
+          {priorities.length > 0 ? <div style={{ display: 'grid', gap: 12 }}>{priorities.map(item => <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '13px 14px', borderRadius: 12, background: 'var(--warn-bg)', border: '1px solid var(--warn-border)' }}>
+            <Icon name={item.icon} size={18} style={{ color: 'var(--warn-text)' }} />
+            <div style={{ flex: '1 1 200px', minWidth: 0 }}><div style={{ color: 'var(--text)', fontSize: 13, fontWeight: 800 }}>{item.title}</div><div style={{ fontSize: 12, lineHeight: 1.6, color: 'var(--text3)', marginTop: 4 }}>{item.detail}</div></div>
+            <button type="button" onClick={item.action} style={{ ...BUTTON, width: mobile ? '100%' : undefined }}>{item.label}<Icon name="→" size={14} /></button>
+          </div>)}</div> : <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '8px 0', color: 'var(--text3)', fontSize: 13, lineHeight: 1.65 }}><Icon name={deliveryUnknown ? 'clock' : 'check'} size={21} style={{ color: 'var(--today-ink)' }} /><span>{loading ? 'Checking your day…' : deliveryUnknown ? 'Some delivery checks are unavailable. Check the relevant tools before relying on the overview.' : summary.delivery.length ? 'No register or staffing issues flagged for today.' : `No ${terms.sessions} scheduled today. Use the next few days to get ahead.`}</span></div>}
+        </section>
 
-        <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>
-          {s.title || 'Session'}
-        </div>
-
-        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 14 }}>
-          <div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: s.present > 0 ? 'var(--ok-text)' : 'var(--text-faint)' }}>
-              {s.present}
-            </div>
-            <div style={{ fontSize: 11.5, color: 'var(--text3)' }}>signed in</div>
+        <section aria-label="Today’s schedule">
+          <SectionTitle icon="calendar">Today’s schedule</SectionTitle>
+          {summary.today.length > 0 && <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+            {filters.map(f => <button key={f.key} type="button" aria-pressed={activeFilter === f.key} onClick={() => setFilter(f.key)} style={{ ...BUTTON, padding: '8px 12px', fontSize: 11.5, background: activeFilter === f.key ? 'var(--today-tint)' : 'var(--surface)', borderColor: activeFilter === f.key ? 'var(--today-border)' : 'var(--border)', color: activeFilter === f.key ? 'var(--today-ink)' : 'var(--text3)' }}>{f.label}</button>)}
+          </div>}
+          <div style={{ display: 'grid', gap: 12 }}>
+            {visible.map(s => {
+              const meta = PHASE[s.phase]
+              return <article key={s.id} style={{ ...CARD, padding: mobile ? 17 : 21, borderLeft: `4px solid ${s.phase === 'live' ? 'var(--ok-text)' : 'var(--today-border)'}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+                  <span style={{ fontSize: 11, padding: '4px 9px', borderRadius: 7, color: meta.color, background: meta.bg, fontWeight: 750 }}>{meta.label}</span>
+                  <span style={{ color: 'var(--text3)', fontSize: 12 }}>{time(s.start_time)}{s.end_time ? `–${time(s.end_time)}` : ''}</span>
+                  {s.session_date < data?.day && <span style={{ fontSize: 11.5, color: 'var(--text3)' }}>Continues from {dateLabel(s.session_date)}</span>}
+                </div>
+                <h3 style={{ margin: '0 0 7px', fontSize: 16, fontWeight: 800, color: 'var(--text)' }}>{s.title || terms.Session}</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text3)', marginBottom: 16 }}><Icon name="location" size={14} />{s.location || 'Location to confirm'}</div>
+                {s.phase !== 'draft' && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', padding: '13px 0', marginBottom: 14, borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', gap: 8 }}>
+                  {[{ n: s.present, label: 'Signed in' }, { n: s.waiting, label: 'Awaiting arrival' }, { n: s.staffAssigned == null ? null : `${s.staffOnSite}/${s.staffAssigned}`, label: 'Team on site' }].map(metric => <div key={metric.label}><div style={{ color: 'var(--text)', fontSize: 19, fontWeight: 800 }}>{show(metric.n)}</div><div style={{ marginTop: 4, color: 'var(--text3)', fontSize: 11 }}>{metric.label}</div></div>)}
+                </div>}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 11.5, color: 'var(--text3)' }}>{s.phase === 'draft' ? 'Finish planning before delivery.' : s.signedOut != null ? `${s.signedOut} signed out · ${s.absent} absent` : 'Attendance unavailable'}</span>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {access.planner && <button type="button" onClick={() => editPlan(s)} style={BUTTON}>{s.phase === 'draft' && access.plannerEdit ? 'Continue planning' : access.plannerEdit ? 'Review plan' : 'View plans'}</button>}
+                    {s.phase !== 'draft' && access.registers && <button type="button" onClick={() => openRegister(access.registerEdit ? s.id : null)} style={primaryButton}>{access.registerEdit ? 'Open register' : 'View registers'}<Icon name="→" size={14} /></button>}
+                  </div>
+                </div>
+              </article>
+            })}
+            {visible.length === 0 && <div style={{ ...CARD, padding: mobile ? 22 : 28, background: 'linear-gradient(120deg, var(--surface), var(--today-tint))' }}>
+              <span style={{ width: 44, height: 44, borderRadius: 13, display: 'grid', placeItems: 'center', color: 'var(--today-ink)', background: 'var(--today-tint)', marginBottom: 15 }}><Icon name="calendar" size={23} /></span>
+              <h3 style={{ fontSize: 17, margin: '0 0 8px', color: 'var(--text)' }}>{loading ? 'Your schedule is loading' : !access.schedule ? 'Schedule access is not available' : !data?.sessions ? 'Your schedule is unavailable' : 'A quieter day for delivery'}</h3>
+              <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: 'var(--text3)', maxWidth: 440 }}>{!data?.sessions ? 'Use the tools you can access, or refresh to try loading the overview again.' : `No ${terms.sessions} scheduled today. Look ahead, prepare your plans or catch up with the team.`}</p>
+              {access.plannerEdit && <button type="button" onClick={createPlan} style={{ ...primaryButton, marginTop: 18 }}><Icon name="add" size={15} />Plan a {terms.session}</button>}
+            </div>}
           </div>
-          <div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>{s.signedOut}</div>
-            <div style={{ fontSize: 11.5, color: 'var(--text3)' }}>signed out</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>{s.absent}</div>
-            <div style={{ fontSize: 11.5, color: 'var(--text3)' }}>absent</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>
-              {s.staffOnSite}<span style={{ fontSize: 13, color: 'var(--text-faint)' }}>/{s.staffAssigned}</span>
-            </div>
-            <div style={{ fontSize: 11.5, color: 'var(--text3)' }}>staff on site</div>
-          </div>
-        </div>
-
-        {!s.registerStarted && s.phase === 'running' && (
-          <div style={{
-            padding: '9px 12px', borderRadius: 10, marginBottom: 12,
-            background: 'var(--danger-bg)', border: '1px solid var(--danger-border)',
-            fontSize: 12.5, color: 'var(--danger-text)',
-          }}>Register not started</div>
-        )}
-
-        {s.phase === 'finished' && s.present > 0 && (
-          <div style={{
-            padding: '9px 12px', borderRadius: 10, marginBottom: 12,
-            background: 'var(--warn-bg)', border: '1px solid var(--warn-border)',
-            fontSize: 12.5, color: 'var(--warn-text)',
-          }}>{s.present} still signed in after the session ended</div>
-        )}
-
-        <button
-          onClick={() => onNavigate?.('registers', { sessionId: s.id, returnTo: 'today' })}
-          style={{
-            width: '100%', padding: '11px', borderRadius: 11, border: 'none',
-            background: primary, color: '#fff', fontSize: 13.5, fontWeight: 700,
-            cursor: 'pointer', fontFamily: 'inherit',
-          }}
-        >Open register</button>
-      </motion.div>
-    )
-  }
-
-  return (
-    <div style={{ padding: isMobile ? '16px 12px 80px' : '20px 24px', minHeight: '100%' }}>
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: isMobile ? 22 : 24, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.4 }}>
-          Today
-        </div>
-        <div style={{ fontSize: 13.5, color: 'var(--text3)', marginTop: 3 }}>{heading}</div>
+        </section>
       </div>
 
-      {loading && (
-        <div style={{ ...CARD, padding: 30, textAlign: 'center', color: 'var(--text3)', fontSize: 14 }}>
-          Loading…
-        </div>
-      )}
+      <aside style={{ display: 'grid', gap: 20, minWidth: 0 }}>
+        {access.schedule && <section aria-label="Next seven days" style={{ ...CARD, padding: mobile ? 18 : 22 }}>
+          <SectionTitle icon="clock" detail={data?.sessions ? `${summary.next.length} planned` : undefined}>Next 7 days</SectionTitle>
+          {summary.next.length ? summary.next.slice(0, 3).map((s, i) => <div key={s.id} style={{ padding: i ? '16px 0 0' : '2px 0 0', marginTop: i ? 16 : 0, borderTop: i ? '1px solid var(--border)' : undefined }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--today-ink)', marginBottom: 7 }}>{dateLabel(s.session_date)} · {time(s.start_time)}</div>
+            <h3 style={{ fontSize: 14, lineHeight: 1.45, fontWeight: 800, color: 'var(--text)', margin: '0 0 6px' }}>{s.title || terms.Session}</h3>
+            <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10 }}>{s.location || 'Location to confirm'}</div>
+            {access.planner && <button type="button" onClick={() => editPlan(s)} style={{ ...BUTTON, minHeight: 44, fontSize: 11.5 }}>{access.plannerEdit ? 'Review plan' : 'View plans'}<Icon name="→" size={13} /></button>}
+          </div>) : <p style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--text3)', margin: 0 }}>{loading ? 'Looking ahead…' : data?.sessions ? `No published ${terms.sessions} in the next seven days. Drafts are available in your plans.` : 'Upcoming plans are unavailable. Refresh to try again.'}</p>}
+          {access.calendar && <button type="button" onClick={() => onNavigate?.('calendar')} style={{ ...BUTTON, marginTop: 17, width: '100%', color: 'var(--today-ink)' }}>View full calendar<Icon name="→" size={14} /></button>}
+        </section>}
 
-      {!loading && error && (
-        <div style={{ ...CARD, padding: '26px 22px', textAlign: 'center' }}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 5 }}>
-            Couldn't load today
-          </div>
-          <div style={{ fontSize: 13.5, color: 'var(--text3)', marginBottom: 14 }}>
-            This is a connection problem, not an empty day.
-          </div>
-          <button onClick={load} style={{
-            padding: '10px 18px', borderRadius: 11, border: 'none', background: primary,
-            color: '#fff', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-          }}>Try again</button>
-        </div>
-      )}
+        {(access.hr || (access.forms && newResponses > 0)) && <section aria-label="Team and admin follow-ups" style={{ ...CARD, padding: mobile ? 18 : 22 }}>
+          <SectionTitle icon="team">Also on your list</SectionTitle>
+          {access.hr && <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 10 }}><span style={{ fontSize: 13, color: 'var(--text)', fontWeight: 750 }}>HR follow-ups</span><strong style={{ fontSize: 22, color: 'var(--text)' }}>{show(data?.hr?.count)}</strong></div>
+            <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.7, marginBottom: 13 }}>{data?.hr ? data.hr.urgent == null ? 'Urgency check unavailable. Open HR to review.' : <><span style={{ fontWeight: 750, color: data.hr.urgent ? 'var(--warn-text)' : 'var(--text2)' }}>{data.hr.urgent} urgent</span> · {Math.max(0, data.hr.count - data.hr.urgent)} other follow-ups<br />Compliance, reviews and team records.</> : loading ? 'Checking team follow-ups…' : 'HR overview unavailable. Open HR to check.'}</div>
+            <button type="button" onClick={() => onNavigate?.('hr')} style={{ ...BUTTON, width: '100%' }}>Review HR<Icon name="→" size={14} /></button>
+          </>}
+          {access.forms && newResponses > 0 && <button type="button" onClick={() => onNavigate?.('forms')} style={{ ...BUTTON, marginTop: access.hr ? 12 : 0, justifyContent: 'space-between', width: '100%', textAlign: 'left' }}><span>{newResponses} new form {newResponses === 1 ? 'response' : 'responses'}</span><Icon name="→" size={14} /></button>}
+        </section>}
 
-      {!loading && !error && (
-        <>
-          {hrAttention.show && (
-            <button onClick={() => onNavigate && onNavigate('hr')} style={{
-              ...CARD, width: '100%', padding: '14px 16px', marginBottom: 16, minHeight: 44,
-              display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
-              textAlign: 'left', fontFamily: 'inherit',
-              border: `1px solid ${hrAttention.urgent > 0 ? '#FCD9A5' : 'var(--border)'}`,
-              background: hrAttention.urgent > 0 ? 'var(--warn-bg)' : 'var(--surface)',
-            }}>
-              <span style={{ fontSize: 20, flexShrink: 0 }}>🧑‍💼</span>
-              <span style={{ minWidth: 0, flex: 1 }}>
-                <span style={{ display: 'block', fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>
-                  {hrAttention.count} HR item{hrAttention.count > 1 ? 's' : ''} to deal with
-                </span>
-                <span style={{ display: 'block', fontSize: 12.5, color: 'var(--text3)', marginTop: 1 }}>
-                  {hrAttention.urgent > 0
-                    ? `${hrAttention.urgent} overdue — compliance, cases or reviews`
-                    : 'Compliance, supervisions and case actions'}
-                </span>
-              </span>
-              <span style={{ color: 'var(--text-faint)', fontSize: 18, flexShrink: 0 }}>›</span>
-            </button>
-          )}
-
-          {sessions.length > 0 && (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)',
-              gap: 10, marginBottom: 16,
-            }}>
-              <Stat value={totals.onSite} label="young people signed in" />
-              <Stat value={totals.staffOnSite} label="staff on site" />
-              <Stat value={running.length} label="sessions running" />
-              <Stat value={expected} label="on the register" />
-            </div>
-          )}
-
-          {attention.length > 0 && (
-            <div style={{ ...CARD, marginBottom: 16, overflow: 'hidden' }}>
-              <div style={{
-                padding: '13px 16px', borderBottom: '1px solid #ECE9F5',
-                fontSize: 14.5, fontWeight: 800, color: 'var(--text)',
-              }}>Needs attention</div>
-              {attention.map((a, i) => (
-                <div key={a.id} style={{
-                  display: 'flex', alignItems: 'center', gap: 12, padding: '13px 16px',
-                  borderBottom: i < attention.length - 1 ? '1px solid #F5F3FA' : 'none',
-                  flexWrap: isMobile ? 'wrap' : 'nowrap',
-                }}>
-                  <span style={{ width: 8, height: 8, borderRadius: 8, background: a.tone, flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{a.title}</div>
-                    <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>{a.detail}</div>
-                  </div>
-                  <button onClick={() => onNavigate?.('registers', a.sessionId ? { sessionId: a.sessionId, returnTo: 'today' } : undefined)} style={{
-                    padding: '8px 14px', borderRadius: 10, border: 'none', background: primary,
-                    color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                    fontFamily: 'inherit', flexShrink: 0,
-                    width: isMobile ? '100%' : 'auto', marginTop: isMobile ? 8 : 0,
-                  }}>{a.cta}</button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {sessions.length === 0 && (
-            <div style={{ ...CARD, padding: '38px 24px', textAlign: 'center' }}>
-              <div style={{ fontSize: 30, marginBottom: 10 }}>☕</div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)', marginBottom: 5 }}>
-                Nothing scheduled today
-              </div>
-              <div style={{ fontSize: 13.5, color: 'var(--text3)', maxWidth: 340, margin: '0 auto 16px', lineHeight: 1.5 }}>
-                When sessions are running you'll see who's signed in, who's on duty,
-                and anything that needs attention.
-              </div>
-              <button onClick={() => onNavigate?.('calendar')} style={{
-                padding: '10px 18px', borderRadius: 11, border: '1px solid var(--border)',
-                background: 'var(--surface)', color: 'var(--text)', fontSize: 13.5, fontWeight: 700,
-                cursor: 'pointer', fontFamily: 'inherit',
-              }}>Open calendar</button>
-            </div>
-          )}
-
-          {running.length > 0 && (
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>
-                Running now
-              </div>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))',
-                gap: 10,
-              }}>
-                {running.map(s => <SessionCard key={s.id} s={s} />)}
-              </div>
-            </div>
-          )}
-
-          {upcoming.length > 0 && (
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>
-                Later today
-              </div>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))',
-                gap: 10,
-              }}>
-                {upcoming.map(s => <SessionCard key={s.id} s={s} />)}
-              </div>
-            </div>
-          )}
-
-          {finished.length > 0 && (
-            <div>
-              <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>
-                Earlier today
-              </div>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))',
-                gap: 10,
-              }}>
-                {finished.map(s => <SessionCard key={s.id} s={s} />)}
-              </div>
-            </div>
-          )}
-        </>
-      )}
+        {shortcuts.length > 0 && <section aria-label="Useful shortcuts" style={{ ...CARD, padding: mobile ? 18 : 22 }}>
+          <SectionTitle icon="operations">Useful shortcuts</SectionTitle>
+          <div style={{ display: 'grid', gap: 4 }}>{shortcuts.map(action => <button key={action.label} type="button" onClick={action.action} style={{ ...BUTTON, justifyContent: 'flex-start', textAlign: 'left', border: 'none', background: 'transparent', padding: '10px 0', gap: 12 }}>
+            <span style={{ width: 36, height: 36, display: 'grid', placeItems: 'center', borderRadius: 11, background: 'var(--today-tint)', color: 'var(--today-ink)', flexShrink: 0 }}><Icon name={action.icon} size={17} /></span>
+            <span style={{ flex: 1 }}><span style={{ display: 'block', fontSize: 12.5 }}>{action.label}</span><span style={{ display: 'block', marginTop: 4, color: 'var(--text3)', fontSize: 11.5, fontWeight: 400 }}>{action.detail}</span></span><Icon name="chevron" size={15} />
+          </button>)}</div>
+        </section>}
+      </aside>
     </div>
-  )
+  </div>
 }

@@ -4,12 +4,11 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { PROJECT_TYPES } from './ProjectWizard'
 import { TripReadiness, ProjectReflectionModal, AddParticipantsModal, AddTeamModal, EditProjectModal, DuplicateProjectModal } from './ProjectExtras'
 import Icon from '../../lib/icons'
-import { sessionPhase } from '../../lib/sessionPhase'
+import { londonDate, sessionPhase } from '../../lib/sessionPhase'
+import ProjectAttention from './ProjectAttention'
+import { buildProjectAttention } from './projectAttentionModel'
 
-const todayISO = () => {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
+const todayISO = londonDate
 
 const fmtDay = (iso) => new Date(`${iso}T12:00:00`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
 const fmtRange = (a, b) => {
@@ -52,6 +51,7 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
   const [attendance, setAttendance] = useState([])
   const [reflections, setReflections] = useState({})
   const [raLinked, setRaLinked] = useState({})
+  const [attentionUnavailable, setAttentionUnavailable] = useState([])
   const [staffProfiles, setStaffProfiles] = useState({})
   const [projectReflection, setProjectReflection] = useState(null)
   const [showReflection, setShowReflection] = useState(false)
@@ -74,26 +74,27 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
 
     // All project sessions in one query, then everything keyed off those ids --
     // avoids a per-day round trip.
-    const { data: sess } = await supabase.from('sessions').select('*')
+    const { data: sess, error: sessionsError } = await supabase.from('sessions').select('*')
       .eq('org_id', org.id).eq('project_id', projectId)
       .order('session_date').order('start_time')
     const sessions = sess || []
     setDays(sessions)
     const ids = sessions.map(s => s.id)
 
-    const [{ data: parts }, { data: pstaff }, { data: att }, { data: refl }, { data: ras }, { data: profiles }, { data: projRefl }, { data: sStaff }] = await Promise.all([
+    const [{ data: parts }, { data: pstaff }, { data: att, error: attendanceError }, { data: refl, error: reflectionsError }, { data: ras, error: riskError }, { data: profiles }, { data: projRefl }, { data: sStaff }] = await Promise.all([
       supabase.from('project_participants')
         .select('*, children(id, first_name, last_name, photo_url, group_name)')
         .eq('org_id', org.id).eq('project_id', projectId),
       supabase.from('project_staff').select('*').eq('org_id', org.id).eq('project_id', projectId),
-      ids.length ? supabase.from('attendance').select('session_id, child_id, status').in('session_id', ids) : Promise.resolve({ data: [] }),
-      ids.length ? supabase.from('session_reflections').select('session_id').in('session_id', ids) : Promise.resolve({ data: [] }),
-      ids.length ? supabase.from('risk_assessment_sessions').select('session_id').in('session_id', ids) : Promise.resolve({ data: [] }),
+      ids.length ? supabase.from('attendance').select('session_id, child_id, status').eq('org_id', org.id).in('session_id', ids) : Promise.resolve({ data: [] }),
+      ids.length ? supabase.from('session_reflections').select('session_id').eq('org_id', org.id).in('session_id', ids) : Promise.resolve({ data: [] }),
+      ids.length ? supabase.from('risk_assessment_sessions').select('session_id').eq('org_id', org.id).in('session_id', ids) : Promise.resolve({ data: [] }),
       supabase.from('user_profiles').select('id, full_name').eq('org_id', org.id),
       supabase.from('project_reflections').select('*').eq('org_id', org.id).eq('project_id', projectId).maybeSingle(),
-      ids.length ? supabase.from('session_staff').select('session_id').in('session_id', ids) : Promise.resolve({ data: [] }),
+      ids.length ? supabase.from('session_staff').select('session_id').eq('org_id', org.id).in('session_id', ids) : Promise.resolve({ data: [] }),
     ])
 
+    setAttentionUnavailable([sessionsError && 'project days', attendanceError && 'attendance', reflectionsError && 'reflections', riskError && 'risk links'].filter(Boolean))
     setParticipants(parts || [])
     setTeam(pstaff || [])
     setAttendance(att || [])
@@ -160,24 +161,12 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
     }
   }, [attendance])
 
-  // ── Needs attention, only from signals the backend genuinely supports ──
-  const attentionItems = useMemo(() => {
-    const items = []
-    const t = todayISO()
-    for (const d of days) {
-      if (d.closed_at) {
-        if (!reflections[d.id]) items.push({ id: `${d.id}-refl`, tone: 'amber', text: `Reflection outstanding — ${d.title}`, session: d, action: 'reflect' })
-        const c = countsFor(d.id)
-        if (c.expected > 0) items.push({ id: `${d.id}-att`, tone: 'amber', text: `Attendance not finalised (${c.expected} unmarked) — ${d.title}`, session: d, action: 'open' })
-      } else if (d.session_date < t) {
-        items.push({ id: `${d.id}-close`, tone: 'amber', text: `Session not closed — ${d.title}`, session: d, action: 'open' })
-      }
-      if (!d.closed_at && d.risk_assessment_required && !raLinked[d.id]) {
-        items.push({ id: `${d.id}-ra`, tone: 'red', text: `Risk assessment required — ${d.title}`, session: d, action: 'open' })
-      }
-    }
-    return items.slice(0, 8)
-  }, [days, reflections, raLinked, countsFor])
+  const attentionItems = useMemo(() => buildProjectAttention(
+    days,
+    attentionUnavailable.includes('attendance') ? null : attendance,
+    attentionUnavailable.includes('reflections') ? null : reflections,
+    attentionUnavailable.includes('risk links') ? null : raLinked,
+  ), [days, attendance, reflections, raLinked, attentionUnavailable])
 
   const withdrawParticipant = useCallback(async (participantId, nextStatus) => {
     await supabase.from('project_participants').update({ status: nextStatus }).eq('id', participantId)
@@ -340,8 +329,8 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
       </div>
 
       {tab === 'overview' && (
-        <div style={isMobile ? undefined : {
-          display: 'grid', gridTemplateColumns: 'minmax(0, 1.6fr) minmax(0, 1fr)',
+        <div style={{
+          display: 'grid', gridTemplateColumns: isMobile ? 'minmax(0, 1fr)' : 'minmax(0, 1.6fr) minmax(0, 1fr)',
           gap: 16, alignItems: 'start',
         }}>
           <div style={{ minWidth: 0 }}>
@@ -428,35 +417,9 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
 
           </div>
 
-          <div style={{ minWidth: 0 }}>
-          {/* Needs attention */}
-          <div style={card({ padding: 18, marginBottom: 14 })}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>Needs attention</div>
-            {attentionItems.length === 0 ? (
-              <div style={{ padding: '18px 0', textAlign: 'center' }}>
-                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--ok-text)' }}><Icon name="✓" /> Everything is ready</div>
-                <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 3 }}>No outstanding actions for this project.</div>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                {attentionItems.map(item => (
-                  <button key={item.id}
-                    onClick={() => onNavigate && onNavigate(item.action === 'reflect' ? 'planner' : 'planner',
-                      item.action === 'reflect' ? { reflectSessionId: item.session.id } : { editSessionId: item.session.id })}
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, width: '100%',
-                      textAlign: 'left', padding: '10px 12px', borderRadius: 11, cursor: 'pointer',
-                      border: `1px solid ${item.tone === 'red' ? 'var(--danger-border)' : 'var(--warn-border)'}`,
-                      background: item.tone === 'red' ? 'var(--danger-bg)' : 'var(--warn-bg)',
-                      fontSize: 12.5, fontWeight: 700, color: item.tone === 'red' ? 'var(--danger-text)' : 'var(--warn-text)',
-                    }}>
-                    <span><Icon name="⚠" /> {item.text}</span>
-                    <span style={{ opacity: 0.6 }}><Icon name="→" /></span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <div style={{ minWidth: 0, order: isMobile && (attentionItems.length > 0 || attentionUnavailable.length > 0) ? -1 : undefined }}>
+            <ProjectAttention org={org} projectId={projectId} projectName={project.name}
+              items={attentionItems} unavailable={attentionUnavailable} onNavigate={onNavigate} onRetry={load} />
           </div>
         </div>
       )}
