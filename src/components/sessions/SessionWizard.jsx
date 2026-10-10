@@ -16,7 +16,7 @@ import { withAlpha } from '../../lib/withAlpha'
 // ─── CONSTANTS ──────────────────────────────────────────────────
 
 const WIZARD_TYPES = [
-  { key: 'activity',    label: 'Regular Session',  icon: '🏃', color: '#6D5DF6' },
+  { key: 'activity',    label: 'Regular Session',  icon: '🏃', color: 'var(--org-primary, #1B9AAA)' },
   { key: 'trip',        label: 'Trip',              icon: '🚌', color: '#F59E0B' },
   { key: 'workshop',     label: 'Workshop',          icon: '🛠️', color: '#0EA5E9' },
   { key: 'mentoring',    label: 'Mentoring',         icon: '🤝', color: '#EC4899' },
@@ -27,7 +27,7 @@ const WIZARD_TYPES = [
   { key: 'community',    label: 'Community Event',   icon: '🎉', color: '#DB2777' },
   { key: 'celebration',  label: 'Celebration',       icon: '🎊', color: '#E11D48' },
   { key: 'training',     label: 'Training',          icon: '📚', color: 'var(--info-text)' },
-  { key: 'custom',       label: 'Custom Session',    icon: '✨', color: '#6D5DF6' },
+  { key: 'custom',       label: 'Custom Session',    icon: '✨', color: 'var(--org-primary, #1B9AAA)' },
 ]
 
 // Session types that show up in the Events & Trips centre rather than the plain Session Planner list.
@@ -113,7 +113,17 @@ const emptyForm = () => ({
 
 // ─── SHARED STYLES ──────────────────────────────────────────────
 
-const ACCENT = '#6D5DF6'
+// The planner's own accent is the organisation's colour. It was LaunchSession
+// purple (#6D5DF6), the last purple on an otherwise branded screen, and as text
+// it fell just short of contrast (4.4:1 on the + Add buttons, 4.16:1 on the
+// PREVIEW pill). Fills use the brand colour; text uses its ink shade, which
+// brandColors keeps readable on light backgrounds whatever the brand.
+const ACCENT = 'var(--org-primary, #1B9AAA)'
+const ACCENT_INK = 'var(--org-ink, #0F6B76)'
+const ON_ACCENT = 'var(--org-on-primary, #fff)'
+// Browser-default checkboxes are 13px. Bigger boxes inside 44px rows, so a
+// thumb can hit them on a phone.
+const CHECKBOX = { width: 20, height: 20, margin: 0, flexShrink: 0, accentColor: ACCENT, cursor: 'inherit' }
 const card = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 20, marginBottom: 16 }
 const inp = { width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 16, minHeight: 44, boxSizing: 'border-box', background: 'var(--surface)', color: 'var(--text)' }
 const label = { fontSize: 12.5, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 5 }
@@ -136,6 +146,9 @@ function Toggle({ value, onChange, label: text }) {
   return <button type="button" role="switch" aria-checked={!!value} onClick={() => onChange(!value)} style={{ display: 'flex', width: '100%', minHeight: 52, alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '10px 0', border: 0, borderBottom: '1px solid var(--border)', background: 'none', cursor: 'pointer', textAlign: 'left' }}><span style={{ fontSize: 14, color: 'var(--text2)' }}>{text}</span><span style={{ width: 42, height: 24, borderRadius: 12, background: value ? 'var(--org-primary, #1B9AAA)' : 'var(--text-faint)', position: 'relative', flexShrink: 0 }}><span style={{ position: 'absolute', top: 3, left: value ? 21 : 3, width: 18, height: 18, borderRadius: '50%', background: 'var(--surface)' }} /></span></button>
 }
 
+// Finished steps were #16A34A, 3.29:1 as 11px text on white. The step names
+// use ink shades that pass 4.5:1; the circles keep white ticks on a darker
+// green.
 function StepDot({ n, active, done, label: text, onClick, compact, color = ACCENT }) {
   const size = compact ? 28 : 34
   return (
@@ -150,7 +163,7 @@ function StepDot({ n, active, done, label: text, onClick, compact, color = ACCEN
       <motion.div
         animate={{
           scale: active ? 1.12 : 1,
-          backgroundColor: active ? color : done ? '#16A34A' : 'var(--surface)',
+          backgroundColor: active ? color : done ? '#15803D' : 'var(--surface)',
           boxShadow: active ? `0 0 0 5px ${withAlpha(color, '22')}, 0 4px 10px ${withAlpha(color, '40')}` : '0 0 0 0px transparent',
         }}
         transition={{ type: 'spring', stiffness: 400, damping: 26 }}
@@ -167,7 +180,7 @@ function StepDot({ n, active, done, label: text, onClick, compact, color = ACCEN
           )}
         </AnimatePresence>
       </motion.div>
-      <span style={{ fontSize: compact ? 9.5 : 11, fontWeight: 700, color: active ? color : done ? '#16A34A' : 'var(--text3)', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', transition: 'color 0.25s ease' }}>{text}</span>
+      <span style={{ fontSize: compact ? 9.5 : 11, fontWeight: 700, color: active ? ACCENT_INK : done ? 'var(--ok-text)' : 'var(--text3)', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', transition: 'color 0.25s ease' }}>{text}</span>
     </motion.button>
   )
 }
@@ -183,7 +196,7 @@ function LiveSummary({ form, leadName, expectedCount }) {
         <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>Live Summary</div>
       </div>
 
-      <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 800, letterSpacing: 0.5, color: ACCENT, background: `${withAlpha(ACCENT, '15')}`, borderRadius: 99, padding: '3px 10px', marginBottom: 10 }}>PREVIEW</span>
+      <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 800, letterSpacing: 0.5, color: ACCENT_INK, background: `${withAlpha(ACCENT, '15')}`, borderRadius: 99, padding: '3px 10px', marginBottom: 10 }}>PREVIEW</span>
 
       <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>
         {form.title || 'Untitled session'}
@@ -206,7 +219,7 @@ function LiveSummary({ form, leadName, expectedCount }) {
 
       {leadName && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 12, borderTop: '1px solid var(--border)', marginBottom: 12 }}>
-          <div style={{ width: 26, height: 26, borderRadius: '50%', background: ACCENT, color: '#fff', fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{initials || '?'}</div>
+          <div style={{ width: 26, height: 26, borderRadius: '50%', background: ACCENT, color: ON_ACCENT, fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{initials || '?'}</div>
           <div style={{ fontSize: 12.5, color: 'var(--text2)' }}>Led by <strong style={{ color: 'var(--text)' }}>{leadName}</strong></div>
         </div>
       )}
@@ -258,7 +271,7 @@ function StepType({ form, setForm, templates, appliedTemplateId, onApplyTemplate
                   <AnimatePresence>
                     {active && (
                       <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 22 }}
-                        style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, borderRadius: '50%', background: ACCENT, color: '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 6px ${withAlpha(ACCENT, '66')}` }}><Icon name="✓" /></motion.div>
+                        style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, borderRadius: '50%', background: ACCENT, color: ON_ACCENT, fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 6px ${withAlpha(ACCENT, '66')}` }}><Icon name="✓" /></motion.div>
                     )}
                   </AnimatePresence>
                   <div style={{ fontSize: 20, marginBottom: 6 }}>{t.icon || '📋'}</div>
@@ -296,11 +309,11 @@ function StepType({ form, setForm, templates, appliedTemplateId, onApplyTemplate
               <AnimatePresence>
                 {active && (
                   <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 22 }}
-                    style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: '50%', background: t.color, color: '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 6px ${withAlpha(t.color, '66')}` }}><Icon name="✓" /></motion.div>
+                    style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: '50%', background: t.color, color: t.color === ACCENT ? ON_ACCENT : '#fff', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 6px ${withAlpha(t.color, '66')}` }}><Icon name="✓" /></motion.div>
                 )}
               </AnimatePresence>
               <motion.div animate={{ scale: active ? 1.08 : 1 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }} style={{ fontSize: isMobile ? 22 : 28, marginBottom: isMobile ? 6 : 8 }}><Icon name={t.icon} /></motion.div>
-              <div style={{ fontSize: isMobile ? 11.5 : 13, fontWeight: 700, color: active ? t.color : 'var(--text)', lineHeight: 1.25, transition: 'color 0.18s' }}>{t.label}</div>
+              <div style={{ fontSize: isMobile ? 11.5 : 13, fontWeight: 700, color: active ? (t.color === ACCENT ? ACCENT_INK : t.color) : 'var(--text)', lineHeight: 1.25, transition: 'color 0.18s' }}>{t.label}</div>
             </motion.button>
           )
         })}
@@ -372,22 +385,22 @@ function StepDetails({ form, setForm, staff, org }) {
       <div style={card}>
         <SectionHeader icon="📅" title="Session Details" subtitle="When is your session taking place?" color="#2563EB" />
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 14 }}>
-          <div><label style={label}>Session title *</label><input style={inp} value={form.title} onChange={e => set('title', e.target.value)} placeholder="e.g. Football Skills Session" /></div>
-          <div><label style={label}>Date *</label><input type="date" style={inp} value={form.session_date} onChange={e => set('session_date', e.target.value)} /></div>
+          <label style={{ display: 'block' }}><span style={label}>Session title *</span><input style={inp} value={form.title} onChange={e => set('title', e.target.value)} placeholder="e.g. Football Skills Session" /></label>
+          <label style={{ display: 'block' }}><span style={label}>Date *</span><input type="date" style={inp} value={form.session_date} onChange={e => set('session_date', e.target.value)} /></label>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12 }}>
-          <div><label style={label}>Start time *</label><input type="time" style={inp} value={form.start_time} onChange={e => onStartTimeChange(e.target.value)} /></div>
-          <div><label style={label}>End time *</label><input type="time" style={inp} value={form.end_time} onChange={e => setForm(f => ({ ...f, end_time: e.target.value, _endTouched: true }))} /></div>
+          <label style={{ display: 'block' }}><span style={label}>Start time *</span><input type="time" style={inp} value={form.start_time} onChange={e => onStartTimeChange(e.target.value)} /></label>
+          <label style={{ display: 'block' }}><span style={label}>End time *</span><input type="time" style={inp} value={form.end_time} onChange={e => setForm(f => ({ ...f, end_time: e.target.value, _endTouched: true }))} /></label>
         </div>
       </div>
 
       <div style={card}>
         <SectionHeader icon="📍" title="Location & Capacity" subtitle="Where will your session take place?" color="#F59E0B" />
         <div style={{ marginBottom: 14 }}>
-          <label style={label}>Location / Venue *</label>
+          <label htmlFor="sw-location" style={label}>Location / Venue *</label>
           {venues.length > 0 && !useCustomLocation ? (
             <>
-              <select style={inp} value={form.venue_id || ''} onChange={e => {
+              <select id="sw-location" style={inp} value={form.venue_id || ''} onChange={e => {
                 const v = venues.find(x => x.id === e.target.value)
                 setForm(f => ({ ...f, venue_id: e.target.value || null, location: v ? v.name : '', meeting_point: v?.default_meeting_point || f.meeting_point }))
               }}>
@@ -395,16 +408,16 @@ function StepDetails({ form, setForm, staff, org }) {
                 {venues.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
               </select>
               <button type="button" onClick={() => { setUseCustomLocation(true); setForm(f => ({ ...f, venue_id: null })) }}
-                style={{ background: 'none', border: 'none', color: ACCENT, fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: '6px 0 0', textAlign: 'left' }}>
+                style={{ background: 'none', border: 'none', color: ACCENT_INK, fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: '6px 0 0', textAlign: 'left' }}>
                 📍 Use a one-off location instead
               </button>
             </>
           ) : (
             <>
-              <input style={inp} value={form.location} onChange={e => set('location', e.target.value)} placeholder="e.g. Cassiobury Park" />
+              <input id="sw-location" style={inp} value={form.location} onChange={e => set('location', e.target.value)} placeholder="e.g. Cassiobury Park" />
               {venues.length > 0 && (
                 <button type="button" onClick={() => setUseCustomLocation(false)}
-                  style={{ background: 'none', border: 'none', color: ACCENT, fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: '6px 0 0', textAlign: 'left' }}>
+                  style={{ background: 'none', border: 'none', color: ACCENT_INK, fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: '6px 0 0', textAlign: 'left' }}>
                   Choose a saved venue instead
                 </button>
               )}
@@ -412,11 +425,11 @@ function StepDetails({ form, setForm, staff, org }) {
           )}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
-          <div><label style={label}>Meeting point</label><input style={inp} value={form.meeting_point} onChange={e => set('meeting_point', e.target.value)} placeholder="e.g. Main entrance" /></div>
+          <label style={{ display: 'block' }}><span style={label}>Meeting point</span><input style={inp} value={form.meeting_point} onChange={e => set('meeting_point', e.target.value)} placeholder="e.g. Main entrance" /></label>
           <div>
-            <label style={label}>Capacity *</label>
+            <label htmlFor="sw-capacity" style={label}>Capacity *</label>
             <div style={{ position: 'relative' }}>
-              <input type="number" style={{ ...inp, paddingRight: 34 }} value={form.max_capacity} onChange={e => set('max_capacity', e.target.value)} placeholder="e.g. 24" />
+              <input id="sw-capacity" type="number" style={{ ...inp, paddingRight: 34 }} value={form.max_capacity} onChange={e => set('max_capacity', e.target.value)} placeholder="e.g. 24" />
               <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, opacity: 0.4, pointerEvents: 'none' }}><Icon name="👥" /></span>
             </div>
           </div>
@@ -427,8 +440,8 @@ function StepDetails({ form, setForm, staff, org }) {
         <SectionHeader icon="🧑‍💼" title="Session Lead" subtitle="Who is running this session?" color="#EC4899" />
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
           <div>
-            <label style={label}>Session lead *</label>
-            <select style={inp} value={form.lead_staff_id} onChange={e => set('lead_staff_id', e.target.value)}>
+            <label htmlFor="sw-lead" style={label}>Session lead *</label>
+            <select id="sw-lead" style={inp} value={form.lead_staff_id} onChange={e => set('lead_staff_id', e.target.value)}>
               <option value="">— Select lead —</option>
               {staff.filter(s => s.assignable).map(s => (
                 <option key={s.id} value={s.id}>
@@ -438,8 +451,8 @@ function StepDetails({ form, setForm, staff, org }) {
             </select>
           </div>
           <div>
-            <label style={label}>Age range</label>
-            <input style={inp} value={form.age_range} onChange={e => set('age_range', e.target.value)} placeholder="e.g. 8-12" />
+            <label htmlFor="sw-age-range" style={label}>Age range</label>
+            <input id="sw-age-range" style={inp} value={form.age_range} onChange={e => set('age_range', e.target.value)} placeholder="e.g. 8-12" />
           </div>
         </div>
       </div>
@@ -447,12 +460,12 @@ function StepDetails({ form, setForm, staff, org }) {
       <div style={card}>
         <SectionHeader icon="🧭" title="Purpose & plan" subtitle="Give delivery staff a clear intention to reflect against afterwards" color="var(--text3)" />
         <div style={{ marginBottom: 14 }}>
-          <label style={label}>What is this session trying to achieve?</label>
-          <textarea style={{ ...inp, minHeight: 80, resize: 'vertical' }} value={form.description} onChange={e => set('description', e.target.value)} placeholder="Describe the purpose, planned approach and what a successful session should look like." />
+          <label htmlFor="sw-purpose" style={label}>What is this session trying to achieve?</label>
+          <textarea id="sw-purpose" style={{ ...inp, minHeight: 80, resize: 'vertical' }} value={form.description} onChange={e => set('description', e.target.value)} placeholder="Describe the purpose, planned approach and what a successful session should look like." />
         </div>
         <div>
-          <label style={label}>Internal notes <span style={{ fontWeight: 400, color: 'var(--text3)' }}>(staff only, not shown to parents)</span></label>
-          <textarea style={{ ...inp, minHeight: 50, resize: 'vertical' }} value={form.internal_notes} onChange={e => set('internal_notes', e.target.value)} />
+          <label htmlFor="sw-internal-notes" style={label}>Internal notes <span style={{ fontWeight: 400, color: 'var(--text3)' }}>(staff only, not shown to parents)</span></label>
+          <textarea id="sw-internal-notes" style={{ ...inp, minHeight: 50, resize: 'vertical' }} value={form.internal_notes} onChange={e => set('internal_notes', e.target.value)} />
         </div>
       </div>
     </>
@@ -486,10 +499,10 @@ function StepPeople({ form, setForm, staff, children, expectedCount, bubbleDefs,
             ['walk_ins', 'Leave open for walk-ins'],
             ['later', 'Add attendees later'],
           ].map(([key, txt]) => (
-            <button key={key} onClick={() => set('participant_mode', key)} style={{
+            <button key={key} aria-pressed={form.participant_mode === key} onClick={() => set('participant_mode', key)} style={{
               minHeight: 44, padding: '9px 16px', borderRadius: 99, fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
-              border: form.participant_mode === key ? '2px solid #1B9AAA' : '1.5px solid var(--border)',
-              background: form.participant_mode === key ? 'rgba(27,154,170,0.08)' : 'var(--surface)', color: 'var(--text)',
+              border: form.participant_mode === key ? `2px solid ${ACCENT}` : '1.5px solid var(--border)',
+              background: form.participant_mode === key ? withAlpha(ACCENT, '14') : 'var(--surface)', color: 'var(--text)',
             }}>{txt}</button>
           ))}
         </div>
@@ -507,7 +520,7 @@ function StepPeople({ form, setForm, staff, children, expectedCount, bubbleDefs,
                 )
               })}
               <button onClick={() => setShowGroupsModal(true)}
-                style={{ minHeight: 44, padding: '7px 14px', borderRadius: 99, border: `1.5px dashed ${withAlpha(ACCENT, '60')}`, background: `${withAlpha(ACCENT, '0A')}`, fontSize: 12.5, fontWeight: 700, color: ACCENT, cursor: 'pointer' }}>
+                style={{ minHeight: 44, padding: '7px 14px', borderRadius: 99, border: `1.5px dashed ${withAlpha(ACCENT, '60')}`, background: `${withAlpha(ACCENT, '0A')}`, fontSize: 12.5, fontWeight: 700, color: ACCENT_INK, cursor: 'pointer' }}>
                 + Add group
               </button>
             </div>
@@ -517,15 +530,15 @@ function StepPeople({ form, setForm, staff, children, expectedCount, bubbleDefs,
           <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 10, padding: 8 }}>
             {children.map(c => (
               <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '6px 8px', cursor: 'pointer', fontSize: 13 }}>
-                <input type="checkbox" checked={form.child_ids.includes(c.id)} onChange={() => toggleChild(c.id)} />
+                <input type="checkbox" style={CHECKBOX} checked={form.child_ids.includes(c.id)} onChange={() => toggleChild(c.id)} />
                 {c.first_name} {c.last_name} <span style={{ color: 'var(--text3)', fontSize: 11 }}>({c.group_name})</span>
               </label>
             ))}
           </div>
         )}
         {form.participant_mode === 'walk_ins' && (
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-            <input type="checkbox" checked={form.allow_walk_ins} onChange={e => set('allow_walk_ins', e.target.checked)} /> Allow walk-in sign-ups on the day
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 44, fontSize: 13 }}>
+            <input type="checkbox" style={CHECKBOX} checked={form.allow_walk_ins} onChange={e => set('allow_walk_ins', e.target.checked)} /> Allow walk-in sign-ups on the day
           </label>
         )}
         <div style={{ marginTop: 12, fontSize: 12.5, fontWeight: 700, color: 'var(--text2)' }}>
@@ -536,8 +549,8 @@ function StepPeople({ form, setForm, staff, children, expectedCount, bubbleDefs,
       <div style={card}>
         <SectionHeader icon="🧑‍💼" title="Staff" subtitle="Who's running the session?" color="#0EA5E9" />
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 12 }}>
-          <div><label style={label}>Minimum staff required</label><input type="number" style={inp} value={form.min_staff} onChange={e => set('min_staff', e.target.value)} /></div>
-          <div><label style={label}>Staff-to-child ratio</label><input style={inp} value={form.staff_ratio} onChange={e => set('staff_ratio', e.target.value)} placeholder="e.g. 1:8" /></div>
+          <label style={{ display: 'block' }}><span style={label}>Minimum staff required</span><input type="number" style={inp} value={form.min_staff} onChange={e => set('min_staff', e.target.value)} /></label>
+          <label style={{ display: 'block' }}><span style={label}>Staff-to-child ratio</span><input style={inp} value={form.staff_ratio} onChange={e => set('staff_ratio', e.target.value)} placeholder="e.g. 1:8" /></label>
         </div>
         <label style={label}>Supporting staff</label>
         <div style={{ maxHeight: 160, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 10, padding: 8, marginBottom: 10 }}>
@@ -545,10 +558,10 @@ function StepPeople({ form, setForm, staff, children, expectedCount, bubbleDefs,
             const flag = COMPLIANCE_FLAG[s.compliance]
             return (
               <label key={s.id || `hr-${i}`} title={s.assignable ? undefined : 'Needs a LaunchSession account before they can be assigned'}
-                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px',
+                style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '6px 8px',
                          cursor: s.assignable ? 'pointer' : 'not-allowed', fontSize: 13,
                          opacity: s.assignable ? 1 : 0.55 }}>
-                <input type="checkbox" disabled={!s.assignable}
+                <input type="checkbox" style={CHECKBOX} disabled={!s.assignable}
                   checked={s.assignable && form.supporting_staff_ids.includes(s.id)}
                   onChange={() => s.assignable && toggleSupport(s.id)} />
                 <span>{s.full_name}</span>
@@ -576,7 +589,7 @@ function StepPeople({ form, setForm, staff, children, expectedCount, bubbleDefs,
             <button onClick={() => removeSlot(i)} style={{ background: 'var(--danger-bg)', border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', color: '#C00' }}>×</button>
           </div>
         ))}
-        <button onClick={addVolunteerSlot} style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px dashed var(--border)', background: 'var(--surface)', fontSize: 12.5, fontWeight: 700, color: '#1B9AAA', cursor: 'pointer' }}>
+        <button onClick={addVolunteerSlot} style={{ minHeight: 44, padding: '9px 16px', borderRadius: 10, border: '1.5px dashed var(--border)', background: 'var(--surface)', fontSize: 12.5, fontWeight: 700, color: ACCENT_INK, cursor: 'pointer' }}>
           + Add volunteer role
         </button>
       </div>
@@ -642,12 +655,12 @@ function StepRequirements({ form, setForm, orgForms, org, onFormCreated, expecte
           return (
             <div key={f.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, flex: 1 }}>
-                  <input type="checkbox" checked={checked} onChange={() => toggleForm(f.id)} /> {f.name}
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 44, cursor: 'pointer', fontSize: 13, flex: 1 }}>
+                  <input type="checkbox" style={CHECKBOX} checked={checked} onChange={() => toggleForm(f.id)} /> {f.name}
                 </label>
                 {checked && (
                   <button onClick={() => setEmailFormFor(f)} title="Email this form to invited parents"
-                    style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 11.5, fontWeight: 700, color: ACCENT, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    style={{ minHeight: 44, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 11.5, fontWeight: 700, color: ACCENT_INK, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                     ✉️ Email parents
                   </button>
                 )}
@@ -661,7 +674,7 @@ function StepRequirements({ form, setForm, orgForms, org, onFormCreated, expecte
           )
         })}
         <button onClick={() => setShowFormBuilder(true)}
-          style={{ marginTop: 12, padding: '9px 16px', borderRadius: 10, border: `1.5px dashed ${withAlpha(ACCENT, '60')}`, background: `${withAlpha(ACCENT, '0A')}`, fontSize: 12.5, fontWeight: 700, color: ACCENT, cursor: 'pointer' }}>
+          style={{ marginTop: 12, minHeight: 44, padding: '9px 16px', borderRadius: 10, border: `1.5px dashed ${withAlpha(ACCENT, '60')}`, background: `${withAlpha(ACCENT, '0A')}`, fontSize: 12.5, fontWeight: 700, color: ACCENT_INK, cursor: 'pointer' }}>
           + Create new form
         </button>
       </div>
@@ -675,10 +688,10 @@ function StepRequirements({ form, setForm, orgForms, org, onFormCreated, expecte
           {OUTCOME_AREAS.map(a => {
             const active = form.outcome_areas.includes(a)
             return (
-              <button key={a} onClick={() => toggleOutcome(a)} style={{
-                padding: '8px 14px', borderRadius: 99, fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
-                border: active ? '2px solid #7C3AED' : '1.5px solid var(--border)',
-                background: active ? 'rgba(124,58,237,0.08)' : 'var(--surface)', color: 'var(--text)',
+              <button key={a} aria-pressed={active} onClick={() => toggleOutcome(a)} style={{
+                minHeight: 44, padding: '8px 14px', borderRadius: 99, fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
+                border: active ? `2px solid ${ACCENT}` : '1.5px solid var(--border)',
+                background: active ? withAlpha(ACCENT, '14') : 'var(--surface)', color: 'var(--text)',
               }}>{a}</button>
             )
           })}
@@ -789,24 +802,24 @@ function RiskAssessmentPicker({ form, setForm, org, riskAssessments, onCreated, 
       {standaloneHeader}
       <div style={{ ...card, borderColor: 'var(--danger-border)' }}>
         <SectionHeader icon="🛡️" title="New risk assessment" subtitle="Created as a draft and attached to this session. You can complete the full detail in Risk Assessments." color="#DC2626" />
-        <div><label style={label}>Name *</label><input value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} placeholder="e.g. Horse Riding — Risk Assessment" style={inp} /></div>
+        <label style={{ display: 'block' }}><span style={label}>Name *</span><input value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} placeholder="e.g. Horse Riding — Risk Assessment" style={inp} /></label>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div><label style={label}>Activity type</label><select value={draft.activity_type} onChange={e => setDraft({ ...draft, activity_type: e.target.value })} style={inp}>
+          <div><label htmlFor="sw-ra-activity" style={label}>Activity type</label><select id="sw-ra-activity" value={draft.activity_type} onChange={e => setDraft({ ...draft, activity_type: e.target.value })} style={inp}>
               <option value="">Choose...</option>
               {RA_ACTIVITY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
             </select></div>
-          <div><label style={label}>Location</label><input value={draft.location} onChange={e => setDraft({ ...draft, location: e.target.value })} placeholder="Venue" style={inp} /></div>
+          <label style={{ display: 'block' }}><span style={label}>Location</span><input value={draft.location} onChange={e => setDraft({ ...draft, location: e.target.value })} placeholder="Venue" style={inp} /></label>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div><label style={label}>Overall risk rating</label><select value={draft.risk_rating} onChange={e => setDraft({ ...draft, risk_rating: e.target.value })} style={inp}>
+          <div><label htmlFor="sw-ra-rating" style={label}>Overall risk rating</label><select id="sw-ra-rating" value={draft.risk_rating} onChange={e => setDraft({ ...draft, risk_rating: e.target.value })} style={inp}>
               <option value="low">Low</option>
               <option value="medium">Medium</option>
               <option value="high">High</option>
             </select></div>
-          <div><label style={label}>Next review date</label><input type="date" value={draft.next_review_date} onChange={e => setDraft({ ...draft, next_review_date: e.target.value })} style={inp} /></div>
+          <label style={{ display: 'block' }}><span style={label}>Next review date</span><input type="date" value={draft.next_review_date} onChange={e => setDraft({ ...draft, next_review_date: e.target.value })} style={inp} /></label>
         </div>
-        <div><label style={label}>Key hazards</label><textarea value={draft.summary} onChange={e => setDraft({ ...draft, summary: e.target.value })} placeholder="What could cause harm on this session?" style={{ ...inp, minHeight: 64, resize: 'vertical' }} /></div>
-        <div><label style={label}>Control measures</label><textarea value={draft.control_measures} onChange={e => setDraft({ ...draft, control_measures: e.target.value })} placeholder="What's in place to reduce those risks?" style={{ ...inp, minHeight: 64, resize: 'vertical' }} /></div>
+        <label style={{ display: 'block' }}><span style={label}>Key hazards</span><textarea value={draft.summary} onChange={e => setDraft({ ...draft, summary: e.target.value })} placeholder="What could cause harm on this session?" style={{ ...inp, minHeight: 64, resize: 'vertical' }} /></label>
+        <label style={{ display: 'block' }}><span style={label}>Control measures</span><textarea value={draft.control_measures} onChange={e => setDraft({ ...draft, control_measures: e.target.value })} placeholder="What's in place to reduce those risks?" style={{ ...inp, minHeight: 64, resize: 'vertical' }} /></label>
         {err && <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 10, padding: '9px 12px', fontSize: 12, fontWeight: 600, color: 'var(--danger-text)', marginBottom: 12 }}>{err}</div>}
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => setShowBuilder(false)} style={{ flex: 1, padding: '11px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
@@ -1529,8 +1542,8 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
   }
   if (done) {
     const draft = done.publishedAs === 'draft'
-    const label = done.publishedAs === 'edited' ? 'Changes saved' : draft ? 'Draft saved' : done.publishedAs === 'scheduled' ? 'Plan scheduled' : 'Plan published'
-    return screen(<div style={{ ...(compact ? { position: 'fixed', inset: 0, zIndex: 10700, overflowY: 'auto' } : { minHeight: '100%' }), background: 'var(--surface2)', display: 'grid', placeItems: 'center', padding: 24, boxSizing: 'border-box' }}><div style={{ width: '100%', maxWidth: 460, textAlign: 'center' }}><div style={{ fontSize: 32, color: 'var(--org-ink)' }}>✓</div><h1 style={{ fontSize: 28, color: 'var(--text)' }}>{label}</h1><p style={{ color: 'var(--text3)', lineHeight: 1.6 }}><strong>{done.session.title}</strong>{draft ? ' is in Drafts. Come back when you are ready to finish planning.' : ' is saved. You can now open its register or return to your plans.'}</p><div style={{ display: 'grid', gap: 10, marginTop: 24 }}>{!draft && onNavigate && <button onClick={() => onNavigate('registers', { sessionId: done.session.id, returnTo: 'planner' })} style={{ ...flowButton, background: primary, color: '#fff', borderColor: primary }}>Open register →</button>}<button onClick={onCancel} style={flowButton}>Back to {terms.sessions}</button>{!draft && form.risk_assessment_required && !form.pending_risk_assessment_id && onNavigate && <button onClick={() => onNavigate('risk_assessments')} style={flowButton}>Complete risk assessment</button>}</div></div></div>)
+    const label = done.publishedAs === 'edited' ? 'Changes saved' : draft ? 'Draft saved' : done.publishedAs === 'scheduled' ? `${terms.Session} scheduled` : `${terms.Session} published`
+    return screen(<div style={{ ...(compact ? { position: 'fixed', inset: 0, zIndex: 10700, overflowY: 'auto' } : { minHeight: '100%' }), background: 'var(--surface2)', display: 'grid', placeItems: 'center', padding: 24, boxSizing: 'border-box' }}><div style={{ width: '100%', maxWidth: 460, textAlign: 'center' }}><div style={{ fontSize: 32, color: 'var(--org-ink)' }}>✓</div><h1 style={{ fontSize: 28, color: 'var(--text)' }}>{label}</h1><p style={{ color: 'var(--text3)', lineHeight: 1.6 }}><strong>{done.session.title}</strong>{draft ? ' is in Drafts. Come back when you are ready to finish planning.' : ` is saved. You can now open its register or go back to your ${terms.sessions}.`}</p><div style={{ display: 'grid', gap: 10, marginTop: 24 }}>{!draft && onNavigate && <button onClick={() => onNavigate('registers', { sessionId: done.session.id, returnTo: 'planner' })} style={{ ...flowButton, background: primary, color: '#fff', borderColor: primary }}>Open register →</button>}<button onClick={onCancel} style={flowButton}>Back to {terms.sessions}</button>{!draft && form.risk_assessment_required && !form.pending_risk_assessment_id && onNavigate && <button onClick={() => onNavigate('risk_assessments')} style={flowButton}>Complete risk assessment</button>}</div></div></div>)
   }
   return screen(<div style={{ ...(compact ? { position: 'fixed', inset: 0, zIndex: 10700, height: '100dvh' } : { height: '100%', minHeight: 600 }), overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--surface2)', color: 'var(--text)' }}>
     <header style={{ padding: compact ? '12px 16px' : '20px 28px', paddingTop: compact ? 'max(12px, env(safe-area-inset-top))' : 20, borderBottom: '1px solid var(--border)', background: 'var(--surface)', flexShrink: 0 }}><div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between', marginBottom: 12 }}><h1 ref={headingRef} tabIndex={-1} style={{ fontSize: compact ? 19 : 23, margin: 0, outline: 'none' }}>{isEditing ? 'Edit' : 'New'} {terms.session}</h1><button onClick={closeWizard} disabled={saving} style={{ ...flowButton, border: 0, color: 'var(--text3)' }}>Close</button></div>

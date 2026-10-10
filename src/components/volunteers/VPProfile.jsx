@@ -5,6 +5,7 @@ import SignedImg from '../shared/SignedImg'
 import Icon from '../../lib/icons'
 import { orgBrand } from '../shared/OrgPageHero'
 import { formatHours, summariseHours } from '../../lib/volunteerHours'
+import { useScrollFade } from '../../hooks/useScrollFade'
 
 // The volunteer's own details. Hours here are the register's count, the same
 // figure as the Hours tab.
@@ -23,6 +24,7 @@ const SEGMENTS = [
 
 export default function VPProfile({ org, user, profile, teamRows = [], sessionsById = {}, primary, initialSub, onSignOut, onProfileUpdated, onNavigate }) {
   const [seg, setSeg] = useState(initialSub || 'overview')
+  const tabFade = useScrollFade(seg)
   useEffect(() => { if (initialSub) setSeg(initialSub) }, [initialSub])
 
   const brand = orgBrand(org)
@@ -43,7 +45,7 @@ export default function VPProfile({ org, user, profile, teamRows = [], sessionsB
         </button>
       </div>
 
-      <div role="tablist" aria-label="Your details" style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '14px 16px 0' }}>
+      <div ref={tabFade.ref} role="tablist" aria-label="Your details" style={{ display: 'flex', gap: 6, padding: '14px 16px 0', ...tabFade.style }}>
         {SEGMENTS.map(s => (
           <button key={s.key} role="tab" aria-selected={seg === s.key} onClick={() => setSeg(s.key)}
             style={{ minHeight: 44, padding: '0 16px', borderRadius: 99, border: seg === s.key ? 'none' : '1px solid var(--border)', background: seg === s.key ? 'var(--org-primary, #1B9AAA)' : 'var(--surface)', color: seg === s.key ? 'var(--org-on-primary, #fff)' : 'var(--text2)', fontWeight: 800, fontSize: 13.5, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, fontFamily: 'inherit' }}>
