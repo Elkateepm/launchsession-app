@@ -92,16 +92,16 @@ export function buildAttentionItems({ assessments = [], sessions = [], coverage 
     const reviewDate = a.next_review_date || a.review_date
     const days = daysUntil(reviewDate)
 
-    if (days !== null && days < 0) {
+    if ((days !== null && days < 0) || a.status === 'expired') {
       items.push({
         id: `review-${a.id}`,
         assessment: a,
         severity: 'action',
         title: a.name,
-        detail: `Review overdue by ${Math.abs(days)} day${Math.abs(days) === 1 ? '' : 's'}`,
+        detail: days !== null && days < 0 ? `Review overdue by ${Math.abs(days)} day${Math.abs(days) === 1 ? '' : 's'}` : 'Assessment has expired',
         cta: 'Review Assessment',
         // Longer overdue sorts first.
-        weight: -1000 + days,
+        weight: -1000 + (days || 0),
       })
       return
     }
@@ -113,7 +113,7 @@ export function buildAttentionItems({ assessments = [], sessions = [], coverage 
         assessment: a,
         severity: 'review',
         title: a.name,
-        detail: `${outstanding} hazard${outstanding === 1 ? ' still requires' : 's still require'} controls`,
+        detail: `${outstanding} control${outstanding === 1 ? '' : 's'} still to complete`,
         cta: 'Continue Assessment',
         weight: -500,
       })
@@ -133,13 +133,13 @@ export function buildAttentionItems({ assessments = [], sessions = [], coverage 
       return
     }
 
-    if (days !== null && days <= REVIEW_WARNING_DAYS) {
+    if ((days !== null && days <= REVIEW_WARNING_DAYS) || a.status === 'review_due') {
       items.push({
         id: `soon-${a.id}`,
         assessment: a,
         severity: 'review',
         title: a.name,
-        detail: days === 0 ? 'Review due today' : `Review due in ${days} day${days === 1 ? '' : 's'}`,
+        detail: days === null ? 'Assessment is marked for review' : days === 0 ? 'Review due today' : `Review due in ${days} day${days === 1 ? '' : 's'}`,
         cta: 'Review Assessment',
         weight: days,
       })
@@ -150,11 +150,13 @@ export function buildAttentionItems({ assessments = [], sessions = [], coverage 
   // can surface, and it isn't visible from the assessment list -- only by
   // looking at what's actually scheduled.
   sessions.forEach(s => {
+    if (['cancelled', 'draft', 'completed'].includes(s.status) || s.cancelled_at || s.closed_at) return
     const cover = coverage[s.id]
     const days = daysUntil(s.session_date)
     if (days === null || days < 0 || days > 14) return
 
     if (!cover) {
+      if (s.risk_assessment_required === false) return
       items.push({
         id: `uncovered-${s.id}`,
         session: s,

@@ -1,442 +1,154 @@
-import React, { useMemo } from 'react'
-import { motion } from 'framer-motion'
+import React, { useMemo, useState } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { ACTIVITY_ICON, RatingBadge, timeAgo, daysUntil } from './ra_shared'
+import { useTerms } from '../../context/OrgContext'
+import { RatingBadge, daysUntil } from './ra_shared'
 import { SAFETY, SAFETY_META, safetyStateOf, summariseSafety, buildAttentionItems, activeOnly } from './ra_safety'
+import { RA_CARD, RA_BUTTON } from './RAWorkspaceHeader'
 import Icon from '../../lib/icons'
 
-// The operational overview. Ordered by urgency rather than by data model: what
-// needs doing, what is coming up, then the library. A manager should be able to
-// read the organisation's safety position without scrolling or clicking.
-
-const CARD = {
-  background: 'var(--surface)',
-  border: '1px solid #ECE9F5',
-  borderRadius: 16,
+const STATUS = {
+  ...SAFETY_META,
+  ready: { ...SAFETY_META.ready, label: 'Up to date', icon: 'check', detail: 'Review and approval checks' },
+  review: { ...SAFETY_META.review, label: 'Needs review', icon: 'clock', detail: 'Due soon or awaiting checks' },
+  action: { ...SAFETY_META.action, label: 'Action needed', icon: 'risk', detail: 'Overdue or expired' },
+  draft: { ...SAFETY_META.draft, label: 'Drafts', icon: 'edit', detail: 'Continue work in progress' },
 }
-
+const dateLabel = value => value ? new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', day: 'numeric', month: 'short' }).format(new Date(`${value.slice(0, 10)}T12:00:00Z`)) : 'No date set'
+const reviewLabel = a => {
+  const date = a.next_review_date || a.review_date
+  const days = daysUntil(date)
+  return days == null ? 'No review date' : days < 0 ? `${Math.abs(days)}d overdue` : days === 0 ? 'Due today' : `Review ${dateLabel(date)}`
+}
 const fmtSessionWhen = s => {
   const days = daysUntil(s.session_date)
-  const time = (s.start_time || '').slice(0, 5)
-  const label =
-    days === 0 ? 'Today' :
-    days === 1 ? 'Tomorrow' :
-    days !== null && days < 7
-      ? new Date(s.session_date).toLocaleDateString('en-GB', { weekday: 'long' })
-      : new Date(s.session_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-  return time ? `${label} · ${time}` : label
+  const label = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : dateLabel(s.session_date)
+  return s.start_time ? `${label} · ${s.start_time.slice(0, 5)}` : label
 }
 
-function SafetyStrip({ counts, activeFilter, onFilter }) {
-  const isMobile = useIsMobile()
-  const order = [SAFETY.READY, SAFETY.REVIEW, SAFETY.ACTION, SAFETY.DRAFT]
+function StatusTag({ assessment, outstanding, unknown }) {
+  const meta = unknown ? { label: 'Checks unavailable', bg: 'var(--surface2)', text: 'var(--text3)' } : STATUS[safetyStateOf(assessment, { outstandingByAssessment: outstanding })]
+  return <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 8px', borderRadius: 7, fontSize: 10.5, fontWeight: 750, background: meta.bg, color: meta.text, lineHeight: 1.5 }}><span aria-hidden="true" style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor', flexShrink: 0 }} />{meta.label}</span>
+}
 
-  return (
-    <div style={{ ...CARD, padding: isMobile ? 12 : 14, marginBottom: 14 }}>
-      <div style={{
-        fontSize: 11.5, fontWeight: 700, color: 'var(--text3)',
-        letterSpacing: 0.3, marginBottom: 10,
-      }}>SAFETY OVERVIEW</div>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)',
-        gap: 8,
-      }}>
-        {order.map(key => {
-          const meta = SAFETY_META[key]
-          const active = activeFilter === key
-          return (
-            <button
-              key={key}
-              onClick={() => onFilter(active ? null : key)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 9, textAlign: 'left',
-                padding: '11px 12px', borderRadius: 12, cursor: 'pointer',
-                fontFamily: 'inherit', minWidth: 0,
-                border: `1px solid ${active ? meta.dot : 'var(--border)'}`,
-                background: active ? meta.bg : 'var(--surface)',
-              }}
-            >
-              <span style={{
-                width: 9, height: 9, borderRadius: 9, background: meta.dot, flexShrink: 0,
-              }} />
-              <span style={{ minWidth: 0 }}>
-                <span style={{ fontSize: 19, fontWeight: 800, color: 'var(--text)', display: 'block', lineHeight: 1.1 }}>
-                  {counts[key]}
-                </span>
-                <span style={{ fontSize: 11.5, color: 'var(--text3)', display: 'block', marginTop: 1 }}>
-                  {meta.label}
-                </span>
-              </span>
-            </button>
-          )
-        })}
-      </div>
+function SafetyStrip({ counts, unknown, onFilter }) {
+  const mobile = useIsMobile()
+  return <section aria-label="Assessment status" style={{ display: 'grid', gridTemplateColumns: mobile ? 'repeat(2,minmax(0,1fr))' : 'repeat(4,minmax(0,1fr))', gap: 12, marginBottom: 22 }}>
+    {[SAFETY.ACTION, SAFETY.REVIEW, SAFETY.READY, SAFETY.DRAFT].map(key => {
+      const meta = STATUS[key]
+      return <button type="button" key={key} onClick={() => onFilter(key)} disabled={unknown} aria-label={`${meta.label}: ${unknown ? 'unavailable' : counts[key]}. View assessments`} style={{ ...RA_CARD, ...RA_BUTTON, display: 'block', padding: mobile ? 14 : 18, textAlign: 'left', minWidth: 0, cursor: unknown ? 'default' : 'pointer' }}>
+        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 12 }}><span style={{ color: 'var(--text2)', fontSize: 12 }}>{meta.label}</span><span style={{ color: meta.text, display: 'flex' }}><Icon name={meta.icon} size={18} /></span></span>
+        <span style={{ display: 'block', color: 'var(--text)', fontSize: 29, fontWeight: 850, lineHeight: 1 }}>{unknown ? '—' : counts[key]}</span>
+        <span style={{ display: 'block', fontSize: 10.5, lineHeight: 1.5, color: 'var(--text3)', fontWeight: 500, marginTop: 8 }}>{unknown ? 'Waiting for checks' : meta.detail}</span>
+      </button>
+    })}
+  </section>
+}
+
+function NeedsAttention({ items, canEdit, canApprove, unknown, checking, onOpen, onCreateForSession, onReuseForSession }) {
+  const reduced = useReducedMotion()
+  const [filter, setFilter] = useState('all')
+  const [showAll, setShowAll] = useState(false)
+  const filtered = items.filter(i => filter === 'all' || i.severity === filter)
+  const shown = showAll ? filtered : filtered.slice(0, 5)
+  const urgent = items.filter(i => i.severity === 'action').length
+  return <section aria-label="Needs attention" style={{ ...RA_CARD, padding: 20, minWidth: 0 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 6 }}><Icon name="risk" size={19} style={{ color: urgent ? 'var(--danger-text)' : 'var(--ra-ink)' }} /><h2 style={{ margin: 0, fontSize: 17, color: 'var(--text)' }}>Needs attention</h2><span style={{ marginLeft: 'auto', padding: '4px 9px', borderRadius: 8, fontSize: 12, fontWeight: 800, background: urgent ? 'var(--danger-bg)' : 'var(--ra-tint)', color: urgent ? 'var(--danger-text)' : 'var(--ra-ink)' }}>{checking ? '—' : `${items.length}${unknown ? '+' : ''}`}</span></div>
+    <p style={{ fontSize: 12, lineHeight: 1.6, color: 'var(--text3)', margin: '0 0 15px' }}>{checking ? 'Checking reviews, controls and upcoming activities…' : unknown ? 'Known follow-ups. Some checks are unavailable.' : urgent ? `${urgent} ${urgent === 1 ? 'priority needs' : 'priorities need'} a closer look. Start here.` : 'Keep reviews, controls and approvals moving.'}</p>
+    {items.length > 0 && <div aria-label="Filter follow-ups" style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 14 }}>
+      {[['all', 'All', items.length], ['action', 'Priority', urgent], ['review', 'Review', items.length - urgent]].map(([key, label, count]) => <button type="button" key={key} aria-pressed={filter === key} onClick={() => { setFilter(key); setShowAll(false) }} style={{ ...RA_BUTTON, padding: '7px 10px', fontSize: 11, color: filter === key ? 'var(--ra-ink)' : 'var(--text3)', background: filter === key ? 'var(--ra-tint)' : 'var(--surface)', borderColor: filter === key ? 'var(--ra-border)' : 'var(--border)' }}>{label}<span style={{ opacity: .7 }}>{count}</span></button>)}
+    </div>}
+    <div style={{ display: 'grid', gap: 10 }}>
+      {shown.map((item, index) => {
+        const urgentItem = item.severity === 'action'
+        const action = !canEdit ? 'View assessment' : !canApprove && item.cta === 'Review & Approve' ? 'Review assessment' : item.cta
+        return <motion.article key={item.id} initial={reduced ? false : { opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduced ? 0 : .2, delay: reduced ? 0 : Math.min(index * .04, .2) }} style={{ border: '1px solid var(--border)', borderLeft: `3px solid ${urgentItem ? 'var(--danger-text)' : 'var(--warn-border)'}`, borderRadius: 12, padding: '14px 14px 12px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            <span style={{ width: 30, height: 30, borderRadius: 9, display: 'grid', placeItems: 'center', flexShrink: 0, background: urgentItem ? 'var(--danger-bg)' : 'var(--warn-bg)', color: urgentItem ? 'var(--danger-text)' : 'var(--warn-text)' }}><Icon name={urgentItem ? 'risk' : 'edit'} size={16} /></span>
+            <div style={{ minWidth: 0, flex: 1 }}><h3 style={{ fontSize: 13, lineHeight: 1.5, color: 'var(--text)', margin: 0, overflowWrap: 'anywhere' }}>{item.title}</h3><p style={{ fontSize: 11.5, lineHeight: 1.6, color: urgentItem ? 'var(--danger-text)' : 'var(--text3)', margin: '4px 0 0' }}>{item.detail}</p></div>
+          </div>
+          <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', justifyContent: 'flex-end', marginTop: 9 }}>
+            {!item.assessment && canEdit && <button type="button" onClick={() => onReuseForSession(item.session)} style={{ ...RA_BUTTON, fontSize: 11 }}>Use previous</button>}
+            {(item.assessment || canEdit) && <button type="button" onClick={() => item.assessment ? onOpen(item.assessment) : onCreateForSession(item.session)} style={{ ...RA_BUTTON, fontSize: 11, background: 'var(--ra-tint)', borderColor: 'var(--ra-border)', color: 'var(--ra-ink)' }}>{action}<Icon name="→" size={13} /></button>}
+            {!item.assessment && !canEdit && <span style={{ color: 'var(--text3)', fontSize: 11 }}>Ask your team to add an assessment.</span>}
+          </div>
+        </motion.article>
+      })}
+      {!shown.length && <div style={{ padding: '23px 12px', borderRadius: 12, background: 'var(--surface2)', textAlign: 'center' }}>
+        <Icon name={unknown || checking ? 'clock' : 'check'} size={26} style={{ color: 'var(--ra-ink)', marginBottom: 10 }} />
+        <h3 style={{ color: 'var(--text)', fontSize: 14, margin: '0 0 7px' }}>{checking ? 'Checking your workspace' : unknown ? 'Checks are incomplete' : items.length ? 'No follow-ups in this filter' : 'No immediate follow-ups found'}</h3>
+        <p style={{ color: 'var(--text3)', fontSize: 12, lineHeight: 1.7, margin: 0 }}>{unknown || checking ? 'Refresh the workspace to get a complete picture.' : items.length ? 'Choose All to see your other actions.' : 'Keep an eye on drafts and the activities coming up.'}</p>
+      </div>}
     </div>
-  )
+    {filtered.length > 5 && <button type="button" aria-expanded={showAll} onClick={() => setShowAll(!showAll)} style={{ ...RA_BUTTON, width: '100%', marginTop: 12 }}>{showAll ? 'Show fewer' : `Show all ${filtered.length} follow-ups`}<Icon name="chevron" size={14} /></button>}
+  </section>
 }
 
-function NeedsAttention({ items, onOpen, onCreateForSession, onReuseForSession, primary, truncated }) {
-  const isMobile = useIsMobile()
-  const [showAll, setShowAll] = React.useState(false)
-  const VISIBLE = 6
-  const shown = showAll ? items : items.slice(0, VISIBLE)
-
-  if (!items.length) {
-    return (
-      <div style={{ ...CARD, padding: '26px 20px', marginBottom: 14, textAlign: 'center' }}>
-        <div style={{ fontSize: 26, marginBottom: 6 }}><Icon name="✅" /></div>
-        <div style={{ fontSize: 15.5, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>
-          Everything is ready
-        </div>
-        <div style={{ fontSize: 13.5, color: 'var(--text3)' }}>
-          {truncated
-            ? 'No outstanding actions across your next 40 scheduled activities.'
-            : 'There are no outstanding risk assessment actions.'}
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div style={{ ...CARD, marginBottom: 14, overflow: 'hidden' }}>
-      <div style={{
-        padding: '13px 16px', borderBottom: '1px solid #ECE9F5',
-        display: 'flex', alignItems: 'center', gap: 9,
-      }}>
-        <span style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)' }}>Needs attention</span>
-        <span style={{
-          padding: '2px 9px', borderRadius: 999, fontSize: 11.5, fontWeight: 700,
-          background: 'var(--danger-bg)', color: 'var(--danger-text)',
-        }}>{items.length}</span>
-      </div>
-
-      <div>
-        {shown.map((item, i) => {
-          const tone = item.severity === 'action'
-            ? { dot: 'var(--danger-text)', bg: 'var(--danger-bg)' }
-            : { dot: '#F79009', bg: 'var(--warn-bg)' }
-
-          return (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2, delay: Math.min(i * 0.03, 0.2) }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 12,
-                padding: '13px 16px',
-                borderBottom: i < shown.length - 1 ? '1px solid #F5F3FA' : 'none',
-                flexWrap: isMobile ? 'wrap' : 'nowrap',
-              }}
-            >
-              <span style={{
-                width: 8, height: 8, borderRadius: 8, background: tone.dot, flexShrink: 0,
-              }} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{
-                  fontSize: 14, fontWeight: 700, color: 'var(--text)',
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>{item.title}</div>
-                <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>{item.detail}</div>
-              </div>
-              <div style={{
-                display: 'flex', gap: 8, flexShrink: 0,
-                width: isMobile ? '100%' : 'auto', marginTop: isMobile ? 8 : 0,
-              }}>
-                {!item.assessment && item.session && onReuseForSession && (
-                  <button
-                    onClick={() => onReuseForSession(item.session)}
-                    style={{
-                      padding: '8px 12px', borderRadius: 10, border: '1px solid var(--border)',
-                      background: 'var(--surface)', color: 'var(--text2)', fontSize: 12.5,
-                      fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                      flex: isMobile ? 1 : 'none', whiteSpace: 'nowrap',
-                    }}
-                  >Reuse</button>
-                )}
-                <button
-                  onClick={() => item.assessment ? onOpen(item.assessment) : onCreateForSession(item.session)}
-                  style={{
-                    padding: '8px 14px', borderRadius: 10, border: 'none',
-                    background: primary, color: '#fff', fontSize: 13, fontWeight: 700,
-                    cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
-                    flex: isMobile ? 1 : 'none',
-                  }}
-                >{item.cta}</button>
-              </div>
-            </motion.div>
-          )
-        })}
-      </div>
-
-      {items.length > VISIBLE && (
-        <button
-          onClick={() => setShowAll(v => !v)}
-          style={{
-            display: 'block', width: '100%', padding: '11px 16px', border: 'none',
-            borderTop: '1px solid #F5F3FA', background: 'var(--surface)',
-            color: 'var(--text2)', fontSize: 13, fontWeight: 700,
-            cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
-          }}
-        >{showAll ? 'Show less' : `Show ${items.length - VISIBLE} more`}</button>
-      )}
+function UpcomingActivities({ sessions, coverage, outstanding, handledSessionIds, canEdit, coverageUnknown, checksUnknown, sessionsUnknown, truncated, onOpen, onCreate, onReuse }) {
+  const terms = useTerms()
+  const [showAll, setShowAll] = useState(false)
+  const upcoming = sessions.filter(s => !handledSessionIds.has(s.id))
+  const shown = showAll ? upcoming : upcoming.slice(0, 5)
+  return <section aria-label="Upcoming activity checks" style={{ ...RA_CARD, padding: 20, minWidth: 0 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}><Icon name="calendar" size={19} style={{ color: 'var(--ra-ink)' }} /><h2 style={{ margin: 0, color: 'var(--text)', fontSize: 17 }}>Coming up next</h2></div>
+    <p style={{ fontSize: 12, lineHeight: 1.6, color: 'var(--text3)', margin: '0 0 16px' }}>Get assessments in place before the day arrives.</p>
+    <div style={{ display: 'grid', gap: 10 }}>
+      {shown.map(s => {
+        const cover = coverage[s.id]
+        const required = s.risk_assessment_required !== false
+        return <article key={s.id} style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--ra-ink)', fontSize: 11, fontWeight: 800, marginBottom: 7 }}><Icon name="calendar" size={14} />{fmtSessionWhen(s)}</div>
+          <h3 style={{ margin: '0 0 5px', fontSize: 13, lineHeight: 1.5, color: 'var(--text)', overflowWrap: 'anywhere' }}>{s.title || terms.Session}</h3>
+          {s.location && <div style={{ display: 'flex', gap: 5, alignItems: 'center', fontSize: 11, color: 'var(--text3)', lineHeight: 1.5, marginBottom: 10 }}><Icon name="location" size={12} />{s.location}</div>}
+          {coverageUnknown ? <span style={{ fontSize: 11, color: 'var(--text3)' }}>Assessment links unavailable</span> : cover ? <StatusTag assessment={cover} outstanding={outstanding} unknown={checksUnknown} /> : <span style={{ display: 'inline-block', background: required ? 'var(--warn-bg)' : 'var(--surface2)', color: required ? 'var(--warn-text)' : 'var(--text3)', fontSize: 10.5, fontWeight: 750, padding: '5px 8px', borderRadius: 7 }}>{required ? 'Assessment to add' : 'Assessment not required'}</span>}
+          {!coverageUnknown && <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginTop: 10 }}>
+            {cover ? <button type="button" onClick={() => onOpen(cover)} style={{ ...RA_BUTTON, fontSize: 11, width: '100%' }}>View assessment<Icon name="→" size={13} /></button> : required && canEdit && <><button type="button" onClick={() => onCreate(s)} style={{ ...RA_BUTTON, fontSize: 11, flex: 1, background: 'var(--ra-tint)', borderColor: 'var(--ra-border)', color: 'var(--ra-ink)' }}><Icon name="add" size={13} />Create</button><button type="button" onClick={() => onReuse(s)} style={{ ...RA_BUTTON, fontSize: 11, flex: 1 }}>Use previous</button></>}
+          </div>}
+        </article>
+      })}
+      {!shown.length && <p style={{ margin: 0, padding: '20px 12px', background: 'var(--surface2)', borderRadius: 12, color: 'var(--text3)', fontSize: 12, lineHeight: 1.7 }}>{sessionsUnknown ? 'Upcoming activities are unavailable.' : handledSessionIds.size ? 'Your upcoming activities are included in Needs attention.' : `No upcoming ${terms.sessions} to check.`}</p>}
     </div>
-  )
+    {upcoming.length > 5 && <button type="button" aria-expanded={showAll} onClick={() => setShowAll(!showAll)} style={{ ...RA_BUTTON, width: '100%', marginTop: 12 }}>{showAll ? 'Show fewer' : `Show all ${upcoming.length} activities`}</button>}
+    {truncated && <p style={{ color: 'var(--text3)', fontSize: 11, lineHeight: 1.6, margin: '13px 0 0' }}>Showing checks for the next 40 scheduled activities.</p>}
+  </section>
 }
 
-function UpcomingActivities({ sessions, coverage, outstandingByAssessment = {}, handledSessionIds, onOpen, primary }) {
-  const isMobile = useIsMobile()
-  const upcoming = sessions
-    .filter(s => !handledSessionIds.has(s.id))
-    .slice(0, isMobile ? 4 : 6)
-
-  if (!upcoming.length) return null
-
-  return (
-    <div style={{ marginBottom: 14 }}>
-      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>
-        Also coming up
-      </div>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(230px, 1fr))',
-        gap: 10,
-      }}>
-        {upcoming.map(s => {
-          const cover = coverage[s.id]
-          const state = cover ? safetyStateOf(cover, { outstandingByAssessment }) : null
-          const meta = state ? SAFETY_META[state] : { dot: 'var(--danger-text)', bg: 'var(--danger-bg)', text: 'var(--danger-text)', label: 'No risk assessment' }
-
-          return (
-            <div key={s.id} style={{ ...CARD, padding: 14 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-                <span style={{ fontSize: 15 }}>{ACTIVITY_ICON[s.session_type] || '📋'}</span>
-                <div style={{
-                  fontSize: 14, fontWeight: 800, color: 'var(--text)', minWidth: 0,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>{s.title || 'Session'}</div>
-              </div>
-              <div style={{ fontSize: 12.5, color: 'var(--text3)' }}>{fmtSessionWhen(s)}</div>
-              {s.location && (
-                <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}><Icon name="📍" /> {s.location}</div>
-              )}
-
-              <div style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                padding: '5px 10px', borderRadius: 999, marginTop: 11,
-                background: meta.bg, color: meta.text,
-                fontSize: 12, fontWeight: 700,
-              }}>
-                <span style={{ width: 7, height: 7, borderRadius: 7, background: meta.dot }} />
-                {cover ? meta.label : 'No risk assessment'}
-              </div>
-
-              {cover && (
-                <button
-                  onClick={() => onOpen(cover)}
-                  style={{
-                    display: 'block', width: '100%', marginTop: 11,
-                    padding: '9px 12px', borderRadius: 10, border: '1px solid var(--border)',
-                    background: 'var(--surface)', color: 'var(--text)',
-                    fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                  }}
-                >View assessment</button>
-              )}
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
+function RecentAssessments({ assessments, staff, outstanding, unknown, unavailable, search, onSearch, onOpen, onBrowse }) {
+  const mobile = useIsMobile(1050)
+  const rows = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return [...assessments].filter(a => !q || [a.name, a.location, a.activity_type].some(v => v?.toLowerCase().includes(q))).sort((a, b) => (b.updated_at || b.created_at || '').localeCompare(a.updated_at || a.created_at || ''))
+  }, [assessments, search])
+  const staffById = Object.fromEntries(staff.map(s => [s.id, s]))
+  return <section aria-label="Find an assessment" style={{ ...RA_CARD, padding: 20, marginTop: 22 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 15 }}><div style={{ flex: 1 }}><h2 style={{ margin: 0, fontSize: 17, color: 'var(--text)' }}>Find an assessment</h2><p style={{ margin: '5px 0 0', fontSize: 12, color: 'var(--text3)' }}>Your most recently updated work.</p></div><button type="button" onClick={onBrowse} style={RA_BUTTON}>View all assessments<Icon name="→" size={14} /></button></div>
+    <label style={{ display: 'flex', alignItems: 'center', gap: 9, minHeight: 46, border: '1px solid var(--border)', borderRadius: 11, padding: '0 12px', color: 'var(--text3)', marginBottom: 14 }}><Icon name="search" size={17} /><input aria-label="Search recent assessments" value={search} onChange={e => onSearch(e.target.value)} placeholder="Search name, activity or location…" style={{ width: '100%', minWidth: 0, minHeight: 44, border: 0, background: 'transparent', color: 'var(--text)', fontFamily: 'inherit', fontSize: 13, outlineOffset: 2 }} />{search && <button type="button" aria-label="Clear search" onClick={() => onSearch('')} style={{ ...RA_BUTTON, border: 0, padding: 8 }}><Icon name="close" size={15} /></button>}</label>
+    {!rows.length ? <p style={{ color: 'var(--text3)', fontSize: 13, lineHeight: 1.6 }}>{unavailable ? 'Your assessment list is unavailable. Refresh to try again.' : search ? 'No assessments match. Try another name or location.' : 'No assessments yet. Start with a template or create your first one.'}</p> : <div style={{ display: 'grid', gap: 8 }}>
+      {rows.slice(0, 6).map(a => <button type="button" key={a.id} onClick={() => onOpen(a)} style={{ ...RA_BUTTON, display: 'grid', gridTemplateColumns: mobile ? 'minmax(0,1fr) auto' : 'minmax(0,2fr) minmax(115px,1fr) 80px 110px 18px', gap: 12, padding: '14px 13px', width: '100%', textAlign: 'left', borderRadius: 12 }}>
+        <span style={{ minWidth: 0 }}><span style={{ display: 'block', fontSize: 13, lineHeight: 1.45, fontWeight: 800, overflowWrap: 'anywhere' }}>{a.name}</span><span style={{ display: 'block', fontSize: 11, lineHeight: 1.5, color: 'var(--text3)', fontWeight: 500, marginTop: 4 }}>{a.location || a.activity_type || 'Activity to confirm'}{staffById[a.owner_id || a.created_by] ? ` · ${staffById[a.owner_id || a.created_by].full_name}` : ''}</span>{mobile && <span style={{ display: 'block', marginTop: 8 }}><StatusTag assessment={a} outstanding={outstanding} unknown={unknown} /><span style={{ display: 'block', fontSize: 10.5, marginTop: 6, color: 'var(--text3)' }}>{reviewLabel(a)}</span></span>}</span>
+        {!mobile && <span><StatusTag assessment={a} outstanding={outstanding} unknown={unknown} /></span>}
+        <span>{a.risk_rating ? <RatingBadge rating={a.risk_rating} size="sm" /> : <span style={{ color: 'var(--text3)', fontSize: 11 }}>Unrated</span>}</span>
+        {!mobile && <><span style={{ fontSize: 11, color: daysUntil(a.next_review_date || a.review_date) < 0 ? 'var(--danger-text)' : 'var(--text3)' }}>{reviewLabel(a)}</span><Icon name="→" size={14} style={{ color: 'var(--ra-ink)' }} /></>}
+      </button>)}
+    </div>}
+    {rows.length > 6 && <button type="button" onClick={onBrowse} style={{ ...RA_BUTTON, width: '100%', marginTop: 12 }}>See all {rows.length} {search ? 'matches' : 'assessments'}</button>}
+  </section>
 }
 
-function RecentAssessments({ assessments, onOpen, staffById, outstandingByAssessment = {} }) {
-  const isMobile = useIsMobile()
-  const rows = assessments.slice(0, 8)
-
-  if (!rows.length) return null
-
-  return (
-    <div>
-      <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>
-        Recent assessments
-      </div>
-
-      {isMobile ? (
-        <div style={{ display: 'grid', gap: 8 }}>
-          {rows.map(a => {
-            const state = safetyStateOf(a, { outstandingByAssessment })
-            const meta = SAFETY_META[state]
-            return (
-              <button key={a.id} onClick={() => onOpen(a)} style={{
-                ...CARD, padding: 13, textAlign: 'left', cursor: 'pointer',
-                fontFamily: 'inherit', width: '100%',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                  <span style={{ fontSize: 16 }}>{ACTIVITY_ICON[a.activity_type] || '📋'}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{
-                      fontSize: 14, fontWeight: 800, color: 'var(--text)',
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }}>{a.name}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>
-                      {a.location || a.activity_type || '—'}
-                    </div>
-                  </div>
-                  <span style={{
-                    width: 8, height: 8, borderRadius: 8, background: meta.dot, flexShrink: 0,
-                  }} />
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      ) : (
-        <div style={{ ...CARD, overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
-            <thead>
-              <tr style={{ background: 'var(--surface2)' }}>
-                {['Assessment', 'Activity', 'Risk', 'Status', 'Owner', 'Next review', 'Updated'].map(h => (
-                  <th key={h} style={{
-                    textAlign: 'left', padding: '10px 14px', fontSize: 11.5, fontWeight: 700,
-                    color: 'var(--text3)', letterSpacing: 0.3, borderBottom: '1px solid #ECE9F5',
-                    whiteSpace: 'nowrap',
-                  }}>{h.toUpperCase()}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map(a => {
-                const state = safetyStateOf(a, { outstandingByAssessment })
-                const meta = SAFETY_META[state]
-                const review = a.next_review_date || a.review_date
-                const days = daysUntil(review)
-                return (
-                  <tr
-                    key={a.id}
-                    onClick={() => onOpen(a)}
-                    style={{ borderBottom: '1px solid #F5F3FA', cursor: 'pointer' }}
-                  >
-                    <td style={{ padding: '11px 14px', fontWeight: 700, color: 'var(--text)' }}>
-                      <span style={{ marginRight: 7 }}>{ACTIVITY_ICON[a.activity_type] || '📋'}</span>
-                      {a.name}
-                    </td>
-                    <td style={{ padding: '11px 14px', color: 'var(--text3)' }}>
-                      {a.location || a.activity_type || '—'}
-                    </td>
-                    <td style={{ padding: '11px 14px' }}>
-                      <RatingBadge rating={a.risk_rating || 'low'} size="sm" />
-                    </td>
-                    <td style={{ padding: '11px 14px' }}>
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 6,
-                        padding: '4px 10px', borderRadius: 999, fontSize: 12, fontWeight: 700,
-                        background: meta.bg, color: meta.text, whiteSpace: 'nowrap',
-                      }}>
-                        <span style={{ width: 6, height: 6, borderRadius: 6, background: meta.dot }} />
-                        {meta.label}
-                      </span>
-                    </td>
-                    <td style={{ padding: '11px 14px', color: 'var(--text3)', whiteSpace: 'nowrap' }}>
-                      {staffById[a.owner_id]?.full_name || staffById[a.created_by]?.full_name || '—'}
-                    </td>
-                    <td style={{
-                      padding: '11px 14px', whiteSpace: 'nowrap',
-                      color: days !== null && days < 0 ? 'var(--danger-text)' : 'var(--text3)',
-                      fontWeight: days !== null && days < 0 ? 700 : 400,
-                    }}>
-                      {review
-                        ? (days !== null && days < 0
-                            ? `Overdue ${Math.abs(days)}d`
-                            : new Date(review).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }))
-                        : '—'}
-                    </td>
-                    <td style={{ padding: '11px 14px', color: 'var(--text3)', whiteSpace: 'nowrap' }}>
-                      {timeAgo(a.updated_at || a.created_at)}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  )
-}
-
-export default function RAOverview({
-  assessments = [],
-  sessionsTruncated = false,
-  sessions = [],
-  coverage = {},
-  outstandingByAssessment = {},
-  staff = [],
-  primary = '#7C5CFC',
-  safetyFilter,
-  onSafetyFilter,
-  onOpen,
-  onCreateForSession,
-  onReuseForSession,
-}) {
-  // Archived work is history, not part of the live safety picture.
+export default function RAOverview({ assessments = [], sessionsTruncated = false, sessions = [], coverage = {}, outstandingByAssessment = {}, staff = [], unavailable = [], checking = false, canEdit = false, canApprove = false, search = '', onSearch, onSafetyFilter, onBrowse, onOpen, onCreateForSession, onReuseForSession }) {
+  const compact = useIsMobile(1100)
   const live = useMemo(() => activeOnly(assessments), [assessments])
-  const counts = useMemo(
-    () => summariseSafety(live, { outstandingByAssessment }),
-    [live, outstandingByAssessment]
-  )
-
-  const attention = useMemo(
-    () => buildAttentionItems({ assessments: live, sessions, coverage, outstandingByAssessment }),
-    [live, sessions, coverage, outstandingByAssessment]
-  )
-
-  // Sessions the attention list already accounts for. Listing them again below
-  // with the same button was the screen's main duplication.
-  const handledSessionIds = useMemo(
-    () => new Set(attention.filter(i => i.session).map(i => i.session.id)),
-    [attention]
-  )
-
-  const staffById = useMemo(
-    () => Object.fromEntries(staff.map(s => [s.id, s])),
-    [staff]
-  )
-
-  const filtered = useMemo(() => {
-    if (!safetyFilter) return live
-    return live.filter(a => safetyStateOf(a, { outstandingByAssessment }) === safetyFilter)
-  }, [live, safetyFilter, outstandingByAssessment])
-
-  return (
-    <div>
-      <SafetyStrip counts={counts} activeFilter={safetyFilter} onFilter={onSafetyFilter} />
-
-      <NeedsAttention
-        items={attention}
-        onOpen={onOpen}
-        onCreateForSession={onCreateForSession}
-        onReuseForSession={onReuseForSession}
-        primary={primary}
-        truncated={sessionsTruncated}
-      />
-
-      <UpcomingActivities
-        sessions={sessions}
-        coverage={coverage}
-        outstandingByAssessment={outstandingByAssessment}
-        handledSessionIds={handledSessionIds}
-        onOpen={onOpen}
-        primary={primary}
-      />
-
-      <RecentAssessments
-        assessments={filtered}
-        onOpen={onOpen}
-        staffById={staffById}
-        outstandingByAssessment={outstandingByAssessment}
-      />
+  const counts = useMemo(() => summariseSafety(live, { outstandingByAssessment }), [live, outstandingByAssessment])
+  const coverageUnknown = checking || unavailable.includes('assessments') || unavailable.includes('assessment links')
+  const checksUnknown = checking || unavailable.includes('assessments') || unavailable.includes('controls')
+  const attention = useMemo(() => buildAttentionItems({ assessments: live, sessions: coverageUnknown ? [] : sessions, coverage, outstandingByAssessment }), [live, sessions, coverage, outstandingByAssessment, coverageUnknown])
+  const handledSessionIds = new Set(attention.filter(i => i.session).map(i => i.session.id))
+  return <div>
+    <SafetyStrip counts={counts} unknown={checksUnknown} onFilter={onSafetyFilter} />
+    <div style={{ display: 'grid', gridTemplateColumns: compact ? 'minmax(0,1fr)' : 'minmax(0,1.3fr) minmax(0,1fr)', gap: 20, alignItems: 'start' }}>
+      <NeedsAttention items={attention} checking={checking} unknown={unavailable.length > 0} canEdit={canEdit} canApprove={canApprove} onOpen={onOpen} onCreateForSession={onCreateForSession} onReuseForSession={onReuseForSession} />
+      <UpcomingActivities sessions={sessions} coverage={coverage} outstanding={outstandingByAssessment} handledSessionIds={handledSessionIds} canEdit={canEdit} coverageUnknown={coverageUnknown} checksUnknown={checksUnknown} sessionsUnknown={checking || unavailable.includes('upcoming activities')} truncated={sessionsTruncated} onOpen={onOpen} onCreate={onCreateForSession} onReuse={onReuseForSession} />
     </div>
-  )
+    <RecentAssessments assessments={live} staff={staff} outstanding={outstandingByAssessment} unknown={checksUnknown} unavailable={unavailable.includes('assessments')} search={search} onSearch={onSearch} onOpen={onOpen} onBrowse={onBrowse} />
+  </div>
 }

@@ -3,6 +3,7 @@
 // HSE-style 5x5 risk-matrix logic used across the workspace.
 import React from 'react'
 import { motion } from 'framer-motion'
+import { todayInLondon, dayInLondon } from '../../lib/today'
 
 export const RA_STATUSES = ['draft', 'active', 'review_due', 'expired', 'archived']
 export const RA_STATUS_LABELS = {
@@ -171,6 +172,8 @@ export function timeAgo(dateStr) {
 // Days until a date (negative if overdue)
 export function daysUntil(dateStr) {
   if (!dateStr) return null
-  const diff = new Date(dateStr).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)
-  return Math.round(diff / 86400000)
+  const day = /^\d{4}-\d{2}-\d{2}$/.test(dateStr) ? dateStr : dayInLondon(dateStr)
+  if (!day) return null
+  const diff = Date.parse(`${day}T00:00:00Z`) - Date.parse(`${todayInLondon()}T00:00:00Z`)
+  return Number.isFinite(diff) ? Math.round(diff / 86400000) : null
 }
