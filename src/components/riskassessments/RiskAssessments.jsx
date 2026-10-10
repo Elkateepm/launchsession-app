@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { CountUp, glass, inputStyle, btnPrimary, btnGhost, PAGE_BG } from '../volunteers/vh_shared'
+import { CountUp, glass, inputStyle, btnPrimary, btnGhost } from '../volunteers/vh_shared'
 import {
   RA_STATUSES, RA_STATUS_LABELS, ACTIVITY_TYPES, ACTIVITY_ICON,
   riskScore, riskRating, RatingBadge, RAStatusChip, RiskMatrix, RiskGauge,
@@ -18,17 +18,26 @@ import HazardDrawer from './HazardDrawer'
 import { DynamicUpdateDrawer, DynamicUpdateList, EmergencyView } from './RALiveSafety'
 import { assessmentProgress, ProgressStrip, ApprovalPanel } from './RAProgress'
 import ReuseAssessmentDrawer from './ReuseAssessmentDrawer'
-import { buildCoverage } from './ra_safety'
+import { buildCoverage, safetyStateOf, SAFETY_META, isArchived } from './ra_safety'
+import RAWorkspaceHeader, { RA_BUTTON } from './RAWorkspaceHeader'
+import { loadRiskOperational, readRiskQuery } from './raOverviewData'
+import { getAuthBranding } from '../auth/authBranding'
+import { brandPalette, rgba, ALPHA_SCALE } from '../../lib/brandColors'
+import { useIsDarkTheme } from '../../hooks/useIsDarkTheme'
 import Icon from '../../lib/icons'
 import { withAlpha } from '../../lib/withAlpha'
 import { todayInLondon } from '../../lib/today'
 
 const RATING_ORDER = { low: 1, medium: 2, high: 3, critical: 4 }
-const SESSION_WINDOW = 40
 
 export default function RiskAssessments({ org, session: authSession, initialOpenAssessmentId, userProfile }) {
   const isMobile = useIsMobile()
-  const primary = org?.primary_color || '#7C5CFC'
+  const dark = useIsDarkTheme()
+  const brand = getAuthBranding(org)
+  const palette = brandPalette(brand.primary, dark)
+  const lightPalette = brandPalette(brand.primary, false)
+  const primary = lightPalette.ink
+  const canEdit = ['owner', 'admin', 'manager', 'staff'].includes(userProfile?.role)
   // Mirrors is_org_manager() in the database. The UI hides what a user cannot
   // do; RLS is what actually stops them.
   const isManager = ['owner', 'admin', 'manager'].includes(userProfile?.role)
@@ -68,49 +77,57 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
   const [coverageLinks, setCoverageLinks] = useState([])
   const [outstandingByAssessment, setOutstandingByAssessment] = useState({})
 
+  const [listErrors, setListErrors] = useState([])
+  const [listRefreshing, setListRefreshing] = useState(false)
+  const [operationalErrors, setOperationalErrors] = useState([])
+  const [operationalLoading, setOperationalLoading] = useState(true)
+  const [loadedOrg, setLoadedOrg] = useState(null)
+  const [operationalOrg, setOperationalOrg] = useState(null)
+  const listRequest = useRef(0)
+  const operationalRequest = useRef(0)
+
   const loadAll = useCallback(async () => {
-    const [{ data: ra }, { data: st }, { data: vs }] = await Promise.all([
-      supabase.from('risk_assessments').select('*').eq('org_id', org.id).eq('is_template', false).order('created_at', { ascending: false }),
-      supabase.from('user_profiles').select('id, full_name, role, photo_url').eq('org_id', org.id).in('role', ['admin', 'staff']),
-      supabase.from('venues').select('*').eq('org_id', org.id).order('name'),
+    const request = ++listRequest.current
+    setListRefreshing(true)
+    const [ra, st, vs] = await Promise.all([
+      readRiskQuery(supabase.from('risk_assessments').select('*').eq('org_id', org.id).eq('is_template', false).order('created_at', { ascending: false })),
+      readRiskQuery(supabase.from('user_profiles').select('id, full_name, role, photo_url').eq('org_id', org.id).in('role', ['owner', 'admin', 'manager', 'staff'])),
+      readRiskQuery(supabase.from('venues').select('*').eq('org_id', org.id).order('name')),
     ])
-    setAssessments(ra || [])
-    setStaff(st || [])
-    setVenues(vs || [])
+    if (request !== listRequest.current) return
+    setAssessments(ra.error ? [] : ra.data || [])
+    setStaff(st.data || [])
+    setVenues(vs.data || [])
+    setListErrors([ra.error && 'assessments', st.error && 'team names', vs.error && 'venues'].filter(Boolean))
+    setLoadedOrg(org.id)
+    setListRefreshing(false)
     setLoading(false)
   }, [org.id])
 
-  useEffect(() => { loadAll() }, [loadAll])
+  useEffect(() => {
+    setSelected(null)
+    loadAll()
+    return () => { listRequest.current += 1 }
+  }, [loadAll])
 
-  // The overview answers "is what we're about to run covered?", which the
-  // assessment list alone cannot show -- an uncovered session is invisible
-  // until you look at the schedule.
   const loadOperational = useCallback(async () => {
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' })
-    const [{ data: sess }, { data: links }, { data: controls }] = await Promise.all([
-      supabase.from('sessions')
-        .select('id, title, session_date, start_time, location, session_type, project_id')
-        .eq('org_id', org.id).gte('session_date', today)
-        .order('session_date').order('start_time').limit(40),
-      supabase.from('risk_assessment_sessions').select('assessment_id, session_id').eq('org_id', org.id),
-      // Outstanding controls drive the "still require controls" attention item.
-      supabase.from('risk_controls')
-        .select('hazard_id, completed, risk_assessment_hazards!inner(assessment_id)')
-        .eq('org_id', org.id).eq('completed', false),
-    ])
-    setUpcomingSessions(sess || [])
-    setSessionsTruncated((sess || []).length >= SESSION_WINDOW)
-    setCoverageLinks(links || [])
-
-    const outstanding = {}
-    ;(controls || []).forEach(c => {
-      const aid = c.risk_assessment_hazards?.assessment_id
-      if (aid) outstanding[aid] = (outstanding[aid] || 0) + 1
-    })
-    setOutstandingByAssessment(outstanding)
+    const request = ++operationalRequest.current
+    setOperationalLoading(true)
+    const result = await loadRiskOperational(org.id)
+    if (request !== operationalRequest.current) return
+    setUpcomingSessions(result.sessions)
+    setSessionsTruncated(result.truncated)
+    setCoverageLinks(result.links)
+    setOutstandingByAssessment(result.outstanding)
+    setOperationalErrors(result.errors)
+    setOperationalOrg(org.id)
+    setOperationalLoading(false)
   }, [org.id])
 
-  useEffect(() => { loadOperational() }, [loadOperational])
+  useEffect(() => {
+    loadOperational()
+    return () => { operationalRequest.current += 1 }
+  }, [loadOperational])
 
   useEffect(() => {
     if (!selected?.id) { setSelectedOutstanding(0); setSelectedAttachments(0); return }
@@ -138,10 +155,10 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
 
   // Deep-link: auto-open a specific assessment when navigated here with one (e.g. from the Home hero card)
   useEffect(() => {
-    if (!initialOpenAssessmentId || assessments.length === 0) return
+    if (loadedOrg !== org.id || !initialOpenAssessmentId || assessments.length === 0) return
     const match = assessments.find(a => a.id === initialOpenAssessmentId)
     if (match) { setSelected(match); setTab('overview') }
-  }, [initialOpenAssessmentId, assessments])
+  }, [initialOpenAssessmentId, assessments, loadedOrg, org.id])
 
   // Load hazards when an assessment is opened
   useEffect(() => {
@@ -227,8 +244,9 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
 
   // ── derived ──
   const filtered = useMemo(() => {
-    let list = assessments.filter(a => !a.archived)
-    if (filters.status !== 'all') list = list.filter(a => a.status === filters.status)
+    let list = assessments.filter(a => filters.status === 'archived' ? isArchived(a) : !isArchived(a))
+    if (safetyFilter) list = list.filter(a => safetyStateOf(a, { outstandingByAssessment }) === safetyFilter)
+    if (filters.status !== 'all' && filters.status !== 'archived') list = list.filter(a => a.status === filters.status)
     if (filters.activity !== 'all') list = list.filter(a => a.activity_type === filters.activity)
     if (filters.rating !== 'all') list = list.filter(a => a.risk_rating === filters.rating)
     if (search.trim()) {
@@ -242,7 +260,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
       name: (a, b) => (a.name || '').localeCompare(b.name || ''),
     }
     return [...list].sort(sorters[sortBy] || sorters.newest)
-  }, [assessments, filters, search, sortBy])
+  }, [assessments, filters, search, sortBy, safetyFilter, outstandingByAssessment])
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / perPage))
   const paged = filtered.slice((page - 1) * perPage, page * perPage)
@@ -274,42 +292,30 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
     assessments.filter(a => !a.archived && a.next_review_date).sort((a, b) => new Date(a.next_review_date) - new Date(b.next_review_date)).slice(0, 4)
   , [assessments])
 
-  if (loading) return <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-faint)' }}>Loading risk assessments…</div>
+  if (loading || loadedOrg !== org.id) return <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-faint)' }}>Loading risk assessments…</div>
 
   const reviewerName = (id) => staff.find(s => s.id === id)?.full_name || '—'
 
   return (
-    <div style={{ background: PAGE_BG, minHeight: '100%', padding: isMobile ? '16px 12px 80px' : '20px 24px' }}>
-      {/* HEADER */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 18 }}>
-        <div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 10 }}><Icon name="🛡️" /> Risk Assessments</div>
-          <div style={{ fontSize: 13.5, color: 'var(--text3)', marginTop: 4 }}>Keep activities safe, reviewed and ready to run.</div>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => setReuseFor({})} style={btnGhost}>♻️ Use Previous</button>
-          <button onClick={() => setShowTemplates(true)} style={btnGhost}><Icon name="📄" /> Use Template</button>
-          <button onClick={() => setShowCreate(true)} style={btnPrimary(primary)}>+ New Assessment</button>
-        </div>
-      </div>
+    <div style={{
+      '--ra-ink': palette.ink, '--ra-tint': palette.tint, '--ra-border': palette.border,
+      '--ra-hero-ink': lightPalette.ink, '--ra-hero-soft': lightPalette.soft,
+      '--org-primary': brand.primary, '--org-ink': palette.ink, '--org-tint': palette.tint,
+      '--org-soft': palette.soft, '--org-border': palette.border,
+      ...Object.fromEntries(Object.entries(ALPHA_SCALE).map(([key, value]) => [`--org-${key}`, rgba(brand.primary, value)])),
+      '--font': brand.font.body, '--font-display': brand.font.display, fontFamily: brand.font.body,
+      minHeight: '100%', maxWidth: 1500, margin: '0 auto', boxSizing: 'border-box', padding: isMobile ? '16px 12px 80px' : '22px 24px 36px',
+    }}>
+      <RAWorkspaceHeader brand={brand} mobile={isMobile} compact={!!selected} canCreate={canEdit}
+        onCreate={() => setShowCreate(true)} onReuse={() => setReuseFor({})} onTemplates={() => setShowTemplates(true)} />
 
-      {!selected && (
-        <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
-          {[['overview', 'Overview'], ['library', 'All assessments']].map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => setView(key)}
-              style={{
-                padding: '8px 15px', borderRadius: 999, fontSize: 13, fontWeight: 700,
-                cursor: 'pointer', fontFamily: 'inherit',
-                border: `1px solid ${view === key ? 'transparent' : 'var(--border)'}`,
-                background: view === key ? primary : 'var(--surface)',
-                color: view === key ? '#fff' : 'var(--text3)',
-              }}
-            >{label}</button>
-          ))}
+      {!selected && <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: 18 }}>
+        <div aria-label="Risk assessment views" style={{ display: 'flex', gap: 5 }}>
+          {[['overview', 'Overview'], ['library', 'All assessments']].map(([key, label]) => <button type="button" key={key} aria-pressed={view === key} onClick={() => setView(key)} style={{ ...RA_BUTTON, background: view === key ? 'var(--ra-tint)' : 'var(--surface)', color: view === key ? 'var(--ra-ink)' : 'var(--text3)', borderColor: view === key ? 'var(--ra-border)' : 'var(--border)' }}>{label}</button>)}
         </div>
-      )}
+        <button type="button" disabled={operationalLoading || listRefreshing} onClick={() => { loadAll(); loadOperational() }} style={{ ...RA_BUTTON, background: 'transparent', opacity: operationalLoading || listRefreshing ? .6 : 1 }}><Icon name="🔄" size={14} />{operationalLoading || listRefreshing ? 'Checking…' : 'Refresh'}</button>
+      </div>}
+      {(listErrors.length > 0 || operationalErrors.length > 0) && <div role="alert" style={{ padding: '14px 16px', background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 12, color: 'var(--warn-text)', fontSize: 12, lineHeight: 1.7, marginBottom: 18 }}>Couldn’t load {[...listErrors, ...operationalErrors].join(', ')}. Some checks are unavailable. Refresh to try again.</div>}
 
       {!selected && view === 'overview' && (
         <RAOverview
@@ -318,10 +324,13 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
           coverage={coverage}
           outstandingByAssessment={outstandingByAssessment}
           staff={staff}
-          primary={primary}
           sessionsTruncated={sessionsTruncated}
-          safetyFilter={safetyFilter}
-          onSafetyFilter={setSafetyFilter}
+          unavailable={[...listErrors, ...operationalErrors]}
+          checking={listRefreshing || operationalLoading || operationalOrg !== org.id}
+          canEdit={canEdit} canApprove={isManager}
+          search={search} onSearch={value => { setSearch(value); setPage(1) }}
+          onBrowse={() => { setSafetyFilter(null); setFilters({ status: 'all', activity: 'all', rating: 'all' }); setPage(1); setView('library') }}
+          onSafetyFilter={value => { setSafetyFilter(value); setSearch(''); setFilters({ status: 'all', activity: 'all', rating: 'all' }); setPage(1); setView('library') }}
           onOpen={a => { setSelected(a); setTab('overview'); logAudit(a.id, 'viewed', null) }}
           onReuseForSession={sess => setReuseFor(sess)}
           onCreateForSession={sess => {
@@ -342,7 +351,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
           { label: 'Require Review', value: kpis.requireReview, icon: '⏰', color: '#F59E0B', suffix: '' },
           { label: 'High Risk Activities', value: kpis.highRisk, icon: '🔥', color: '#EF4444', suffix: '' },
           { label: 'Drafts', value: kpis.drafts, icon: '🗂', color: 'var(--text3)', suffix: '' },
-          { label: 'Completion Rate', value: kpis.rate, icon: '✅', color: '#22C55E', suffix: '%' },
+          { label: 'Out of draft', value: kpis.rate, icon: '✅', color: '#22C55E', suffix: '%' },
         ].map((k, i) => (
           <motion.div key={k.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} whileHover={{ y: -2 }} style={{ ...glass({ padding: '16px' }) }}>
             <div style={{ width: 34, height: 34, borderRadius: 10, background: `${withAlpha(k.color, '18')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}><Icon name={k.icon} /></div>
@@ -352,25 +361,29 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
         ))}
       </div>
 
+      {safetyFilter && <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 12, fontSize: 12, color: 'var(--ra-ink)' }}>
+        <span>Showing: {safetyFilter === 'ready' ? 'Up to date' : SAFETY_META[safetyFilter].label}</span>
+        <button type="button" onClick={() => { setSafetyFilter(null); setPage(1) }} style={RA_BUTTON}>Clear status filter<Icon name="close" size={13} /></button>
+      </div>}
       {/* SEARCH + FILTERS */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flex: '1 1 240px' }}>
           <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-faint)', fontSize: 13 }}><Icon name="🔍" /></span>
-          <input style={{ ...inputStyle, paddingLeft: 32 }} placeholder="Search assessments…" value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} />
+          <input style={{ ...inputStyle, paddingLeft: 32 }} aria-label="Search assessments" placeholder="Search assessments…" value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} />
         </div>
-        <select style={{ ...inputStyle, width: 140 }} value={filters.status} onChange={e => { setFilters(f => ({ ...f, status: e.target.value })); setPage(1) }}>
+        <select style={{ ...inputStyle, width: 140 }} aria-label="Assessment status" value={filters.status} onChange={e => { setSafetyFilter(null); setFilters(f => ({ ...f, status: e.target.value })); setPage(1) }}>
           <option value="all">All Status</option>
           {RA_STATUSES.map(s => <option key={s} value={s}>{RA_STATUS_LABELS[s]}</option>)}
         </select>
-        <select style={{ ...inputStyle, width: 150 }} value={filters.activity} onChange={e => { setFilters(f => ({ ...f, activity: e.target.value })); setPage(1) }}>
+        <select style={{ ...inputStyle, width: 150 }} aria-label="Activity category" value={filters.activity} onChange={e => { setFilters(f => ({ ...f, activity: e.target.value })); setPage(1) }}>
           <option value="all">All Categories</option>
           {ACTIVITY_TYPES.map(a => <option key={a} value={a}>{a}</option>)}
         </select>
-        <select style={{ ...inputStyle, width: 130 }} value={filters.rating} onChange={e => { setFilters(f => ({ ...f, rating: e.target.value })); setPage(1) }}>
+        <select style={{ ...inputStyle, width: 130 }} aria-label="Risk rating" value={filters.rating} onChange={e => { setFilters(f => ({ ...f, rating: e.target.value })); setPage(1) }}>
           <option value="all">All Risk</option>
           <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option>
         </select>
-        <select style={{ ...inputStyle, width: 150 }} value={sortBy} onChange={e => setSortBy(e.target.value)}>
+        <select style={{ ...inputStyle, width: 150 }} aria-label="Sort assessments" value={sortBy} onChange={e => setSortBy(e.target.value)}>
           <option value="newest">Sort: Newest</option>
           <option value="rating">Sort: Risk Rating</option>
           <option value="review">Sort: Review Due</option>
@@ -818,18 +831,25 @@ function CreateModal({ org, staff, venues, onClose, onCreate, primary, prefillSe
   // location across so the staff member isn't retyping what we already know.
   const [form, setForm] = useState({
     name: prefillSession?.title ? `${prefillSession.title} Risk Assessment` : '',
-    activity_type: prefillSession?.session_type || '',
+    activity_type: ACTIVITY_TYPES.find(type => type.toLowerCase() === prefillSession?.session_type?.toLowerCase())
+      || ({ activity: 'General Activity', trip: 'Day Trip', holiday: 'Holiday Club' })[prefillSession?.session_type] || '',
     location: prefillSession?.location || '',
     venue_id: null,
     summary: '',
   })
-  const [useCustomLocation, setUseCustomLocation] = useState(activeVenues.length === 0)
+  const [useCustomLocation, setUseCustomLocation] = useState(!!prefillSession?.location || activeVenues.length === 0)
   const [saving, setSaving] = useState(false)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
   const submit = async () => {
     if (!form.name.trim()) return
     setSaving(true)
-    await onCreate({ ...form, hazards: [], linkSessionId: prefillSession?.id || null })
+    try {
+      await onCreate({ ...form, hazards: [], linkSessionId: prefillSession?.id || null })
+    } catch {
+      alert('Could not create the assessment. Please try again.')
+    } finally {
+      setSaving(false)
+    }
   }
   const selectedVenue = form.venue_id ? activeVenues.find(v => v.id === form.venue_id) : null
   return (
