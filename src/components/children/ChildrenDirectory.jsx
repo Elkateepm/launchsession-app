@@ -454,7 +454,7 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
   )
 }
 
-function AddChildQuickModal({ org, onClose, onAdded }) {
+export function AddChildQuickModal({ org, onClose, onAdded }) {
   const [form, setForm] = useState({ first_name: '', last_name: '', date_of_birth: '', group_name: '', parent_name: '', parent_phone: '', parent_email: '', school: '' })
   const [saving, setSaving] = useState(false)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
