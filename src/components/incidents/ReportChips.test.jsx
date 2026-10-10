@@ -118,12 +118,18 @@ describe('living inside a card that is itself a button', () => {
   })
 
   it('does not close the half-written form on a backdrop tap', () => {
-    const { container } = setup({ linkedSession: liveSession, compact: true })
+    setup({ linkedSession: liveSession, compact: true })
     fireEvent.click(screen.getByText('Injury'))
     // jsdom drops backdrop-filter from the style attribute, so the backdrop is
     // found by its positioning instead.
-    const backdrop = container.querySelector('div[style*="position: fixed"]')
+    const backdrop = document.body.querySelector('div[style*="position: fixed"]')
     fireEvent.click(backdrop)
     expect(screen.getByText('Save to accident book')).toBeInTheDocument()
+  })
+
+  it('opens the form outside the card, so a clipped hero cannot trap it', () => {
+    const { container } = setup({ linkedSession: null })
+    fireEvent.click(screen.getByText('Log an injury'))
+    expect(container).not.toContainElement(screen.getByText('Save to accident book'))
   })
 })
