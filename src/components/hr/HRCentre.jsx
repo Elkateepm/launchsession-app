@@ -4,6 +4,8 @@ import { supabase } from '../../lib/supabase'
 import MemberAccess from './MemberAccess'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import Icon from '../../lib/icons'
+import JoinLinkPanel from '../team/JoinLinkPanel'
+import { INVITABLE, ROLE_NAMES, canManageTeam, sendTeamInvite } from '../team/teamJoin'
 
 // HR Centre — the single place staff are managed.
 //
@@ -762,13 +764,13 @@ function StaffProfile({ person, org, leave, primary, isAdmin, hasHRModule, viewe
 // Exported so the HR home screen can offer the same invite flow rather than a
 // second, subtly different one.
 // Who each role may invite: the same table api/invite-volunteer.js enforces.
-const INVITABLE = {
-  owner: ['staff', 'manager', 'admin', 'volunteer'],
-  admin: ['staff', 'manager', 'admin', 'volunteer'],
-  manager: ['staff', 'volunteer'],
-  staff: ['volunteer'],
+// What each role is for, one line under the picker so nobody has to guess.
+const ROLE_HELP = {
+  staff: 'Runs sessions and registers, and sees the young people they work with.',
+  manager: 'Everything staff can do, plus approving new people and managing the team.',
+  admin: 'Full access, including settings, billing and branding.',
+  volunteer: 'Uses the volunteer portal: their sessions, messages and hours.',
 }
-const ROLE_NAMES = { staff: 'Staff', manager: 'Manager', admin: 'Admin', volunteer: 'Volunteer' }
 
 export function InviteStaffModal({ org, primary, onClose, onSent, inviterRole = 'admin', title = 'Invite staff' }) {
   const isMobile = useIsMobile()
@@ -781,6 +783,10 @@ export function InviteStaffModal({ org, primary, onClose, onSent, inviterRole = 
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
   const [sent, setSent] = useState(false)
+  // Email someone, or share the join link / QR code. Only the roles that can
+  // approve a request get the second; anyone else's link would go nowhere.
+  const [mode, setMode] = useState('email')
+  const linkAllowed = canManageTeam(inviterRole)
 
   // 44px fields, and 16px text on a phone so iOS does not zoom into them.
   const input = {
@@ -808,20 +814,8 @@ export function InviteStaffModal({ org, primary, onClose, onSent, inviterRole = 
     }
 
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('/api/invite-volunteer', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-        body: JSON.stringify({
-          email: clean, name: fullName, org_id: org.id, org_slug: org.slug, role,
-        }),
-      })
-      const json = await res.json()
-      if (json.error) throw new Error(json.error)
-      setExistingUser(!!json.existing_user)
+      const { existingUser } = await sendTeamInvite({ org, email: clean, name: fullName, role })
+      setExistingUser(existingUser)
       setSent(true)
     } catch (err) {
       setError(err.message || 'Could not send the invite.')
@@ -852,20 +846,51 @@ export function InviteStaffModal({ org, primary, onClose, onSent, inviterRole = 
                 ? `${email} already had an account — they've been added to ${org?.name} and notified by email.`
                 : `${fullName || email} has been invited to join ${org?.name}. They'll get an email to set up their account.`}
             </div>
-            <button onClick={() => onSent(fullName || email)} style={{
-              width: '100%', padding: '13px', borderRadius: 12, border: 'none',
-              background: primary, color: '#fff', fontSize: 14.5, fontWeight: 800,
-              cursor: 'pointer', fontFamily: 'inherit',
-            }}>Done</button>
+            <div style={{ display: 'flex', gap: 10 }}>
+              {/* Inviting a whole team is several of these in a row. Keeps the
+                  role, since the next person is usually the same kind. */}
+              <button onClick={() => { setSent(false); setFirstName(''); setLastName(''); setEmail(''); setExistingUser(false) }} style={{
+                flex: 1, padding: '13px', borderRadius: 12, border: '1px solid var(--border)',
+                background: 'var(--surface)', color: 'var(--text2)', fontSize: 14, fontWeight: 700,
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}>Invite someone else</button>
+              <button onClick={() => onSent(fullName || email)} style={{
+                flex: 1, padding: '13px', borderRadius: 12, border: 'none',
+                background: primary, color: '#fff', fontSize: 14.5, fontWeight: 800,
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}>Done</button>
+            </div>
           </div>
         ) : (
           <>
             <h2 id={`${fieldId}-title`} style={{ margin: '0 0 16px', fontSize: 17, fontWeight: 800, color: 'var(--text)' }}>{title}</h2>
-            <div style={{ display: 'grid', gap: 14 }}>
+            {linkAllowed && (
+              <div role="tablist" aria-label="How to invite" style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 12, background: 'var(--surface2)', marginBottom: 16 }}>
+                {[['email', 'Email an invite'], ['link', 'Share a link or QR']].map(([key, text]) => (
+                  <button key={key} role="tab" aria-selected={mode === key} onClick={() => setMode(key)} style={{
+                    flex: 1, minHeight: 40, borderRadius: 9, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                    background: mode === key ? 'var(--surface)' : 'transparent',
+                    boxShadow: mode === key ? '0 1px 3px rgba(15,23,42,0.12)' : 'none',
+                    color: mode === key ? 'var(--text)' : 'var(--text3)', fontSize: 13, fontWeight: 800,
+                  }}>{text}</button>
+                ))}
+              </div>
+            )}
+            {mode === 'link' ? (
+              <>
+                <JoinLinkPanel org={org} primary={primary || 'var(--org-primary, #1B9AAA)'} />
+                <button onClick={onClose} style={{
+                  width: '100%', marginTop: 16, minHeight: 46, borderRadius: 12, border: '1px solid var(--border)',
+                  background: 'var(--surface)', color: 'var(--text2)', fontSize: 14, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}>Close</button>
+              </>
+            ) : (
+            <form onSubmit={e => { e.preventDefault(); if (!busy && email.trim()) send() }} style={{ display: 'grid', gap: 14 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
                   <label htmlFor={`${fieldId}-first`} style={label}>FIRST NAME</label>
-                  <input id={`${fieldId}-first`} autoComplete="off" value={firstName} onChange={e => setFirstName(e.target.value)} style={input} />
+                  <input id={`${fieldId}-first`} autoFocus={!isMobile} autoComplete="off" value={firstName} onChange={e => setFirstName(e.target.value)} style={input} />
                 </div>
                 <div>
                   <label htmlFor={`${fieldId}-last`} style={label}>LAST NAME</label>
@@ -881,7 +906,7 @@ export function InviteStaffModal({ org, primary, onClose, onSent, inviterRole = 
                 <select id={`${fieldId}-role`} value={role} onChange={e => setRole(e.target.value)} style={input}>
                   {roles.map(r => <option key={r} value={r}>{ROLE_NAMES[r]}</option>)}
                 </select>
-                {role === 'volunteer' && <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 6, lineHeight: 1.5 }}>Volunteers use the volunteer portal: their sessions, messages and hours.</div>}
+                {ROLE_HELP[role] && <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 6, lineHeight: 1.5 }}>{ROLE_HELP[role]}</div>}
               </div>
 
               {error && (
@@ -892,14 +917,14 @@ export function InviteStaffModal({ org, primary, onClose, onSent, inviterRole = 
               )}
 
               <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={onClose} style={{
+                <button type="button" onClick={onClose} style={{
                   minHeight: 46, padding: '0 18px', borderRadius: 12, border: '1px solid var(--border)',
                   background: 'var(--surface)', color: 'var(--text2)', fontSize: 14, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}>Cancel</button>
                 {/* Faded rather than near-white while the form is empty, so it
                     still reads as the button that will send it. */}
-                <button onClick={send} disabled={busy || !email.trim()} style={{
+                <button type="submit" disabled={busy || !email.trim()} style={{
                   flex: 1, minHeight: 46, padding: '0 18px', borderRadius: 12, border: 'none',
                   background: primary || 'var(--org-primary, #1B9AAA)', color: '#fff',
                   opacity: busy || !email.trim() ? 0.5 : 1,
@@ -907,7 +932,8 @@ export function InviteStaffModal({ org, primary, onClose, onSent, inviterRole = 
                   cursor: busy || !email.trim() ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
                 }}>{busy ? 'Sending…' : 'Send invite'}</button>
               </div>
-            </div>
+            </form>
+            )}
           </>
         )}
       </div>

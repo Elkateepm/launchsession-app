@@ -29,6 +29,7 @@ const VolunteerAcceptInvite = lazy(() => import('./components/volunteers/Volunte
 const PublicForm = lazy(() => import('./components/forms/PublicForm'))
 const PublicDonationPage = lazy(() => import('./components/fundraising/PublicDonationPage'))
 const PublicChildRegistration = lazy(() => import('./components/children/PublicChildRegistration'))
+const PublicTeamJoin = lazy(() => import('./components/team/PublicTeamJoin'))
 const Unsubscribe = lazy(() => import('./components/messaging/Unsubscribe'))
 const PublicVolunteerRegistration = lazy(() => import('./components/volunteers/PublicVolunteerRegistration'))
 const VerifyVolunteerApplication = lazy(() => import('./components/volunteers/VerifyVolunteerApplication'))
@@ -483,6 +484,7 @@ export default function App() {
   if (pathname.startsWith('/pay/')) return <Suspense fallback={<RouteLoading />}><PublicDonationPage /></Suspense>
   if (pathname.startsWith('/unsubscribe/')) return <Suspense fallback={<RouteLoading />}><Unsubscribe /></Suspense>
   if (pathname.startsWith('/register-child/')) return <Suspense fallback={<RouteLoading />}><PublicChildRegistration /></Suspense>
+  if (pathname.startsWith('/join-team/')) return <Suspense fallback={<RouteLoading />}><PublicTeamJoin /></Suspense>
   if (pathname.startsWith('/register-volunteer/')) return <Suspense fallback={<RouteLoading />}><PublicVolunteerRegistration /></Suspense>
   if (pathname === '/verify-volunteer') return <Suspense fallback={<RouteLoading />}><VerifyVolunteerApplication /></Suspense>
   if (pathname === '/signup') return <Suspense fallback={<RouteLoading />}><Signup /></Suspense>

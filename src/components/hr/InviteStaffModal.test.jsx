@@ -23,3 +23,16 @@ test('each role is offered only the roles it may invite', () => {
   // Faded, not missing, while the form is empty.
   expect(screen.getByRole('button', { name: 'Send invite' })).toBeDisabled()
 })
+
+test('owners, admins and managers can switch to a join link; staff cannot', () => {
+  const { unmount } = render(<InviteStaffModal org={org} primary="#0E7C86" inviterRole="manager" onClose={() => {}} onSent={() => {}} />)
+  expect(screen.getByRole('tab', { name: 'Share a link or QR' })).toBeInTheDocument()
+  unmount()
+  render(<InviteStaffModal org={org} primary="#0E7C86" inviterRole="staff" onClose={() => {}} onSent={() => {}} />)
+  expect(screen.queryByRole('tab', { name: 'Share a link or QR' })).not.toBeInTheDocument()
+})
+
+test('says what the chosen role can do', () => {
+  render(<InviteStaffModal org={org} primary="#0E7C86" inviterRole="owner" onClose={() => {}} onSent={() => {}} />)
+  expect(screen.getByText(/Runs sessions and registers/)).toBeInTheDocument()
+})

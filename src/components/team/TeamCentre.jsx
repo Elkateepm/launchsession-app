@@ -4,6 +4,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import MemberAccess from '../hr/MemberAccess'
 import StaffHRProfile from '../hr/StaffHRProfile'
 import { InviteStaffModal } from '../hr/HRCentre'
+import JoinRequests from './JoinRequests'
 import Icon from '../../lib/icons'
 
 // The Team tab: who is in the organisation, what they are allowed to reach,
@@ -82,6 +83,9 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
   const [tab, setTab] = useState('people')
   const [people, setPeople] = useState([])
   const [invites, setInvites] = useState([])
+  // Asked to join through the join link (team_join_requests). Only the roles
+  // that can decide them can read them, so nobody else loads them.
+  const [joinRequests, setJoinRequests] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState(null)
@@ -94,7 +98,7 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
   const load = useCallback(async () => {
     if (!org?.id) return
     setLoading(true)
-    const [p, inv] = await Promise.all([
+    const [p, inv, jr] = await Promise.all([
       supabase.from('user_profiles')
         .select('id, full_name, preferred_name, email, role, job_title, photo_url, approval_status, approved_at, approval_note, created_at')
         .eq('org_id', org.id)
@@ -103,11 +107,18 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
         .select('id, email, full_name, role, created_at')
         .eq('org_id', org.id).eq('status', 'pending')
         .order('created_at', { ascending: false }),
+      canDecide
+        ? supabase.from('team_join_requests')
+          .select('id, full_name, email, phone, message, created_at')
+          .eq('org_id', org.id).eq('status', 'pending')
+          .order('created_at', { ascending: true })
+        : Promise.resolve({ data: [] }),
     ])
     setPeople(p.data || [])
     setInvites(inv.data || [])
+    setJoinRequests(jr.data || [])
     setLoading(false)
-  }, [org?.id])
+  }, [org?.id, canDecide])
 
   useEffect(() => { load() }, [load])
 
@@ -190,6 +201,12 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
           </span>
           <span style={{ color: 'var(--warn-text)', fontSize: 18, flexShrink: 0 }}>›</span>
         </button>
+      )}
+
+      {canDecide && (
+        <JoinRequests org={org} requests={joinRequests} myRole={myRole} myId={session?.user?.id || userProfile?.id} primary={primary}
+          memberEmails={new Set(people.map(p => (p.email || '').toLowerCase()))}
+          onChanged={load} onFlash={flash} />
       )}
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
