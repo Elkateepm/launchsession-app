@@ -24,7 +24,7 @@ const org = { id: 'org-1', name: 'Solidarity Sports', primary_color: '#4714ff' }
 
 // A session running right now, with nobody marked in — the state in the
 // screenshot: "October — Day 2", register not started.
-const today = new Date().toISOString().slice(0, 10)
+const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date())
 const SESSION = {
   id: 'sess-42', org_id: 'org-1', title: 'October — Day 2', session_date: today,
   start_time: '00:01', end_time: '23:59', location: 'Fulham Hub', status: 'published',
@@ -36,7 +36,7 @@ function mockTables({ sessions = [SESSION], attendance = [], staff = [] } = {}) 
     const res = Promise.resolve({ data, error: null })
     const q = {
       select: () => q, eq: () => q, in: () => q, gte: () => q, lte: () => q,
-      order: () => q, limit: () => q, maybeSingle: () => Promise.resolve({ data: data[0] || null, error: null }),
+      or: () => q, order: () => q, limit: () => q, maybeSingle: () => Promise.resolve({ data: data[0] || null, error: null }),
       then: (a, b) => res.then(a, b), catch: (a) => res.catch(a), finally: (a) => res.finally(a),
     }
     return q
@@ -55,7 +55,7 @@ describe('Today → Open register', () => {
   // read "Open register" — and both should open that session.
   it('opens the session the button is about, not the list of every register', async () => {
     const onNavigate = jest.fn()
-    render(<Today org={org} session={{ user: { id: 'u1' } }} userProfile={{ role: 'admin' }} onNavigate={onNavigate} />)
+    render(<Today access={{ schedule: true, registers: true, registerEdit: true }} org={org} session={{ user: { id: 'u1' } }} userProfile={{ role: 'admin' }} onNavigate={onNavigate} />)
 
     const buttons = await screen.findAllByRole('button', { name: /^Open register$/ })
     expect(buttons).toHaveLength(2)
@@ -70,7 +70,7 @@ describe('Today → Open register', () => {
 
   it('comes back to Today rather than dumping you on the register list', async () => {
     const onNavigate = jest.fn()
-    render(<Today org={org} session={{ user: { id: 'u1' } }} userProfile={{ role: 'admin' }} onNavigate={onNavigate} />)
+    render(<Today access={{ schedule: true, registers: true, registerEdit: true }} org={org} session={{ user: { id: 'u1' } }} userProfile={{ role: 'admin' }} onNavigate={onNavigate} />)
 
     const [first] = await screen.findAllByRole('button', { name: /^Open register$/ })
     fireEvent.click(first)
@@ -78,7 +78,7 @@ describe('Today → Open register', () => {
   })
 
   it('names the session in the attention row when only one register is affected', async () => {
-    render(<Today org={org} session={{ user: { id: 'u1' } }} userProfile={{ role: 'admin' }} onNavigate={jest.fn()} />)
+    render(<Today access={{ schedule: true, registers: true, registerEdit: true }} org={org} session={{ user: { id: 'u1' } }} userProfile={{ role: 'admin' }} onNavigate={jest.fn()} />)
     expect(await screen.findByText(/October — Day 2 is running with nobody marked in/)).toBeInTheDocument()
   })
 
@@ -87,7 +87,7 @@ describe('Today → Open register', () => {
       sessions: [SESSION, { ...SESSION, id: 'sess-43', title: 'October — Day 3' }],
     })
     const onNavigate = jest.fn()
-    render(<Today org={org} session={{ user: { id: 'u1' } }} userProfile={{ role: 'admin' }} onNavigate={onNavigate} />)
+    render(<Today access={{ schedule: true, registers: true, registerEdit: true }} org={org} session={{ user: { id: 'u1' } }} userProfile={{ role: 'admin' }} onNavigate={onNavigate} />)
 
     const generic = await screen.findByRole('button', { name: /^Open registers$/ })
     fireEvent.click(generic)

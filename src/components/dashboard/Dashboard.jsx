@@ -324,7 +324,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
     return () => el.removeEventListener('scroll', onScroll, true)
   }, [])
 
-  const moduleLabel = tab === 'children' ? terms.People : tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : tab === 'branding' ? 'Branding' : tab === 'office' ? 'Office' : ALL_MODULES.find(m => m.key === tab)?.label || tab
+  const moduleLabel = tab === 'children' ? terms.People : tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : tab === 'branding' ? 'Branding' : tab === 'office' ? 'Office' : tab === 'today' ? 'Today' : ALL_MODULES.find(m => m.key === tab)?.label || tab
 
   // Was gated on plan === 'starter', a paid plan, so a trial never saw it.
   const daysLeft = trialDaysRemaining(org, trialNow)
@@ -1092,7 +1092,19 @@ export default function Dashboard({ session, org }) {
           >
           {/* ── BASE MODULES — always free ── */}
           {effectiveTab === 'today'      && (isAdmin
-            ? <Today org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} />
+            ? <Today key={`${org.id}:${session.user.id}`} org={org} userProfile={userProfile} onNavigate={handleSetTab} newResponses={unreadSubs.length}
+                access={{
+                  schedule: moduleLevel('planner') !== 'none' || moduleLevel('calendar') !== 'none',
+                  planner: moduleLevel('planner') !== 'none' && !hiddenItems.includes('planner'),
+                  plannerEdit: moduleLevel('planner') === 'edit' && !hiddenItems.includes('planner') && !planEnded,
+                  calendar: moduleLevel('calendar') !== 'none' && !hiddenItems.includes('calendar'),
+                  registers: hasModule('registers') && moduleLevel('registers') !== 'none' && !hiddenItems.includes('registers'),
+                  registerEdit: hasModule('registers') && moduleLevel('registers') === 'edit' && !hiddenItems.includes('registers'),
+                  hr: canUsePeopleHR && !hiddenItems.includes('hr'),
+                  forms: visibleOfficeTabs.some(t => t.tab === 'forms'),
+                  office: visibleOfficeTabs.length > 0,
+                  risk: hasModule('risk_assessments') && moduleLevel('risk_assessments') !== 'none' && !hiddenItems.includes('risk_assessments'),
+                }} />
             : <RestrictedModule label="Today" icon="⚡" onNavigate={handleSetTab} />)}
           {effectiveTab === 'home'       && <Hub key={sessionVersion} org={org} session={session} onNavigate={handleSetTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
           {effectiveTab === 'planner'    && <SessionPlanner org={org} session={session} onSessionSaved={bumpSessions} initialReflectSessionId={reflectSessionId} autoOpenWizard={autoOpenWizard} initialEditSessionId={editSessionId} onNavigate={handleSetTab} />}
