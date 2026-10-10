@@ -8,6 +8,8 @@ import { orgFilename } from '../../lib/orgExport'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import RegisterTeam from './RegisterTeam'
 import { allergyLabel } from '../../lib/allergyLabel'
+import { medicalFlag } from '../../lib/medicalFlag'
+import { useScrollFade } from '../../hooks/useScrollFade'
 import { formatDuration, teamMinutes } from '../../lib/volunteerHours'
 
 function fmtTime(d) {
@@ -45,6 +47,7 @@ export default function PastSessionRegister({
   // closed registers, and opening on 'Nobody in this list' read as if the
   // register itself were empty.
   const [tab, setTab] = useState(() => grouped.expected.length ? 'expected' : grouped.signed_in.length ? 'signed_in' : grouped.signed_out.length ? 'signed_out' : grouped.absent.length ? 'absent' : 'expected')
+  const tabFade = useScrollFade(tab)
   const [search, setSearch] = useState('')
   const [showCorrection, setShowCorrection] = useState(false)
   const [showReopen, setShowReopen] = useState(false)
@@ -206,9 +209,9 @@ export default function PastSessionRegister({
       </div>
 
       {/* TABS */}
-      <div className="no-print" style={{ display: 'flex', background: 'var(--surface)', borderBottom: '1px solid var(--border)', overflowX: 'auto' }}>
+      <div ref={tabFade.ref} className="no-print" style={{ display: 'flex', background: 'var(--surface)', borderBottom: '1px solid var(--border)', ...tabFade.style }}>
         {TABS.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{ flex: '1 0 auto', minHeight: 44, padding: '11px 14px', border: 'none', borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent', background: 'none', color: t.warn ? 'var(--warn-text)' : tab === t.key ? 'var(--org-ink)' : 'var(--text3)', fontSize: 12.5, fontWeight: t.warn ? 800 : 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          <button key={t.key} aria-pressed={tab === t.key} onClick={() => setTab(t.key)} style={{ flex: '1 0 auto', minHeight: 44, padding: '11px 14px', border: 'none', borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent', background: 'none', color: t.warn ? 'var(--warn-text)' : tab === t.key ? 'var(--org-ink)' : 'var(--text3)', fontSize: 12.5, fontWeight: t.warn ? 800 : 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
             {t.warn && <Icon name="⚠" />} {t.label} {t.count}
           </button>
         ))}
@@ -307,6 +310,7 @@ const STATUS_PILL = {
 
 function HistoricalRow({ child, att, groupLabel, peopleProfiles, isCorrected, onOpen, onViewAudit }) {
   const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
+  const medical = medicalFlag(child)
   const status = att?.status
   const pill = STATUS_PILL[status] || { label: 'Unmarked', color: 'var(--text3)', bg: 'var(--surface2)' }
   const recordedBy = peopleProfiles[att?.signed_out_by || att?.signed_in_by] || null
@@ -330,7 +334,7 @@ function HistoricalRow({ child, att, groupLabel, peopleProfiles, isCorrected, on
         </div>
         {recordedBy && <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginTop: 2 }}>Recorded by {recordedBy}</div>}
         <div style={{ display: 'flex', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
-          {(child.has_epipen || child.has_asthma || child.has_diabetes || child.takes_medication || child.medical_notes) && <span style={alertPill('danger')}>⚕ Medical</span>}
+          {medical && <span title={medical.detail} aria-label={medical.detail} style={alertPill('danger')}>⚕ {medical.label}</span>}
           {child.allergies && <span title={`Allergy: ${child.allergies}`} aria-label={`Allergy: ${child.allergies}`} style={alertPill('warn')}><Icon name="⚠" /> {allergyLabel(child.allergies)}</span>}
           {isCorrected && (
             <span onClick={onViewAudit} style={{ ...alertPill('warn'), cursor: 'pointer', textDecoration: 'underline' }}>Corrected — view audit history</span>

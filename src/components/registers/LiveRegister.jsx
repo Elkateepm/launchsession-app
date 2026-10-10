@@ -17,6 +17,8 @@ import RegisterHero, { BandPill, ON_BAND, bandBar } from './RegisterHero'
 import { orgBrand } from '../shared/OrgPageHero'
 import RegisterTeam from './RegisterTeam'
 import { allergyLabel } from '../../lib/allergyLabel'
+import { medicalFlag } from '../../lib/medicalFlag'
+import { useScrollFade } from '../../hooks/useScrollFade'
 
 const COLLECTION_TYPES = [
   { key: 'approved_adult', label: 'Approved adult' },
@@ -95,6 +97,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
   const [safeguardingCount, setSafeguardingCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('expected')
+  const tabFade = useScrollFade(tab)
   const [search, setSearch] = useState('')
   const [groupFilter, setGroupFilter] = useState('all')
   const [signOutChild, setSignOutChild] = useState(null)
@@ -430,7 +433,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
   )
   const tabStrip = (
     <div style={{ padding: '10px 14px 0', background: 'var(--surface)', borderBottom: '1px solid var(--border-soft)' }}>
-      <div style={{ display: 'flex', gap: 4, background: 'var(--surface2)', borderRadius: 12, padding: 4, overflowX: 'auto', marginBottom: 10 }}>
+      <div ref={tabFade.ref} style={{ display: 'flex', gap: 4, background: 'var(--surface2)', borderRadius: 12, padding: 4, marginBottom: 10, ...tabFade.style }}>
         {[
           { key: 'all', label: 'All', count: rows.length },
           { key: 'expected', label: 'Expected', count: grouped.expected.length },
@@ -452,23 +455,26 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
       </div>
     </div>
   )
+  // Type a name, press Enter, next child. Only when the search has narrowed
+  // to exactly one person still to be marked: acting on the first of several
+  // would sign in the wrong child, and this is the record of who was actually
+  // there. Enter used to do this silently, so pressing it to "search" signed
+  // a child in by accident; the hint under the box now says who it will be.
+  const searchQuery = search.trim().toLowerCase()
+  const enterHits = searchQuery ? grouped.expected.filter(({ child }) =>
+    `${child.first_name} ${child.last_name}`.toLowerCase().includes(searchQuery)) : []
+  const enterChild = enterHits.length === 1 ? enterHits[0].child : null
   const searchBox = (
     <div style={{ position: 'relative', flex: '1 1 160px' }}>
-      <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--text-faint)', pointerEvents: 'none' }}><Icon name="🔍" /></span>
+      <span style={{ position: 'absolute', left: 12, top: 22, transform: 'translateY(-50%)', fontSize: 13, color: 'var(--text-faint)', pointerEvents: 'none' }}><Icon name="🔍" /></span>
       <input value={search} onChange={e => setSearch(e.target.value)}
         onKeyDown={e => {
-          if (e.key !== 'Enter') return
-          // Type a name, press Enter, next child. Only when the search has
-          // narrowed to exactly one person still to be marked: acting on
-          // the first of several would sign in the wrong child, and this
-          // is the record of who was actually there.
-          const q = search.trim().toLowerCase()
-          if (!q) return
-          const hits = grouped.expected.filter(({ child }) =>
-            `${child.first_name} ${child.last_name}`.toLowerCase().includes(q))
-          if (hits.length === 1) { handleSignIn(hits[0].child); setSearch('') }
+          if (e.key !== 'Enter' || !enterChild) return
+          handleSignIn(enterChild); setSearch('')
         }}
-        aria-label={`Search ${terms.people}`} placeholder={`Search ${terms.people}, then press Enter`} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px 10px 32px', borderRadius: 10, border: '1.5px solid var(--border)', minHeight: 44, fontSize: isMobile ? 16 : 14, color: 'var(--text)', background: 'var(--surface2)', outline: 'none', transition: 'border-color 0.15s ease' }} onFocus={e => e.target.style.borderColor = org?.primary_color || 'var(--org-primary)'} onBlur={e => e.target.style.borderColor = 'var(--border)'} />
+        enterKeyHint={enterChild ? 'done' : 'search'} aria-describedby={enterChild ? 'register-enter-hint' : undefined}
+        aria-label={`Search ${terms.people}`} placeholder="Type a name, press Enter to sign in" style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px 10px 32px', borderRadius: 10, border: '1.5px solid var(--border)', minHeight: 44, fontSize: isMobile ? 16 : 14, color: 'var(--text)', background: 'var(--surface2)', outline: 'none', transition: 'border-color 0.15s ease' }} onFocus={e => e.target.style.borderColor = org?.primary_color || 'var(--org-primary)'} onBlur={e => e.target.style.borderColor = 'var(--border)'} />
+      {enterChild && <div id="register-enter-hint" role="status" style={{ fontSize: 12, fontWeight: 700, color: 'var(--org-ink)', padding: '6px 2px 0' }}>Enter signs in {enterChild.first_name} {enterChild.last_name}</div>}
     </div>
   )
   const quickActions = (
@@ -668,6 +674,7 @@ function MiniStat({ icon, label, value, color, compact }) {
 const STATUS_FLASH = { signed_in: 'rgba(22,163,74,0.22)', absent: 'rgba(217,119,6,0.22)', signed_out: 'rgba(37,99,235,0.22)' }
 
 function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, onCorrect, groupLabel, org, authUserId, paymentBalance, onPaymentChanged, isMobile, index = 0 }) {
+  const medical = medicalFlag(child)
   const initials = `${child.first_name?.[0] || ''}${child.last_name?.[0] || ''}`
   const status = att?.status
   const [hover, setHover] = useState(false)
@@ -744,9 +751,7 @@ function RegisterRow({ child, att, onOpen, onSignIn, onSignOut, onMarkAbsent, on
           {status === 'absent' && ` · ${att.absence_reason || 'Absent'}`}
         </div>
         <div style={{ display: 'flex', gap: 5, marginTop: 5, flexWrap: 'wrap' }}>
-          {(child.has_epipen || child.has_asthma || child.has_diabetes || child.takes_medication || child.has_medication || child.medical_notes) && (
-            <span style={alertPill('danger')}>⚕ Medical</span>
-          )}
+          {medical && <span title={medical.detail} aria-label={medical.detail} style={alertPill('danger')}>⚕ {medical.label}</span>}
           {child.allergies && <span title={`Allergy: ${child.allergies}`} aria-label={`Allergy: ${child.allergies}`} style={alertPill('warn')}><Icon name="⚠" /> {allergyLabel(child.allergies)}</span>}
           {child.collection_restricted && <span style={alertPill('warn')}><Icon name="⚠" /> Collection restriction</span>}
         </div>

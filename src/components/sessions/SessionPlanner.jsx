@@ -14,6 +14,7 @@ import { londonDate, sessionPhase } from '../../lib/sessionPhase'
 import SessionSheet, { flowButton, flowInput } from './SessionSheet'
 import { withAlpha } from '../../lib/withAlpha'
 import OrgPageHero, { orgBrand, heroButtons } from '../shared/OrgPageHero'
+import { useScrollFade } from '../../hooks/useScrollFade'
 
 const SESSION_TYPES = [
   { key: 'activity',  label: 'Activity',  icon: '🏃', color: '#1B9AAA' },
@@ -1467,6 +1468,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState(preferences.view || 'list') // 'list' | 'week' | 'form' | 'wizard'
   const [tab, setTab] = useState(preferences.tab || 'upcoming') // 'upcoming' | 'live' | 'completed' | 'needs_review'
+  const tabFade = useScrollFade(tab)
   const [locationFilter, setLocationFilter] = useState(preferences.locationFilter || 'all')
   const [showFilters, setShowFilters] = useState(false)
   const [sourceFilter, setSourceFilter] = useState(preferences.sourceFilter || 'all') // all | standalone | project
@@ -2053,23 +2055,21 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
         {/* ═══ TABS ═══
             Five or six tabs need ~400px and a phone has ~330-360, so on mobile
             the row scrolls. Cut off bare at the screen edge, "Follow-up 57"
-            looked broken and Drafts looked absent; the fade says "more this
-            way", the trailing spacer lets the last tab scroll clear of the
-            fade, and a tapped tab is brought into view. Where they do fit,
-            the tabs share the width. */}
-        <div style={{
-          display: 'flex', gap: isMobile ? 0 : 4, marginBottom: 14, borderBottom: '1px solid var(--border)', overflowX: 'auto', WebkitOverflowScrolling: 'touch',
-          ...(isMobile ? { scrollbarWidth: 'none', WebkitMaskImage: 'linear-gradient(90deg, #000 calc(100% - 28px), transparent)', maskImage: 'linear-gradient(90deg, #000 calc(100% - 28px), transparent)' } : null),
+            looked broken and Drafts looked absent; useScrollFade fades the side
+            with more, drops the fade at the end of the row, and brings the
+            chosen tab into view. Where they do fit, the tabs share the
+            width. */}
+        <div ref={tabFade.ref} style={{
+          display: 'flex', gap: isMobile ? 0 : 4, marginBottom: 14, borderBottom: '1px solid var(--border)', WebkitOverflowScrolling: 'touch', ...tabFade.style,
         }}>
           {TABS.map(t => (
-            <button key={t.key} aria-pressed={tab === t.key} onClick={e => { setTab(t.key); if (isMobile) e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }) }}
+            <button key={t.key} aria-pressed={tab === t.key} onClick={() => setTab(t.key)}
               style={{ minHeight: 48, padding: isMobile ? '10px 6px' : '10px 14px', flex: isMobile ? '1 0 auto' : undefined, justifyContent: 'center', border: 'none', borderBottom: tab === t.key ? `2.5px solid ${primary}` : '2.5px solid transparent', background: 'none', color: tab === t.key ? 'var(--org-ink)' : 'var(--text3)', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: isMobile ? 5 : 6 }}>
               {t.live && t.count > 0 && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16A34A', animation: 'sp-live-pulse 1.6s ease-in-out infinite' }} />}
               {t.label}
               <span style={{ fontSize: 11, fontWeight: 800, color: tab === t.key ? 'var(--text)' : 'var(--text3)', background: tab === t.key ? 'var(--org-a10)' : 'var(--border-soft)', borderRadius: 99, padding: isMobile ? '1px 6px' : '1px 7px' }}>{t.count}</span>
             </button>
           ))}
-          {isMobile && <span aria-hidden="true" style={{ flex: '0 0 24px' }} />}
         </div>
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>

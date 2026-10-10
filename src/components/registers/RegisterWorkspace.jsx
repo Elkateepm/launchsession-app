@@ -101,7 +101,16 @@ export default function RegisterWorkspace({ org, terms, people, sessions, sessio
               {[['expected', 'To arrive'], ['signed_out', 'Signed out'], ['absent', 'Absent']].map(([key, label]) => <button key={key} onClick={() => filterStatus(key)} aria-pressed={!effectiveDirectory && filter === key} style={{ ...button, padding: mobile ? '6px' : '10px 6px', flexDirection: 'column', gap: 4, background: !effectiveDirectory && filter === key ? withAlpha(primary, '1C') : 'var(--surface)', borderColor: !effectiveDirectory && filter === key ? primary : 'var(--border)' }}><b style={{ fontSize: 18 }}>{attendanceUnavailable ? '—' : view.counts[key]}</b><span style={{ fontSize: 11, color: 'var(--text3)' }}>{label}</span></button>)}
             </div>
           </div>
-        </div> : <div style={{ display: 'flex', gap: 22, justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
+        </div> : mobile ? (
+          // On a phone the full card pushed the directory search to ~650px of
+          // an 844px screen, so finding a child meant scrolling past a
+          // planning prompt. One line keeps the prompt and puts search on the
+          // first screen.
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ minWidth: 0 }}><b style={{ display: 'block', fontSize: 15 }}>No {terms.session} today</b><span style={{ fontSize: 12.5, color: 'var(--text3)' }}>Your directory is below.</span></div>
+            <button onClick={onPlan} style={{ ...actionStyle, flexShrink: 0 }}><Icon name="📅" /> Plan a {terms.session}</button>
+          </div>
+        ) : <div style={{ display: 'flex', gap: 22, justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{ flex: '1 1 240px' }}><div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--org-ink)', marginBottom: 8 }}>Plan your next {terms.session}</div><h2 style={{ fontSize: mobile ? 20 : 26, letterSpacing: -.6, margin: '0 0 8px' }}>Ready for your next {terms.session}.</h2><p style={{ margin: 0, fontSize: 14, color: 'var(--text3)', lineHeight: 1.6 }}>No {terms.session} scheduled for today. Your directory is ready below. Plan a {terms.session} to start taking attendance.</p></div>
           <button onClick={onPlan} style={{ ...actionStyle, width: mobile ? '100%' : undefined }}><Icon name="📅" /> Open {terms.session} planner</button>
         </div>}
