@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import InjuryForm from './InjuryForm'
 import ReportShareSheet from './ReportShareSheet'
+import OverlayPortal from '../shared/OverlayPortal'
 import Icon from '../../lib/icons'
 
 // ─── REPORT CHIPS ─────────────────────────────────────────────
@@ -92,13 +93,16 @@ export default function ReportChips({
 
       {shareOpen && <ReportShareSheet org={org} userProfile={userProfile} onClose={() => setShareOpen(false)} />}
 
+      {/* Portalled to the body. On the day hero these chips sit inside a
+          blurred, clipped box, which traps a position:fixed overlay inside it:
+          the form opened in the hero's own footprint, under the stat cards. */}
       {injuryOpen && (
-        <div onClick={e => e.stopPropagation()}>
+        <OverlayPortal>
           {/* No backdrop-dismiss: a half-written account of an incident must not
               be lost to a stray tap. Closing is the Cancel button or the X. */}
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99, backdropFilter: 'blur(4px)' }} />
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10699, backdropFilter: 'blur(4px)' }} />
           <div style={{
-            position: 'fixed', zIndex: 100, background: 'var(--surface, #fff)',
+            position: 'fixed', zIndex: 10700, background: 'var(--surface, #fff)',
             boxShadow: '0 32px 80px rgba(0,0,0,0.4)', textAlign: 'left',
             ...(isMobile
               // Bottom sheet on a phone, which is where this gets filled in.
@@ -114,7 +118,7 @@ export default function ReportChips({
               onClose={() => setInjuryOpen(false)}
             />
           </div>
-        </div>
+        </OverlayPortal>
       )}
     </>
   )
