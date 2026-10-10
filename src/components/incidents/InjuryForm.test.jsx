@@ -136,3 +136,31 @@ describe('what it writes', () => {
     expect(screen.getByText(/has not been told yet/)).toBeInTheDocument()
   })
 })
+
+describe('the accident book shortcut', () => {
+  it('is not offered when there is nowhere to go', () => {
+    setup()
+    expect(screen.queryByText('Accident book')).not.toBeInTheDocument()
+  })
+
+  it('opens straight away from an untouched form', () => {
+    const onOpenBook = jest.fn()
+    const confirm = jest.spyOn(window, 'confirm')
+    setup({ onOpenBook })
+    fireEvent.click(screen.getByText('Accident book'))
+    expect(confirm).not.toHaveBeenCalled()
+    expect(onOpenBook).toHaveBeenCalled()
+    confirm.mockRestore()
+  })
+
+  it('asks before abandoning a half-written entry', () => {
+    const onOpenBook = jest.fn()
+    const confirm = jest.spyOn(window, 'confirm').mockReturnValue(false)
+    setup({ onOpenBook })
+    fireEvent.change(screen.getByPlaceholderText(/In your own words/), { target: { value: 'Fell on the steps' } })
+    fireEvent.click(screen.getByText('Accident book'))
+    expect(confirm).toHaveBeenCalled()
+    expect(onOpenBook).not.toHaveBeenCalled()
+    confirm.mockRestore()
+  })
+})

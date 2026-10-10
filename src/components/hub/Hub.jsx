@@ -2776,6 +2776,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const toLocalDateStr = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(d)
   const today = toLocalDateStr(new Date());
 
+  const openAccidentBook = () => go('safeguarding', { subTab: 'injuries' })
+
   function go(tab, payload) {
     if (typeof onNavigate === "function") onNavigate(tab, payload);
     else if (typeof setTab === "function") setTab(tab);
@@ -3041,6 +3043,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     if (canEdit('messaging')) list.push({ key: 'message', icon: '💬', label: 'Send communication', onClick: () => go('messaging') })
     if (canEdit('forms')) list.push({ key: 'forms', icon: '📋', label: 'Send a form', onClick: () => go('forms') })
     if (hasModule('safeguarding')) list.push({ key: 'concern', icon: '🚨', label: 'Report a concern', onClick: () => raiseConcern(null) })
+    // The accident book lives in the Safeguarding Hub, three clicks from Home.
+    // Asked for on the spot by an inspector or a parent, it should be one.
+    if (hasModule('safeguarding')) list.push({ key: 'accident_book', icon: '🩹', label: 'Accident book', onClick: openAccidentBook })
     return list
   })();
 
@@ -3428,6 +3433,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                 canRaiseConcern={hasModule('safeguarding')}
                 onRaiseConcern={raiseConcern}
                 isMobile={isMobile}
+                onOpenAccidentBook={hasModule('safeguarding') ? openAccidentBook : null}
                 variant="onDark"
               />
             </div>
@@ -3776,6 +3782,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                           canRaiseConcern={hasModule('safeguarding')}
                           onRaiseConcern={raiseConcern}
                           isMobile={isMobile}
+                          onOpenAccidentBook={hasModule('safeguarding') ? openAccidentBook : null}
                           variant="onDark"
                           compact
                         />
