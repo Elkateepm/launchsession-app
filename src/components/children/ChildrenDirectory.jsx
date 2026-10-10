@@ -4,6 +4,8 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { useOrgSettings } from '../../hooks/useOrgSettings'
 import { PeopleHeader, PeopleTabs, PeopleSummary, PeopleRoster, PeopleProfileDrawer } from './PeopleWorkspace'
 import QRShareSheet from '../shared/QRShareSheet'
+import AddPersonChooser from './AddPersonChooser'
+import HandoverRegistration from './HandoverRegistration'
 import { Avatar, glass, inputStyle, btnGhost, btnPrimary } from '../volunteers/vh_shared'
 import ChildPaymentsCard from '../payments/ChildPaymentsCard'
 import { useTerms } from '../../context/OrgContext'
@@ -56,6 +58,8 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
   const [sort, setSort] = useState('name')
   const [selectedId, setSelectedId] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
+  const [showChooser, setShowChooser] = useState(false)
+  const [showHandover, setShowHandover] = useState(false)
   const [showInvite, setShowInvite] = useState(false)
   const [showQR, setShowQR] = useState(false)
   const [mainTab, setMainTab] = useState(initialOpenRequestsTab ? 'requests' : 'directory')
@@ -171,7 +175,7 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
     <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: 'var(--bg, #F6F8FC)', padding: isMobile ? 16 : 28, boxSizing: 'border-box' }}>
       <PeopleHeader
         terms={terms} primary={primary} stats={stats} loading={loading}
-        onAdd={() => setShowAdd(true)} onInvite={() => setShowInvite(true)}
+        onAdd={() => setShowChooser(true)} onInvite={() => setShowInvite(true)}
         onQR={() => setShowQR(true)} onOnSite={() => setMainTab('onsite')}
       />
       <PeopleTabs terms={terms} stats={stats} value={mainTab} onChange={setMainTab} />
@@ -183,7 +187,7 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
             search={search} onSearch={setSearch} groupFilter={groupFilter} groups={groupOptions} onGroup={setGroupFilter}
             quickFilter={quickFilter} onFilter={setQuickFilter} sort={sort} onSort={setSort}
             onClear={() => { setSearch(''); setGroupFilter('all'); setQuickFilter(null) }}
-            onOpen={setSelectedId} onAdd={() => setShowAdd(true)} groupLabel={groupLabel}
+            onOpen={setSelectedId} onAdd={() => setShowChooser(true)} groupLabel={groupLabel}
             latestAttByChild={latestAttByChild} medicalAlerts={medicalAlerts} consentIssue={consentIssue} age={age}
           />
         </>}
@@ -214,6 +218,15 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
           onPhotoChanged={(id, path) => setChildren(prev => prev.map(c => (c.id === id ? { ...c, photo_url: path } : c)))}
         />
       </PeopleProfileDrawer>}
+      {showChooser && <AddPersonChooser terms={terms} onClose={() => setShowChooser(false)} onPick={way => {
+        setShowChooser(false)
+        if (way === 'form') setShowAdd(true)
+        if (way === 'link') setShowInvite(true)
+        if (way === 'handover') setShowHandover(true)
+      }} />}
+      {/* Reload on the way out so anything the parent submitted shows up in
+          Registration Requests without a refresh. */}
+      {showHandover && <HandoverRegistration org={org} onExit={() => { setShowHandover(false); load() }} />}
       {showAdd && <AddChildQuickModal org={org} onClose={() => setShowAdd(false)} onAdded={() => { setShowAdd(false); load() }} />}
       {showInvite && <InviteParentModal org={org} onClose={() => setShowInvite(false)} />}
       {showQR && <QRShareSheet org={org} onClose={() => setShowQR(false)} />}
@@ -441,7 +454,7 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
   )
 }
 
-function AddChildQuickModal({ org, onClose, onAdded }) {
+export function AddChildQuickModal({ org, onClose, onAdded }) {
   const [form, setForm] = useState({ first_name: '', last_name: '', date_of_birth: '', group_name: '', parent_name: '', parent_phone: '', parent_email: '', school: '' })
   const [saving, setSaving] = useState(false)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))

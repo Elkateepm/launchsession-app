@@ -110,7 +110,12 @@ function ChildCard({ child, index, total, primary, open, onToggle, onChange, onR
   )
 }
 
-export default function PublicChildRegistration() {
+// Also rendered inside the app by HandoverRegistration, when staff hand their
+// own phone to a parent. Then the slug comes in as a prop (the URL is the
+// app's, not /register-child/...) and the thank-you screen offers the next
+// family a fresh form instead of leaving the last one's answers on screen.
+export default function PublicChildRegistration({ slug: slugProp, onRegisterAnother } = {}) {
+  const slug = slugProp || ORG_SLUG
   const [org, setOrg] = useState(undefined) // undefined = loading, null = not found
   const [step, setStep] = useState(1)
   const [submitting, setSubmitting] = useState(false)
@@ -130,11 +135,11 @@ export default function PublicChildRegistration() {
   useEffect(() => { setOpenKey(children[0]?.key || null) }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!ORG_SLUG) { setOrg(null); return }
+    if (!slug) { setOrg(null); return }
     // Public-safe view -- no auth context here (parent registration form).
     supabase.from('organisations_public').select('id, name, slug, logo_url, primary_color, secondary_color')
-      .eq('slug', ORG_SLUG).maybeSingle().then(({ data }) => setOrg(data || null))
-  }, [])
+      .eq('slug', slug).maybeSingle().then(({ data }) => setOrg(data || null))
+  }, [slug])
 
   const primary = org?.primary_color || '#1B9AAA'
   const secondary = org?.secondary_color || '#123B30'
@@ -202,6 +207,14 @@ export default function PublicChildRegistration() {
           <div style={{ fontSize: 14, color: 'var(--text3)', lineHeight: 1.5 }}>
             Thanks — {list} been sent to {org.name} for review. They'll be in touch once they've been approved.
           </div>
+          {onRegisterAnother && (
+            <>
+              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', marginTop: 18 }}>Please hand the phone back.</div>
+              <button onClick={onRegisterAnother} style={{ marginTop: 16, minHeight: 46, padding: '0 22px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontWeight: 800, fontSize: 13.5, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Register another family
+              </button>
+            </>
+          )}
         </div>
       </div>
     )

@@ -10,7 +10,9 @@ import CauseForConcernForm from "../safeguarding/CauseForConcernForm";
 import ReportChips from "../incidents/ReportChips";
 import LiveRegister from "../registers/LiveRegister";
 import EndSessionFlow from "../registers/EndSessionFlow";
-import { InviteParentModal } from "../children/ChildrenDirectory";
+import { InviteParentModal, AddChildQuickModal } from "../children/ChildrenDirectory";
+import AddPersonChooser from "../children/AddPersonChooser";
+import HandoverRegistration from "../children/HandoverRegistration";
 import AddVolunteersToSessionModal from "../volunteers/AddVolunteersToSessionModal";
 import HistoricalAttendanceModal from "../shared/HistoricalAttendanceModal";
 import { isPushSupported, getNotificationPermission, subscribeToPush } from "../../services/pushNotifications";
@@ -2629,7 +2631,9 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     setConcernSession(linked)
     setShowConcernForm(true)
   }, [])
-  const [showInviteChild, setShowInviteChild] = React.useState(false)
+  // null, or which way of adding a young person is open: 'choose' first, then
+  // 'form', 'link' or 'handover' (see AddPersonChooser).
+  const [addPersonWay, setAddPersonWay] = React.useState(null)
   const [showReflectionsModal, setShowReflectionsModal] = React.useState(false)
 
   const getGreeting = () => {
@@ -3032,7 +3036,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     const list = []
     if (hasModule('registers')) list.push({ key: 'register', icon: '▶️', label: 'Start a register', onClick: () => go('registers') })
     if (canEdit('planner')) list.push({ key: 'session', icon: '➕', label: `New ${terms.session}`, onClick: () => go('planner', { autoOpenWizard: true }) })
-    if (canEdit('people')) list.push({ key: 'child', icon: '🧒', label: `Add ${terms.person}`, onClick: () => setShowInviteChild(true) })
+    if (canEdit('people')) list.push({ key: 'child', icon: '🧒', label: `Add ${terms.person}`, onClick: () => setAddPersonWay('choose') })
     if (canEdit('risk_assessments')) list.push({ key: 'risk', icon: '🛡️', label: 'Risk assessments', onClick: () => go('risk_assessments') })
     if (canEdit('messaging')) list.push({ key: 'message', icon: '💬', label: 'Send communication', onClick: () => go('messaging') })
     if (canEdit('forms')) list.push({ key: 'forms', icon: '📋', label: 'Send a form', onClick: () => go('forms') })
@@ -4060,7 +4064,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         </>
       )}
 
-      {showInviteChild && <InviteParentModal org={org} onClose={() => setShowInviteChild(false)} />}
+      {addPersonWay === 'choose' && <AddPersonChooser terms={terms} onPick={setAddPersonWay} onClose={() => setAddPersonWay(null)} />}
+      {addPersonWay === 'form' && <AddChildQuickModal org={org} onClose={() => setAddPersonWay(null)} onAdded={() => setAddPersonWay(null)} />}
+      {addPersonWay === 'link' && <InviteParentModal org={org} onClose={() => setAddPersonWay(null)} />}
+      {addPersonWay === 'handover' && <HandoverRegistration org={org} onExit={() => setAddPersonWay(null)} />}
 
       {infoModalSession && (
         <SessionInfoModal
