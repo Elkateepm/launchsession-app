@@ -19,6 +19,7 @@ import RegisterTeam from './RegisterTeam'
 import { allergyLabel } from '../../lib/allergyLabel'
 import { medicalFlag } from '../../lib/medicalFlag'
 import { useScrollFade } from '../../hooks/useScrollFade'
+import { registerPhase, staffOnSite, ratioCheck, ratioMessage } from '../../lib/registerState'
 
 const COLLECTION_TYPES = [
   { key: 'approved_adult', label: 'Approved adult' },
@@ -39,26 +40,8 @@ const NOTE_TYPES = [
   { key: 'incident', label: 'Accident or incident', icon: '🚨' },
 ]
 
-function getRequiredRatio(session, org) {
-  if (session?.staff_ratio) {
-    const m = session.staff_ratio.match(/(\d+)\s*:\s*(\d+)/)
-    if (m) return Number(m[2]) / Number(m[1])
-  }
-  return org?.default_staff_ratio || 8
-}
-
-function computeRegisterState(session, attendanceRows) {
-  if (session.closed_at) return 'closed'
-  const started = !!session.opened_at || attendanceRows.some(a => a.status === 'signed_in')
-  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
-  }).formatToParts(new Date()).map(part => [part.type, part.value]))
-  const now = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`
-  const end = session.end_time ? `${session.end_date || session.session_date}T${session.end_time.slice(0, 5)}` : null
-  if (started) return end && now >= end ? 'ending' : 'live'
-  const start = session.start_time ? `${session.session_date}T${session.start_time.slice(0, 5)}` : null
-  return session.register_opened_at || (start && now >= start) ? 'register_open' : 'upcoming'
-}
+// Phase, end time and ratio rules are shared with the register pop-up on Home
+// (lib/registerState), so both screens say the same thing about a session.
 
 const STATE_LABEL = { upcoming: 'Upcoming', register_open: 'Register open', live: 'Live', ending: 'Ending', closed: 'Closed' }
 const STATE_BAND_COLOR = { upcoming: ON_BAND.muted, register_open: ON_BAND.open, live: ON_BAND.live, ending: ON_BAND.ending, closed: ON_BAND.muted }
@@ -242,11 +225,9 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
   }
 
   const signedInCount = grouped.signed_in.length
-  const registerState = computeRegisterState(session, attendance)
-  const requiredRatio = getRequiredRatio(session, org)
-  const signedInStaffCount = staffRows.filter(s => s.signed_in_at && !s.signed_out_at).length
-  const currentRatio = signedInStaffCount > 0 ? signedInCount / signedInStaffCount : null
-  const ratioBreached = signedInCount > 0 && (!signedInStaffCount || currentRatio > requiredRatio)
+  const registerState = registerPhase(session)
+  const signedInStaffCount = staffOnSite(staffRows)
+  const ratio = ratioCheck({ childrenOnSite: signedInCount, staffRows, session, org })
   const processedCount = grouped.signed_in.length + grouped.absent.length + grouped.signed_out.length
   const totalExpected = rows.length
 
@@ -396,9 +377,9 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
         <MiniStat icon="✕" compact={isMobile} label="Absent" value={grouped.absent.length} color={ON_BAND.absent} />
         <MiniStat icon="✓" compact={isMobile} label="Signed out" value={grouped.signed_out.length} color={ON_BAND.open} />
       </div>
-      {ratioBreached && (
+      {ratio && (
         <div style={{ marginTop: 12, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 12, padding: '10px 13px', fontSize: 12, fontWeight: 700, color: 'var(--danger-text)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 14 }}><Icon name="⚠" /></span> {signedInStaffCount ? `Current staffing ratio 1:${currentRatio.toFixed(1)}. Required ratio: 1:${requiredRatio}.` : 'No team members are signed in. Sign them in under Team.'}
+          <span style={{ fontSize: 14 }}><Icon name="⚠" /></span> {ratioMessage(ratio)}
         </div>
       )}
       {totalExpected > 0 && (
