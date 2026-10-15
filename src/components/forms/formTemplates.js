@@ -659,6 +659,8 @@ export function toLegacyTemplate(t) {
     accent: t.accent,
     purpose: t.purpose,
     fields: t.fields.map(f => ({
+      ...f,
+      description: f.description || f.help || '',
       type: f.type,
       label: f.label,
       required: !!f.required,

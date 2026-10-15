@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { FormsOverview, ResponseInbox } from './FormsOverview'
 import { mergeTemplates } from './formTemplates'
 import NewFormBuilder, { CHILD_TAG } from './FormBuilder'
+import { templateDraft } from './formBuilderUtils'
 import Icon from '../../lib/icons'
 import { withAlpha } from '../../lib/withAlpha'
 
@@ -693,6 +694,7 @@ export default function Forms({ org, session, isAdmin }) {
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState('list') // 'list' | 'builder' | 'submissions'
   const [selectedForm, setSelectedForm] = useState(null)
+  const [publishedForm, setPublishedForm] = useState(null)
   const [tab, setTab] = useState('all') // 'all' | 'active' | 'draft' | 'archived' | 'templates'
   // The redesign leads with what needs doing rather than with counts. The
   // existing list survives as the 'Forms' section rather than being deleted --
@@ -897,7 +899,7 @@ export default function Forms({ org, session, isAdmin }) {
   })
 
   const applyTemplate = (t) => {
-    setSelectedForm({ name: t.name, description: t.desc, tag: 'Registration', fields: t.fields.map((f, i) => ({ ...f, id: Date.now() + i })) })
+    setSelectedForm(templateDraft(t, () => `f_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`))
     setView('builder')
   }
 
@@ -913,7 +915,7 @@ export default function Forms({ org, session, isAdmin }) {
       initial={selectedForm}
       // Autosave writes directly; this fires on publish, so the list is fresh
       // and the user lands back where they started.
-      onSave={() => { load(); setView('list'); setSelectedForm(null) }}
+      onSave={saved => { load(); setPublishedForm(saved); setView('list'); setSelectedForm(null) }}
       onSaved={load}
       onCancel={() => { setView('list'); setSelectedForm(null) }}
     />
@@ -923,6 +925,11 @@ export default function Forms({ org, session, isAdmin }) {
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100%', padding: isMobile ? 16 : 24 }}>
 
+      {publishedForm && <div role="status" style={{ padding: 18, marginBottom: 20, borderRadius: 14, background: 'var(--ok-bg)', border: '1px solid var(--ok-border)', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: 180, color: 'var(--ok-text)' }}><strong>{publishedForm.name} is ready.</strong><div style={{ fontSize: 13, marginTop: 4 }}>{publishedForm.visibility === 'private' ? 'Staff can access this form in the workspace.' : 'Your form is live. No emails have been sent.'}</div></div>
+        {publishedForm.visibility !== 'private' && <button onClick={() => copyFormLink(publishedForm)} style={{ ...sel, minHeight: 44, cursor: 'pointer' }}>{copiedId === publishedForm.id ? 'Link copied' : 'Copy form link'}</button>}
+        <button onClick={() => setPublishedForm(null)} aria-label="Dismiss publishing message" style={{ ...iconBtn, minWidth: 44, minHeight: 44 }}>×</button>
+      </div>}
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 18, marginBottom: 26 }}>
         <div>
           <div style={{ color: 'var(--org-ink)', fontSize: 11, fontWeight: 800, letterSpacing: 1.5, marginBottom: 8 }}>OFFICE / FORMS</div>
