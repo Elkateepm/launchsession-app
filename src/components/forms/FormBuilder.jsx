@@ -8,6 +8,7 @@ import { withAlpha } from '../../lib/withAlpha'
 import { useTerms } from '../../context/OrgContext'
 import { PANEL, BUTTON, QuestionToolbox, TemplateStarter, ReviewChecklist } from './FormBuilderWorkspace'
 import { formIssues, templateDraft } from './formBuilderUtils'
+import { OrgLogo, orgBrand } from '../shared/OrgPageHero'
 
 const AUTOSAVE_MS = 800
 
@@ -67,6 +68,7 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
   const isMobile = useIsMobile()
   const compact = useIsMobile(1180)
   const primary = org?.primary_color || '#6D5DF6'
+  const actionColour = orgBrand(org).ink
 
   const [form, setForm] = useState(() => {
     const base = initial || { name: '', description: '', fields: [], tag: 'Other', visibility: 'public' }
@@ -380,13 +382,15 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
         <button onClick={leave} style={BUTTON}><Icon name="←" /> All forms</button>
         <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
           <SaveBadge />
-          <button onClick={() => changeTab('preview')} style={{ ...BUTTON, background: primary, borderColor: primary, color: '#fff' }}><Icon name="view" /> Review form</button>
+          <button onClick={() => changeTab('preview')} style={{ ...BUTTON, background: actionColour, borderColor: actionColour, color: '#fff' }}><Icon name="view" /> Review form</button>
         </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 22 }}>
-        <span style={{ display: 'grid', placeItems: 'center', width: 50, height: 50, borderRadius: 15, flexShrink: 0, background: 'var(--org-a10)', color: primary }}><Icon name="forms" size={26} /></span>
-        <div><div style={{ fontSize: 10.5, letterSpacing: 1.5, color: 'var(--org-ink)', fontWeight: 800, marginBottom: 4 }}>YOUR FORM WORKSPACE</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 22, padding: isMobile ? 13 : 17, borderRadius: 18, border: '1px solid var(--org-a15)', background: `linear-gradient(110deg, var(--org-a10), var(--surface) 72%)` }}>
+        <OrgLogo org={org} height={isMobile ? 48 : 56} maxWidth={isMobile ? 116 : 190} />
+        <span aria-hidden="true" style={{ alignSelf: 'stretch', width: 3, minHeight: 38, borderRadius: 3, background: `linear-gradient(180deg, ${primary}, ${org?.secondary_color || primary})`, flexShrink: 0 }} />
+        <div style={{ minWidth: 0, flex: 1 }}><div style={{ fontSize: 10.5, letterSpacing: 1.2, color: 'var(--org-ink)', fontWeight: 800, marginBottom: 4, overflowWrap: 'anywhere' }}>{org?.name || 'YOUR ORGANISATION'} · FORMS</div>
           <h1 style={{ margin: 0, fontSize: isMobile ? 25 : 30, letterSpacing: -1, color: 'var(--text)' }}>Form studio<span style={{ display: 'inline-block', verticalAlign: 'middle', marginLeft: 12, padding: '5px 8px', borderRadius: 6, background: isDraft ? 'var(--warn-bg)' : 'var(--ok-bg)', color: isDraft ? 'var(--warn-text)' : 'var(--ok-text)', fontSize: 11, letterSpacing: 0 }}>{isDraft ? 'Draft' : 'Live'}</span></h1>
+          {org?.slogan && <p style={{ margin: '5px 0 0', color: 'var(--text3)', fontSize: 12.5, lineHeight: 1.5 }}>{org.slogan}</p>}
         </div>
       </div>
       {!isDraft && <div role="note" style={{ ...PANEL, padding: 13, marginBottom: 16, color: 'var(--text3)', fontSize: 13 }}>This form is live. Complete edits save automatically to the shared form. Unfinished questions stay here until they are ready.</div>}
@@ -396,7 +400,7 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
       </div>}
       <nav aria-label="Form building steps" style={{ ...PANEL, display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', padding: isMobile ? 5 : 8, gap: 4, marginBottom: 22 }}>
         {TABS.map(([key, label, hint], index) => <button key={key} aria-current={tab === key ? 'step' : undefined} onClick={() => changeTab(key)} style={{ ...BUTTON, borderColor: 'transparent', padding: isMobile ? '10px 2px' : '12px 14px', justifyContent: isMobile ? 'center' : 'flex-start', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 5 : 10, background: tab === key ? 'var(--org-a10)' : 'transparent' }}>
-          <span style={{ display: 'grid', placeItems: 'center', width: 27, height: 27, borderRadius: 9, flexShrink: 0, background: tab === key ? primary : 'var(--surface2)', color: tab === key ? '#fff' : 'var(--text3)', fontSize: 12 }}>{index + 1}</span>
+          <span style={{ display: 'grid', placeItems: 'center', width: 27, height: 27, borderRadius: 9, flexShrink: 0, background: tab === key ? actionColour : 'var(--surface2)', color: tab === key ? '#fff' : 'var(--text3)', fontSize: 12 }}>{index + 1}</span>
           <span style={{ textAlign: isMobile ? 'center' : 'left' }}><span style={{ fontSize: isMobile ? 11 : 13, color: tab === key ? 'var(--org-ink)' : 'var(--text)' }}>{label}</span>{!compact && <span style={{ display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--text3)', marginTop: 3 }}>{hint}</span>}</span>
         </button>)}
       </nav>
@@ -406,21 +410,21 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
           selectedId={selectedId} setSelectedId={setSelectedId} menuFor={menuFor} setMenuFor={setMenuFor}
           adderAt={adderAt} setAdderAt={idx => { if (idx !== null) loadSmartOptions(); setAdderAt(idx) }}
           addField={addField} updateField={updateField} removeField={removeField}
-          duplicateField={duplicateField} moveField={moveField} smartOptions={smartOptions} onTemplate={useTemplate} />
+          duplicateField={duplicateField} moveField={moveField} smartOptions={smartOptions} onTemplate={useTemplate} actionColour={actionColour} />
         {!compact && <aside style={{ position: 'sticky', top: 16 }}>
-          {selected ? <QuestionEditor key={selected.id} {...editorProps} /> : <QuestionToolbox primary={primary} onAdd={type => addField(type)} />}
+          {selected ? <QuestionEditor key={selected.id} {...editorProps} /> : <QuestionToolbox primary={primary} actionColour={actionColour} onAdd={type => addField(type)} />}
         </aside>}
       </div>}
       {compact && selected && tab === 'build' && <MobileEditorSheet key={selected.id} {...editorProps} />}
-      {tab === 'recipients' && <RecipientsPanel org={org} formId={formIdRef.current} form={form} primary={primary} isMobile={isMobile} />}
+      {tab === 'recipients' && <RecipientsPanel org={org} formId={formIdRef.current} form={form} primary={actionColour} isMobile={isMobile} />}
       {tab === 'settings' && <SettingsPanel form={form} setForm={setForm} primary={primary} />}
       {tab === 'preview' && <div style={{ display: 'grid', gridTemplateColumns: compact ? 'minmax(0, 1fr)' : 'minmax(0, 1fr) 300px', gap: 20, alignItems: 'start' }}>
-        <PreviewPanel form={form} org={org} primary={primary} value={previewData} onChange={setPreviewData} isMobile={isMobile} />
-        <ReviewChecklist form={form} issues={issues} primary={primary} onPublish={publish} publishing={publishing} isDraft={isDraft} onFix={issue => { setTab(issue.tab); setSelectedId(issue.fieldId || null) }} />
+        <PreviewPanel form={form} org={org} primary={primary} actionColour={actionColour} value={previewData} onChange={setPreviewData} isMobile={isMobile} />
+        <ReviewChecklist form={form} issues={issues} primary={primary} actionColour={actionColour} onPublish={publish} publishing={publishing} isDraft={isDraft} onFix={issue => { setTab(issue.tab); setSelectedId(issue.fieldId || null) }} />
       </div>}
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 22, borderTop: '1px solid var(--border)', paddingTop: 18 }}>
         <button disabled={step === 0} onClick={() => changeTab(TABS[step - 1][0])} style={{ ...BUTTON, opacity: step === 0 ? 0.4 : 1 }}><Icon name="←" /> Back</button>
-        {step < 3 && <button onClick={() => changeTab(TABS[step + 1][0])} style={{ ...BUTTON, background: primary, borderColor: primary, color: '#fff' }}>Next: {TABS[step + 1][1]} <Icon name="→" /></button>}
+        {step < 3 && <button onClick={() => changeTab(TABS[step + 1][0])} style={{ ...BUTTON, background: actionColour, borderColor: actionColour, color: '#fff' }}>Next: {TABS[step + 1][1]} <Icon name="→" /></button>}
       </div>
     </fieldset>
   )
@@ -429,7 +433,7 @@ export default function FormBuilder({ org, initial, onSave, onCancel, onSaved })
 // ------------------------------------------------------------------ canvas
 
 function Canvas({
-  form, setForm, primary, isMobile, selectedId, setSelectedId, menuFor, setMenuFor,
+  form, setForm, primary, actionColour, isMobile, selectedId, setSelectedId, menuFor, setMenuFor,
   adderAt, setAdderAt, addField, updateField, removeField, duplicateField, moveField, smartOptions, onTemplate,
 }) {
   const [hoverGap, setHoverGap] = useState(null)
@@ -465,7 +469,7 @@ function Canvas({
         }}
       />
 
-      {form.fields.length === 0 && <TemplateStarter primary={primary} onUse={onTemplate} onBlank={() => addField('text', 0)} />}
+      {form.fields.length === 0 && <TemplateStarter primary={primary} actionColour={actionColour} onUse={onTemplate} onBlank={() => addField('text', 0)} />}
       {form.fields.length > 0 && <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10 }}>Select a question to edit. Use the arrows to change its order.</div>}
 
       {form.fields.map((field, i) => {
@@ -1142,12 +1146,13 @@ function SettingsPanel({ form, setForm, primary }) {
 
 // ---------------------------------------------------------------- preview
 
-function PreviewPanel({ form, org, primary, value, onChange, isMobile }) {
+function PreviewPanel({ form, org, primary, actionColour, value, onChange, isMobile }) {
   const [device, setDevice] = useState('mobile')
   const [page, setPage] = useState(0)
   const [submitted, setSubmitted] = useState(false)
   const split = form.multi_step && form.fields.length > 8
   const pages = split ? Math.ceil(form.fields.length / 6) : 1
+  const brand = orgBrand(org)
   const fields = split ? form.fields.slice(page * 6, page * 6 + 6) : form.fields
   const reset = () => { onChange({}); setPage(0); setSubmitted(false) }
 
@@ -1158,9 +1163,13 @@ function PreviewPanel({ form, org, primary, value, onChange, isMobile }) {
       </div><button onClick={reset} style={BUTTON}><Icon name="↻" /> Reset preview</button>
     </div>
     <div style={{ ...PANEL, maxWidth: device === 'mobile' ? 420 : 800, margin: '0 auto', overflow: 'hidden' }}>
-      <div style={{ height: 6, background: primary }} />
+      <div style={{ background: brand.hero, padding: isMobile ? 16 : 20, color: '#fff' }}>
+        <OrgLogo org={org} height={46} maxWidth={190} />
+        <div style={{ fontSize: 15, fontWeight: 800, marginTop: 11, overflowWrap: 'anywhere' }}>{org?.name || 'Your organisation'}</div>
+        {org?.slogan && <div style={{ fontSize: 12, lineHeight: 1.5, color: '#ffffffdf', marginTop: 4 }}>{org.slogan}</div>}
+      </div>
+      <div aria-hidden="true" style={{ height: 5, background: brand.stripe }} />
       <div style={{ padding: isMobile ? 18 : 26 }}>
-        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--org-ink)', marginBottom: 20 }}>{org?.name || 'Your organisation'}</div>
         {submitted ? <div role="status" style={{ padding: '22px 0', textAlign: 'center' }}><Icon name="check" size={32} /><h2 style={{ fontSize: 22, color: 'var(--text)' }}>Thank you!</h2><p style={{ color: 'var(--text3)', lineHeight: 1.6 }}>{form.confirmation_message || 'Thanks, your response has been received.'}</p><button onClick={reset} style={BUTTON}>Try again</button></div> : <>
           <h2 style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.6, margin: '0 0 8px', color: 'var(--text)', overflowWrap: 'anywhere' }}>{form.name || 'Untitled form'}</h2>
           {form.description && <p style={{ fontSize: 14, color: 'var(--text3)', lineHeight: 1.6 }}>{form.description}</p>}
@@ -1172,7 +1181,7 @@ function PreviewPanel({ form, org, primary, value, onChange, isMobile }) {
             {!fields.length && <p style={{ color: 'var(--text3)' }}>Add a question to try your form.</p>}
             {fields.length > 0 && <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
               {page > 0 && <button type="button" onClick={() => setPage(p => p - 1)} style={BUTTON}>Back</button>}
-              <button type="submit" style={{ ...BUTTON, flex: 1, background: primary, borderColor: primary, color: '#fff' }}>{page < pages - 1 ? 'Continue' : 'Test submission'} <Icon name="→" /></button>
+              <button type="submit" style={{ ...BUTTON, flex: 1, background: actionColour, borderColor: actionColour, color: '#fff' }}>{page < pages - 1 ? 'Continue' : 'Test submission'} <Icon name="→" /></button>
             </div>}
           </form>
         </>}

@@ -22,7 +22,7 @@ export function QuestionToolbox({ onAdd, primary }) {
   </section>
 }
 
-export function TemplateStarter({ onUse, onBlank, primary }) {
+export function TemplateStarter({ onUse, onBlank, primary, actionColour = primary }) {
   const [browsing, setBrowsing] = useState(false)
   const [query, setQuery] = useState('')
   const isMobile = useIsMobile()
@@ -34,7 +34,7 @@ export function TemplateStarter({ onUse, onBlank, primary }) {
       <span style={{ display: 'inline-flex', padding: 10, borderRadius: 12, background: 'var(--surface)', color: primary, marginBottom: 12 }}><Icon name="forms" size={24} /></span>
       <h2 style={{ fontSize: 23, fontWeight: 800, margin: '0 0 8px', letterSpacing: -0.6, color: 'var(--text)' }}>A good form starts here.</h2>
       <p style={{ color: 'var(--text3)', fontSize: 14, lineHeight: 1.65, maxWidth: 440, margin: '0 0 18px' }}>Start with a ready-made template, or add your first question. You can change every word.</p>
-      <button onClick={() => setBrowsing(v => !v)} aria-expanded={browsing} style={{ ...BUTTON, background: primary, borderColor: primary, color: '#fff' }}><Icon name="templates" />{browsing ? 'Show suggestions' : 'Browse templates'}</button>
+      <button onClick={() => setBrowsing(v => !v)} aria-expanded={browsing} style={{ ...BUTTON, background: actionColour, borderColor: actionColour, color: '#fff' }}><Icon name="templates" />{browsing ? 'Show suggestions' : 'Browse templates'}</button>
       <button onClick={onBlank} style={{ ...BUTTON, marginLeft: isMobile ? 0 : 8, marginTop: isMobile ? 8 : 0, background: 'transparent', borderColor: 'transparent' }}>Start from scratch <Icon name="→" /></button>
     </div>
     <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 800, letterSpacing: 1, marginBottom: 12 }}>{browsing ? 'TEMPLATE LIBRARY' : 'A LITTLE HEAD START'}</div>
@@ -50,7 +50,7 @@ export function TemplateStarter({ onUse, onBlank, primary }) {
   </section>
 }
 
-export function ReviewChecklist({ form, issues, onFix, primary, onPublish, publishing, isDraft }) {
+export function ReviewChecklist({ form, issues, onFix, primary, actionColour = primary, onPublish, publishing, isDraft }) {
   return <section style={{ ...PANEL, padding: 22 }} aria-label="Publishing checks">
     <span style={{ display: 'inline-flex', padding: 10, borderRadius: 12, color: issues.length ? 'var(--warn-text)' : primary, background: 'var(--org-a05)' }}><Icon name={issues.length ? 'edit' : 'check'} size={24} /></span>
     <h2 style={{ fontSize: 20, letterSpacing: -0.5, color: 'var(--text)', margin: '14px 0 8px' }}>{issues.length ? 'A few finishing touches' : isDraft ? 'Ready when you are.' : 'Your form is live.'}</h2>
@@ -59,7 +59,7 @@ export function ReviewChecklist({ form, issues, onFix, primary, onPublish, publi
     <dl style={{ margin: 0, display: 'grid', gap: 14, color: 'var(--text3)', fontSize: 13 }}>
       {[['Questions', `${form.fields.length} · ${form.fields.filter(f => f.required).length} required`], ['Who can respond', form.visibility === 'private' ? 'Staff only' : 'Anyone with the link'], ['Closes', form.closing_date ? new Date(`${form.closing_date}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/London' }) : 'No closing date']].map(([label, value]) => <div key={label}><dt style={{ fontSize: 11, marginBottom: 4 }}>{label}</dt><dd style={{ margin: 0, color: 'var(--text)', fontWeight: 700 }}>{value}</dd></div>)}
     </dl>
-    <button onClick={onPublish} disabled={issues.length > 0 || publishing} style={{ ...BUTTON, width: '100%', marginTop: 22, background: primary, borderColor: primary, color: '#fff', opacity: issues.length || publishing ? 0.5 : 1, cursor: issues.length || publishing ? 'not-allowed' : 'pointer' }}>{publishing ? 'Saving…' : isDraft ? 'Publish form' : 'Save changes'} <Icon name="→" /></button>
+    <button onClick={onPublish} disabled={issues.length > 0 || publishing} style={{ ...BUTTON, width: '100%', marginTop: 22, background: actionColour, borderColor: actionColour, color: '#fff', opacity: issues.length || publishing ? 0.5 : 1, cursor: issues.length || publishing ? 'not-allowed' : 'pointer' }}>{publishing ? 'Saving…' : isDraft ? 'Publish form' : 'Save changes'} <Icon name="→" /></button>
     <p style={{ fontSize: 11.5, lineHeight: 1.6, color: 'var(--text3)', marginBottom: 0 }}>{form.visibility === 'private' ? 'Publishing makes this form available to staff in your workspace.' : 'Publishing enables responses. It does not send an email. Share your link from the Forms workspace.'}</p>
   </section>
 }

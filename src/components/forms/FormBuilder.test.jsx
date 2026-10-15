@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import FormBuilder from './FormBuilder'
 import { supabase } from '../../lib/supabase'
 import { formIssues, templateDraft } from './formBuilderUtils'
+import { orgBrand } from '../shared/OrgPageHero'
 
 jest.mock('../../lib/supabase', () => ({ supabase: { from: jest.fn(), rpc: jest.fn() } }))
 const org = { id: 'org-one', name: 'Test organisation', primary_color: '#275D5A' }
@@ -109,4 +110,18 @@ test('unfinished changes to a live form do not overwrite the published version',
   expect(await screen.findByRole('alert')).toHaveTextContent('Your latest changes have not been saved.')
   expect(writes).toHaveLength(0)
   expect(onCancel).not.toHaveBeenCalled()
+})
+
+
+test('the studio and respondent preview carry the organisation logo, strapline and accessible colour', () => {
+  const brandedOrg = { ...org, primary_color: '#FFE300', secondary_color: '#A4B896', slogan: 'Every child deserves happiness', logo_url: '/solidarity.svg' }
+  const { container } = render(<FormBuilder org={brandedOrg} initial={valid} />)
+  expect(screen.getByRole('heading', { name: /Form studio/ })).toBeInTheDocument()
+  expect(screen.getByText('Every child deserves happiness')).toBeInTheDocument()
+  expect(container.querySelector('img')).toHaveAttribute('src', '/solidarity.svg')
+  fireEvent.click(screen.getByRole('button', { name: 'Review form' }))
+  expect(screen.getAllByText('Every child deserves happiness')).toHaveLength(2)
+  expect(container.querySelectorAll('img[src="/solidarity.svg"]')).toHaveLength(2)
+  const action = orgBrand(brandedOrg).ink
+  expect(screen.getByRole('button', { name: 'Test submission' })).toHaveStyle({ background: action })
 })
