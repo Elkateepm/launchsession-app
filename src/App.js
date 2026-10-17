@@ -378,7 +378,6 @@ function AutoResolveOrg({ session }) {
 }
 
 function AppContent() {
-  const pathname = window.location.pathname
   const { org, loading: orgLoading, error: orgError, noOrg } = useOrg()
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -432,12 +431,6 @@ function AppContent() {
     return null
   }
 
-  // Special routes that bypass the org/session splash entirely.
-  // /signup and /create-password are deliberately NOT here: App() returns those
-  // before AppContent is ever mounted, so a copy at this level is dead code.
-  // /reset-password is not handled up there, so it does belong here.
-  if (pathname === '/reset-password') return <Suspense fallback={<RouteLoading />}><ResetPassword /></Suspense>
-
   const baseLoading = orgLoading || loading
   const willShowAuthedApp = !baseLoading && !noOrg && !orgError && session
   const appReady = !baseLoading && (!willShowAuthedApp || authedAppReady)
@@ -478,6 +471,14 @@ export default function App() {
   // component, so the hook has to run unconditionally.
   useSystemTheme()
   const pathname = window.location.pathname
+  // Older Settings emails returned to the current screen with recovery tokens.
+  if (pathname !== '/reset-password' && new URLSearchParams(window.location.hash.slice(1)).get('type') === 'recovery') {
+    window.location.replace('/reset-password' + window.location.search + window.location.hash)
+    return null
+  }
+  // Recovery owns its session. Org polling and stale idle clocks must not
+  // sign it out or redirect while the user is choosing a new password.
+  if (pathname === '/reset-password') return <Suspense fallback={<RouteLoading />}><ResetPassword /></Suspense>
   if (pathname === '/volunteer/accept-invite') return <Suspense fallback={<RouteLoading />}><VolunteerAcceptInvite /></Suspense>
   if (pathname.startsWith('/volunteer')) return <Suspense fallback={<RouteLoading />}><VolunteerPortal /></Suspense>
   if (pathname.startsWith('/forms/')) return <Suspense fallback={<RouteLoading />}><PublicForm /></Suspense>

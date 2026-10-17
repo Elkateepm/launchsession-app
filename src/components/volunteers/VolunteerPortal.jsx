@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
+import { requestPasswordReset } from '../../lib/passwordReset'
 import { useRealtimeTable } from '../../lib/useRealtimeTable'
 import VPToday from './VPToday'
 import VPSessions from './VPSessions'
@@ -390,6 +391,7 @@ export default function VolunteerPortal() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [forgotSent, setForgotSent] = useState(false)
+  const [resetLoading, setResetLoading] = useState(false)
   const brand = orgBrand(org)
   const primary = brand.ink
 
@@ -428,16 +430,16 @@ export default function VolunteerPortal() {
   // colours, landing back on its password page.
   async function handleForgot() {
     if (!email.trim()) { setError('Type your email address above first, then press Forgotten your password.'); return }
-    setError('')
-    const { error: err } = await supabase.functions.invoke('send-password-reset-email', {
-      body: {
-        email: email.trim(), org_name: org?.name, org_slug: org?.slug,
-        org_logo: org?.branding_enabled && org?.logo_url ? org.logo_url : window.location.origin + '/logo.png', org_color: org?.primary_color,
-        redirect_to: window.location.origin + '/reset-password' + (org?.slug ? '?org=' + encodeURIComponent(org.slug) : ''),
-      },
-    })
-    if (err) { setError('We could not send the reset link. Check your connection and try again.'); return }
-    setForgotSent(true)
+    if (resetLoading) return
+    setError(''); setResetLoading(true)
+    try {
+      await requestPasswordReset(email, org, 'volunteer')
+      setForgotSent(true)
+    } catch (e) {
+      setError('We could not send the reset link. Check your connection and try again.')
+    } finally {
+      setResetLoading(false)
+    }
   }
 
   async function handleAuth(e) {
@@ -510,7 +512,7 @@ export default function VolunteerPortal() {
           <div style={{ textAlign:'center', marginTop:16, fontSize:13, color: 'var(--text3)', lineHeight:1.5 }}>
             {forgotSent
               ? <div role="status" style={{ color:'var(--text2)', fontWeight:700 }}>If {email.trim()} has a volunteer account, a link to set a new password is on its way.</div>
-              : <button type="button" onClick={handleForgot} style={{ minHeight:44, border:'none', background:'none', padding:'0 8px', color:'var(--org-ink)', fontWeight:800, fontSize:13, cursor:'pointer', fontFamily:'inherit', textDecoration:'underline' }}>Forgotten your password?</button>}
+              : <button type="button" onClick={handleForgot} disabled={resetLoading} style={{ minHeight:44, border:'none', background:'none', padding:'0 8px', color:'var(--org-ink)', fontWeight:800, fontSize:13, cursor:'pointer', fontFamily:'inherit', textDecoration:'underline' }}>{resetLoading ? 'Sending…' : 'Forgotten your password?'}</button>}
             <div style={{ marginTop:8 }}>New volunteer? Ask {org?.name || 'your organisation'} to send you an invite.</div>
           </div>
           {!org?.branding_enabled && <div style={{ textAlign:'center', marginTop:14, fontSize:11.5, color:'var(--text-faint)' }}>Powered by LaunchSession</div>}

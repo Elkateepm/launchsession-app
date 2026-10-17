@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useId } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
+import { requestPasswordReset } from '../../lib/passwordReset'
 import { useOrg, useTerms } from '../../context/OrgContext'
 import { HIDEABLE_ITEMS } from '../dashboard/sidebar/navConfig'
 import { makeHasModule, trialDaysRemaining, isPlanEnded, ACCESS_MODULES } from '../../lib/moduleAccess'
@@ -760,17 +761,24 @@ function BiometricUnlockCard() {
 
 
 function SecuritySection() {
+  const { org } = useOrg()
   const [pwLoading, setPwLoading] = useState(false)
   const [pwMsg, setPwMsg] = useState('')
 
   const handleChangePassword = async () => {
+    if (pwLoading) return
     setPwLoading(true)
     setPwMsg('')
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session?.user?.email) { setPwMsg('Could not find your email.'); setPwLoading(false); return }
-    const { error } = await supabase.auth.resetPasswordForEmail(session.user.email, { redirectTo: window.location.href })
-    setPwLoading(false)
-    setPwMsg(error ? 'Error: ' + error.message : '✅ Password reset email sent — check your inbox.')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user?.email) { setPwMsg('Could not find your email.'); return }
+      await requestPasswordReset(session.user.email, org)
+      setPwMsg('✅ Password reset link requested — check your inbox and spam folder.')
+    } catch (e) {
+      setPwMsg('Could not send the reset link. Please try again.')
+    } finally {
+      setPwLoading(false)
+    }
   }
 
   return (

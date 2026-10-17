@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
+import { requestPasswordReset } from '../../lib/passwordReset'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import MemberAccess from '../hr/MemberAccess'
 import StaffHRProfile from '../hr/StaffHRProfile'
@@ -349,23 +350,17 @@ function PersonDrawer({ person, org, primary, isMobile, isAdmin, canDecide, myRo
   }
 
   const sendReset = async () => {
+    if (savingField === 'reset') return
     setSavingField('reset'); setError('')
-    // Same Edge Function the sign-in screen uses, so the email is the branded
-    // one people already recognise rather than a second, different-looking link.
-    const { error: e } = await supabase.functions.invoke('send-password-reset-email', {
-      body: {
-        email: person.email,
-        org_name: org?.name,
-        org_slug: org?.slug,
-        org_logo: org?.logo_url,
-        org_color: 'var(--org-ink)',
-        redirect_to: window.location.origin + '/reset-password' + (org?.slug ? '?org=' + org.slug : ''),
-      },
-    })
-    setSavingField(null)
-    if (e) { setError('Could not send the reset email. Please try again.'); return }
-    setResetSent(true)
-    onFlash(`Password reset link sent to ${person.email}`)
+    try {
+      await requestPasswordReset(person.email, org)
+      setResetSent(true)
+      onFlash(`Password reset link requested for ${person.email}`)
+    } catch (e) {
+      setError('Could not send the reset email. Please try again.')
+    } finally {
+      setSavingField(null)
+    }
   }
 
   return (
