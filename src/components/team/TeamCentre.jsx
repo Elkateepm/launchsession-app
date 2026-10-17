@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
+import { requestPasswordReset } from '../../lib/passwordReset'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import MemberAccess from '../hr/MemberAccess'
 import StaffHRProfile from '../hr/StaffHRProfile'
@@ -88,6 +89,8 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
   const [joinRequests, setJoinRequests] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [roleFilter, setRoleFilter] = useState('all')
+  const [loadError, setLoadError] = useState('')
   const [selected, setSelected] = useState(null)
   // The HR record opens over the top of the Team drawer rather than
   // replacing it, so closing HR returns you to where you were.
@@ -96,28 +99,36 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
   const [inviting, setInviting] = useState(false)
 
   const load = useCallback(async () => {
-    if (!org?.id) return
+    if (!org?.id) { setLoading(false); return }
     setLoading(true)
-    const [p, inv, jr] = await Promise.all([
-      supabase.from('user_profiles')
-        .select('id, full_name, preferred_name, email, role, job_title, photo_url, approval_status, approved_at, approval_note, created_at')
-        .eq('org_id', org.id)
-        .order('full_name', { ascending: true }),
-      supabase.from('admin_invites')
-        .select('id, email, full_name, role, created_at')
-        .eq('org_id', org.id).eq('status', 'pending')
-        .order('created_at', { ascending: false }),
-      canDecide
-        ? supabase.from('team_join_requests')
-          .select('id, full_name, email, phone, message, created_at')
+    setLoadError('')
+    try {
+      const [p, inv, jr] = await Promise.all([
+        supabase.from('user_profiles')
+          .select('id, full_name, preferred_name, email, role, job_title, photo_url, approval_status, approved_at, approval_note, created_at')
+          .eq('org_id', org.id)
+          .order('full_name', { ascending: true }),
+        supabase.from('admin_invites')
+          .select('id, email, full_name, role, created_at')
           .eq('org_id', org.id).eq('status', 'pending')
-          .order('created_at', { ascending: true })
-        : Promise.resolve({ data: [] }),
-    ])
-    setPeople(p.data || [])
-    setInvites(inv.data || [])
-    setJoinRequests(jr.data || [])
-    setLoading(false)
+          .order('created_at', { ascending: false }),
+        canDecide
+          ? supabase.from('team_join_requests')
+            .select('id, full_name, email, phone, message, created_at')
+            .eq('org_id', org.id).eq('status', 'pending')
+            .order('created_at', { ascending: true })
+          : Promise.resolve({ data: [] }),
+      ])
+      setPeople(p.data || [])
+      setInvites(inv.data || [])
+      setJoinRequests(jr.data || [])
+      const queryError = p.error || inv.error || jr.error
+      if (queryError) setLoadError(queryError.message || 'Some team information could not be loaded.')
+    } catch (error) {
+      setLoadError(error?.message || 'The team could not be loaded. Try again.')
+    } finally {
+      setLoading(false)
+    }
   }, [org?.id, canDecide])
 
   useEffect(() => { load() }, [load])
@@ -136,14 +147,41 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
     () => people.filter(p => p.approval_status === 'pending'),
     [people],
   )
+  const currentAccounts = useMemo(
+    () => people.filter(p => !['pending', 'declined'].includes(p.approval_status)),
+    [people],
+  )
+  const listablePeople = useMemo(
+    () => people.filter(p => p.approval_status !== 'pending'),
+    [people],
+  )
+  const roleFilterOptions = [
+    { key: 'all', label: 'Everyone' },
+    { key: 'admins', label: 'Admins' },
+    { key: 'manager', label: 'Managers' },
+    { key: 'staff', label: 'Staff' },
+    { key: 'volunteer', label: 'Volunteers' },
+    { key: 'parent', label: 'Parents' },
+  ].map(option => ({
+    ...option,
+    count: option.key === 'all'
+      ? listablePeople.length
+      : option.key === 'admins'
+        ? listablePeople.filter(p => ['owner', 'admin'].includes(p.role)).length
+        : listablePeople.filter(p => p.role === option.key).length,
+  })).filter((option, index) => index === 0 || option.count > 0)
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    const active = people.filter(p => p.approval_status !== 'pending')
-    if (!q) return active
-    return active.filter(p => [p.full_name, p.email, p.job_title, ROLE_LABELS[p.role]]
-      .filter(Boolean).join(' ').toLowerCase().includes(q))
-  }, [people, search])
+    return listablePeople.filter(p => {
+      const matchesRole = roleFilter === 'all'
+        || (roleFilter === 'admins' ? ['owner', 'admin'].includes(p.role) : p.role === roleFilter)
+      const matchesSearch = !q || [
+        p.preferred_name, p.full_name, p.email, p.job_title, ROLE_LABELS[p.role],
+      ].filter(Boolean).join(' ').toLowerCase().includes(q)
+      return matchesRole && matchesSearch
+    })
+  }, [listablePeople, search, roleFilter])
 
   const flash = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3200) }
 
@@ -160,128 +198,288 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
 
   const TABS = [
     // Everyone on the team, volunteers included, so not "Staff".
-    ['people', `Everyone (${filtered.length})`],
+    ['people', `Team members (${people.length})`],
     ['mail', 'Internal mail'],
   ]
 
+  const roleCountsForStats = currentAccounts.filter(p => p.role === 'volunteer').length
+
   return (
-    <div style={{ background: 'var(--surface2)', minHeight: '100%', padding: isMobile ? 16 : 24 }}>
-      <div style={{ marginBottom: 16, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-        <div style={{ minWidth: 0, flex: '1 1 260px' }}>
-          <div style={{ fontSize: isMobile ? 22 : 26, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.5 }}>Team</div>
-          <div style={{ fontSize: 13.5, color: 'var(--text3)', marginTop: 3 }}>
-            Invite and approve people, set what each person can reach, and message the team.
+    <div className="team-page" style={{ background: 'var(--surface2)', minHeight: '100%', padding: isMobile ? 16 : 24 }}>
+      <style>{[
+        '@keyframes teamFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }',
+        '@keyframes teamOverlay { from { opacity: 0; } to { opacity: 1; } }',
+        '@keyframes teamDrawer { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }',
+        '.team-page .team-enter { animation: teamFade .28s ease both; }',
+        '.team-page .team-stat-card { transition: transform .18s ease, box-shadow .18s ease; }',
+        '.team-page .team-stat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(41, 27, 92, .08); }',
+        '.team-page .team-filter { transition: background .16s ease, color .16s ease, border-color .16s ease, transform .16s ease; }',
+        '.team-page .team-filter:hover { transform: translateY(-1px); }',
+        '.team-page .team-row { transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease; }',
+        '.team-page .team-row:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(41, 27, 92, .07); border-color: var(--border); }',
+        '@media (prefers-reduced-motion: reduce) { .team-page .team-enter, .team-page .team-stat-card, .team-page .team-filter, .team-page .team-row { animation: none !important; transition: none !important; transform: none !important; } }',
+      ].join(' ')}</style>
+
+      <div className="team-enter" style={{ marginBottom: 20, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ minWidth: 0, flex: '1 1 280px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9, color: 'var(--text3)', fontSize: 11, fontWeight: 800, letterSpacing: 1.1, textTransform: 'uppercase', marginBottom: 5 }}>
+            <span style={{ width: 8, height: 8, borderRadius: 99, background: primary, boxShadow: `0 0 0 4px ${primary}1c` }} />
+            People &amp; access
+          </div>
+          <div style={{ fontSize: isMobile ? 25 : 30, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.8, lineHeight: 1.12 }}>Your team</div>
+          <div style={{ fontSize: 13.5, color: 'var(--text3)', marginTop: 6, maxWidth: 620, lineHeight: 1.5 }}>
+            Manage access, welcome new people and keep everyone in sync.
           </div>
         </div>
-        {/* Inviting used to live only in HR, which the Complete Platform plan
-            does not include, so this page said "Invite staff from HR" to
-            organisations that could not open it. */}
-        {canDecide && (
-          <button onClick={() => setInviting(true)} style={{
-            minHeight: 44, padding: '0 16px', borderRadius: 12, border: 'none', cursor: 'pointer',
-            background: primary, color: '#fff', fontSize: 14, fontWeight: 800, fontFamily: 'inherit',
-            display: 'inline-flex', alignItems: 'center', gap: 8, flexShrink: 0,
-          }}><Icon name="✉️" /> Invite someone</button>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
+          <button onClick={() => load()} disabled={loading} aria-label="Refresh team" style={{
+            minHeight: 44, padding: '0 13px', borderRadius: 12, border: '1px solid var(--border)',
+            cursor: loading ? 'default' : 'pointer', background: 'var(--surface)', color: 'var(--text3)',
+            fontSize: 13, fontWeight: 750, fontFamily: 'inherit', display: 'inline-flex',
+            alignItems: 'center', justifyContent: 'center', gap: 7, opacity: loading ? .65 : 1,
+          }}><Icon name="↻" /> Refresh</button>
+          {canDecide && (
+            <button onClick={() => setInviting(true)} style={{
+              minHeight: 44, padding: '0 16px', borderRadius: 12, border: 'none', cursor: 'pointer',
+              background: primary, color: '#fff', fontSize: 14, fontWeight: 800, fontFamily: 'inherit',
+              display: 'inline-flex', alignItems: 'center', gap: 8, boxShadow: `0 7px 16px ${primary}35`,
+            }}><Icon name="✉️" /> Invite someone</button>
+          )}
+        </div>
+      </div>
+
+      <div className="team-enter" style={{
+        display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))',
+        gap: 10, marginBottom: 18, animationDelay: '45ms',
+      }}>
+        {[
+          { label: 'Active accounts', value: currentAccounts.length, hint: 'Ready to use LaunchSession', icon: '✓', color: '#168A63', bg: 'rgba(22,138,99,.09)' },
+          { label: 'Awaiting approval', value: pending.length, hint: 'People who need a decision', icon: '⌛', color: '#A75C00', bg: 'rgba(229,151,42,.13)' },
+          { label: 'Volunteers', value: roleCountsForStats, hint: 'Part of your delivery team', icon: '♡', color: '#7147C8', bg: 'rgba(113,71,200,.10)' },
+          { label: 'Invites out', value: invites.length, hint: 'Waiting for someone to join', icon: '✉', color: '#315CA8', bg: 'rgba(49,92,168,.10)' },
+        ].map((item, index) => (
+          <div key={item.label} className="team-stat-card" style={{
+            background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 15,
+            padding: isMobile ? 13 : 16, display: 'flex', alignItems: 'center', gap: 12,
+            minWidth: 0, animationDelay: (index * 35 + 70) + 'ms',
+          }}>
+            <div style={{
+              width: isMobile ? 38 : 42, height: isMobile ? 38 : 42, borderRadius: 12, flexShrink: 0,
+              display: 'grid', placeItems: 'center', background: item.bg, color: item.color,
+              fontSize: 19, fontWeight: 900,
+            }}>{item.icon}</div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: isMobile ? 19 : 22, fontWeight: 900, color: 'var(--text)', lineHeight: 1.1 }}>{item.value}</div>
+              <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--text)', marginTop: 5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</div>
+              {!isMobile && <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.hint}</div>}
+            </div>
+          </div>
+        ))}
       </div>
 
       {pending.length > 0 && (
-        <button onClick={() => hasHR ? onNavigate && onNavigate('hr') : setSelected(pending[0])} style={{
-          width: '100%', textAlign: 'left', marginBottom: 12, cursor: 'pointer',
-          background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 12,
-          padding: '12px 14px', fontFamily: 'inherit', display: 'flex',
-          alignItems: 'center', gap: 10, minHeight: 44,
+        <button className="team-enter" onClick={() => hasHR ? onNavigate && onNavigate('hr') : setSelected(pending[0])} style={{
+          width: '100%', textAlign: 'left', marginBottom: 14, cursor: 'pointer',
+          background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 14,
+          padding: '13px 15px', fontFamily: 'inherit', display: 'flex',
+          alignItems: 'center', gap: 11, minHeight: 54, animationDelay: '130ms',
         }}>
-          <span style={{ color: 'var(--warn-text)', display: 'flex' }}><Icon name="⚠️" /></span>
-          <span style={{ fontSize: 13.5, color: 'var(--warn-text)', fontWeight: 700, flex: 1, minWidth: 0 }}>
+          <span style={{ color: 'var(--warn-text)', display: 'grid', placeItems: 'center', width: 36, height: 36, borderRadius: 11, background: 'rgba(255,255,255,.5)', flexShrink: 0 }}><Icon name="⚠️" /></span>
+          <span style={{ fontSize: 13.5, color: 'var(--warn-text)', fontWeight: 800, flex: 1, minWidth: 0 }}>
             {pending.length} {pending.length === 1 ? 'person is' : 'people are'} waiting for approval
-            <span style={{ display: 'block', fontWeight: 500, fontSize: 12.5, marginTop: 1 }}>
-              {hasHR ? 'Approvals are in HR, where approving someone starts their record' : 'Open them to approve or decline'}
+            <span style={{ display: 'block', fontWeight: 500, fontSize: 12.5, marginTop: 2 }}>
+              {hasHR ? 'Review their request in HR' : 'Open a profile to approve or decline'}
             </span>
           </span>
-          <span style={{ color: 'var(--warn-text)', fontSize: 18, flexShrink: 0 }}>›</span>
+          <span aria-hidden="true" style={{ color: 'var(--warn-text)', fontSize: 21, flexShrink: 0 }}>›</span>
         </button>
       )}
 
       {canDecide && (
-        <JoinRequests org={org} requests={joinRequests} myRole={myRole} myId={session?.user?.id || userProfile?.id} primary={primary}
-          memberEmails={new Set(people.map(p => (p.email || '').toLowerCase()))}
-          onChanged={load} onFlash={flash} />
+        <div className="team-enter" style={{ animationDelay: '150ms' }}>
+          <JoinRequests org={org} requests={joinRequests} myRole={myRole} myId={session?.user?.id || userProfile?.id} primary={primary}
+            memberEmails={new Set(people.map(p => (p.email || '').toLowerCase()))}
+            onChanged={load} onFlash={flash} />
+        </div>
       )}
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+      {toast && (
+        <div role="status" className="team-enter" style={{
+          background: 'var(--ok-bg)', border: '1px solid var(--ok-border)', borderRadius: 12,
+          padding: '12px 14px', marginBottom: 12, color: 'var(--ok-text)', fontSize: 13.5, fontWeight: 700,
+        }}>{toast}</div>
+      )}
+
+      {loadError && (
+        <div role="alert" className="team-enter" style={{
+          background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 12,
+          padding: '12px 14px', marginBottom: 12, color: 'var(--danger-text)', fontSize: 13,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
+        }}>
+          <span>{loadError}</span>
+          <button onClick={() => load()} style={{
+            minHeight: 40, padding: '0 12px', borderRadius: 9, border: '1px solid var(--danger-border)',
+            background: 'var(--surface)', color: 'var(--danger-text)', font: 'inherit', fontWeight: 750, cursor: 'pointer',
+          }}>Try again</button>
+        </div>
+      )}
+
+      <div role="tablist" aria-label="Team workspace" className="team-enter" style={{
+        display: 'flex', gap: 7, margin: '18px 0 14px', borderBottom: '1px solid var(--border)', overflowX: 'auto',
+        animationDelay: '180ms',
+      }}>
         {TABS.map(([key, label]) => (
-          <button key={key} onClick={() => setTab(key)} style={{
-            padding: '9px 14px', borderRadius: 10, cursor: 'pointer', minHeight: 44,
-            border: `1px solid ${tab === key ? 'transparent' : 'var(--border)'}`,
-            background: tab === key ? primary : 'var(--surface)',
-            color: tab === key ? '#fff' : 'var(--text3)',
-            fontSize: 13.5, fontWeight: 700, fontFamily: 'inherit',
+          <button key={key} role="tab" aria-selected={tab === key} onClick={() => setTab(key)} style={{
+            padding: '11px 15px', borderRadius: '10px 10px 0 0', cursor: 'pointer', minHeight: 46,
+            border: '1px solid transparent', borderBottom: tab === key ? `3px solid ${primary}` : '3px solid transparent',
+            background: tab === key ? 'var(--surface)' : 'transparent',
+            color: tab === key ? primary : 'var(--text3)',
+            fontSize: 13.5, fontWeight: tab === key ? 850 : 700, fontFamily: 'inherit', whiteSpace: 'nowrap',
           }}>{label}</button>
         ))}
       </div>
 
-      {toast && (
-        <div style={{
-          ...card, background: 'var(--ok-bg)', border: '1px solid var(--ok-border)',
-          color: 'var(--ok-text)', fontSize: 13.5, fontWeight: 700,
-        }}>{toast}</div>
+      {loading && (
+        <div aria-label="Loading team" style={{ display: 'grid', gap: 9 }}>
+          {[0, 1, 2].map(i => <div key={i} style={{
+            height: 72, borderRadius: 14, background: 'var(--surface)', border: '1px solid var(--border)',
+            opacity: 1 - i * .18, animation: 'teamFade .3s ease both',
+          }} />)}
+        </div>
       )}
-
-      {loading && <div style={{ ...card, color: 'var(--text3)', fontSize: 14 }}>Loading the team…</div>}
 
       {!loading && tab === 'people' && (
         <>
-          <input
-            value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search by name, email or job title"
-            style={{ ...input, marginBottom: 12, background: 'var(--surface)' }}
-          />
+          <div className="team-enter" style={{
+            background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 15,
+            padding: isMobile ? 12 : 15, marginBottom: 12, animationDelay: '210ms',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
+              <div style={{ position: 'relative', flex: '1 1 260px', minWidth: 0 }}>
+                <span aria-hidden="true" style={{ position: 'absolute', left: 13, top: 12, color: 'var(--text-faint)', display: 'flex' }}><Icon name="⌕" /></span>
+                <input
+                  value={search} onChange={e => setSearch(e.target.value)}
+                  placeholder="Search name, email, role or job title"
+                  aria-label="Search team members"
+                  style={{ ...input, paddingLeft: 39, margin: 0, background: 'var(--surface)' }}
+                />
+              </div>
+              <div style={{ fontSize: 12.5, color: 'var(--text3)', fontWeight: 700, whiteSpace: 'nowrap', padding: '0 4px' }}>
+                {filtered.length} {filtered.length === 1 ? 'person' : 'people'}
+              </div>
+            </div>
+            <div aria-label="Filter by role" style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginTop: 12 }}>
+              {roleFilterOptions.map(option => (
+                <button key={option.key} className="team-filter" aria-pressed={roleFilter === option.key}
+                  onClick={() => setRoleFilter(option.key)} style={{
+                    minHeight: 37, padding: '0 12px', borderRadius: 99, cursor: 'pointer',
+                    border: `1px solid ${roleFilter === option.key ? primary : 'var(--border)'}`,
+                    background: roleFilter === option.key ? `${primary}14` : 'var(--surface)',
+                    color: roleFilter === option.key ? primary : 'var(--text3)',
+                    fontSize: 12.5, fontWeight: roleFilter === option.key ? 800 : 650, fontFamily: 'inherit',
+                    display: 'inline-flex', alignItems: 'center', gap: 7,
+                  }}>
+                  {option.label}
+                  <span style={{
+                    minWidth: 20, height: 20, padding: '0 5px', boxSizing: 'border-box',
+                    display: 'inline-grid', placeItems: 'center', borderRadius: 99, fontSize: 11,
+                    background: roleFilter === option.key ? 'rgba(255,255,255,.72)' : 'var(--surface2)',
+                    color: roleFilter === option.key ? primary : 'var(--text-faint)',
+                  }}>{option.count}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {filtered.length === 0 && (
-            <div style={{ ...card, color: 'var(--text3)', fontSize: 14 }}>
-              {search ? 'Nobody matches that search.' : canDecide ? 'No one here yet. Press Invite someone to add your team.' : 'No one here yet.'}
+            <div className="team-enter" style={{
+              ...card, textAlign: 'center', padding: isMobile ? '26px 16px' : '34px 24px',
+              animationDelay: '240ms',
+            }}>
+              <div style={{ width: 48, height: 48, borderRadius: 15, margin: '0 auto 12px', display: 'grid', placeItems: 'center', background: 'rgba(113,71,200,.10)', color: '#7147C8', fontSize: 22 }}>👥</div>
+              <div style={{ fontSize: 15, fontWeight: 850, color: 'var(--text)' }}>
+                {search || roleFilter !== 'all' ? 'No people match these filters' : canDecide ? 'Your team is ready to grow' : 'No team members yet'}
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 5, lineHeight: 1.5 }}>
+                {search || roleFilter !== 'all' ? 'Try another search or clear the current filters.' : 'Invite your staff and volunteers to give them access to the workspace.'}
+              </div>
+              {search || roleFilter !== 'all' ? (
+                <button onClick={() => { setSearch(''); setRoleFilter('all') }} style={{
+                  minHeight: 42, marginTop: 14, padding: '0 14px', borderRadius: 10,
+                  border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)',
+                  fontSize: 13, fontWeight: 750, cursor: 'pointer', fontFamily: 'inherit',
+                }}>Clear filters</button>
+              ) : canDecide && (
+                <button onClick={() => setInviting(true)} style={{
+                  minHeight: 44, marginTop: 15, padding: '0 16px', borderRadius: 11,
+                  border: 'none', background: primary, color: '#fff', fontSize: 13.5,
+                  fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+                }}>Invite someone</button>
+              )}
             </div>
           )}
-          {filtered.map(p => (
-            <button key={p.id} onClick={() => setSelected(p)} style={{
-              ...card, width: '100%', textAlign: 'left', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 12, fontFamily: 'inherit',
-              minHeight: 44,
+
+          {filtered.map((p, index) => (
+            <button key={p.id} className="team-row team-enter" onClick={() => setSelected(p)} style={{
+              ...card, width: '100%', textAlign: 'left', cursor: 'pointer', padding: isMobile ? 13 : '14px 16px',
+              display: 'flex', alignItems: 'center', gap: 12, fontFamily: 'inherit', minHeight: 72,
+              animationDelay: (Math.min(index, 8) * 25 + 250) + 'ms',
             }}>
               <Avatar person={p} primary={primary} />
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {p.full_name || p.email}
+                <div style={{ fontSize: 14.5, fontWeight: 850, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {p.preferred_name || p.full_name || p.email}
                 </div>
-                <div style={{ fontSize: 12.5, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {p.job_title || ROLE_LABELS[p.role] || 'Staff'}
+                <div style={{ fontSize: 12.5, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 3 }}>
+                  {p.email}{p.job_title ? ` · ${p.job_title}` : ''}
                 </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 5, alignItems: 'flex-end' }}>
+              <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 6, alignItems: 'flex-end', flexShrink: 0 }}>
                 <Pill tone="#3730A3" bg="var(--info-bg)">{ROLE_LABELS[p.role] || p.role}</Pill>
-                {p.approval_status === 'declined' && <Pill tone="var(--danger-text)" bg="var(--danger-bg)">Declined</Pill>}
+                {p.approval_status === 'declined'
+                  ? <Pill tone="var(--danger-text)" bg="var(--danger-bg)">Declined</Pill>
+                  : p.approval_status === 'approved' && <Pill tone="var(--ok-text)" bg="var(--ok-bg)">Active</Pill>}
               </div>
+              <span aria-hidden="true" style={{ color: 'var(--text-faint)', fontSize: 21, marginLeft: 1 }}>›</span>
             </button>
           ))}
+
           {invites.length > 0 && (
-            <div style={{ ...card, background: 'var(--surface2)' }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 8 }}>
-                {invites.length} pending invite{invites.length === 1 ? '' : 's'}
-              </div>
-              {invites.map(i => (
-                <div key={i.id} style={{ fontSize: 13, color: 'var(--text3)', padding: '4px 0' }}>
-                  {i.full_name || i.email} · {ROLE_LABELS[i.role] || i.role} · not yet set up
+            <div className="team-enter" style={{ ...card, marginTop: 8, animationDelay: '300ms' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 850, color: 'var(--text)' }}>Invitations in progress</div>
+                  <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 3 }}>These people have been invited but have not joined yet.</div>
                 </div>
-              ))}
+                <Pill tone="#315CA8" bg="rgba(49,92,168,.10)">{invites.length} pending</Pill>
+              </div>
+              <div style={{ display: 'grid', gap: 7 }}>
+                {invites.map(invite => (
+                  <div key={invite.id} style={{
+                    display: 'flex', alignItems: 'center', gap: 10, padding: '10px 11px',
+                    borderRadius: 11, background: 'var(--surface2)', minWidth: 0,
+                  }}>
+                    <span aria-hidden="true" style={{ width: 34, height: 34, display: 'grid', placeItems: 'center', flexShrink: 0, borderRadius: 10, color: '#315CA8', background: 'rgba(49,92,168,.10)' }}><Icon name="✉️" /></span>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 750, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{invite.full_name || invite.email}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {ROLE_LABELS[invite.role] || invite.role} · Sent {new Date(invite.created_at).toLocaleDateString('en-GB', { timeZone: 'Europe/London', day: 'numeric', month: 'short' })}
+                      </div>
+                    </div>
+                    <Pill tone="#315CA8" bg="var(--surface)">Pending</Pill>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </>
       )}
 
       {!loading && tab === 'mail' && (
-        <InternalMail org={org} people={people} primary={primary} isMobile={isMobile} onFlash={flash} />
+        <div className="team-enter" style={{ animationDelay: '210ms' }}>
+          <InternalMail org={org} people={people} primary={primary} isMobile={isMobile} onFlash={flash} />
+        </div>
       )}
-
       {hrPerson && (
         <StaffHRProfile
           org={org} userProfile={userProfile} person={hrPerson}
@@ -317,6 +515,12 @@ function PersonDrawer({ person, org, primary, isMobile, isAdmin, canDecide, myRo
   const [resetSent, setResetSent] = useState(false)
 
   useEffect(() => {
+    const closeOnEscape = event => { if (event.key === 'Escape') onClose() }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [onClose])
+
+  useEffect(() => {
     setJobTitle(person.job_title || '')
     setRole(person.role || 'staff')
     setError('')
@@ -349,46 +553,40 @@ function PersonDrawer({ person, org, primary, isMobile, isAdmin, canDecide, myRo
   }
 
   const sendReset = async () => {
+    if (savingField === 'reset') return
     setSavingField('reset'); setError('')
-    // Same Edge Function the sign-in screen uses, so the email is the branded
-    // one people already recognise rather than a second, different-looking link.
-    const { error: e } = await supabase.functions.invoke('send-password-reset-email', {
-      body: {
-        email: person.email,
-        org_name: org?.name,
-        org_slug: org?.slug,
-        org_logo: org?.logo_url,
-        org_color: 'var(--org-ink)',
-        redirect_to: window.location.origin + '/reset-password' + (org?.slug ? '?org=' + org.slug : ''),
-      },
-    })
-    setSavingField(null)
-    if (e) { setError('Could not send the reset email. Please try again.'); return }
-    setResetSent(true)
-    onFlash(`Password reset link sent to ${person.email}`)
+    try {
+      await requestPasswordReset(person.email, org)
+      setResetSent(true)
+      onFlash(`Password reset link requested for ${person.email}`)
+    } catch (e) {
+      setError('Could not send the reset email. Please try again.')
+    } finally {
+      setSavingField(null)
+    }
   }
 
   return (
     <div onClick={onClose} style={{
       position: 'fixed', inset: 0, zIndex: 1200, background: 'rgba(17,15,35,0.42)',
       display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center',
-      padding: isMobile ? 0 : 16,
+      padding: isMobile ? 0 : 16, animation: 'teamOverlay .18s ease both',
     }}>
-      <div onClick={e => e.stopPropagation()} style={{
+      <div role="dialog" aria-modal="true" aria-label={`Profile for ${person.preferred_name || person.full_name || person.email}`} tabIndex={-1} onClick={e => e.stopPropagation()} style={{
         background: 'var(--surface)', width: isMobile ? '100%' : 520, maxWidth: '100%',
         maxHeight: isMobile ? '92vh' : '88vh', overflowY: 'auto',
-        borderRadius: isMobile ? '20px 20px 0 0' : 18, padding: 20,
+        borderRadius: isMobile ? '20px 20px 0 0' : 18, padding: 20, animation: 'teamDrawer .22s ease both',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
           <Avatar person={person} size={52} primary={primary} />
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)' }}>{person.full_name || person.email}</div>
+            <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)' }}>{person.preferred_name || person.full_name || person.email}</div>
             <div style={{ fontSize: 13, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{person.email}</div>
           </div>
           <button onClick={onClose} style={{
             background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-faint)',
             fontSize: 15, minHeight: 44, minWidth: 44, fontFamily: 'inherit',
-          }}><Icon name="✕" /></button>
+          }} aria-label="Close profile"><Icon name="✕" /></button>
         </div>
 
         {error && (

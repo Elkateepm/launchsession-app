@@ -1,5 +1,6 @@
 import React, { useId, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { requestPasswordReset } from '../../lib/passwordReset'
 import { useBreakpoint } from '../../hooks/useIsMobile'
 import { useTerms } from '../../context/OrgContext'
 import AuthLayout, { AUTH, AuthError, OrganisationIdentity, authInput, authLabel, authLink, authButton } from './AuthLayout'
@@ -34,7 +35,6 @@ export default function Login({ org }) {
   const terms = useTerms()
   const brand = getAuthBranding(org)
   const primary = brand.primary
-  const orgName = org?.name || 'your organisation'
   const changeStep = next => { setStep(next); setError(''); setForgotSent(false); setShowPassword(false) }
   const heading = { margin: '0 0 10px', color: AUTH.ink, fontSize: isDesktop ? 28 : 25, fontWeight: 800, lineHeight: 1.25, letterSpacing: -0.8 }
   const description = { fontSize: 13, color: AUTH.muted, lineHeight: 1.7, margin: '0 0 22px' }
@@ -73,14 +73,7 @@ export default function Login({ org }) {
     if (loading || !email.trim()) return
     setLoading(true); setError(''); setEmail(email.trim())
     try {
-      const { error: resetError } = await supabase.functions.invoke('send-password-reset-email', {
-        body: {
-          email: email.trim(), org_name: orgName, org_slug: org?.slug,
-          org_logo: brand.enabled ? brand.logo : window.location.origin + '/logo.png', org_color: primary,
-          redirect_to: window.location.origin + '/reset-password' + (org?.slug ? '?org=' + encodeURIComponent(org.slug) : ''),
-        },
-      })
-      if (resetError) throw resetError
+      await requestPasswordReset(email, org)
       setForgotSent(true)
     } catch (e) { setError('We could not send the reset link. Check your connection and try again.') }
     finally { setLoading(false) }

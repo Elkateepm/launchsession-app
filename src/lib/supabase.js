@@ -34,9 +34,19 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true,
+    // Recovery must not replace an unrelated account already open in this browser.
+    detectSessionInUrl: window.location.pathname !== '/reset-password' && new URLSearchParams(window.location.hash.slice(1)).get('type') !== 'recovery',
     storage: authStorage,
   }
+})
+
+export const createRecoveryClient = () => createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    storageKey: 'launchsession-password-recovery',
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false,
+  },
 })
 
 // supabaseAdmin is ONLY available server-side via Vercel edge functions.
