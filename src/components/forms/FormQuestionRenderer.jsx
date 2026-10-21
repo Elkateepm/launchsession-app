@@ -1,11 +1,4 @@
-import React from 'react'
-
-// One renderer for what a question looks like to the person answering it.
-//
-// The builder canvas and the preview both use this, so the thing staff are
-// editing cannot drift away from the thing parents actually see. The public
-// form has its own copy because it needs validation state and submission
-// wiring; this one is deliberately inert.
+import React, { useId } from 'react'
 
 export const QUESTION_TYPES = [
   { key: 'text', label: 'Short answer', hint: 'A name, a school, a short reply', group: 'common' },
@@ -30,98 +23,37 @@ export function typeLabel(key) {
   return QUESTION_TYPES.find(t => t.key === key)?.label || 'Short answer'
 }
 
-const inputBase = {
-  width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 10,
-  border: '1.5px solid var(--border)', fontSize: 14.5, fontFamily: 'inherit',
-  background: 'var(--surface2)', color: 'var(--text-faint)', pointerEvents: 'none',
-}
-
-/**
- * Inert rendering of a single question, as the respondent would see it.
- * `interactive` is false in the canvas (the card itself is the click target)
- * and true in preview.
- */
-export default function FormQuestionRenderer({ field, value, onChange, interactive = false, accent = '#6D5DF6' }) {
-  const live = interactive
-    ? { ...inputBase, background: 'var(--surface)', color: 'var(--text)', pointerEvents: 'auto' }
-    : inputBase
-
-  const label = (
-    <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--text)', marginBottom: field.description ? 3 : 8 }}>
-      {field.label || 'Untitled question'}
-      {field.required && <span style={{ color: 'var(--danger-text)' }}> *</span>}
-    </div>
-  )
-
-  const description = field.description ? (
-    <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 9, lineHeight: 1.5 }}>
-      {field.description}
-    </div>
-  ) : null
-
-  let control
-  switch (field.type) {
-    case 'textarea':
-      control = <textarea rows={3} value={value || ''} readOnly={!interactive}
-        onChange={e => onChange?.(e.target.value)}
-        placeholder="Enter answer…" style={{ ...live, resize: 'none' }} />
-      break
-
-    case 'checkbox':
-      control = (
-        <label style={{
-          display: 'flex', alignItems: 'flex-start', gap: 10,
-          fontSize: 14, color: 'var(--text2)', cursor: interactive ? 'pointer' : 'default',
-        }}>
-          <input type="checkbox" checked={!!value} readOnly={!interactive}
-            onChange={e => onChange?.(e.target.checked)}
-            style={{ marginTop: 2, width: 17, height: 17, accentColor: accent, pointerEvents: interactive ? 'auto' : 'none' }} />
-          <span>{field.checkboxText || 'Yes, I confirm'}</span>
-        </label>
-      )
-      break
-
-    case 'select':
-      control = (
-        <select value={value || ''} disabled={!interactive}
-          onChange={e => onChange?.(e.target.value)} style={live}>
-          <option value="">{field.placeholder || 'Select an option…'}</option>
-          {(field.options || []).map((o, i) => <option key={i} value={o}>{o}</option>)}
-        </select>
-      )
-      break
-
-    case 'date':
-      control = <input type="date" value={value || ''} readOnly={!interactive}
-        onChange={e => onChange?.(e.target.value)} style={live} />
-      break
-
-    case 'number':
-      control = <input type="number" value={value || ''} readOnly={!interactive}
-        onChange={e => onChange?.(e.target.value)} placeholder="0" style={live} />
-      break
-
-    case 'email':
-      control = <input type="email" value={value || ''} readOnly={!interactive}
-        onChange={e => onChange?.(e.target.value)} placeholder="name@example.com" style={live} />
-      break
-
-    case 'phone':
-      control = <input type="tel" value={value || ''} readOnly={!interactive}
-        onChange={e => onChange?.(e.target.value)} placeholder="07123 456789" style={live} />
-      break
-
-    default:
-      control = <input type="text" value={value || ''} readOnly={!interactive}
-        onChange={e => onChange?.(e.target.value)} placeholder="Enter answer…" style={live} />
+export default function FormQuestionRenderer({ field, value, onChange, interactive = false, accent = 'var(--org-primary)' }) {
+  const id = useId()
+  const base = {
+    width: '100%', boxSizing: 'border-box', minHeight: 46, padding: '12px 14px', borderRadius: 10,
+    border: '1px solid var(--border)', fontSize: 16, fontFamily: 'inherit',
+    background: interactive ? 'var(--surface)' : 'var(--surface2)', color: 'var(--text)',
+    pointerEvents: interactive ? 'auto' : 'none',
   }
-
-  return (
-    <div>
-      {field.type !== 'checkbox' && label}
-      {field.type !== 'checkbox' && description}
-      {field.type === 'checkbox' && field.description && description}
-      {control}
-    </div>
-  )
+  const common = { id, required: interactive && !!field.required, tabIndex: interactive ? 0 : -1,
+    'aria-describedby': field.description ? `${id}-help` : undefined }
+  let control
+  if (field.type === 'checkbox') {
+    control = <label htmlFor={id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, minHeight: 44, padding: 12, borderRadius: 10, border: '1px solid var(--border)', color: 'var(--text)', fontSize: 14, lineHeight: 1.55, cursor: interactive ? 'pointer' : 'default' }}>
+      <input {...common} type="checkbox" checked={!!value} readOnly={!interactive} onChange={e => onChange?.(e.target.checked)} style={{ width: 19, height: 19, marginTop: 2, flexShrink: 0, accentColor: accent, pointerEvents: interactive ? 'auto' : 'none' }} />
+      <span>{field.checkboxText || field.label || 'Untitled question'}{field.required && <span style={{ color: 'var(--danger-text)' }}> *</span>}</span>
+    </label>
+  } else if (field.type === 'select') {
+    control = (field.options || []).length <= 5
+      ? <div role="radiogroup" aria-labelledby={`${id}-label`} style={{ display: 'grid', gap: 8 }}>{(field.options || []).map((option, i) => <label key={i} style={{ ...base, display: 'flex', alignItems: 'center', gap: 10, cursor: interactive ? 'pointer' : 'default', borderColor: value === option ? accent : 'var(--border)' }}>
+          <input {...common} id={`${id}-${i}`} name={id} type="radio" value={option} checked={value === option} readOnly={!interactive} onChange={() => onChange?.(option)} style={{ accentColor: accent }} /><span style={{ fontSize: 14 }}>{option}</span>
+        </label>)}</div>
+      : <select {...common} disabled={!interactive} value={value || ''} onChange={e => onChange?.(e.target.value)} style={base}><option value="">Select an option…</option>{(field.options || []).map((option, i) => <option key={i} value={option}>{option}</option>)}</select>
+  } else if (field.type === 'textarea') {
+    control = <textarea {...common} rows={3} value={value ?? ''} readOnly={!interactive} onChange={e => onChange?.(e.target.value)} placeholder="Enter answer…" style={{ ...base, resize: 'vertical' }} />
+  } else {
+    const type = field.type === 'phone' ? 'tel' : ['text', 'email', 'date', 'number'].includes(field.type) ? field.type : 'text'
+    control = <input {...common} type={type} value={value ?? ''} readOnly={!interactive} onChange={e => onChange?.(e.target.value)} placeholder={type === 'email' ? 'name@example.com' : type === 'tel' ? '07123 456789' : type === 'number' ? '0' : 'Enter answer…'} style={base} />
+  }
+  return <div>
+    {field.type !== 'checkbox' && <label id={`${id}-label`} htmlFor={id} style={{ display: 'block', fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 9 }}>{field.label || 'Untitled question'}{field.required && <span style={{ color: 'var(--danger-text)' }}> *</span>}</label>}
+    {field.description && <div id={`${id}-help`} style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 9, lineHeight: 1.6 }}>{field.description}</div>}
+    {control}
+  </div>
 }
