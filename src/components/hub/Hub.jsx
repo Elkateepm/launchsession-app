@@ -33,6 +33,7 @@ import Icon from '../../lib/icons'
 import { carryAssessmentToSession } from '../../lib/sessionRiskAssessment'
 import { withAlpha } from '../../lib/withAlpha'
 import { todayInLondon } from '../../lib/today'
+import { registerPhase, sessionEndAt, londonNow, ratioCheck, ratioMessage } from '../../lib/registerState'
 
 
 const ANNOUNCEMENT_EMOJIS = ['📣', '🎉', '⭐', '🔥', '💡', '📌', '🚨', '🙌', '❤️', '🏆']
@@ -324,7 +325,8 @@ function AttendanceBreakdownModal({ session, attendance, onClose }) {
 
 function TimeBreakdownModal({ session, onClose }) {
   const startDT = session.start_time ? new Date(`${session.session_date}T${session.start_time}`) : null
-  const endDT = session.end_time ? new Date(`${session.end_date || session.session_date}T${session.end_time}`) : null
+  const endAt = sessionEndAt(session)
+  const endDT = endAt ? new Date(endAt) : null
 
   const fmtDur = (ms) => {
     const totalMin = Math.max(0, Math.floor(ms / 60000))
@@ -544,14 +546,6 @@ const NOTE_TYPES_HUB = [
   { key: 'incident', label: 'Accident or incident', icon: '🚨' },
 ]
 function hubFmtTime(d) { if (!d) return ''; return new Date(d).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' }) }
-function hubRequiredRatio(session, org) {
-  if (session?.staff_ratio) {
-    const m = session.staff_ratio.match(/(\d+)\s*:\s*(\d+)/)
-    if (m) return Number(m[2]) / Number(m[1])
-  }
-  return org?.default_staff_ratio || 8
-}
-
 function ModalEdgeFade({ colour = '#0B1023' }) {
   return (
     <>
@@ -672,6 +666,10 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
   }, [activeSession?.id])
 
   useEffect(() => { loadRegisterExtras() }, [loadRegisterExtras])
+  // The team list was read once when the pop-up opened, so someone signed in
+  // on the full register never appeared here. Follow it like attendance is.
+  useRealtimeTable('session_staff', loadRegisterExtras, { filter: activeSession?.id ? `session_id=eq.${activeSession.id}` : undefined, enabled: !!activeSession?.id, pollInterval: 5000 })
+  useRealtimeTable('session_notes', loadRegisterExtras, { filter: activeSession?.id ? `session_id=eq.${activeSession.id}` : undefined, enabled: !!activeSession?.id, pollInterval: 5000 })
 
   // Keep local attendance in sync
   React.useEffect(() => { setLocalAttendance(attendance) }, [attendance])
@@ -859,10 +857,10 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     setShowWalkIn(false)
   }
 
-  const requiredRatio = hubRequiredRatio(activeSession, org)
-  const signedInStaffCount = sessionStaff.filter(s => s.signed_in_at).length || sessionStaff.length
-  const currentRatio = signedInStaffCount > 0 ? stats.signedIn / signedInStaffCount : null
-  const ratioBreached = currentRatio !== null && signedInStaffCount > 0 && currentRatio > requiredRatio
+  // Same rule as the full register: only the team signed in and not signed
+  // out. Counting the rota when nobody had signed in showed a 1:12 ratio here
+  // while the register said no team was on site.
+  const ratio = ratioCheck({ childrenOnSite: stats.signedIn, staffRows: sessionStaff, session: activeSession, org })
   const processedCount = regGrouped.signed_in.length + regGrouped.absent.length + regGrouped.signed_out.length
 
   const [nowTick, setNowTick] = React.useState(() => new Date())
@@ -871,37 +869,25 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     return () => clearInterval(interval)
   }, [])
 
+  // Phase and end time come from lib/registerState, shared with the full
+  // register so the two never disagree (one said Ending while this said
+  // Register open, over a stray end_date).
   const isSessionEnded = React.useMemo(() => {
-    if (!activeSession?.session_date) return false
-    // Only use end_date when the session genuinely crosses midnight (end_time earlier than start_time).
-    // Some sessions carry a stray/incorrect end_date even when they're same-day — don't blindly trust it.
-    const crossesMidnight = !!(activeSession.start_time && activeSession.end_time && activeSession.end_time < activeSession.start_time)
-    const endDateStr = (crossesMidnight && activeSession.end_date) || activeSession.session_date
-    const endDateTime = new Date(`${endDateStr}T${activeSession.end_time || '23:59'}`)
-    return endDateTime < nowTick
+    const end = sessionEndAt(activeSession)
+    return !!end && londonNow(nowTick) >= end
   }, [activeSession, nowTick])
 
   const activeReflection = (reflections || []).find(r => r.session_id === activeSession?.id) || null
   const hasReflection = !!activeReflection
 
-  // ── Session lifecycle: Upcoming → Live → Ending → Closed ──
-  // Register opens 30 min before start (or when the lead starts the session early);
-  // "Live" begins only when the lead taps Start Session (opened_at), not just because
-  // the clock passed start time. "Ending" begins 15 min before scheduled end.
+  // ── Session lifecycle: Upcoming → Register open → Live → Ending → Closed ──
+  // This screen shows Register open as a flavour of upcoming, so the shared
+  // phase is folded back into the two values it renders from.
   const sessionStartDT = activeSession?.session_date && activeSession?.start_time ? new Date(`${activeSession.session_date}T${activeSession.start_time}`) : null
   const minsToStart = sessionStartDT ? Math.round((sessionStartDT - nowTick) / 60000) : null
-  const registerOpen = !!activeSession && !activeSession.closed_at && (
-    !!activeSession.opened_at || !!activeSession.register_opened_at || (minsToStart !== null && minsToStart <= 30)
-  )
-  const sessionPhase = React.useMemo(() => {
-    if (!activeSession) return 'upcoming'
-    if (activeSession.closed_at) return 'closed'
-    if (!activeSession.opened_at) return 'upcoming'
-    if (isSessionEnded) return 'ending'
-    const endDT = activeSession.session_date && activeSession.end_time ? new Date(`${activeSession.session_date}T${activeSession.end_time}`) : null
-    if (endDT && (endDT - nowTick) <= 15 * 60000) return 'ending'
-    return 'live'
-  }, [activeSession, isSessionEnded, nowTick])
+  const phase = registerPhase(activeSession, londonNow(nowTick))
+  const registerOpen = !!activeSession && phase !== 'upcoming' && phase !== 'closed'
+  const sessionPhase = phase === 'register_open' ? 'upcoming' : phase
 
   const handleStartSession = async () => {
     const now = new Date().toISOString()
@@ -1091,9 +1077,9 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
         </ClosedSessionSummary>
       ) : (
         <div style={{ padding: '14px 22px 20px' }}>
-          {ratioBreached && (
+          {ratio && (
             <div style={{ marginBottom: 14, background: 'rgba(239,68,68,0.14)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: 12, padding: '10px 14px', fontSize: 12, fontWeight: 700, color: 'var(--danger-text)' }}>
-              ⚠ Staff-to-child ratio is currently 1:{currentRatio.toFixed(1)}. Required ratio: 1:{requiredRatio}.
+              ⚠ {ratioMessage(ratio)}
             </div>
           )}
 
