@@ -226,7 +226,7 @@ export default function OrgLookup() {
           <span><strong style={{ color: AUTH.ink, fontWeight: 650 }}>{title}</strong> {text}</span>
         </li>)}
       </ul>
-      <p style={{ ...description, margin: '16px 0 0', fontSize: 12 }}>Setting up a new organisation? <a href="/signup" style={{ color: 'var(--auth-link)', fontWeight: 700 }}>Start a free 14-day trial</a></p>
+      <p style={{ ...description, margin: '4px 0 0', fontSize: 12 }}>Setting up a new organisation? <a href="/signup" style={{ color: 'var(--auth-link)', fontWeight: 700, display: 'inline-block', padding: '13px 0' }}>Start a free 14-day trial</a></p>
     </>}
 
     {selectedOrg && <>
