@@ -611,7 +611,6 @@ footer{padding:48px 5% 32px;border-top:1px solid var(--border);background:var(--
   .btn-start{padding:9px 14px;font-size:13px}
   .hero-inner{grid-template-columns:1fr;gap:40px;text-align:center}
   .hero-sub{max-width:100%;margin-left:auto;margin-right:auto}
-  .hero-visual{display:none}
   .steps-grid{grid-template-columns:1fr}
   .steps-grid::before{display:none}
   .step-card{padding:24px 22px}
@@ -745,7 +744,7 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
     <div class="nav-links">
       <a href="#how">How it works</a>
       <a href="#features">Features</a>
-      <a href="#community">Community</a>
+      <a href="#trust-security">Safety</a>
       <a href="#pricing">Pricing</a>
     </div>
     <div class="nav-right">
@@ -793,11 +792,11 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
         <div class="mn-chev">›</div>
       </a>
 
-      <a class="mn-card" href="#community" onclick="toggleMenu()" style="--mn-accent:#2DD4BF">
-        <div class="mn-ico"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      <a class="mn-card" href="#trust-security" onclick="toggleMenu()" style="--mn-accent:#2DD4BF">
+        <div class="mn-ico"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
         <div class="mn-txt">
-          <div class="mn-t">Community</div>
-          <div class="mn-d">Join a growing community of organisations like yours.</div>
+          <div class="mn-t">Safety</div>
+          <div class="mn-d">Who sees what, and how your data is protected.</div>
         </div>
         <div class="mn-chev">›</div>
       </a>
@@ -844,7 +843,7 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
         Built for youth & community organisations
       </div>
       <h1 class="hero-title">Run your whole<br><span class="grad">organisation</span><br>from one place</h1>
-      <p class="hero-sub">Registers, sessions, volunteers, safeguarding and parent comms — all connected, all in real time. One price for the whole platform, whatever your size.</p>
+      <p class="hero-sub">Registers, <span data-term="sessions">sessions</span>, volunteers, safeguarding and parent comms — all connected, all in real time. One price for the whole platform, whatever your size.</p>
       <div class="hero-ctas">
         <button class="btn-hero-cta" onclick="window.location.href='/signup'">Start your free 14-day trial →</button>
         <button class="btn-hero-ghost" onclick="document.getElementById('how')?.scrollIntoView({behavior:'smooth'})">See how it works</button>
@@ -856,60 +855,150 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
       </div>
     </div>
     <div class="hero-visual">
-      <div class="hero-badge hero-badge-2">
-        <div class="hb-icon">✅</div>
-        <div><div class="hb-text">48 signed in</div><div class="hb-sub">Today's session</div></div>
+      <div class="hero-badge hero-badge-2" aria-hidden="true">
+        <div class="hb-ico" style="--hb:#4ADE80"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div><div class="hb-text"><span id="demoBadgeIn">2</span> signed in</div><div class="hb-sub">Updating on every phone</div></div>
       </div>
-      <div class="hero-card" id="live-register-card">
+      <div class="hero-card demo-card" id="demoCard">
+        <div class="demo-types" role="group" aria-label="Show the demo for your kind of organisation">
+          <button type="button" class="demo-type" data-org-type="youth_club" aria-pressed="true">Youth club</button>
+          <button type="button" class="demo-type" data-org-type="charity" aria-pressed="false">Charity</button>
+          <button type="button" class="demo-type" data-org-type="education" aria-pressed="false">School</button>
+          <button type="button" class="demo-type" data-org-type="sports_club" aria-pressed="false">Sports club</button>
+          <button type="button" class="demo-type" data-org-type="community_centre" aria-pressed="false">Community</button>
+        </div>
         <div class="hc-header">
-          <div class="hc-avatar">SC</div>
-          <div><div class="hc-title">Scouts Club Watford</div><div class="hc-sub"><span class="hc-live-dot"></span>Friday session · Live</div></div>
+          <div class="hc-avatar" id="demoAvatar">RY</div>
+          <div><div class="hc-title" id="demoOrg">Riverside Youth Club</div><div class="hc-sub"><span class="hc-live-dot"></span><span id="demoSession">Friday youth session</span> · Live</div></div>
         </div>
         <div class="hc-stat-row">
-          <div class="hc-stat"><div class="hc-stat-n" id="lr-in" style="color:#4ADE80">45</div><div class="hc-stat-l">Signed In</div></div>
-          <div class="hc-stat"><div class="hc-stat-n" id="lr-absent" style="color:#F59E0B">6</div><div class="hc-stat-l">Absent</div></div>
-          <div class="hc-stat"><div class="hc-stat-n" style="color:#60A5FA">8</div><div class="hc-stat-l">Volunteers</div></div>
+          <div class="hc-stat"><div class="hc-stat-n" id="demoIn" style="color:#4ADE80">2</div><div class="hc-stat-l">Signed in</div></div>
+          <div class="hc-stat"><div class="hc-stat-n" id="demoDue" style="color:#F59E0B">4</div><div class="hc-stat-l">To arrive</div></div>
+          <div class="hc-stat"><div class="hc-stat-n" style="color:#60A5FA">3</div><div class="hc-stat-l"><span data-term="Staff">Staff</span> on shift</div></div>
         </div>
-        <div class="hc-list" id="lr-list">
-          <div class="hc-row" data-name="Aisha Mohammed"><div class="hc-dot" style="background:#4ADE80"></div><div class="hc-name">Aisha Mohammed</div><div class="hc-badge" style="background:rgba(34,197,94,0.12);color:#4ADE80">In · 09:12</div></div>
-          <div class="hc-row" data-name="Marcus Johnson"><div class="hc-dot" style="background:#4ADE80"></div><div class="hc-name">Marcus Johnson</div><div class="hc-badge" style="background:rgba(34,197,94,0.12);color:#4ADE80">In · 09:14</div></div>
-          <div class="hc-row" data-name="Layla Hassan"><div class="hc-dot" style="background:#F59E0B"></div><div class="hc-name">Layla Hassan</div><div class="hc-badge" style="background:rgba(245,158,11,0.12);color:#F59E0B">Absent</div></div>
-          <div class="hc-row" data-name="Noah Thompson"><div class="hc-dot" style="background:#60A5FA"></div><div class="hc-name">Noah Thompson</div><div class="hc-badge" style="background:rgba(96,165,250,0.12);color:#60A5FA">⚠ Allergy</div></div>
+        <div class="demo-alert" id="demoAlert" role="status" aria-live="polite" hidden>
+          <div class="demo-alert-ico"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div class="demo-alert-txt" id="demoAlertTxt"></div>
+          <button type="button" class="demo-alert-x" id="demoAlertX" aria-label="Dismiss alert"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <ul class="demo-list" id="demoList">
+          <li><button type="button" class="demo-row" data-in="17:58" aria-pressed="true" style="--av:#3B82F6"><span class="demo-av">AM</span><span class="demo-name">Aisha Mohammed</span><span class="demo-st"></span></button></li>
+          <li><button type="button" class="demo-row" data-in="18:01" aria-pressed="true" style="--av:#8B5CF6"><span class="demo-av">MJ</span><span class="demo-name">Marcus Johnson</span><span class="demo-st"></span></button></li>
+          <li><button type="button" class="demo-row" aria-pressed="false" style="--av:#F59E0B" data-flag="Nut allergy" data-alert="EpiPen is in the blue first aid bag."><span class="demo-av">NT</span><span class="demo-name">Noah Thompson</span><span class="demo-flag">Nut allergy</span><span class="demo-st"></span></button></li>
+          <li><button type="button" class="demo-row" aria-pressed="false" style="--av:#14B8A6"><span class="demo-av">LH</span><span class="demo-name">Layla Hassan</span><span class="demo-st"></span></button></li>
+          <li><button type="button" class="demo-row" aria-pressed="false" style="--av:#EC4899" data-flag="Asthma" data-alert="Inhaler is kept at the front desk."><span class="demo-av">PP</span><span class="demo-name">Priya Patel</span><span class="demo-flag">Asthma</span><span class="demo-st"></span></button></li>
+          <li><button type="button" class="demo-row" aria-pressed="false" style="--av:#22C55E"><span class="demo-av">JW</span><span class="demo-name">Jack Wilson</span><span class="demo-st"></span></button></li>
+        </ul>
+        <div class="demo-foot">
+          <span class="demo-hint" id="demoHint"><svg viewBox="0 0 24 24"><path d="M9 11V6a2 2 0 0 1 4 0v5"/><path d="M13 10V9a2 2 0 0 1 4 0v4a6 6 0 0 1-6 6h-1a6 6 0 0 1-5.2-3l-1.5-2.6a1.8 1.8 0 0 1 3-2L9 14"/></svg><span id="demoHintTxt">Try it: tap a name to sign them in</span></span>
+          <button type="button" class="demo-reset" id="demoReset" hidden>Run it again</button>
         </div>
       </div>
-      <div class="hero-badge hero-badge-1">
-        <div class="hb-icon">🛡️</div>
-        <div><div class="hb-text">0 safeguarding alerts</div><div class="hb-sub">All clear today</div></div>
+      <div class="hero-badge hero-badge-1" aria-hidden="true">
+        <div class="hb-ico" style="--hb:#F59E0B"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div><div class="hb-text">Medical flags at sign-in</div><div class="hb-sub">No folder to find</div></div>
       </div>
     </div>
   </div>
 </section>
 
+
+<style>
+/* ── HERO DEMO REGISTER ─────────────────────────────────────── */
+.demo-card{animation:none;padding:20px}
+.hero-visual .hero-badge-2{top:-38px;right:-20px}
+.hero-visual .hero-badge-1{bottom:-44px;left:-22px}
+.demo-types{display:flex;gap:6px;margin:-4px -4px 16px;padding:4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.demo-types::-webkit-scrollbar{display:none}
+.demo-type{flex-shrink:0;padding:7px 12px;border-radius:99px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);
+  color:rgba(255,255,255,.6);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
+.demo-type[aria-pressed="true"]{background:rgba(59,130,246,.16);border-color:rgba(96,165,250,.55);color:#fff}
+.demo-type:focus-visible,.demo-row:focus-visible,.demo-reset:focus-visible,.demo-alert-x:focus-visible{outline:2px solid #60A5FA;outline-offset:2px}
+.hc-avatar{transition:background .3s}
+.demo-alert{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;padding:11px 12px;border-radius:12px;
+  background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);animation:demo-alert-in .35s ease}
+.demo-alert[hidden]{display:none}
+@keyframes demo-alert-in{0%{opacity:0;transform:translateY(-6px)}100%{opacity:1;transform:none}}
+.demo-alert-ico{flex-shrink:0;width:26px;height:26px;border-radius:8px;background:rgba(245,158,11,.2);display:flex;align-items:center;justify-content:center}
+.demo-alert-ico svg{width:15px;height:15px;stroke:#FBBF24;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.demo-alert-txt{flex:1;min-width:0;font-size:12.5px;line-height:1.45;color:rgba(255,255,255,.82)}
+.demo-alert-txt b{color:#FDE68A}
+.demo-alert-x{flex-shrink:0;width:26px;height:26px;border-radius:50%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.demo-alert-x svg{width:13px;height:13px;stroke:rgba(255,255,255,.55);fill:none;stroke-width:2.4;stroke-linecap:round}
+.demo-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.demo-row{width:100%;min-height:46px;display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:11px;
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);cursor:pointer;font-family:var(--font);text-align:left;
+  transition:background .2s,border-color .2s,transform .12s}
+.demo-row:active{transform:scale(.985)}
+.demo-av{width:30px;height:30px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;color:#fff;background:color-mix(in srgb,var(--av) 70%,#0B0F27);transition:opacity .2s}
+.demo-name{flex:1;min-width:0;font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.demo-flag{flex-shrink:0;font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:99px;background:rgba(245,158,11,.14);color:#FBBF24}
+.demo-st{flex-shrink:0;min-width:74px;text-align:center;font-size:11px;font-weight:800;padding:4px 9px;border-radius:99px}
+.demo-row[aria-pressed="false"] .demo-st{border:1px dashed rgba(255,255,255,.22);color:rgba(255,255,255,.6)}
+.demo-row[aria-pressed="false"] .demo-st::before{content:'Sign in'}
+.demo-row[aria-pressed="false"] .demo-av{opacity:.55}
+.demo-row[aria-pressed="true"]{background:rgba(34,197,94,.06);border-color:rgba(34,197,94,.18)}
+.demo-row[aria-pressed="true"] .demo-st{background:rgba(34,197,94,.14);color:#4ADE80}
+.demo-row.demo-just{animation:hc-row-in .7s ease}
+.demo-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;min-height:32px}
+.demo-hint{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:rgba(255,255,255,.5)}
+.demo-hint svg{width:15px;height:15px;stroke:#60A5FA;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.demo-reset{padding:7px 14px;border-radius:99px;border:1px solid rgba(96,165,250,.45);background:rgba(59,130,246,.12);
+  color:#BFDBFE;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer}
+.demo-reset[hidden]{display:none}
+.hb-ico{width:28px;height:28px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  background:color-mix(in srgb,var(--hb) 18%,transparent)}
+.hb-ico svg{width:15px;height:15px;stroke:var(--hb);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+@media (hover:hover) and (pointer:fine){
+  .demo-row:hover{border-color:rgba(96,165,250,.35);background:rgba(59,130,246,.07)}
+  .demo-type:hover{color:#fff;border-color:rgba(255,255,255,.22)}
+}
+@media (pointer:coarse){.demo-type{min-height:40px;padding:8px 14px}}
+@media (max-width:1024px){
+  /* minmax(0,…) so the demo's scrolling chip row can't widen the column past the screen */
+  .hero-inner{grid-template-columns:minmax(0,1fr)}
+  .hero-visual{width:100%;max-width:460px;margin:0 auto;text-align:left}
+  .hero-badge{display:none}
+}
+@media (max-width:600px){
+  .hero-ctas{margin-bottom:28px}
+  .hero-trust{justify-content:center}
+  .demo-card{padding:16px;border-radius:16px}
+  .demo-st{min-width:66px;padding:4px 7px}
+  .demo-flag{font-size:10px;padding:3px 7px}
+}
+@media (max-width:380px){
+  .demo-flag{display:none}
+}
+</style>
+
 <!-- TRUST STRIP -->
 <div id="trust">
   <div class="container">
     <div class="trust-divider"><span>Built for organisations like yours</span></div>
+    <p class="trust-lead">Tap yours. LaunchSession uses your words: <b data-term="people">young people</b>, <b data-term="sessions">sessions</b>, <b data-term="Staff">staff</b>.</p>
     <div class="trust-chips">
-      <div class="trust-chip" style="--tc:#3B82F6">
+      <button type="button" class="trust-chip" style="--tc:#3B82F6" data-org-type="youth_club" aria-pressed="true">
         <div class="trust-chip-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.2"/><path d="M9 22l1.5-6L8 13l1-5 3 1 2 3.5 3 1"/><path d="M6 9l3 1"/></svg></div>
         Youth clubs
-      </div>
-      <div class="trust-chip" style="--tc:#F472B6">
+      </button>
+      <button type="button" class="trust-chip" style="--tc:#F472B6" data-org-type="charity" aria-pressed="false">
         <div class="trust-chip-ico"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
         Charities
-      </div>
-      <div class="trust-chip" style="--tc:#F59E0B">
+      </button>
+      <button type="button" class="trust-chip" style="--tc:#F59E0B" data-org-type="education" aria-pressed="false">
         <div class="trust-chip-ico"><svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h1"/><path d="M9 13h1"/><path d="M14 9h1"/><path d="M14 13h1"/></svg></div>
         Schools
-      </div>
-      <div class="trust-chip" style="--tc:#22C55E">
+      </button>
+      <button type="button" class="trust-chip" style="--tc:#22C55E" data-org-type="sports_club" aria-pressed="false">
         <div class="trust-chip-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 2.5v6l4.5 3-1.7 5.6-5.6-.1L6.4 12l3-4.3z"/></svg></div>
         Sports groups
-      </div>
-      <div class="trust-chip" style="--tc:#8B5CF6">
+      </button>
+      <button type="button" class="trust-chip" style="--tc:#8B5CF6" data-org-type="community_centre" aria-pressed="false">
         <div class="trust-chip-ico"><svg viewBox="0 0 24 24"><path d="M2 12l4-2 2.5 2.5L12 9l3 3 2-2 5 2"/><path d="M7 10l2 2-2 2-3-2z"/><path d="M17 10l-2 2 2 2 3-2z"/></svg></div>
         Community projects
-      </div>
+      </button>
     </div>
   </div>
 </div>
@@ -926,7 +1015,12 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
 .trust-chips{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;max-width:920px;margin:0 auto}
 .trust-chip{display:flex;align-items:center;gap:11px;padding:10px 20px 10px 12px;border-radius:99px;
   background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.09);
-  font-size:13.5px;font-weight:700;color:rgba(255,255,255,.68);transition:all .25s;cursor:default}
+  font-size:13.5px;font-weight:700;color:rgba(255,255,255,.68);transition:all .25s;cursor:pointer;font-family:var(--font)}
+.trust-chip[aria-pressed="true"]{color:#fff;border-color:color-mix(in srgb,var(--tc) 60%,transparent);
+  background:color-mix(in srgb,var(--tc) 14%,transparent);box-shadow:0 8px 22px -12px var(--tc)}
+.trust-chip:focus-visible{outline:2px solid var(--tc);outline-offset:3px}
+.trust-lead{text-align:center;font-size:14px;color:rgba(255,255,255,.5);margin:-14px auto 24px;max-width:520px}
+.trust-lead b{color:#fff;font-weight:700;text-transform:lowercase}
 .trust-chip-ico{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
   justify-content:center;background:color-mix(in srgb,var(--tc) 16%,transparent);
   border:1px solid color-mix(in srgb,var(--tc) 30%,transparent)}
@@ -1302,92 +1396,99 @@ async function submitFoundingOffer(e) {
       </div>
       <p class="section-sub" style="margin:0">From daily registers to long-term impact reporting — all the tools youth workers actually use, without the complexity.</p>
     </div>
-    <div class="features-grid">
-      <div class="feature-card" style="--feat-color:#22C55E;--feat-bg:rgba(34,197,94,0.1)" data-feat="live_registers" role="button" tabindex="0" onclick="openFeature('live_registers')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('live_registers')}">
+    <div class="ft-tabs" role="group" aria-label="Filter features">
+      <button type="button" class="ft-tab" data-cat="all" aria-pressed="true">All <span class="ft-n">13</span></button>
+      <button type="button" class="ft-tab" data-cat="run" aria-pressed="false">Run the day <span class="ft-n">4</span></button>
+      <button type="button" class="ft-tab" data-cat="safe" aria-pressed="false">Keep everyone safe <span class="ft-n">4</span></button>
+      <button type="button" class="ft-tab" data-cat="team" aria-pressed="false">Your team <span class="ft-n">3</span></button>
+      <button type="button" class="ft-tab" data-cat="impact" aria-pressed="false">Show your impact <span class="ft-n">2</span></button>
+    </div>
+    <div class="features-grid" id="featuresGrid">
+      <div class="feature-card" style="--feat-color:#22C55E;--feat-bg:rgba(34,197,94,0.1)" data-feat="live_registers" data-cat="run" role="button" tabindex="0" onclick="openFeature('live_registers')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('live_registers')}">
         <div class="feat-tag">Included</div>
         <div class="feat-title">Live Registers</div>
-        <div class="feat-desc">Take attendance in real time. Sign young people in and out, track latecomers, and flag medical alerts automatically.</div>
+        <div class="feat-desc">Take attendance in real time. Sign <span data-term="people">young people</span> in and out, track latecomers, and flag medical alerts automatically.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-live_registers.png" alt="Live Registers" loading="lazy" /></div>
       </div>
-      <div class="feature-card" style="--feat-color:#3B82F6;--feat-bg:rgba(59,130,246,0.1)" data-feat="session_planner" role="button" tabindex="0" onclick="openFeature('session_planner')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('session_planner')}">
+      <div class="feature-card" style="--feat-color:#3B82F6;--feat-bg:rgba(59,130,246,0.1)" data-feat="session_planner" data-cat="run" role="button" tabindex="0" onclick="openFeature('session_planner')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('session_planner')}">
         <div class="feat-tag">Included</div>
         <div class="feat-title">Session Planner</div>
         <div class="feat-desc">Plan activities, trips and workshops weeks ahead. Assign volunteers, set capacity limits and track outcomes.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-session_planner.png" alt="Session Planner" loading="lazy" /></div>
       </div>
-      <div class="feature-card" style="--feat-color:#8B5CF6;--feat-bg:rgba(139,92,246,0.1)" data-feat="safeguarding" role="button" tabindex="0" onclick="openFeature('safeguarding')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('safeguarding')}">
+      <div class="feature-card" style="--feat-color:#8B5CF6;--feat-bg:rgba(139,92,246,0.1)" data-feat="safeguarding" data-cat="safe" role="button" tabindex="0" onclick="openFeature('safeguarding')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('safeguarding')}">
         <div class="feat-tag">Included</div>
         <div class="feat-title">Safeguarding</div>
         <div class="feat-desc">Log causes for concern, track follow-ups and ensure no safeguarding alert falls through the cracks.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-safeguarding.png" alt="Safeguarding" loading="lazy" /></div>
       </div>
-      <div class="feature-card" style="--feat-color:#F59E0B;--feat-bg:rgba(245,158,11,0.1)" data-feat="notifications_centre" role="button" tabindex="0" onclick="openFeature('notifications_centre')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('notifications_centre')}">
+      <div class="feature-card" style="--feat-color:#F59E0B;--feat-bg:rgba(245,158,11,0.1)" data-feat="notifications_centre" data-cat="run" role="button" tabindex="0" onclick="openFeature('notifications_centre')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('notifications_centre')}">
         <div class="feat-tag">Included</div>
         <div class="feat-title">Notifications Centre</div>
         <div class="feat-desc">Send targeted emails, SMS and in-app notifications. Keep your team, volunteers and parents always in the loop.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-notifications_centre.png" alt="Notifications Centre" loading="lazy" /></div>
       </div>
-      <div class="feature-card" style="--feat-color:#14B8A6;--feat-bg:rgba(20,184,166,0.1)" data-feat="team_staff" role="button" tabindex="0" onclick="openFeature('team_staff')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('team_staff')}">
+      <div class="feature-card" style="--feat-color:#14B8A6;--feat-bg:rgba(20,184,166,0.1)" data-feat="team_staff" data-cat="team" role="button" tabindex="0" onclick="openFeature('team_staff')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('team_staff')}">
         <div class="feat-tag">Part of Office · £59.99</div>
         <div class="feat-title">HR Centre</div>
         <div class="feat-desc">Staff records, DBS and training expiry tracking, and per-member access control — so you know who is compliant before you roster them.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-team_staff.png" alt="Team & Staff" loading="lazy" /></div>
       </div>
-      <div class="feature-card" style="--feat-color:#6366F1;--feat-bg:rgba(99,102,241,0.1)" data-feat="settings_integrations" role="button" tabindex="0" onclick="openFeature('settings_integrations')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('settings_integrations')}">
+      <div class="feature-card" style="--feat-color:#0EA5E9;--feat-bg:rgba(14,165,233,0.1)" data-feat="medical_accidents" data-cat="safe" role="button" tabindex="0" onclick="openFeature('medical_accidents')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('medical_accidents')}">
         <div class="feat-tag">Included</div>
-        <div class="feat-title">Settings & Integrations</div>
-        <div class="feat-desc">Configure your organisation settings and connect with tools you already use.</div>
+        <div class="feat-title">Medical &amp; Accident Book</div>
+        <div class="feat-desc">Allergy and medical flags at sign-in, a printable medical list for trips, and an accident book with a body map.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
-        <div class="feat-icon-wrap"><img src="/icons/feat-settings_integrations.png" alt="Settings & Integrations" loading="lazy" /></div>
+        <div class="feat-icon-wrap"><img src="/icons/medical-icon.png" alt="Medical &amp; Accident Book" loading="lazy" /></div>
       </div>
-      <div class="feature-card" style="--feat-color:#6366F1;--feat-bg:rgba(99,102,241,0.1)" data-feat="branding_centre" role="button" tabindex="0" onclick="openFeature('branding_centre')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('branding_centre')}">
+      <div class="feature-card" style="--feat-color:#6366F1;--feat-bg:rgba(99,102,241,0.1)" data-feat="branding_centre" data-cat="impact" role="button" tabindex="0" onclick="openFeature('branding_centre')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('branding_centre')}">
         <div class="feat-tag">Option · £69.99 with Office</div>
         <div class="feat-title">Branding Centre</div>
         <div class="feat-desc">Upload your logo, set brand colours and your volunteers and parents see a fully branded experience on every screen.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-branding_centre.png" alt="Branding Centre" loading="lazy" /></div>
       </div>
-      <div class="feature-card" style="--feat-color:#F97316;--feat-bg:rgba(249,115,22,0.1)" data-feat="mentoring" role="button" tabindex="0" onclick="openFeature('mentoring')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('mentoring')}">
+      <div class="feature-card" style="--feat-color:#F97316;--feat-bg:rgba(249,115,22,0.1)" data-feat="mentoring" data-cat="team" role="button" tabindex="0" onclick="openFeature('mentoring')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('mentoring')}">
         <div class="feat-tag">Included</div>
         <div class="feat-title">Mentoring</div>
         <div class="feat-desc">Match mentors and mentees, track session notes, log milestones and measure the impact of 1:1 relationships.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-mentoring.png" alt="Mentoring" loading="lazy" /></div>
       </div>
-      <div class="feature-card" style="--feat-color:#E11D48;--feat-bg:rgba(225,29,72,0.1)" data-feat="policies_docs" role="button" tabindex="0" onclick="openFeature('policies_docs')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('policies_docs')}">
+      <div class="feature-card" style="--feat-color:#E11D48;--feat-bg:rgba(225,29,72,0.1)" data-feat="policies_docs" data-cat="safe" role="button" tabindex="0" onclick="openFeature('policies_docs')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('policies_docs')}">
         <div class="feat-tag">Included</div>
         <div class="feat-title">Policies & Documents</div>
         <div class="feat-desc">Store, organise and share policies, consents and key documents with staff, volunteers and parents.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-policies_docs.png" alt="Policies & Documents" loading="lazy" /></div>
       </div>
-      <div class="feature-card" style="--feat-color:#DC2626;--feat-bg:rgba(220,38,38,0.1)" data-feat="risk_assessments" role="button" tabindex="0" onclick="openFeature('risk_assessments')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('risk_assessments')}">
+      <div class="feature-card" style="--feat-color:#DC2626;--feat-bg:rgba(220,38,38,0.1)" data-feat="risk_assessments" data-cat="safe" role="button" tabindex="0" onclick="openFeature('risk_assessments')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('risk_assessments')}">
         <div class="feat-tag">Included</div>
         <div class="feat-title">Risk Assessments</div>
         <div class="feat-desc">HSE-standard 5×5 risk matrix, hazard tracking, session linking and one-click PDF export. Keep every activity properly assessed.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-risk_assessments.png" alt="Risk Assessments" loading="lazy" /></div>
       </div>
-      <div class="feature-card" style="--feat-color:#14B8A6;--feat-bg:rgba(20,184,166,0.1)" data-feat="bulk_import" role="button" tabindex="0" onclick="openFeature('bulk_import')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('bulk_import')}">
+      <div class="feature-card" style="--feat-color:#14B8A6;--feat-bg:rgba(20,184,166,0.1)" data-feat="bulk_import" data-cat="run" role="button" tabindex="0" onclick="openFeature('bulk_import')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('bulk_import')}">
         <div class="feat-tag">Included</div>
         <div class="feat-title">Bulk Import</div>
         <div class="feat-desc">Already have a spreadsheet of young people? Import up to thousands of records in seconds with our CSV import tool.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-bulk_import.png" alt="Bulk Import" loading="lazy" /></div>
       </div>
-      <div class="feature-card" style="--feat-color:#F59E0B;--feat-bg:rgba(245,158,11,0.1)" data-feat="volunteer_mgmt" role="button" tabindex="0" onclick="openFeature('volunteer_mgmt')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('volunteer_mgmt')}">
+      <div class="feature-card" style="--feat-color:#F59E0B;--feat-bg:rgba(245,158,11,0.1)" data-feat="volunteer_mgmt" data-cat="team" role="button" tabindex="0" onclick="openFeature('volunteer_mgmt')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('volunteer_mgmt')}">
         <div class="feat-tag">Included</div>
         <div class="feat-title">Volunteer Management</div>
         <div class="feat-desc">Manage your volunteer workforce with sign-up flows, DBS tracking, availability matching and QR check-in.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-volunteer_mgmt.png" alt="Volunteer Management" loading="lazy" /></div>
       </div>
-      <div class="feature-card" style="--feat-color:#1B9AAA;--feat-bg:rgba(27,154,170,0.1)" data-feat="impact_outcomes" role="button" tabindex="0" onclick="openFeature('impact_outcomes')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('impact_outcomes')}">
+      <div class="feature-card" style="--feat-color:#1B9AAA;--feat-bg:rgba(27,154,170,0.1)" data-feat="impact_outcomes" data-cat="impact" role="button" tabindex="0" onclick="openFeature('impact_outcomes')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('impact_outcomes')}">
         <div class="feat-tag">Included</div>
         <div class="feat-title">Impact & Outcomes</div>
         <div class="feat-desc">AI-refined insights, outcome tracking and visual reporting — generate funder-ready evidence of your programme's impact in one click.</div>
@@ -1398,210 +1499,198 @@ async function submitFoundingOffer(e) {
   </div>
 </section>
 
-<!-- PRICING -->
-<section id="pricing">
-  <div class="container" style="text-align:center">
-    <div class="section-tag">Pricing</div>
-    <h2 class="section-heading">One price. The whole platform.</h2>
-    <p class="section-sub" style="margin:0 auto 32px">No per-user fees and no cap on how many young people you support. Everyone gets the complete platform — the options below add the Office (HR, resource booking and payments), then your own branding on top.</p>
-
-    <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:48px">
-      <span id="monthlyLabel" class="active" style="font-size:14px;font-weight:700;color:var(--text2)">Monthly</span>
-      <div class="toggle-pill" id="togglePill" onclick="toggleBilling()" role="switch" aria-checked="false" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){toggleBilling()}">
-        <div class="toggle-pill-inner" id="toggleInner"></div>
-      </div>
-      <span id="yearlyLabel" style="font-size:14px;font-weight:700;color:var(--text2)">Annual</span>
-      <span class="save-badge">Save ~20%</span>
-    </div>
-
-    <div class="pricing-grid">
-
-      <!-- COMPLETE PLATFORM -->
-      <div class="pricing-card popular">
-        <div class="popular-badge">Most Popular</div>
-        <div class="plan-name">Complete Platform</div>
-        <div class="plan-price">£<span id="p1">49.99</span><span>/mo</span></div>
-        <div class="plan-period" id="pp1">billed monthly</div>
-        <div class="plan-tagline">Everything you need to run sessions, people and safeguarding, for your whole organisation. No user limits, no cap on the number of young people.</div>
-        <button class="plan-btn plan-btn-fill" onclick="window.location.href='/signup'">Start Free Trial</button>
-        <div class="plan-divider">Everything included</div>
-        <ul class="plan-features">
-          <li><span class="chk">✓</span> Sessions, Calendar &amp; Projects</li>
-          <li><span class="chk">✓</span> Live Registers &amp; attendance history</li>
-          <li><span class="chk">✓</span> Young people, groups &amp; medical alerts</li>
-          <li><span class="chk">✓</span> Safeguarding Hub &amp; Risk Assessments</li>
-          <li><span class="chk">✓</span> Volunteers, applications &amp; QR sign-up</li>
-          <li><span class="chk">✓</span> Forms, Messaging &amp; Newsletter</li>
-          <li><span class="chk">✓</span> Reports, Impact &amp; Outcomes</li>
-          <li><span class="chk">✓</span> Photo Gallery</li>
-          <li><span class="chk">✓</span> Mentoring &amp; Templates</li>
-        </ul>
-      </div>
-
-      <!-- + OFFICE -->
-      <div class="pricing-card">
-        <div class="plan-name">Platform + Office</div>
-        <div class="plan-price">£<span id="p2">59.99</span><span>/mo</span></div>
-        <div class="plan-period" id="pp2">billed monthly</div>
-        <div class="plan-tagline">The desk side of running an organisation — your staff, your spaces and what you're owed.</div>
-        <button class="plan-btn plan-btn-outline" onclick="window.location.href='/signup'">Start Free Trial</button>
-        <div class="plan-divider">Everything above, plus</div>
-        <ul class="plan-features">
-          <li><span class="chk">✓</span> <b>Office</b></li>
-          <li><span class="chk">✓</span> HR: staff records, roles and onboarding</li>
-          <li><span class="chk">✓</span> DBS and training expiry tracking</li>
-          <li><span class="chk">✓</span> Leave, supervision and staff documents</li>
-          <li><span class="chk">✓</span> Resource booking for rooms, kit and vehicles</li>
-          <li><span class="chk">✓</span> Payments: what's paid and what's owed</li>
-        </ul>
-      </div>
-
-      <!-- + OFFICE + BRANDING -->
-      <div class="pricing-card">
-        <div class="plan-name">Platform + Office + Branding</div>
-        <div class="plan-price">£<span id="p3">69.99</span><span>/mo</span></div>
-        <div class="plan-period" id="pp3">billed monthly</div>
-        <div class="plan-tagline">Everything LaunchSession does — unmistakably yours, everywhere your families and funders see it.</div>
-        <button class="plan-btn plan-btn-outline" onclick="window.location.href='/signup'">Start Free Trial</button>
-        <div class="plan-divider">Everything above, plus</div>
-        <ul class="plan-features">
-          <li><span class="chk">✓</span> <b>Branding Centre</b></li>
-          <li><span class="chk">✓</span> Your logo and colours across the app</li>
-          <li><span class="chk">✓</span> Branded parent and volunteer forms</li>
-          <li><span class="chk">✓</span> Emails sent in your name, with no LaunchSession branding</li>
-          <li><span class="chk">✓</span> Branded public sign-up pages and reports</li>
-        </ul>
-      </div>
-
-    </div>
-
-    <p style="margin-top:32px;font-size:13px;color:var(--text3)">Every price includes a 14-day free trial with full access. No contracts, no per-user fees, no limit on how many young people you support. Registered charity? <a href="mailto:hello@launchsession.co.uk" style="color:#60A5FA;font-weight:600">Ask about our discount →</a></p>
-  </div>
-</section>
-
-
-<!-- WHY -->
-<section id="why">
-  <div class="container">
-    <div class="why-grid">
-      <div>
-        <div class="section-tag">Why LaunchSession</div>
-        <h2 class="section-heading">Built for the people<br>doing the work</h2>
-        <div class="why-list">
-          <div class="why-item">
-            <div class="why-icon">📱</div>
-            <div>
-              <div class="why-title">Works on any device</div>
-              <div class="why-desc">Take registers on a phone, plan sessions on a laptop — everything syncs instantly so your whole team is always in step.</div>
-            </div>
-          </div>
-          <div class="why-item">
-            <div class="why-icon">🔒</div>
-            <div>
-              <div class="why-title">GDPR-ready from day one</div>
-              <div class="why-desc">Built-in data protection, role-based access and UK-based data storage. We take safeguarding seriously so you can focus on the people.</div>
-            </div>
-          </div>
-          <div class="why-item">
-            <div class="why-icon">⚡</div>
-            <div>
-              <div class="why-title">Set up in under 10 minutes</div>
-              <div class="why-desc">Import your existing spreadsheet, invite your team, and you're live. No IT consultants, no weeks-long onboarding.</div>
-            </div>
-          </div>
-          <div class="why-item">
-            <div class="why-icon">🎯</div>
-            <div>
-              <div class="why-title">Prove your impact</div>
-              <div class="why-desc">Generate reports that funders actually want to read. Show attendance trends, demographic data and programme outcomes in one click.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="why-visual">
-        <div class="wv-header">Live session overview</div>
-        <div class="wv-metric">
-          <div class="wv-metric-label"><span>👧</span> Young people today</div>
-          <div class="wv-metric-val" style="color:#4ADE80">54</div>
-        </div>
-        <div class="wv-metric">
-          <div class="wv-metric-label"><span>❤️</span> Volunteers on shift</div>
-          <div class="wv-metric-val" style="color:#60A5FA">8</div>
-        </div>
-        <div class="wv-metric">
-          <div class="wv-metric-label"><span>⚠️</span> Medical alerts active</div>
-          <div class="wv-metric-val" style="color:#F59E0B">3</div>
-        </div>
-        <div class="wv-metric">
-          <div class="wv-metric-label"><span>🛡️</span> Safeguarding concerns</div>
-          <div class="wv-metric-val" style="color:#4ADE80">0</div>
-        </div>
-        <div class="wv-bar-wrap" style="margin-top:24px">
-          <div class="wv-bar-label"><span>Attendance rate</span><span style="color:#4ADE80">91%</span></div>
-          <div class="wv-bar"><div class="wv-bar-fill" style="width:91%"></div></div>
-          <div class="wv-bar-label"><span>Volunteer coverage</span><span style="color:#60A5FA">100%</span></div>
-          <div class="wv-bar"><div class="wv-bar-fill" style="width:100%;background:linear-gradient(90deg,#1B9AAA,#22C55E)"></div></div>
-          <div class="wv-bar-label"><span>Register completion</span><span style="color:#A78BFA">78%</span></div>
-          <div class="wv-bar"><div class="wv-bar-fill" style="width:78%;background:linear-gradient(90deg,#8B5CF6,#6366F1)"></div></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- SAFEGUARDING & TRUST -->
-<section id="trust-security">
-  <div class="container">
-    <div class="section-tag">Safeguarding &amp; trust</div>
-    <h2 class="section-heading">Designed to support secure<br>and responsible data handling.</h2>
-    <p class="section-sub">Youth data deserves real care. Every part of LaunchSession is built around who should — and shouldn't — see what.</p>
-    <div class="trust-security-grid">
-      <div class="ts-card"><div class="ts-icon">🔐</div><div class="ts-title">Role-based permissions</div><div class="ts-desc">Staff, volunteers and admins each see only what their role needs — nothing more.</div></div>
-      <div class="ts-card"><div class="ts-icon">🏢</div><div class="ts-title">Organisation-level separation</div><div class="ts-desc">Every organisation's data is fully isolated. Nothing is ever shared across accounts.</div></div>
-      <div class="ts-card"><div class="ts-icon">🔑</div><div class="ts-title">Secure authentication</div><div class="ts-desc">Industry-standard encrypted sign-in, with password reset and session management built in.</div></div>
-      <div class="ts-card"><div class="ts-icon">📜</div><div class="ts-title">Audit trails</div><div class="ts-desc">Key actions on sensitive records are tracked, so you can see what changed and when.</div></div>
-      <div class="ts-card"><div class="ts-icon">🛡️</div><div class="ts-title">Safeguarding workflows</div><div class="ts-desc">Concerns are logged, assigned and tracked through to resolution — never lost in email.</div></div>
-      <div class="ts-card"><div class="ts-icon">🔒</div><div class="ts-title">Sensitive record restrictions</div><div class="ts-desc">Safeguarding and case management records are restricted to the people who need them.</div></div>
-    </div>
-  </div>
-</section>
 <style>
-.trust-security-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:48px}
-.ts-card{background:var(--glass);border:1px solid var(--border);border-radius:18px;padding:26px}
-.ts-icon{font-size:24px;margin-bottom:12px}
-.ts-title{font-size:15px;font-weight:800;color:#fff;margin-bottom:6px}
-.ts-desc{font-size:13px;color:var(--text2);line-height:1.6}
-@media (max-width:1024px){.trust-security-grid{grid-template-columns:1fr 1fr}}
-@media (max-width:600px){.trust-security-grid{grid-template-columns:1fr}}
+/* ── FEATURE FILTER ─────────────────────────────────────────── */
+.features-intro{margin-bottom:32px}
+.ft-tabs{display:flex;gap:8px;margin-bottom:28px;overflow-x:auto;scrollbar-width:none;padding:2px;-webkit-overflow-scrolling:touch}
+.ft-tabs::-webkit-scrollbar{display:none}
+.ft-tab{flex-shrink:0;display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:99px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.62);
+  font-family:var(--font);font-size:13px;font-weight:700;transition:background .2s,color .2s,border-color .2s}
+.ft-tab[aria-pressed="true"]{background:#fff;border-color:#fff;color:#0B1020}
+.ft-tab:focus-visible{outline:2px solid #60A5FA;outline-offset:2px}
+.ft-n{font-size:11px;font-weight:800;padding:1px 7px;border-radius:99px;background:rgba(255,255,255,.08)}
+.ft-tab[aria-pressed="true"] .ft-n{background:rgba(11,16,32,.1)}
+.feature-card[hidden]{display:none}
+#featuresGrid .feature-card.ft-in{animation:ft-in .35s ease backwards}
+@keyframes ft-in{0%{opacity:0;transform:translateY(8px) scale(.98)}100%{opacity:1;transform:none}}
+@media (hover:hover) and (pointer:fine){.ft-tab:not([aria-pressed="true"]):hover{color:#fff;border-color:rgba(255,255,255,.25)}}
+@media (pointer:coarse){.ft-tab{min-height:44px}}
+@media (max-width:600px){.ft-tabs{margin:0 -5% 22px;padding:2px 5%}}
 </style>
 
-<!-- MOBILE FIRST -->
-<section id="mobile">
+<!-- WHY: ONE SESSION, TWO WAYS -->
+<section id="why" class="ba-mode-paper">
   <div class="container">
-    <div class="mobile-grid">
-      <div>
-        <div class="section-tag">Built for the field</div>
-        <h2 class="section-heading">Built for frontline teams,<br>wherever delivery happens.</h2>
-        <p class="section-sub">Parks, halls, minibuses, corridors — LaunchSession is designed to be used one-handed, on the move, by someone who doesn't have time to fight with an app.</p>
-        <div class="mobile-points">
-          <div class="mobile-point"><span>👆</span> One-handed use, large touch targets</div>
-          <div class="mobile-point"><span>⚡</span> Fast live registers — sign a child in in seconds</div>
-          <div class="mobile-point"><span>🚨</span> Quick access to incident and concern reporting</div>
-          <div class="mobile-point"><span>📶</span> Built to stay usable on patchy connections</div>
-          <div class="mobile-point"><span>📱</span> Fully responsive on any phone or tablet</div>
+    <div class="ba-head">
+      <div class="section-tag">Why LaunchSession</div>
+      <h2 class="section-heading">One evening,<br>two ways to run it.</h2>
+      <p class="section-sub">Same club, same night, same people. Flip the switch to see what changes when everything lives in one place.</p>
+      <div class="ba-switch" role="group" aria-label="Compare the two ways">
+        <span class="ba-thumb" aria-hidden="true"></span>
+        <button type="button" class="ba-opt" data-ba="paper" aria-pressed="true">Paper &amp; spreadsheets</button>
+        <button type="button" class="ba-opt" data-ba="ls" aria-pressed="false">With LaunchSession</button>
+      </div>
+    </div>
+    <ol class="ba-list">
+      <li class="ba-row" style="--i:0">
+        <div class="ba-when"><span class="ba-time">17:45</span><span class="ba-moment">Before doors open</span></div>
+        <div class="ba-cell">
+          <div class="ba-paper"><span class="ba-tool">Clipboard, folder, group chat</span><p>Print the register, dig out the medical folder, then scroll the group chat to see who is actually covering tonight.</p></div>
+          <div class="ba-ls"><span class="ba-tool">Your phone</span><p>Tonight's register, medical flags and team are already on the phone of everyone on shift.</p></div>
+        </div>
+      </li>
+      <li class="ba-row" style="--i:1">
+        <div class="ba-when"><span class="ba-time">18:00</span><span class="ba-moment">Doors open</span></div>
+        <div class="ba-cell">
+          <div class="ba-paper"><span class="ba-tool">Clipboard</span><p>A queue at the clipboard. One person ticks names while another tries to keep a headcount.</p></div>
+          <div class="ba-ls"><span class="ba-tool">Live register</span><p>Tap each name as they arrive. The headcount updates on every phone in the room.</p></div>
+        </div>
+      </li>
+      <li class="ba-row" style="--i:2">
+        <div class="ba-when"><span class="ba-time">18:40</span><span class="ba-moment">Someone gets hurt</span></div>
+        <div class="ba-cell">
+          <div class="ba-paper"><span class="ba-tool">Accident form</span><p>Find a blank accident form, fill it in later from memory and hope it reaches the right person.</p></div>
+          <div class="ba-ls"><span class="ba-tool">Accident book</span><p>Log it on the spot with a body map, the first aid given and whether a parent was told.</p></div>
+        </div>
+      </li>
+      <li class="ba-row" style="--i:3">
+        <div class="ba-when"><span class="ba-time">19:15</span><span class="ba-moment">A worry about a child</span></div>
+        <div class="ba-cell">
+          <div class="ba-paper"><span class="ba-tool">Email</span><p>A note in a diary, or an email to your safeguarding lead that sits in an inbox with everything else.</p></div>
+          <div class="ba-ls"><span class="ba-tool">Safeguarding</span><p>Raise a concern from your phone. It goes straight into the safeguarding record, with an owner and an audit trail.</p></div>
+        </div>
+      </li>
+      <li class="ba-row" style="--i:4">
+        <div class="ba-when"><span class="ba-time">20:00</span><span class="ba-moment">Locking up</span></div>
+        <div class="ba-cell">
+          <div class="ba-paper"><span class="ba-tool">Headcount</span><p>Count the clipboard twice and check the toilets. Is anyone still here?</p></div>
+          <div class="ba-ls"><span class="ba-tool">Close checklist</span><p>The <span data-term="session">session</span> will not close while anyone is still signed in.</p></div>
+        </div>
+      </li>
+      <li class="ba-row" style="--i:5">
+        <div class="ba-when"><span class="ba-time">Monday</span><span class="ba-moment">The funder wants numbers</span></div>
+        <div class="ba-cell">
+          <div class="ba-paper"><span class="ba-tool">Spreadsheet</span><p>Retype a term of paper registers into a spreadsheet the night before the deadline.</p></div>
+          <div class="ba-ls"><span class="ba-tool">Reports</span><p>Attendance and impact figures are already counted, ready to export.</p></div>
+        </div>
+      </li>
+    </ol>
+    <div class="ba-sum" aria-live="polite">
+      <div class="ba-sum-n"><span class="ba-paper">6</span><span class="ba-ls">1</span></div>
+      <div class="ba-sum-t"><span class="ba-paper">places to keep in step, and most of it written down twice.</span><span class="ba-ls">place, written once, seen by the people who need it.</span></div>
+    </div>
+    <div class="ba-points">
+      <div class="ba-point"><div class="ba-point-ico"><svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div><div><div class="ba-point-t">Works on any device</div><div class="ba-point-d">Phone at the door, laptop in the office. Everything stays in step.</div></div></div>
+      <div class="ba-point"><div class="ba-point-ico"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div><div class="ba-point-t">Set up in minutes</div><div class="ba-point-d">Import your spreadsheet, invite your team and run a real session on day one.</div></div></div>
+      <div class="ba-point"><div class="ba-point-ico"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div><div class="ba-point-t">Data protection built in</div><div class="ba-point-d">Role-based access, encryption and an audit trail on sensitive records.</div></div></div>
+      <div class="ba-point"><div class="ba-point-ico"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><div><div class="ba-point-t">Prove your impact</div><div class="ba-point-d">Funder-ready reports from the registers you already take.</div></div></div>
+    </div>
+  </div>
+</section>
+<style>
+/* ── WHY: BEFORE / AFTER ────────────────────────────────────── */
+#why{background:var(--navy)}
+.ba-head{text-align:center;max-width:640px;margin:0 auto 44px}
+.ba-head .section-sub{margin:0 auto 28px}
+.ba-switch{position:relative;display:inline-grid;grid-template-columns:1fr 1fr;padding:5px;border-radius:99px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
+.ba-opt{position:relative;z-index:1;min-height:44px;padding:10px 20px;border:none;background:none;cursor:pointer;
+  font-family:var(--font);font-size:14px;font-weight:800;color:rgba(255,255,255,.6);border-radius:99px;transition:color .3s}
+.ba-opt[aria-pressed="true"]{color:#fff}
+.ba-opt:focus-visible{outline:2px solid #60A5FA;outline-offset:2px}
+.ba-thumb{position:absolute;top:5px;bottom:5px;left:5px;width:calc(50% - 5px);border-radius:99px;
+  background:rgba(239,68,68,.22);border:1px solid rgba(248,113,113,.4);transition:transform .45s cubic-bezier(.3,.7,.2,1),background .45s,border-color .45s}
+#why.ba-mode-ls .ba-thumb{transform:translateX(100%);background:linear-gradient(135deg,#3B82F6,#6366F1);border-color:transparent;
+  box-shadow:0 8px 24px -8px rgba(99,102,241,.8)}
+
+.ba-list{list-style:none;max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.ba-row{display:grid;grid-template-columns:190px 1fr;gap:20px;align-items:center;padding:16px 20px;border-radius:16px;
+  background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);transition:border-color .4s,background .4s;
+  transition-delay:calc(var(--i) * 70ms)}
+#why.ba-mode-ls .ba-row{background:rgba(59,130,246,.05);border-color:rgba(96,165,250,.16)}
+.ba-when{display:flex;flex-direction:column;gap:2px}
+.ba-time{font-size:12px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.4);font-variant-numeric:tabular-nums}
+.ba-moment{font-size:15.5px;font-weight:800;color:#fff;letter-spacing:-.2px}
+/* Both versions share one grid cell, so the row is always as tall as the
+   longer of the two and flipping never makes the page jump. */
+.ba-cell{display:grid}
+.ba-cell > div{grid-area:1/1;display:flex;align-items:flex-start;gap:12px;transition:opacity .35s,transform .35s,visibility .35s;
+  transition-delay:calc(var(--i) * 70ms)}
+.ba-cell p{font-size:14px;line-height:1.55;color:rgba(255,255,255,.7)}
+.ba-tool{flex-shrink:0;width:118px;margin-top:1px;padding:3px 9px;border-radius:7px;font-size:10.5px;font-weight:800;
+  letter-spacing:.5px;text-transform:uppercase;text-align:center}
+.ba-paper .ba-tool{background:rgba(239,68,68,.12);color:#FCA5A5}
+.ba-ls .ba-tool{background:rgba(34,197,94,.13);color:#4ADE80}
+#why.ba-mode-paper .ba-ls,#why.ba-mode-ls .ba-paper{opacity:0;transform:translateY(6px);pointer-events:none;visibility:hidden}
+#why.ba-mode-paper .ba-paper,#why.ba-mode-ls .ba-ls{visibility:visible}
+
+.ba-sum{display:flex;align-items:center;justify-content:center;gap:16px;max-width:900px;margin:22px auto 0;padding:18px 22px;
+  border-radius:16px;border:1px dashed rgba(255,255,255,.14)}
+.ba-sum-n,.ba-sum-t{display:grid}
+.ba-sum-n > span,.ba-sum-t > span{grid-area:1/1;transition:opacity .35s,visibility .35s}
+.ba-sum-n{font-size:44px;font-weight:900;line-height:1;letter-spacing:-1.5px}
+.ba-sum-n .ba-paper{color:#FCA5A5}
+.ba-sum-n .ba-ls{color:#4ADE80}
+.ba-sum-t{font-size:15px;font-weight:600;color:rgba(255,255,255,.7);max-width:420px}
+#why.ba-mode-paper .ba-sum .ba-ls,#why.ba-mode-ls .ba-sum .ba-paper{opacity:0;visibility:hidden}
+
+.ba-points{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:1060px;margin:52px auto 0}
+.ba-point{display:flex;gap:12px;align-items:flex-start}
+.ba-point-ico{width:38px;height:38px;flex-shrink:0;border-radius:11px;display:flex;align-items:center;justify-content:center;
+  background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.22)}
+.ba-point-ico svg{width:18px;height:18px;stroke:#93C5FD;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.ba-point-t{font-size:14.5px;font-weight:800;color:#fff;margin-bottom:3px}
+.ba-point-d{font-size:13px;color:var(--text2);line-height:1.55}
+@media (prefers-reduced-motion:reduce){.ba-row,.ba-cell > div{transition-delay:0s}}
+@media (max-width:1024px){.ba-points{grid-template-columns:1fr 1fr;gap:22px}}
+@media (max-width:700px){
+  .ba-row{grid-template-columns:1fr;gap:10px;padding:14px 16px}
+  .ba-when{flex-direction:row;align-items:baseline;gap:10px}
+  .ba-cell > div{flex-direction:column;gap:8px}
+  .ba-tool{width:auto}
+  .ba-opt{padding:10px 14px;font-size:13px}
+  .ba-sum{flex-direction:column;text-align:center;gap:6px}
+  .ba-points{grid-template-columns:1fr}
+}
+</style>
+
+<!-- SAFEGUARDING & TRUST: WHO SEES WHAT -->
+<section id="trust-security">
+  <div class="container">
+    <div class="ws-grid">
+      <div class="ws-intro">
+        <div class="section-tag">Safeguarding &amp; trust</div>
+        <h2 class="section-heading">Everyone sees what their role needs. Nothing more.</h2>
+        <p class="section-sub">Access is enforced in the database itself, not just hidden on screen. Pick a role to see what it opens.</p>
+        <div class="ws-facts">
+          <div class="ws-fact"><span class="ws-fact-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>Every organisation's data is walled off from every other, in the database itself</div>
+          <div class="ws-fact"><span class="ws-fact-ico"><svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></span>Encrypted in transit and at rest</div>
+          <div class="ws-fact"><span class="ws-fact-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>Stored in an EU data centre, protected under UK GDPR</div>
+          <div class="ws-fact"><span class="ws-fact-ico"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>An audit trail on safeguarding records</div>
         </div>
       </div>
-      <div class="mobile-visual">
-        <div class="mobile-frame">
-          <div class="mobile-notch"></div>
-          <div class="mobile-screen">
-            <div class="mobile-header">Good afternoon 👋</div>
-            <div class="mobile-stat-row">
-              <div class="mobile-stat" style="background:rgba(34,197,94,0.12);color:#4ADE80">48 in</div>
-              <div class="mobile-stat" style="background:rgba(245,158,11,0.12);color:#F59E0B">6 out</div>
-            </div>
-            <div class="mobile-btn">✅ Sign In — Aisha M.</div>
-            <div class="mobile-btn" style="background:rgba(96,165,250,0.14);color:#60A5FA">🚨 Report a Concern</div>
+      <div class="ws-panel">
+        <div class="ws-roles" role="tablist" aria-label="Choose a role">
+          <button type="button" role="tab" class="ws-role" id="wsTab-admin" data-role="admin" aria-selected="true" aria-controls="wsPanel">Admin</button>
+          <button type="button" role="tab" class="ws-role" id="wsTab-manager" data-role="manager" aria-selected="false" aria-controls="wsPanel" tabindex="-1">Manager</button>
+          <button type="button" role="tab" class="ws-role" id="wsTab-staff" data-role="staff" aria-selected="false" aria-controls="wsPanel" tabindex="-1">Staff</button>
+          <button type="button" role="tab" class="ws-role" id="wsTab-volunteer" data-role="volunteer" aria-selected="false" aria-controls="wsPanel" tabindex="-1">Volunteer</button>
+        </div>
+        <div id="wsPanel" role="tabpanel" aria-labelledby="wsTab-admin">
+          <p class="ws-desc" id="wsDesc">Owners and admins run the organisation, so they can open everything inside it, and nothing outside it.</p>
+          <ul class="ws-table" id="wsTable">
+          <li class="ws-row"><span class="ws-rec"><span class="ws-rec-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span>Registers &amp; sessions</span></span><span class="ws-state" data-state="full"><span class="ws-state-ico" aria-hidden="true"></span><span class="ws-state-t"></span></span></li>
+          <li class="ws-row"><span class="ws-rec"><span class="ws-rec-ico"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span><span data-term="People">Young people</span> &amp; medical info</span></span><span class="ws-state" data-state="full"><span class="ws-state-ico" aria-hidden="true"></span><span class="ws-state-t"></span></span></li>
+          <li class="ws-row"><span class="ws-rec"><span class="ws-rec-ico"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span>Safeguarding case files</span></span><span class="ws-state" data-state="full"><span class="ws-state-ico" aria-hidden="true"></span><span class="ws-state-t"></span></span></li>
+          <li class="ws-row"><span class="ws-rec"><span class="ws-rec-ico"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span><span>HR &amp; staff records<span class="ws-office">Office</span></span></span><span class="ws-state" data-state="full"><span class="ws-state-ico" aria-hidden="true"></span><span class="ws-state-t"></span></span></li>
+          <li class="ws-row"><span class="ws-rec"><span class="ws-rec-ico"><svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h1"/><path d="M9 13h1"/><path d="M14 9h1"/><path d="M14 13h1"/></svg></span><span>Other organisations' data</span></span><span class="ws-state" data-state="full"><span class="ws-state-ico" aria-hidden="true"></span><span class="ws-state-t"></span></span></li>
+          </ul>
+          <div class="ws-legend">
+            <span><i class="ws-dot" data-state="full"></i>Can see</span>
+            <span><i class="ws-dot" data-state="part"></i>Only their own</span>
+            <span><i class="ws-dot" data-state="set"></i>You decide</span>
+            <span><i class="ws-dot" data-state="none"></i>Locked</span>
           </div>
         </div>
       </div>
@@ -1609,18 +1698,174 @@ async function submitFoundingOffer(e) {
   </div>
 </section>
 <style>
-.mobile-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
-.mobile-points{display:flex;flex-direction:column;gap:14px;margin-top:28px}
-.mobile-point{font-size:14px;font-weight:600;color:var(--text2);display:flex;align-items:center;gap:10px}
-.mobile-visual{display:flex;justify-content:center}
-.mobile-frame{width:240px;height:480px;background:#0B0F27;border:6px solid #1a1f3a;border-radius:36px;box-shadow:0 30px 80px rgba(0,0,0,0.5);position:relative;padding:18px 14px}
-.mobile-notch{position:absolute;top:6px;left:50%;transform:translateX(-50%);width:80px;height:18px;background:#000;border-radius:0 0 12px 12px}
-.mobile-screen{margin-top:24px;display:flex;flex-direction:column;gap:12px}
-.mobile-header{font-size:15px;font-weight:800;color:#fff;margin-bottom:4px}
-.mobile-stat-row{display:flex;gap:8px}
-.mobile-stat{flex:1;text-align:center;padding:10px;border-radius:10px;font-size:13px;font-weight:800}
-.mobile-btn{padding:12px;border-radius:12px;background:rgba(34,197,94,0.14);color:#4ADE80;font-size:12.5px;font-weight:700;text-align:center}
-@media (max-width:1024px){.mobile-grid{grid-template-columns:1fr;gap:36px}.mobile-visual{order:-1}}
+/* ── SAFEGUARDING: WHO SEES WHAT ────────────────────────────── */
+#trust-security{background:var(--navy2)}
+.ws-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:56px;align-items:center}
+.ws-facts{display:flex;flex-direction:column;gap:12px;margin-top:30px}
+.ws-fact{display:flex;align-items:center;gap:12px;font-size:14px;font-weight:600;color:rgba(255,255,255,.75)}
+.ws-fact-ico{width:32px;height:32px;flex-shrink:0;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.26)}
+.ws-fact-ico svg{width:16px;height:16px;stroke:#C4B5FD;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.ws-panel{padding:22px;border-radius:24px;background:#0B1020;border:1px solid rgba(255,255,255,.09);
+  box-shadow:0 30px 70px -30px rgba(0,0,0,.8)}
+.ws-roles{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:4px;border-radius:14px;background:rgba(255,255,255,.04);margin-bottom:16px}
+.ws-role{min-height:44px;border:none;border-radius:10px;background:none;cursor:pointer;font-family:var(--font);
+  font-size:13.5px;font-weight:800;color:rgba(255,255,255,.55);transition:background .2s,color .2s}
+.ws-role[aria-selected="true"]{background:rgba(139,92,246,.22);color:#fff;box-shadow:inset 0 0 0 1px rgba(167,139,250,.45)}
+.ws-role:focus-visible{outline:2px solid #A78BFA;outline-offset:2px}
+.ws-desc{font-size:13.5px;color:rgba(255,255,255,.6);line-height:1.6;min-height:44px;margin-bottom:14px;padding:0 4px}
+.ws-table{list-style:none;display:flex;flex-direction:column;gap:6px}
+.ws-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 14px;border-radius:12px;
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05)}
+.ws-rec{display:flex;align-items:center;gap:11px;font-size:13.5px;font-weight:700;color:#fff;min-width:0}
+.ws-rec-ico{width:28px;height:28px;flex-shrink:0;border-radius:8px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.05)}
+.ws-rec-ico svg{width:15px;height:15px;stroke:rgba(255,255,255,.7);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.ws-office{display:inline-block;margin-left:7px;padding:1px 7px;border-radius:6px;font-size:10px;font-weight:800;letter-spacing:.4px;
+  text-transform:uppercase;color:#5EEAD4;background:rgba(20,184,166,.14);vertical-align:1px}
+.ws-state{--c:#4ADE80;display:flex;align-items:center;gap:7px;flex-shrink:0;max-width:52%;padding:5px 11px;border-radius:99px;
+  font-size:12px;font-weight:700;color:var(--c);background:color-mix(in srgb,var(--c) 12%,transparent);text-align:right;
+  transition:color .25s,background .25s}
+.ws-state[data-state="part"],.ws-dot[data-state="part"]{--c:#FBBF24}
+.ws-state[data-state="set"],.ws-dot[data-state="set"]{--c:#93C5FD}
+.ws-state[data-state="none"],.ws-dot[data-state="none"]{--c:#94A3B8}
+.ws-state-ico{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--c)}
+.ws-state[data-state="none"] .ws-state-ico{background:none;border:1.5px solid var(--c)}
+.ws-state.ws-swap{animation:ws-swap .3s ease}
+@keyframes ws-swap{0%{opacity:.2;transform:translateX(6px)}100%{opacity:1;transform:none}}
+.ws-legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:14px;padding:0 4px;font-size:11.5px;color:rgba(255,255,255,.5)}
+.ws-legend span{display:flex;align-items:center;gap:6px}
+.ws-dot{--c:#4ADE80;width:8px;height:8px;border-radius:50%;background:var(--c)}
+.ws-dot[data-state="none"]{background:none;border:1.5px solid var(--c)}
+@media (max-width:1024px){.ws-grid{grid-template-columns:1fr;gap:36px}}
+@media (max-width:600px){
+  .ws-panel{padding:14px;border-radius:20px}
+  .ws-role{font-size:12.5px}
+  .ws-row{flex-direction:column;align-items:flex-start;gap:8px;padding:12px}
+  .ws-state{max-width:none;text-align:left}
+}
+</style>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="container">
+    <div class="pricing-intro">
+      <div class="section-tag">Pricing</div>
+      <h2 class="section-heading">One price. The whole platform.</h2>
+      <p class="section-sub">No per-user fees and no cap on how many <span data-term="people">young people</span> you support. Start with everything, then add the Office or your own branding if you want them.</p>
+      <div class="pricing-toggle">
+        <span id="monthlyLabel" class="toggle-label active">Monthly</span>
+        <div class="toggle-pill" id="togglePill" onclick="toggleBilling()" role="switch" aria-checked="false" aria-label="Annual billing" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleBilling()}">
+          <div class="toggle-pill-inner" id="toggleInner"></div>
+        </div>
+        <span id="yearlyLabel" class="toggle-label">Annual</span>
+        <span class="save-badge">Save ~20%</span>
+      </div>
+    </div>
+
+    <div class="pb-grid">
+      <div class="pb-base">
+        <div class="pb-base-head">
+          <div>
+            <div class="plan-name">Complete Platform</div>
+            <div class="pb-base-t">Everything, for everyone in your organisation</div>
+          </div>
+          <span class="pb-always">Always included</span>
+        </div>
+        <ul class="plan-features pb-features">
+          <li><span class="chk">✓</span> <span>Sessions, Calendar &amp; Projects</span></li>
+          <li><span class="chk">✓</span> <span>Live Registers &amp; attendance history</span></li>
+          <li><span class="chk">✓</span> <span><span data-term="People">Young people</span>, groups &amp; medical alerts</span></li>
+          <li><span class="chk">✓</span> <span>Safeguarding Hub &amp; Risk Assessments</span></li>
+          <li><span class="chk">✓</span> <span>Volunteers, applications &amp; QR sign-up</span></li>
+          <li><span class="chk">✓</span> <span>Forms, Messaging &amp; Newsletter</span></li>
+          <li><span class="chk">✓</span> <span>Reports, Impact &amp; Outcomes</span></li>
+          <li><span class="chk">✓</span> <span>Photo Gallery</span></li>
+          <li><span class="chk">✓</span> <span>Mentoring &amp; Templates</span></li>
+        </ul>
+      </div>
+
+      <div class="pb-build">
+        <div class="pb-build-t">Build your plan</div>
+        <div class="pb-opt pb-opt-on pb-opt-fixed">
+          <span class="pb-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+          <span class="pb-opt-body"><span class="pb-opt-name">Complete Platform</span><span class="pb-opt-d">Sessions, registers, safeguarding, volunteers, forms and reports</span></span>
+          <span class="pb-opt-price">£<span id="pbBase">49.99</span></span>
+        </div>
+        <label class="pb-opt" for="pbOffice">
+          <input type="checkbox" id="pbOffice" class="pb-input" />
+          <span class="pb-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+          <span class="pb-opt-body"><span class="pb-opt-name">Add the Office</span><span class="pb-opt-d">HR records, DBS and training expiry, resource booking and payments</span></span>
+          <span class="pb-opt-price" id="pbOfficeAdd">+£10</span>
+        </label>
+        <label class="pb-opt" for="pbBrand">
+          <input type="checkbox" id="pbBrand" class="pb-input" />
+          <span class="pb-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+          <span class="pb-opt-body"><span class="pb-opt-name">Add your branding</span><span class="pb-opt-d">Your logo and colours across the app, forms, emails and reports. Comes with the Office.</span></span>
+          <span class="pb-opt-price" id="pbBrandAdd">+£10</span>
+        </label>
+        <div class="pb-total" aria-live="polite">
+          <div>
+            <div class="pb-plan" id="pbPlan">Complete Platform</div>
+            <div class="plan-period" id="pbPeriod">billed monthly</div>
+          </div>
+          <div class="plan-price">£<span id="pbPrice">49.99</span><span>/mo</span></div>
+        </div>
+        <button class="plan-btn plan-btn-fill pb-cta" onclick="window.location.href='/signup'">Start your free 14-day trial →</button>
+        <p class="pb-note">The trial includes all of it. You choose a plan when it ends, and nothing charges automatically.</p>
+      </div>
+    </div>
+
+    <p class="pricing-fine">Every price includes a 14-day free trial with full access. No contracts, no per-user fees, no limit on how many <span data-term="people">young people</span> you support. Registered charity? <a href="mailto:hello@launchsession.co.uk">Ask about our discount →</a></p>
+  </div>
+</section>
+<style>
+/* ── PRICING: PLAN BUILDER ──────────────────────────────────── */
+.pricing-intro{margin-bottom:44px}
+.toggle-pill-inner{transition:transform .25s}
+.pb-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:1000px;margin:0 auto;text-align:left}
+.pb-base,.pb-build{border-radius:24px;padding:30px}
+.pb-base{background:var(--glass);border:1px solid var(--border)}
+.pb-base-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:22px}
+.pb-base-t{font-size:15px;font-weight:700;color:#fff}
+.pb-always{flex-shrink:0;padding:4px 10px;border-radius:99px;font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;
+  color:#4ADE80;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.28)}
+.pb-features{gap:12px;margin:0}
+.pb-features li{font-size:14px}
+.pb-build{background:linear-gradient(170deg,rgba(59,130,246,.09),rgba(99,102,241,.04));border:1px solid rgba(96,165,250,.32);
+  display:flex;flex-direction:column;gap:10px}
+.pb-build-t{font-size:12px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px}
+.pb-opt{position:relative;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;cursor:pointer;
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.09);transition:background .2s,border-color .2s}
+.pb-opt-fixed{cursor:default}
+.pb-input{position:absolute;opacity:0;width:1px;height:1px}
+.pb-check{width:24px;height:24px;flex-shrink:0;border-radius:7px;border:1.5px solid rgba(255,255,255,.28);
+  display:flex;align-items:center;justify-content:center;transition:background .2s,border-color .2s}
+.pb-check svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .15s}
+.pb-opt-on .pb-check,.pb-input:checked + .pb-check{background:#3B82F6;border-color:#3B82F6}
+.pb-opt-on .pb-check svg,.pb-input:checked + .pb-check svg{opacity:1}
+.pb-opt-fixed .pb-check{background:rgba(34,197,94,.85);border-color:transparent}
+.pb-opt:has(.pb-input:checked){background:rgba(59,130,246,.1);border-color:rgba(96,165,250,.5)}
+.pb-input:focus-visible + .pb-check{outline:2px solid #60A5FA;outline-offset:3px}
+.pb-opt-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.pb-opt-name{font-size:14.5px;font-weight:800;color:#fff}
+.pb-opt-d{font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.45}
+.pb-opt-price{flex-shrink:0;font-size:14px;font-weight:800;color:#BFDBFE;font-variant-numeric:tabular-nums}
+.pb-total{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:8px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08)}
+.pb-plan{font-size:13px;font-weight:800;color:#fff;margin-bottom:2px}
+.pb-total .plan-period{margin:0}
+.pb-total .plan-price{margin:0;font-variant-numeric:tabular-nums}
+.pb-total .plan-price.pb-bump{animation:hc-stat-bump .4s ease}
+.pb-cta{margin:6px 0 0}
+.pb-note{font-size:12.5px;color:rgba(255,255,255,.5);text-align:center;line-height:1.5}
+.pricing-fine{margin-top:32px;font-size:13px;color:var(--text3);text-align:center}
+.pricing-fine a{color:#60A5FA;font-weight:600}
+@media (hover:hover) and (pointer:fine){.pb-opt:not(.pb-opt-fixed):hover{border-color:rgba(96,165,250,.45)}}
+@media (max-width:860px){.pb-grid{grid-template-columns:1fr;max-width:520px}.pb-build{order:-1}}
+@media (max-width:600px){
+  .pb-base,.pb-build{padding:20px;border-radius:20px}
+  .pb-opt{padding:13px 12px;gap:11px}
+  .pb-total .plan-price{font-size:36px}
+}
 </style>
 
 <!-- TESTIMONIALS -->
@@ -1644,36 +1889,35 @@ async function submitFoundingOffer(e) {
 @media (max-width:720px){.mission-values{grid-template-columns:repeat(2,1fr)}}
 </style>
 
-<!-- COMMUNITY & GIVING -->
-<section id="community" style="padding:100px 0;background:linear-gradient(180deg,#0B1023 0%,#131B33 100%)">
+<!-- COMMUNITY & GIVING: IN DEVELOPMENT -->
+<section id="community">
   <div class="container">
-    <div style="text-align:center;max-width:640px;margin:0 auto 56px">
-      <div class="section-tag" style="color:#F59E0B">Launching Summer 2026</div>
-      <h2 class="section-heading" style="color:#fff">A community for charities<br>doing the work</h2>
-      <p class="section-sub" style="color:rgba(255,255,255,0.55)">A public spotlight for charities on LaunchSession — and a way for supporters to give directly to the campaigns that move them. Both are opt-in and both are in active development.</p>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:900px;margin:0 auto 40px" class="community-grid">
-      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:32px">
-        <div style="width:44px;height:44px;border-radius:12px;background:rgba(99,102,241,0.15);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px">🏅</div>
-        <div style="font-size:19px;font-weight:800;color:#fff;margin-bottom:8px">Charity Spotlight</div>
-        <div style="font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;margin-bottom:16px">Charities will be able to opt in from their Settings to appear in a public directory — showing their story and active campaigns. Nothing from registers, safeguarding or case management is ever eligible to be shown publicly. Nobody has opted in yet, because the feature isn't live — you'd be one of the first.</div>
+    <div class="cm-card">
+      <div class="cm-copy">
+        <div class="cm-tag"><span class="cm-tag-dot"></span>In development</div>
+        <h2 class="cm-title">Coming next: a spotlight for charities, and giving that goes straight to them.</h2>
+        <div class="cm-items">
+          <div class="cm-item">
+            <div class="cm-ico" style="--cm:#818CF8"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg></div>
+            <div><div class="cm-item-t">Charity Spotlight</div><div class="cm-item-d">Opt in to a public page with your story and active campaigns. Registers, safeguarding and case records can never be shown.</div></div>
+          </div>
+          <div class="cm-item">
+            <div class="cm-ico" style="--cm:#FBBF24"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+            <div><div class="cm-item-t">Give Directly</div><div class="cm-item-d">Supporters donate to a spotlighted campaign, with real payment processing and every charity verified first. We would rather build it properly than rush it out.</div></div>
+          </div>
+        </div>
       </div>
-      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:32px">
-        <div style="width:44px;height:44px;border-radius:12px;background:rgba(186,117,23,0.18);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px">💛</div>
-        <div style="font-size:19px;font-weight:800;color:#fff;margin-bottom:8px">Give Directly</div>
-        <div style="font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;margin-bottom:16px">Visitors will be able to donate straight to a spotlighted charity's campaign from this page. We're building this properly — real payment processing with each charity verified — rather than rushing it out, so it isn't live yet.</div>
-      </div>
-    </div>
-    <div style="max-width:480px;margin:0 auto;text-align:center">
-      <div style="font-size:14px;color:rgba(255,255,255,0.5);margin-bottom:14px">Want to know when either launches?</div>
-      <form id="waitlistForm" style="display:flex;gap:10px" onsubmit="return submitWaitlist(event)">
-        <input id="waitlistEmail" type="email" required placeholder="you@yourcharity.org" style="flex:1;padding:13px 16px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;font-size:14px;outline:none;font-family:var(--font)" />
-        <button type="submit" id="waitlistBtn" style="padding:13px 22px;border-radius:12px;border:none;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap;font-family:var(--font)">Notify me</button>
-      </form>
-      <div id="waitlistMsg" style="margin-top:12px;font-size:13px;color:#4ADE80;display:none">✓ You're on the list — we'll email you when it's live.</div>
-      <div id="waitlistErr" style="margin-top:12px;font-size:13px;color:#F87171;display:none">Something went wrong — mind trying again, or email <a href="mailto:hello@launchsession.co.uk" style="color:#F87171;text-decoration:underline">hello@launchsession.co.uk</a> directly?</div>
-      <div style="margin-top:20px;font-size:13px;color:rgba(255,255,255,0.4)">
-        Prefer email? <a href="mailto:hello@launchsession.co.uk?subject=Register%20interest%20-%20Charity%20Spotlight%20%26%20Giving" style="color:#A5B4FC;text-decoration:underline">hello@launchsession.co.uk</a>
+      <div class="cm-form-wrap">
+        <div class="cm-form-t">Hear when it opens</div>
+        <div class="cm-form-d">One email when either goes live. Nothing else.</div>
+        <form id="waitlistForm" class="cm-form" onsubmit="return submitWaitlist(event)">
+          <label class="cm-sr" for="waitlistEmail">Email address</label>
+          <input id="waitlistEmail" type="email" required placeholder="you@yourcharity.org" class="fo-input" />
+          <button type="submit" id="waitlistBtn" class="cm-btn">Notify me</button>
+        </form>
+        <div id="waitlistMsg" class="fo-msg fo-msg-success" style="display:none">✓ You're on the list. We'll email you when it's live.</div>
+        <div id="waitlistErr" class="fo-msg fo-msg-error" style="display:none">Something went wrong. Mind trying again, or email <a href="mailto:hello@launchsession.co.uk">hello@launchsession.co.uk</a> directly?</div>
+        <div class="cm-fine">Prefer email? <a href="mailto:hello@launchsession.co.uk?subject=Register%20interest%20-%20Charity%20Spotlight%20%26%20Giving">hello@launchsession.co.uk</a></div>
       </div>
     </div>
   </div>
@@ -1693,7 +1937,6 @@ async function submitWaitlist(e) {
   msg.style.display = 'none'; err.style.display = 'none';
   waitlistSending = true;
   btn.disabled = true;
-  btn.style.opacity = '0.6';
   btn.textContent = 'Sending…';
   try {
     const res = await fetch('https://ssahcqeqrxawmwtjpwvh.supabase.co/rest/v1/waitlist_signups', {
@@ -1714,17 +1957,39 @@ async function submitWaitlist(e) {
     // button disabled is what stops a second identical signup.
     waitlistSending = false;
     btn.disabled = false;
-    btn.style.opacity = '1';
     btn.textContent = 'Notify me';
   }
   return false;
 }
 </script>
 <style>
-@media (max-width: 720px) {
-  .community-grid { grid-template-columns: 1fr !important; }
-  #waitlistForm { flex-direction: column; }
-}
+/* ── COMMUNITY: IN DEVELOPMENT ──────────────────────────────── */
+#community{padding:64px 5%}
+.cm-card{max-width:1060px;margin:0 auto;display:grid;grid-template-columns:1.25fr .75fr;gap:40px;align-items:center;padding:36px;
+  border-radius:26px;background:linear-gradient(160deg,#111733,#0B1023);border:1px solid rgba(255,255,255,.09)}
+.cm-tag{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:99px;margin-bottom:16px;
+  font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#FBBF24;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3)}
+.cm-tag-dot{width:6px;height:6px;border-radius:50%;background:#FBBF24;animation:fo-pulse 1.8s ease-in-out infinite}
+.cm-title{font-size:clamp(22px,2.6vw,30px);font-weight:900;letter-spacing:-.8px;line-height:1.18;color:#fff;margin-bottom:22px}
+.cm-items{display:flex;flex-direction:column;gap:16px}
+.cm-item{display:flex;gap:14px;align-items:flex-start}
+.cm-ico{width:38px;height:38px;flex-shrink:0;border-radius:11px;display:flex;align-items:center;justify-content:center;
+  background:color-mix(in srgb,var(--cm) 14%,transparent);border:1px solid color-mix(in srgb,var(--cm) 30%,transparent)}
+.cm-ico svg{width:18px;height:18px;stroke:var(--cm);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.cm-item-t{font-size:15px;font-weight:800;color:#fff;margin-bottom:3px}
+.cm-item-d{font-size:13.5px;color:rgba(255,255,255,.55);line-height:1.55}
+.cm-form-wrap{padding:24px;border-radius:18px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09)}
+.cm-form-t{font-size:16px;font-weight:800;color:#fff}
+.cm-form-d{font-size:12.5px;color:rgba(255,255,255,.5);margin:3px 0 16px}
+.cm-form{display:flex;flex-direction:column;gap:10px}
+.cm-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.cm-btn{padding:13px 22px;border-radius:12px;border:none;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;
+  font-weight:800;font-size:14px;cursor:pointer;font-family:var(--font)}
+.cm-btn:disabled{opacity:.6;cursor:default}
+.cm-fine{margin-top:14px;font-size:12.5px;color:rgba(255,255,255,.45)}
+.cm-fine a{color:#A5B4FC;text-decoration:underline}
+@media (max-width:860px){.cm-card{grid-template-columns:1fr;padding:26px 20px;gap:28px}}
+@media (max-width:600px){#community{padding:44px 5%}}
 </style>
 
 <!-- FAQ -->
@@ -1784,7 +2049,16 @@ async function submitWaitlist(e) {
           <span class="faq-chevron">⌄</span>
         </button>
         <div class="faq-a" id="faq-a-5" role="region">
-          <p>Safeguarding and case management records are restricted to the people who need them, based on role. See our Safeguarding & Trust section above for more detail.</p>
+          <p>Access is decided by role and enforced in the database, not just hidden on screen. Volunteers can raise a concern but cannot read case files, and you decide which staff can. Pick a role in the Safeguarding &amp; trust section above to see exactly what each one opens.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-a-8" onclick="toggleFaq(this)">
+          <span>Where is our data stored?</span>
+          <span class="faq-chevron">⌄</span>
+        </button>
+        <div class="faq-a" id="faq-a-8" role="region">
+          <p>In a secure data centre in the EU (Frankfurt), encrypted in transit and at rest. The UK recognises EU data protection as adequate, so your data stays protected under UK GDPR. Each organisation's records are kept separate from every other organisation's in the database itself. Our <a href="/privacy.html" style="color:#60A5FA">privacy policy</a> and <a href="/data-processing-agreement.html" style="color:#60A5FA">data processing agreement</a> have the detail.</p>
         </div>
       </div>
       <div class="faq-item">
@@ -1925,29 +2199,53 @@ function toggleMenu() {
   btn.setAttribute('aria-expanded', open ? 'true' : 'false')
 }
 
-// ── BILLING TOGGLE ─────────────────────────────────────────────
+// ── PLAN BUILDER ───────────────────────────────────────────────
 let annual = false
 // Annual is the monthly price less ~20%, billed once a year. Kept as strings
 // so the pence render exactly -- toFixed(2) on a float would be a rounding
 // argument nobody needs on a pricing page.
 const prices = { monthly: ['49.99', '59.99', '69.99'], annual: ['39.99', '47.99', '55.99'] }
+// Mirrors plan_entitlements: Branding is only sold on top of the Office, so
+// there is no "platform + branding" tier for the builder to land on.
+const PLAN_NAMES = ['Complete Platform', 'Platform + Office', 'Platform + Office + Branding']
+
+function renderPlan() {
+  const office = document.getElementById('pbOffice')
+  const brand = document.getElementById('pbBrand')
+  const tier = brand.checked ? 2 : office.checked ? 1 : 0
+  const p = annual ? prices.annual : prices.monthly
+  const step = (Number(p[1]) - Number(p[0])).toFixed(0)
+  document.getElementById('pbBase').textContent = p[0]
+  document.getElementById('pbOfficeAdd').textContent = '+£' + step
+  document.getElementById('pbBrandAdd').textContent = '+£' + step
+  document.getElementById('pbPlan').textContent = PLAN_NAMES[tier]
+  document.getElementById('pbPeriod').textContent = annual ? 'per month, billed annually' : 'billed monthly'
+  const priceEl = document.getElementById('pbPrice')
+  if (priceEl.textContent !== p[tier]) {
+    priceEl.textContent = p[tier]
+    const box = priceEl.parentElement
+    box.classList.remove('pb-bump'); void box.offsetWidth; box.classList.add('pb-bump')
+  }
+}
 
 function toggleBilling() {
   annual = !annual
-  const inner = document.getElementById('toggleInner')
-  inner.style.transform = annual ? 'translateX(20px)' : 'translateX(0)'
+  document.getElementById('toggleInner').style.transform = annual ? 'translateX(20px)' : 'translateX(0)'
   document.getElementById('togglePill').setAttribute('aria-checked', annual)
   document.getElementById('monthlyLabel').classList.toggle('active', !annual)
   document.getElementById('yearlyLabel').classList.toggle('active', annual)
-  const p = annual ? prices.annual : prices.monthly
-  document.getElementById('p1').textContent = p[0]
-  document.getElementById('p2').textContent = p[1]
-  document.getElementById('p3').textContent = p[2]
-  const period = annual ? 'billed annually' : 'billed monthly'
-  document.getElementById('pp1').textContent = period
-  document.getElementById('pp2').textContent = period
-  document.getElementById('pp3').textContent = period
+  renderPlan()
 }
+
+document.getElementById('pbOffice').addEventListener('change', e => {
+  if (!e.target.checked) document.getElementById('pbBrand').checked = false
+  renderPlan()
+})
+document.getElementById('pbBrand').addEventListener('change', e => {
+  if (e.target.checked) document.getElementById('pbOffice').checked = true
+  renderPlan()
+})
+renderPlan()
 </script>
 
 
@@ -2140,17 +2438,17 @@ const FEATURES = {
     ],
     note: "<b>Role-based permissions come with every plan.</b> Admin, manager, staff and volunteer each get an appropriate view, enforced in the database rather than hidden in the interface. HR adds the staff records and compliance tracking on top."
   },
-  settings_integrations: {
-    lead: "Configure the platform around how your organisation actually works, and connect it to the tools you already use.",
+  medical_accidents: {
+    lead: "Medical information in front of the person who needs it, at the moment they need it, and a proper record when someone gets hurt.",
     points: [
-      "<b>Organisation profile, sites and venues</b> set up once and used everywhere.",
-      "<b>Custom fields</b> so you can record the things that matter to your provision.",
-      "<b>Custom forms</b> published to a public link for registrations, feedback or expressions of interest.",
-      "<b>Configure session types, groups and bubbles</b> to match your structure.",
-      "<b>Data export</b> whenever you want it — your data stays yours.",
-      "<b>Integrations</b> with the tools already in your workflow."
+      "<b>Allergy and medical flags at sign-in.</b> Whoever takes the register sees them as each person arrives.",
+      "<b>One medical list for the whole organisation</b>, so you can check who needs what before doors open.",
+      "<b>A printable medication list</b> for the first aid bag on trips and off-site sessions, dated so nobody relies on an old copy.",
+      "<b>An accident book with a body map</b>: what happened, where, the first aid given and whether a parent was told.",
+      "<b>Report without an account.</b> Put a link or QR code in the first aid kit and anyone can file a report from their own phone.",
+      "<b>Reports land where your team already looks</b>, not in a drawer or a personal inbox."
     ],
-    note: "<b>No lock-in.</b> You can export your full dataset at any time, in a format you can actually use."
+    note: "<b>Included on every plan.</b> Keeping people safe is not an add-on."
   }
 };
 
@@ -2280,54 +2578,267 @@ document.getElementById('fdSheet').addEventListener('keydown', e => {
 </script>
 
 <script>
-// Purely cosmetic live-register simulation for the hero mockup — no backend, just a demo loop.
-(function(){
-  var card = document.getElementById('live-register-card');
-  if(!card) return;
-  var list = document.getElementById('lr-list');
-  var inCountEl = document.getElementById('lr-in');
-  var absentCountEl = document.getElementById('lr-absent');
-  var inCount = parseInt(inCountEl.textContent,10);
-  var absentCount = parseInt(absentCountEl.textContent,10);
+// ── ORGANISATION TYPE ──────────────────────────────────────────
+// The app renames its core nouns per organisation type (src/lib/terminology.js);
+// this is the same table, cut down to the words the page shows. Safeguarding
+// wording ("a worry about a child") is deliberately never renamed, for the
+// reason given in terminology.js.
+const TERMS = {
+  charity: { people: 'young people', People: 'Young people', person: 'young person', session: 'session', sessions: 'sessions', Staff: 'Staff' },
+  youth_club: { session: 'youth session', sessions: 'youth sessions' },
+  sports_club: { people: 'players', People: 'Players', person: 'player', session: 'training session', sessions: 'training sessions', Staff: 'Coaches' },
+  education: { people: 'students', People: 'Students', person: 'student', session: 'class', sessions: 'classes', Staff: 'Teachers' },
+  community_centre: { people: 'participants', People: 'Participants', person: 'participant', session: 'activity', sessions: 'activities' },
+}
+// Made-up organisations only: a real club's name here would read as a customer.
+const DEMO_ORGS = {
+  youth_club: { name: 'Riverside Youth Club', initials: 'RY', session: 'Friday youth session', hue: 'linear-gradient(135deg,#1B9AAA,#3B82F6)' },
+  charity: { name: 'Bright Futures Trust', initials: 'BF', session: 'Thursday drop-in session', hue: 'linear-gradient(135deg,#EC4899,#8B5CF6)' },
+  education: { name: 'Oakfield Academy', initials: 'OA', session: 'Year 9 drama class', hue: 'linear-gradient(135deg,#F59E0B,#EF4444)' },
+  sports_club: { name: 'Northside FC Academy', initials: 'NF', session: 'Under-12s training session', hue: 'linear-gradient(135deg,#22C55E,#14B8A6)' },
+  community_centre: { name: 'Eastgate Community Centre', initials: 'EC', session: 'Saturday family activity', hue: 'linear-gradient(135deg,#8B5CF6,#3B82F6)' },
+}
 
-  var incoming = ['Priya Patel','Jack Wilson','Sofia Rossi','Omar Farouk','Ella Brooks','Tyler Reid','Zainab Ali','Freddie Marsh'];
-  var idx = 0;
+function setOrgType(type) {
+  if (!DEMO_ORGS[type]) return
+  const words = Object.assign({}, TERMS.charity, TERMS[type])
+  document.querySelectorAll('[data-term]').forEach(el => {
+    const w = words[el.dataset.term]
+    if (w) el.textContent = w
+  })
+  document.querySelectorAll('[data-org-type]').forEach(b => b.setAttribute('aria-pressed', b.dataset.orgType === type ? 'true' : 'false'))
+  const org = DEMO_ORGS[type]
+  document.getElementById('demoOrg').textContent = org.name
+  document.getElementById('demoSession').textContent = org.session
+  const av = document.getElementById('demoAvatar')
+  av.textContent = org.initials
+  av.style.background = org.hue
+}
+document.querySelectorAll('[data-org-type]').forEach(b => b.addEventListener('click', () => setOrgType(b.dataset.orgType)))
+// The page's own copy keeps the neutral words until a visitor picks a type;
+// only the demo card starts dressed as a youth club.
+document.getElementById('demoAvatar').style.background = DEMO_ORGS.youth_club.hue
 
-  function timeNow(){
-    var d = new Date();
-    var h = d.getHours()%12 || 12;
-    var m = d.getMinutes().toString().padStart(2,'0');
-    return (h<10?'0'+h:h)+':'+m;
+// ── HERO DEMO REGISTER ─────────────────────────────────────────
+// Nothing here talks to a backend. Signing someone in is the moment that sells
+// the product, so visitors get to do it themselves; until they do, it plays
+// itself slowly so the card still reads as live.
+;(function () {
+  const card = document.getElementById('demoCard')
+  const rows = [...card.querySelectorAll('.demo-row')]
+  const alertBox = document.getElementById('demoAlert')
+  const alertTxt = document.getElementById('demoAlertTxt')
+  const hint = document.getElementById('demoHintTxt')
+  const reset = document.getElementById('demoReset')
+  const initial = rows.map(r => r.getAttribute('aria-pressed') === 'true')
+  // An evening session: times run from just after six, not the visitor's clock.
+  let minutes = 18 * 60 + 3
+  let touched = false
+  let autoplay = null
+  let alertFor = null
+
+  const clock = () => {
+    const h = Math.floor(minutes / 60), m = minutes % 60
+    return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0')
   }
-
-  function bump(el){
-    el.classList.remove('hc-stat-n-bump');
-    void el.offsetWidth; // restart animation
-    el.classList.add('hc-stat-n-bump');
+  function label(row) {
+    const signedIn = row.getAttribute('aria-pressed') === 'true'
+    const name = row.querySelector('.demo-name').textContent
+    row.querySelector('.demo-st').textContent = signedIn ? 'In · ' + row.dataset.in : ''
+    row.setAttribute('aria-label', (signedIn ? 'Signed in at ' + row.dataset.in + ': ' : 'Sign in ') + name + (row.dataset.flag ? ', ' + row.dataset.flag : ''))
   }
-
-  function signInNext(){
-    if(idx >= incoming.length){ idx = 0; return; } // simple loop cap, keeps card tidy
-    var name = incoming[idx++];
-
-    var row = document.createElement('div');
-    row.className = 'hc-row hc-row-enter';
-    row.innerHTML = '<div class="hc-dot" style="background:#4ADE80"></div>' +
-      '<div class="hc-name">'+name+'</div>' +
-      '<div class="hc-badge" style="background:rgba(34,197,94,0.12);color:#4ADE80">In · '+timeNow()+'</div>';
-
-    list.insertBefore(row, list.firstChild);
-    while(list.children.length > 4){ list.removeChild(list.lastChild); }
-
-    inCount++;
-    inCountEl.textContent = inCount;
-    bump(inCountEl);
+  function counts() {
+    const n = rows.filter(r => r.getAttribute('aria-pressed') === 'true').length
+    const inEl = document.getElementById('demoIn'), dueEl = document.getElementById('demoDue')
+    if (inEl.textContent !== String(n)) {
+      inEl.textContent = n
+      inEl.classList.remove('hc-stat-n-bump'); void inEl.offsetWidth; inEl.classList.add('hc-stat-n-bump')
+    }
+    dueEl.textContent = rows.length - n
+    document.getElementById('demoBadgeIn').textContent = n
+    const done = n === rows.length
+    reset.hidden = !done
+    hint.textContent = done ? 'Everyone is here.' : touched ? 'Tap a signed-in name to undo' : 'Try it: tap a name to sign them in'
   }
+  function showAlert(row) {
+    alertFor = row
+    alertTxt.innerHTML = ''
+    const b = document.createElement('b')
+    b.textContent = row.querySelector('.demo-name').textContent.split(' ')[0] + ' · ' + row.dataset.flag
+    alertTxt.append(b, document.createTextNode(' ' + row.dataset.alert))
+    alertBox.hidden = false
+  }
+  function hideAlert() { alertBox.hidden = true; alertFor = null }
+  function toggle(row) {
+    const signingIn = row.getAttribute('aria-pressed') !== 'true'
+    if (signingIn) {
+      minutes += 1 + Math.floor(Math.random() * 2)
+      row.dataset.in = clock()
+      row.classList.remove('demo-just'); void row.offsetWidth; row.classList.add('demo-just')
+      if (row.dataset.flag) showAlert(row)
+    } else if (alertFor === row) {
+      hideAlert()
+    }
+    row.setAttribute('aria-pressed', signingIn ? 'true' : 'false')
+    label(row)
+    counts()
+  }
+  function stopAutoplay() { clearInterval(autoplay); autoplay = null }
 
-  // Gentle pace so it reads as "live" without being distracting
-  setInterval(signInNext, 3200);
-})();
+  rows.forEach(r => {
+    label(r)
+    r.addEventListener('click', () => { touched = true; stopAutoplay(); toggle(r) })
+  })
+  document.getElementById('demoAlertX').addEventListener('click', () => { touched = true; stopAutoplay(); hideAlert() })
+  reset.addEventListener('click', () => {
+    rows.forEach((r, i) => { r.setAttribute('aria-pressed', initial[i] ? 'true' : 'false'); label(r) })
+    minutes = 18 * 60 + 3
+    hideAlert()
+    counts()
+    rows.find(r => r.getAttribute('aria-pressed') === 'false').focus()
+  })
+  counts()
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return
+  let visible = false
+  new IntersectionObserver(([e]) => { visible = e.isIntersecting }, { threshold: 0.5 }).observe(card)
+  setTimeout(() => {
+    if (touched) return
+    autoplay = setInterval(() => {
+      if (touched || !visible || document.hidden) return
+      const next = rows.find(r => r.getAttribute('aria-pressed') === 'false')
+      if (!next) return stopAutoplay()
+      toggle(next)
+    }, 3400)
+  }, 1800)
+})()
+
+// ── FEATURE FILTER ─────────────────────────────────────────────
+;(function () {
+  const tabs = [...document.querySelectorAll('.ft-tab')]
+  const cards = [...document.querySelectorAll('#featuresGrid .feature-card')]
+  tabs.forEach(t => {
+    const cat = t.dataset.cat
+    t.querySelector('.ft-n').textContent = cat === 'all' ? cards.length : cards.filter(c => c.dataset.cat === cat).length
+    t.addEventListener('click', () => {
+      tabs.forEach(x => x.setAttribute('aria-pressed', x === t ? 'true' : 'false'))
+      let i = 0
+      cards.forEach(c => {
+        const show = cat === 'all' || c.dataset.cat === cat
+        c.hidden = !show
+        c.classList.remove('ft-in')
+        if (show) { void c.offsetWidth; c.style.animationDelay = (i++ * 40) + 'ms'; c.classList.add('ft-in') }
+      })
+    })
+  })
+})()
+
+// ── WHY: PAPER VS LAUNCHSESSION ────────────────────────────────
+;(function () {
+  const section = document.getElementById('why')
+  const opts = [...section.querySelectorAll('.ba-opt')]
+  let touched = false
+  function setMode(mode) {
+    section.classList.toggle('ba-mode-paper', mode === 'paper')
+    section.classList.toggle('ba-mode-ls', mode === 'ls')
+    opts.forEach(o => o.setAttribute('aria-pressed', o.dataset.ba === mode ? 'true' : 'false'))
+  }
+  opts.forEach(o => o.addEventListener('click', () => { touched = true; setMode(o.dataset.ba) }))
+  // Most people scroll past without touching the switch, and the paper column
+  // alone sells nothing. Flip it once for them when the list comes into view.
+  if (!('IntersectionObserver' in window)) return setMode('ls')
+  const io = new IntersectionObserver(([e]) => {
+    if (!e.isIntersecting) return
+    io.disconnect()
+    setTimeout(() => { if (!touched) setMode('ls') }, 1600)
+  }, { threshold: 0.45 })
+  io.observe(section.querySelector('.ba-list'))
+})()
+
+// ── SAFEGUARDING: WHO SEES WHAT ────────────────────────────────
+// Every cell is what the database enforces (module_access(), is_portal_user()
+// and the RLS on cause_for_concern, children and hr_staff), not what the
+// interface happens to show. Change the policies and this must change with them.
+;(function () {
+  const ROLES = {
+    admin: {
+      desc: 'Owners and admins run the organisation, so they can open everything inside it, and nothing outside it.',
+      cells: [['full', 'Every session'], ['full', 'Everyone'], ['full', 'Full case files'], ['full', 'Every staff record'], ['none', 'Never']],
+    },
+    manager: {
+      desc: 'Managers run the day to day. You can widen or narrow what each one sees, person by person.',
+      cells: [['full', 'Every session'], ['full', 'Everyone, unless you narrow it'], ['set', 'You decide, per person'], ['set', 'Only if you grant it, within their remit'], ['none', 'Never']],
+    },
+    staff: {
+      desc: 'Staff deliver sessions. They get what the room needs, and the office stays with the office.',
+      cells: [['full', 'Every session'], ['full', 'Everyone, unless you narrow it'], ['set', 'You decide, per person'], ['none', 'Locked'], ['none', 'Never']],
+    },
+    volunteer: {
+      desc: 'Volunteers use their own portal, limited to the sessions they are on the team for.',
+      cells: [['part', 'Only sessions they are on'], ['part', 'Only people on those sessions'], ['part', 'Can raise a concern, cannot read any'], ['none', 'Locked'], ['none', 'Never']],
+    },
+  }
+  const tabs = [...document.querySelectorAll('.ws-role')]
+  const states = [...document.querySelectorAll('#wsTable .ws-state')]
+  const panel = document.getElementById('wsPanel')
+  function show(role, animate) {
+    const r = ROLES[role]
+    tabs.forEach(t => {
+      const on = t.dataset.role === role
+      t.setAttribute('aria-selected', on ? 'true' : 'false')
+      t.tabIndex = on ? 0 : -1
+      if (on) panel.setAttribute('aria-labelledby', t.id)
+    })
+    document.getElementById('wsDesc').textContent = r.desc
+    states.forEach((el, i) => {
+      el.dataset.state = r.cells[i][0]
+      el.querySelector('.ws-state-t').textContent = r.cells[i][1]
+      if (animate) { el.classList.remove('ws-swap'); void el.offsetWidth; el.style.animationDelay = (i * 45) + 'ms'; el.classList.add('ws-swap') }
+    })
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => show(t.dataset.role, true))
+    t.addEventListener('keydown', e => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0
+      if (!d) return
+      e.preventDefault()
+      const next = tabs[(i + d + tabs.length) % tabs.length]
+      next.focus()
+      show(next.dataset.role, true)
+    })
+  })
+  show('admin', false)
+})()
+
+// ── SCROLL REVEAL ──────────────────────────────────────────────
+// Content is only hidden once this script has run, so the page reads fine
+// without JavaScript, and reduced-motion visitors never wait on an animation.
+;(function () {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return
+  const els = document.querySelectorAll([
+    'section:not(#hero) .section-tag', 'section:not(#hero) .section-heading', '.jn-step', '.feature-card',
+    '.ba-row', '.ba-point', '.ws-panel', '.pb-base', '.pb-build', '.mission-value', '.faq-item', '.cta-box', '.cm-card', '.fo-shell',
+  ].join(','))
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return
+      const siblings = [...e.target.parentElement.children].filter(c => c.classList.contains('rv'))
+      e.target.style.setProperty('--rv-d', Math.min(siblings.indexOf(e.target), 6) * 60 + 'ms')
+      e.target.classList.add('rv-in')
+      io.unobserve(e.target)
+    })
+  }, { rootMargin: '0px 0px -8% 0px' })
+  els.forEach(el => { el.classList.add('rv'); io.observe(el) })
+})()
 </script>
+<style>
+/* Hidden only until revealed; animation (not transition) so the cards keep
+   their own hover transitions, and fill-mode backwards so nothing is pinned
+   once it has played. */
+.rv:not(.rv-in){opacity:0}
+.rv.rv-in{animation:rv-in .6s cubic-bezier(.2,.7,.2,1) backwards;animation-delay:var(--rv-d,0ms)}
+@keyframes rv-in{0%{opacity:0;transform:translateY(16px)}100%{opacity:1;transform:none}}
+</style>
 </body>
 </html>
 
