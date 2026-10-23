@@ -16,6 +16,30 @@ const CYCLES = ['monthly', 'annual']
 // billing immediately rather than failing the checkout.
 const MIN_TRIAL_SECONDS = 48 * 60 * 60
 
+// Registered charities get 20% off every plan, for as long as the
+// subscription runs (src/lib/charityDiscount.js has the client's copy of the
+// percentage). A claim counts while LaunchSession checks it against the
+// register; a rejected one does not. The coupon has a fixed id and is made on
+// first use, so the sandbox and the live account each get one without a new
+// environment variable -- and api/ has no room for a setup function.
+const CHARITY_COUPON_ID = 'launchsession-registered-charity-20'
+const hasCharityDiscount = org => !!org.charity_number && ['claimed', 'verified'].includes(org.charity_status)
+
+async function charityCoupon(stripe) {
+  try {
+    return (await stripe.coupons.retrieve(CHARITY_COUPON_ID)).id
+  } catch (err) {
+    if (err?.code !== 'resource_missing') throw err
+  }
+  try {
+    return (await stripe.coupons.create({ id: CHARITY_COUPON_ID, percent_off: 20, duration: 'forever', name: 'Registered charity (20% off)' })).id
+  } catch (err) {
+    // Two checkouts racing to make it: the other one won, which is fine.
+    if (err?.code === 'resource_already_exists') return CHARITY_COUPON_ID
+    throw err
+  }
+}
+
 export default async function handler(req, res) {
   try {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -84,13 +108,14 @@ export default async function handler(req, res) {
 
     const { data: org, error: orgErr } = await adminClient
       .from('organisations')
-      .select('id, name, stripe_customer_id, stripe_subscription_id, contact_email, plan, trial_expires_at')
+      .select('id, name, stripe_customer_id, stripe_subscription_id, contact_email, plan, trial_expires_at, charity_number, charity_status')
       .eq('id', org_id)
       .single()
     if (orgErr || !org) return res.status(404).json({ error: 'Organisation not found' })
 
     const stripe = new Stripe(STRIPE_SECRET_KEY)
     const origin = req.headers.origin || 'https://app.launchsession.co.uk'
+    const charity = hasCharityDiscount(org)
 
     // Already subscribed? Change the price on the existing subscription rather
     // than sending them through Checkout again -- a second Checkout would
@@ -110,8 +135,12 @@ export default async function handler(req, res) {
         if (item.price.id === priceId) {
           return res.status(400).json({ error: `This organisation is already on ${entitlement.label}.` })
         }
+        // A charity that claimed after subscribing gets its discount with the
+        // change; one that already has a discount keeps whatever it has.
+        const hasDiscount = (existing.discounts || []).length > 0 || !!existing.discount
         const updated = await stripe.subscriptions.update(existing.id, {
           items: [{ id: item.id, price: priceId }],
+          ...(charity && !hasDiscount ? { discounts: [{ coupon: await charityCoupon(stripe) }] } : {}),
           // Bill the difference now rather than at the next renewal, so an
           // upgrade takes effect immediately and is paid for immediately.
           proration_behavior: 'always_invoice',
@@ -153,7 +182,9 @@ export default async function handler(req, res) {
       client_reference_id: org_id,
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: subscriptionData,
-      allow_promotion_codes: true,
+      // Stripe takes one or the other: a charity's discount is applied for
+      // them; everyone else can still enter a promotion code.
+      ...(charity ? { discounts: [{ coupon: await charityCoupon(stripe) }] } : { allow_promotion_codes: true }),
       // ?tab= and ?section= rather than a /settings path: this app selects its
       // screen from the query string, so a path-based return URL landed the
       // customer on Home with their old plan still showing.

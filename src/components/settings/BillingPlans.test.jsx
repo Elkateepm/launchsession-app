@@ -53,3 +53,41 @@ test('billing sells the three plans and says which include Office and Branding',
   expect(screen.queryByText('Pro+')).toBeNull()
   expect(screen.queryByText(/Need more than Pro\+/)).toBeNull()
 })
+
+test('a registered charity sees every plan at 20% off, and what it claimed with', async () => {
+  render(<Settings org={{ id: 'o1', name: 'Riverside Youth Club', plan: 'trial', branding_enabled: true, charity_number: '1123456', charity_regulator: 'ccew', charity_status: 'claimed' }} userProfile={{ role: 'owner' }} />)
+  fireEvent.click(screen.getByRole('button', { name: 'Billing', exact: true }))
+
+  const card = async label => (await screen.findByText(label, { selector: 'div' })).parentElement
+  expect(within(await card('Complete Platform')).getByText('£39.99')).toBeInTheDocument()
+  expect(within(await card('Platform + Office')).getByText('£47.99')).toBeInTheDocument()
+  expect(within(await card('Platform + Office + Branding')).getByText('£55.99')).toBeInTheDocument()
+  expect(screen.getAllByText('20% charity discount')).toHaveLength(3)
+  expect(screen.getByText(/20% off is applied at checkout/)).toBeInTheDocument()
+  expect(screen.getByText('1123456')).toBeInTheDocument()
+})
+
+test('an organisation without a claim can make one, and a bad number is explained', async () => {
+  const update = jest.fn(() => ({ eq: () => Promise.resolve({ error: null }) }))
+  supabase.from.mockImplementation(table => {
+    const result = { data: table === 'plan_entitlements' ? catalogue : [], error: null }
+    const query = { select: () => query, eq: () => query, order: () => query, update, single: () => Promise.resolve(result), then: (res, rej) => Promise.resolve(result).then(res, rej) }
+    return query
+  })
+  render(<Settings org={{ id: 'o1', name: 'Riverside Youth Club', plan: 'trial', branding_enabled: true }} userProfile={{ role: 'admin' }} />)
+  fireEvent.click(screen.getByRole('button', { name: 'Billing', exact: true }))
+
+  expect(within(await screen.findByText('Complete Platform', { selector: 'div' }).then(el => el.parentElement)).getByText('£49.99')).toBeInTheDocument()
+  const number = screen.getByLabelText('Charity number')
+  fireEvent.change(number, { target: { value: '12345' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Claim 20% off' }))
+  expect(await screen.findByText(/look like 1123456/)).toBeInTheDocument()
+  expect(update).not.toHaveBeenCalled()
+
+  // Typing a Scottish number moves the regulator to match.
+  fireEvent.change(number, { target: { value: 'sc 012345' } })
+  expect(screen.getByLabelText('Registered with')).toHaveValue('oscr')
+  fireEvent.click(screen.getByRole('button', { name: 'Claim 20% off' }))
+  await screen.findByRole('button', { name: 'Claim 20% off' })
+  expect(update).toHaveBeenCalledWith(expect.objectContaining({ charity_number: 'SC012345', charity_regulator: 'oscr', charity_status: 'claimed' }))
+})

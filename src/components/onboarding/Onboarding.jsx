@@ -1,12 +1,13 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import OnboardingLayout, { useReducedMotion } from '../auth/onboarding/OnboardingLayout'
+import OnboardingLayout, { ActionBar, useReducedMotion } from '../auth/onboarding/OnboardingLayout'
 import ProgressHeader from '../auth/onboarding/ProgressHeader'
 import SelectionCard from '../auth/onboarding/SelectionCard'
 import AnimatedInput from '../auth/onboarding/AnimatedInput'
 import Icon from '../../lib/icons'
+import { getTerms } from '../../lib/terminology'
 
 // Same 12-option list and icon keys as the sign-up flow, for a consistent
 // vocabulary across both onboarding surfaces. Values are free text on
@@ -37,14 +38,20 @@ const FOCUSES = [
   { value: 'multiple',   label: 'Multiple Focus Areas',           icon: 'compass' },
 ]
 
-const STEP_TITLES = ['Welcome', 'Organisation type', 'Organisation size', 'Location', 'Primary focus', 'Groups', 'Main contact']
-const TOTAL_STEPS = 7
+const STEP_TITLES = { welcome: 'Welcome', type: 'Organisation type', size: 'Organisation size', location: 'Location', focus: 'Primary focus', groups: 'Groups', contact: 'Main contact' }
 
 export default function Onboarding({ session, org, onComplete }) {
   const isMobile = useIsMobile()
   const reducedMotion = useReducedMotion()
   const [step, setStep] = useState(0)
-  const [orgType, setOrgType] = useState('')
+  // The founder chose a type at sign-up, and approve_trial_request() saved it
+  // on the organisation, so asking again was a repeat question. Workspaces
+  // made some other way still get the step. It can be changed in Settings.
+  const [askType] = useState(() => !org?.type)
+  const keys = ['welcome', ...(askType ? ['type'] : []), 'size', 'location', 'focus', 'groups', 'contact']
+  const key = keys[step]
+  const TOTAL_STEPS = keys.length
+  const [orgType, setOrgType] = useState(org?.type || '')
   const [orgTypeOther, setOrgTypeOther] = useState('')
   const [youngPeopleRange, setYoungPeopleRange] = useState('')
   const [staffRange, setStaffRange] = useState('')
@@ -55,11 +62,22 @@ export default function Onboarding({ session, org, onComplete }) {
   const [customGroups, setCustomGroups] = useState([])
   const [newGroupLabel, setNewGroupLabel] = useState('')
   const [newGroupColor, setNewGroupColor] = useState('#4F6EF7')
-  const [contactName, setContactName] = useState('')
-  const [contactEmail, setContactEmail] = useState('')
+  const [contactName, setContactName] = useState(org?.contact_name || '')
+  const [contactEmail, setContactEmail] = useState(org?.contact_email || session?.user?.email || '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
+  // The main contact is usually the founder, who typed their name and email
+  // at sign-up: start from those rather than an empty form.
+  useEffect(() => {
+    if (!session?.user?.id) return
+    let cancelled = false
+    supabase.from('user_profiles').select('full_name').eq('id', session.user.id).maybeSingle()
+      .then(({ data }) => { if (!cancelled && data?.full_name) setContactName(n => n || data.full_name) })
+    return () => { cancelled = true }
+  }, [session?.user?.id])
+
+  const terms = getTerms(orgType || org?.type)
   const next = () => setStep(s => Math.min(s + 1, TOTAL_STEPS - 1))
   const back = () => setStep(s => Math.max(s - 1, 0))
   const timezone = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone } catch (e) { return null } })()
@@ -104,41 +122,41 @@ export default function Onboarding({ session, org, onComplete }) {
     onComplete()
   }
 
-  const canContinue = [
-    true,                              // 0 welcome
-    !!orgType,                         // 1 org type
-    !!youngPeopleRange && !!staffRange,// 2 size
-    city.trim().length > 0,            // 3 location
-    !!focus,                           // 4 focus
-    true,                              // 5 groups (optional)
-    contactName.trim().length > 0,     // 6 contact
-  ][step]
+  const canContinue = {
+    welcome: true,
+    type: !!orgType,
+    size: !!youngPeopleRange && !!staffRange,
+    location: city.trim().length > 0,
+    focus: !!focus,
+    groups: true,                      // optional
+    contact: contactName.trim().length > 0,
+  }[key]
 
   const stepVariants = reducedMotion
     ? { initial: { opacity: 0 }, animate: { opacity: 1, transition: { duration: 0.12 } }, exit: { opacity: 0, transition: { duration: 0.1 } } }
     : { initial: { opacity: 0, x: 14 }, animate: { opacity: 1, x: 0, transition: { duration: 0.32, ease: [0.16, 1, 0.3, 1] } }, exit: { opacity: 0, x: -10, transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } } }
 
-  if (step === 0) return (
+  if (key === 'welcome') return (
     <OnboardingLayout wide={false}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontSize: 48, marginBottom: 18 }}><Icon name="🚀" /></div>
         <h2 style={cardTitle}>Welcome to {org.name}!</h2>
-        <p style={cardSub}>Let's take a couple of minutes to set up your LaunchSession workspace. We'll ask a few quick questions to personalise it.</p>
+        <p style={cardSub}>{TOTAL_STEPS - 1} quick questions to set up your workspace — about a minute. Nothing here is final; you can change all of it in Settings.</p>
         <button className="ls-primary-btn" style={primaryBtn} onClick={next}>Let's go <span className="ls-btn-arrow"><Icon name="→" /></span></button>
       </div>
     </OnboardingLayout>
   )
 
-  const stepWide = step === 1
-  const disabledReason = [
-    '', 'Select an organisation type to continue.', 'Choose both ranges to continue.',
-    'Add a town or city to continue.', 'Choose a primary focus to continue.', '',
-    'Add a name for the main contact to continue.',
-  ][step]
+  const stepWide = key === 'type'
+  const disabledReason = {
+    type: 'Select an organisation type to continue.', size: 'Choose both ranges to continue.',
+    location: 'Add a town or city to continue.', focus: 'Choose a primary focus to continue.',
+    contact: 'Add a name for the main contact to continue.',
+  }[key] || ''
 
   return (
-    <OnboardingLayout wide>
-      <ProgressHeader stepNumber={step + 1} totalSteps={TOTAL_STEPS} title={STEP_TITLES[step]} showBack onBack={back} />
+    <OnboardingLayout wide signedIn>
+      <ProgressHeader stepNumber={step + 1} totalSteps={TOTAL_STEPS} title={STEP_TITLES[key]} showBack onBack={back} />
 
       {error && (
         <div role="alert" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger-text)', borderRadius: 12, padding: '12px 16px', marginBottom: 20, fontSize: 13, fontWeight: 600 }}>
@@ -148,9 +166,9 @@ export default function Onboarding({ session, org, onComplete }) {
 
       <div style={{ maxWidth: stepWide ? 'none' : 460, margin: stepWide ? 0 : '0 auto' }}>
         <AnimatePresence mode="wait">
-          <motion.div key={step} variants={stepVariants} initial="initial" animate="animate" exit="exit">
+          <motion.div key={key} variants={stepVariants} initial="initial" animate="animate" exit="exit">
 
-            {step === 1 && (
+            {key === 'type' && (
               <div>
                 <h2 style={cardTitle}>What type of organisation is {org.name}?</h2>
                 <p style={cardSub}>We'll tailor your workspace, terminology and suggested modules.</p>
@@ -172,9 +190,9 @@ export default function Onboarding({ session, org, onComplete }) {
               </div>
             )}
 
-            {step === 2 && (
+            {key === 'size' && (
               <div>
-                <h2 style={cardTitle}>Approximately how many young people do you support?</h2>
+                <h2 style={cardTitle}>Approximately how many {terms.people} do you support?</h2>
                 <p style={cardSub}>This helps us recommend the right setup. An estimate is fine.</p>
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: 10, marginBottom: 26 }}>
                   {YOUNG_PEOPLE_RANGES.map(r => (
@@ -183,7 +201,7 @@ export default function Onboarding({ session, org, onComplete }) {
                 </div>
 
                 <h3 style={{ fontSize: 14.5, fontWeight: 800, color: '#fff', margin: '0 0 4px' }}>How many staff and volunteers will use LaunchSession?</h3>
-                <p style={{ ...cardSub, marginBottom: 14 }}>You can invite them properly in the next step.</p>
+                <p style={{ ...cardSub, marginBottom: 14 }}>You'll invite them from Team once you're in.</p>
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: 10 }}>
                   {STAFF_RANGES.map(r => (
                     <SelectionCard key={r} compact title={r} selected={staffRange === r} onClick={() => setStaffRange(r)} icon={<span style={{ fontSize: 16, fontWeight: 900 }}>#</span>} />
@@ -192,7 +210,7 @@ export default function Onboarding({ session, org, onComplete }) {
               </div>
             )}
 
-            {step === 3 && (
+            {key === 'location' && (
               <div style={{ maxWidth: 460 }}>
                 <h2 style={cardTitle}>Where is {org.name} based?</h2>
                 <p style={cardSub}>We'll use this for regional settings, dates and safeguarding guidance.</p>
@@ -209,7 +227,7 @@ export default function Onboarding({ session, org, onComplete }) {
               </div>
             )}
 
-            {step === 4 && (
+            {key === 'focus' && (
               <div>
                 <h2 style={cardTitle}>What's your primary focus?</h2>
                 <p style={cardSub}>What does {org.name} mainly deliver?</p>
@@ -221,16 +239,16 @@ export default function Onboarding({ session, org, onComplete }) {
               </div>
             )}
 
-            {step === 5 && (
+            {key === 'groups' && (
               <div style={{ maxWidth: 460 }}>
                 <h2 style={cardTitle}>Set up your groups</h2>
-                <p style={cardSub}>Add the groups your participants are organised into — like "Under 10s" or "Beginners". You can skip this and set it up later in Settings → Registers.</p>
+                <p style={cardSub}>Add the groups your {terms.people} are organised into — like "Under 10s" or "Beginners". You can skip this and set it up later in Settings → Registers.</p>
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 20 }}>
                   {PRESET_GROUPS.map(label => (
-                    <button key={label} onClick={() => {
+                    <button key={label} type="button" aria-pressed={!!customGroups.find(g => g.label === label)} onClick={() => {
                       if (!customGroups.find(g => g.label === label)) setCustomGroups(prev => [...prev, { id: 'g-' + Date.now() + label, label, color: newGroupColor }])
-                    }} style={{ padding: '5px 12px', borderRadius: 20, border: '1.5px solid rgba(255,255,255,0.15)', background: customGroups.find(g => g.label === label) ? 'rgba(79,110,247,0.3)' : 'rgba(255,255,255,0.05)', color: customGroups.find(g => g.label === label) ? '#93C5FD' : 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                    }} style={{ minHeight: 44, padding: '8px 14px', borderRadius: 22, border: '1.5px solid rgba(255,255,255,0.15)', background: customGroups.find(g => g.label === label) ? 'rgba(79,110,247,0.3)' : 'rgba(255,255,255,0.05)', color: customGroups.find(g => g.label === label) ? '#93C5FD' : 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                       + {label}
                     </button>
                   ))}
@@ -242,7 +260,7 @@ export default function Onboarding({ session, org, onComplete }) {
                       <div key={g.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                         <div style={{ width: 12, height: 12, borderRadius: '50%', background: g.color, flexShrink: 0 }} />
                         <span style={{ flex: 1, fontSize: 14, color: '#fff' }}>{g.label}</span>
-                        <button onClick={() => setCustomGroups(prev => prev.filter(x => x.id !== g.id))} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: 16 }}><Icon name="✕" /></button>
+                        <button type="button" aria-label={`Remove ${g.label}`} onClick={() => setCustomGroups(prev => prev.filter(x => x.id !== g.id))} style={{ width: 44, height: 44, background: 'none', border: 'none', color: 'rgba(255,255,255,0.45)', cursor: 'pointer', fontSize: 16 }}><Icon name="✕" /></button>
                       </div>
                     ))}
                   </div>
@@ -250,21 +268,21 @@ export default function Onboarding({ session, org, onComplete }) {
 
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10 }}>
                   <div style={{ flex: 1 }}>
-                    <AnimatedInput valid={false} inputProps={{ placeholder: 'Custom group name...', value: newGroupLabel, onChange: e => setNewGroupLabel(e.target.value), onKeyDown: e => e.key === 'Enter' && addGroup() }} />
+                    <AnimatedInput valid={false} inputProps={{ 'aria-label': 'Custom group name', placeholder: 'Custom group name...', value: newGroupLabel, onChange: e => setNewGroupLabel(e.target.value), onKeyDown: e => e.key === 'Enter' && addGroup() }} />
                   </div>
-                  <label title="Pick a colour" style={{ position: 'relative', width: 52, height: 52, borderRadius: 14, flexShrink: 0, background: newGroupColor, border: '2px solid rgba(255,255,255,0.25)', cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <label title="Pick a colour" aria-label="Group colour" style={{ position: 'relative', width: 52, height: 52, borderRadius: 14, flexShrink: 0, background: newGroupColor, border: '2px solid rgba(255,255,255,0.25)', cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <input type="color" value={newGroupColor} onChange={e => setNewGroupColor(e.target.value)} style={{ position: 'absolute', inset: -4, width: 'calc(100% + 8px)', height: 'calc(100% + 8px)', border: 'none', padding: 0, cursor: 'pointer', opacity: 0 }} />
                     <span style={{ fontSize: 16, pointerEvents: 'none' }}><Icon name="🎨" /></span>
                   </label>
                 </div>
-                <button onClick={addGroup} style={{ width: '100%', padding: '13px 16px', borderRadius: 12, border: 'none', background: '#4F6EF7', color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>+ Add Group</button>
+                <button type="button" onClick={addGroup} style={{ width: '100%', padding: '13px 16px', borderRadius: 12, border: 'none', background: '#3D5AFE', color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>+ Add Group</button>
               </div>
             )}
 
-            {step === 6 && (
+            {key === 'contact' && (
               <div style={{ maxWidth: 460 }}>
                 <h2 style={cardTitle}>Who's the main contact?</h2>
-                <p style={cardSub}>We'll use this for important workspace communications.</p>
+                <p style={cardSub}>We'll use this for important workspace communications. We've started with your details — change them if someone else should hear from us.</p>
                 <div style={{ marginBottom: 14 }}>
                   <AnimatedInput label="Full name" autoFocus valid={contactName.trim().length > 1} inputProps={{ placeholder: 'e.g. Jane Smith', value: contactName, onChange: e => setContactName(e.target.value) }} />
                 </div>
@@ -275,12 +293,12 @@ export default function Onboarding({ session, org, onComplete }) {
         </AnimatePresence>
       </div>
 
-      <div style={isMobile ? mobileStickyNav : { display: 'flex', flexDirection: 'column', gap: 8, marginTop: 24, maxWidth: stepWide ? 460 : 'none' }}>
+      <ActionBar mobile={isMobile} style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 24, maxWidth: stepWide ? 460 : 'none' }}>
         <div style={{ display: 'flex', gap: 10 }}>
           <button type="button" onClick={back} style={ghostBtn}><Icon name="←" /> Back</button>
-          {step === 5 ? (
+          {key === 'groups' ? (
             <button type="button" onClick={next} className="ls-primary-btn" style={{ ...primaryBtn, flex: 1 }}>Continue <span className="ls-btn-arrow"><Icon name="→" /></span></button>
-          ) : step === 6 ? (
+          ) : key === 'contact' ? (
             <button type="button" onClick={handleComplete} disabled={!canContinue || saving} className="ls-primary-btn" style={{ ...primaryBtn, flex: 1, opacity: !canContinue || saving ? 0.6 : 1 }}>
               {saving ? 'Setting up…' : <>Launch My Workspace <span className="ls-btn-arrow"><Icon name="🚀" /></span></>}
             </button>
@@ -289,8 +307,8 @@ export default function Onboarding({ session, org, onComplete }) {
           )}
         </div>
         {!canContinue && disabledReason && <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{disabledReason}</div>}
-      </div>
-      {isMobile && <div style={{ height: 84 }} />}
+      </ActionBar>
+      {isMobile && <div style={{ height: 104 }} />}
     </OnboardingLayout>
   )
 
@@ -316,4 +334,3 @@ const cardTitle = { fontSize: 22, margin: '0 0 8px', fontWeight: 900, color: '#f
 const cardSub = { color: 'rgba(255,255,255,0.55)', margin: '0 0 20px', fontSize: 14, lineHeight: 1.6, maxWidth: 460 }
 const primaryBtn = { padding: '15px 26px', borderRadius: 14, border: 'none', color: '#fff', fontWeight: 900, fontSize: 15, cursor: 'pointer', boxShadow: '0 12px 40px rgba(59,130,246,0.35)', fontFamily: 'inherit' }
 const ghostBtn = { padding: '15px 18px', borderRadius: 14, border: '1.5px solid rgba(255,255,255,0.15)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }
-const mobileStickyNav = { position: 'fixed', left: 0, right: 0, bottom: 0, padding: '12px 16px calc(12px + env(safe-area-inset-bottom))', background: 'rgba(7,11,22,0.92)', backdropFilter: 'blur(16px)', borderTop: '1px solid rgba(255,255,255,0.1)', zIndex: 50 }

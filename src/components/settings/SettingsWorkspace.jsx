@@ -16,7 +16,7 @@ export const SETTINGS_NAV = [
   { key: 'integrations', icon: 'fields', label: 'Integrations', group: 'Day-to-day', description: 'Explore connected services' },
   { key: 'appearance', icon: '🎨', label: 'Appearance', group: 'Your account', description: 'Light, dark or your device theme' },
   { key: 'security', icon: 'lock', label: 'Security', group: 'Your account', description: 'Password and device security', keywords: 'login lock' },
-  { key: 'billing', icon: 'payments', label: 'Billing', group: 'Your account', description: 'Your plan, subscription and usage', keywords: 'payment invoice trial' },
+  { key: 'billing', icon: 'payments', label: 'Billing', group: 'Your account', description: 'Your plan, subscription and usage', keywords: 'payment invoice trial charity discount' },
   { key: 'help', icon: 'help', label: 'Help & support', group: 'Your account', description: 'Guidance and a hand when you need it', keywords: 'contact assistance' },
 ]
 

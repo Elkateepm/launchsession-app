@@ -1,4 +1,5 @@
 import React from 'react'
+import { createPortal } from 'react-dom'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import OnboardingStyles from './OnboardingStyles'
 import { STAGGER, DURATION } from './animations'
@@ -27,7 +28,21 @@ const STARS = [
   { top: '45%', left: '92%', size: 1.5, delay: 3.1 },
 ]
 
-export default function OnboardingLayout({ children, wide = true, panelStyle, onBackHome }) {
+// The step buttons. On a phone they sit in a bar fixed to the bottom of the
+// screen -- but the glass panel's backdrop-filter makes the panel the
+// containing block for anything fixed inside it, so the bar used to pin to
+// the bottom of the card instead. On the long steps (organisation type,
+// review) that put Continue below the fold, behind twelve cards. Rendering
+// the bar into <body> puts it back on the edge of the screen.
+export function ActionBar({ mobile, style, children }) {
+  if (!mobile) return <div style={style}>{children}</div>
+  return createPortal(<div style={mobileBar}>{children}</div>, document.body)
+}
+
+// `signedIn` is for someone already in their workspace (the first-run
+// questions): "sign in" and "back to the website" mean nothing to them, and
+// the second dropped them out of their own setup onto the marketing page.
+export default function OnboardingLayout({ children, wide = true, panelStyle, onBackHome, signedIn = false }) {
   const isMobile = useIsMobile()
   const reducedMotion = useReducedMotion()
 
@@ -75,19 +90,23 @@ export default function OnboardingLayout({ children, wide = true, panelStyle, on
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginTop: 22, flexWrap: 'wrap', textAlign: 'center', ...enterStyle(STAGGER.footer, 'ls-fade-in') }}>
-          <button onClick={onBackHome || (() => { window.location.href = '/landing.html' })} className="ls-footlink" style={footLink}><Icon name="←" /> Back to LaunchSession</button>
-          <Dot />
+          {!signedIn && <>
+            <button onClick={onBackHome || (() => { window.location.href = '/landing.html' })} className="ls-footlink" style={footLink}><Icon name="←" /> Back to LaunchSession</button>
+            <Dot />
+          </>}
           <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.35)' }}><Icon name="🔒" /> Secure &amp; never shared</span>
           <Dot />
           <a href="/privacy.html" className="ls-footlink" style={footLink}>Privacy Policy</a>
           <Dot />
           <a href="/terms.html" className="ls-footlink" style={footLink}>Terms</a>
+          {!signedIn && <>
           <Dot />
           {/* /login.html has never existed -- this pointed at a 404. Sign-in
               goes through /org-search, which clears any saved organisation
               first, per AUTH_FLOW_LOCK.md; /login on its own is only valid
               once an organisation has been chosen. */}
           <a href="/org-search" className="ls-footlink" style={footLink}>Already have an account? Sign in</a>
+          </>}
         </div>
       </div>
     </div>
@@ -122,4 +141,7 @@ const glassPanel = (isMobile) => ({
   boxSizing: 'border-box',
 })
 
-const footLink = { background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.45)', cursor: 'pointer', fontSize: 12.5, fontFamily: 'inherit', textDecoration: 'none' }
+// Tall enough to tap on a phone; the footer wraps, so the height is free.
+const footLink = { background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.45)', cursor: 'pointer', fontSize: 12.5, fontFamily: 'inherit', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 44, padding: '0 2px' }
+
+const mobileBar = { position: 'fixed', left: 0, right: 0, bottom: 0, padding: '12px 16px calc(12px + env(safe-area-inset-bottom))', background: 'rgba(7,11,22,0.92)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderTop: '1px solid rgba(255,255,255,0.1)', zIndex: 50, color: '#fff', fontFamily: "'Plus Jakarta Sans', sans-serif" }
