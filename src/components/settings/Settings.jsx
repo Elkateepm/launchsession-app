@@ -1194,7 +1194,7 @@ function CharityDiscountCard({ org, refreshOrg }) {
       <form onSubmit={claim} noValidate>
         <Field label="Registered with">
           <select value={regulator} onChange={e => setRegulator(e.target.value)} style={inp}>
-            {REGULATORS.map(r => <option key={r.key} value={r.key}>{r.name}</option>)}
+            {REGULATORS.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
           </select>
         </Field>
         <Field label="Charity number" hint={`As it appears on the register, for example ${regulatorFor(regulator)?.example}.`}>

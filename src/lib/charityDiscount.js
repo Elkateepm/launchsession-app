@@ -15,9 +15,9 @@ export const CHARITY_DISCOUNT_PERCENT = 20
 // England & Wales 6 or 7 digits (a linked charity adds "-1"), Scotland "SC"
 // and 6 digits, Northern Ireland "NIC" and 6 digits.
 export const REGULATORS = [
-  { key: 'ccew', label: 'England & Wales', name: 'Charity Commission for England and Wales', example: '1123456', pattern: /^\d{6,7}(-\d{1,2})?$/ },
-  { key: 'oscr', label: 'Scotland', name: 'Scottish Charity Regulator (OSCR)', example: 'SC012345', pattern: /^SC\d{6}$/ },
-  { key: 'ccni', label: 'Northern Ireland', name: 'Charity Commission for Northern Ireland', example: 'NIC100002', pattern: /^NIC\d{6}$/ },
+  { key: 'ccew', label: 'England & Wales (Charity Commission)', name: 'Charity Commission for England and Wales', example: '1123456', pattern: /^\d{6,7}(-\d{1,2})?$/ },
+  { key: 'oscr', label: 'Scotland (OSCR)', name: 'Scottish Charity Regulator (OSCR)', example: 'SC012345', pattern: /^SC\d{6}$/ },
+  { key: 'ccni', label: 'Northern Ireland (CCNI)', name: 'Charity Commission for Northern Ireland', example: 'NIC100002', pattern: /^NIC\d{6}$/ },
 ]
 
 export const regulatorFor = key => REGULATORS.find(r => r.key === key) || null
@@ -44,7 +44,7 @@ export function charityNumberError(raw, regulator) {
   if (!reg) return 'Choose where your charity is registered.'
   const n = normaliseCharityNumber(raw, regulator)
   if (!n) return 'Enter your registered charity number.'
-  if (!reg.pattern.test(n)) return `That doesn't look like a ${reg.label} charity number — they look like ${reg.example}.`
+  if (!reg.pattern.test(n)) return `That doesn't look right for the ${reg.name} — numbers there look like ${reg.example}.`
   return ''
 }
 

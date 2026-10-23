@@ -575,7 +575,7 @@ export default function Signup() {
             </button>
           )}
         </div>
-        {!canContinue && !isReviewStep && <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{disabledReason}</div>}
+        {!canContinue && !isReviewStep && <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.6)', textAlign: 'center' }}>{disabledReason}</div>}
       </ActionBar>
       {isMobile && <div style={{ height: isReviewStep ? 150 : 104 }} />}
     </OnboardingLayout>

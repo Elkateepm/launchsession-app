@@ -306,7 +306,7 @@ export default function Onboarding({ session, org, onComplete }) {
             <button type="button" onClick={next} disabled={!canContinue} className="ls-primary-btn" style={{ ...primaryBtn, flex: 1, opacity: canContinue ? 1 : 0.4 }}>Continue <span className="ls-btn-arrow"><Icon name="→" /></span></button>
           )}
         </div>
-        {!canContinue && disabledReason && <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{disabledReason}</div>}
+        {!canContinue && disabledReason && <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.6)', textAlign: 'center' }}>{disabledReason}</div>}
       </ActionBar>
       {isMobile && <div style={{ height: 104 }} />}
     </OnboardingLayout>

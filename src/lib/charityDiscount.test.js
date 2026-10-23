@@ -20,7 +20,7 @@ test('numbers are accepted as each register prints them', () => {
 test('a number that cannot be on the register says what one looks like', () => {
   expect(charityNumberError('', 'ccew')).toMatch(/Enter your registered charity number/)
   expect(charityNumberError('12345', 'ccew')).toMatch(/look like 1123456/)
-  expect(charityNumberError('SC012345', 'ccew')).toMatch(/England & Wales/)
+  expect(charityNumberError('SC012345', 'ccew')).toMatch(/Charity Commission for England and Wales/)
   expect(charityNumberError('1123456', 'nowhere')).toMatch(/Choose where/)
 })
 
