@@ -20,6 +20,7 @@ import Icon from '../../lib/icons'
 import BrandingCentre from './branding/BrandingCentre'
 import { withAlpha } from '../../lib/withAlpha'
 import SettingsWorkspace, { SETTINGS_NAV as NAV } from './SettingsWorkspace'
+import { CHARITY_DISCOUNT_PERCENT, REGULATORS, regulatorFor, normaliseCharityNumber, guessRegulator, charityNumberError, hasCharityDiscount, discountedPence } from '../../lib/charityDiscount'
 
 // Shown everywhere an org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = '/launchsession-badge.png'
@@ -1125,6 +1126,98 @@ const MODULE_LABEL = Object.fromEntries(ACCESS_MODULES.map(m => [m.key, m.label]
 // rounding to whole pounds quoted £50 for a plan that bills £49.99.
 const poundsPerMonth = (pence) => `£${(pence / 100).toFixed(pence % 100 ? 2 : 0)}`
 
+// A registered charity claims its 20% here. The claim is just the number:
+// it applies at checkout straight away, and LaunchSession checks it against
+// the public register afterwards (see src/lib/charityDiscount.js).
+function CharityDiscountCard({ org, refreshOrg }) {
+  const status = org?.charity_status || 'none'
+  const claimed = hasCharityDiscount(org)
+  const [editing, setEditing] = useState(false)
+  const [regulator, setRegulator] = useState(org?.charity_regulator || 'ccew')
+  const [number, setNumber] = useState(status === 'rejected' ? (org?.charity_number || '') : '')
+  const [touched, setTouched] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const numberError = charityNumberError(number, regulator)
+  const reg = regulatorFor(org?.charity_regulator)
+
+  const save = async (fields) => {
+    setSaving(true); setError('')
+    const { error: err } = await supabase.from('organisations').update(fields).eq('id', org.id)
+    setSaving(false)
+    if (err) {
+      setError(err.code === '42501'
+        ? 'That number was already checked and could not be matched. Use a different number, or email hello@launchsession.co.uk.'
+        : 'Could not save that just now. Please try again.')
+      return false
+    }
+    if (refreshOrg) await refreshOrg()
+    return true
+  }
+  const claim = async e => {
+    e.preventDefault()
+    setTouched(true)
+    if (numberError) return
+    if (await save({ charity_number: normaliseCharityNumber(number, regulator), charity_regulator: regulator, charity_status: 'claimed', charity_claimed_at: new Date().toISOString() })) setEditing(false)
+  }
+  const remove = () => save({ charity_number: null, charity_regulator: null, charity_status: 'none', charity_claimed_at: null })
+
+  const title = `Registered charity: ${CHARITY_DISCOUNT_PERCENT}% off`
+  if (claimed && !editing) return (
+    <SettingCard title={title}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap', justifyContent: 'space-between' }}>
+        <div style={{ minWidth: 0, flex: '1 1 260px' }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--ok-text)' }}>
+            <Icon name="✓" /> {status === 'verified' ? `Verified — ${CHARITY_DISCOUNT_PERCENT}% off every plan` : `${CHARITY_DISCOUNT_PERCENT}% off is applied at checkout`}
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--text2)', marginTop: 4, lineHeight: 1.6 }}>
+            Charity number <strong>{org.charity_number}</strong>{reg ? ` · ${reg.name}` : ''}.
+            {status !== 'verified' && ' We check it against the public register; there is nothing else for you to do.'}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button type="button" onClick={() => { setNumber(org.charity_number || ''); setRegulator(org.charity_regulator || 'ccew'); setEditing(true) }} disabled={saving} style={charityGhostBtn}>Change</button>
+          <button type="button" onClick={remove} disabled={saving} style={charityGhostBtn}>Remove</button>
+        </div>
+      </div>
+      {error && <div role="alert" style={{ fontSize: 13, color: 'var(--danger-text)', marginTop: 10 }}>{error}</div>}
+    </SettingCard>
+  )
+
+  return (
+    <SettingCard title={title} description={`Registered charities pay ${CHARITY_DISCOUNT_PERCENT}% less on every plan, monthly or annual, for as long as they stay registered. Add your number before you choose a plan.`}>
+      {status === 'rejected' && !editing && (
+        <div role="status" style={{ fontSize: 13, color: 'var(--warn-text)', background: 'var(--warn-bg)', borderRadius: 10, padding: '10px 12px', marginBottom: 14, lineHeight: 1.6 }}>
+          We couldn't find charity number <strong>{org.charity_number}</strong> on the register, so the discount isn't applied. Check the number and claim again, or email <a href="mailto:hello@launchsession.co.uk?subject=Charity%20discount" style={{ color: 'inherit', fontWeight: 700 }}>hello@launchsession.co.uk</a>.
+        </div>
+      )}
+      <form onSubmit={claim} noValidate>
+        <Field label="Registered with">
+          <select value={regulator} onChange={e => setRegulator(e.target.value)} style={inp}>
+            {REGULATORS.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
+          </select>
+        </Field>
+        <Field label="Charity number" hint={`As it appears on the register, for example ${regulatorFor(regulator)?.example}.`}>
+          <input value={number} inputMode="text" autoComplete="off" placeholder={regulatorFor(regulator)?.example}
+            onChange={e => { setNumber(e.target.value); const g = guessRegulator(e.target.value); if (g && g !== regulator) setRegulator(g) }}
+            onBlur={() => setTouched(true)}
+            aria-invalid={touched && !!numberError}
+            style={{ ...inp, borderColor: touched && numberError ? 'var(--danger-border)' : undefined }} />
+        </Field>
+        {touched && numberError && <div role="alert" style={{ fontSize: 13, color: 'var(--danger-text)', margin: '-8px 0 12px' }}>{numberError}</div>}
+        {error && <div role="alert" style={{ fontSize: 13, color: 'var(--danger-text)', margin: '0 0 12px' }}>{error}</div>}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button type="submit" disabled={saving} style={{ minHeight: 44, padding: '10px 18px', borderRadius: 10, border: 'none', background: 'var(--org-primary)', color: 'var(--org-on-primary, #fff)', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>
+            {saving ? 'Saving…' : `Claim ${CHARITY_DISCOUNT_PERCENT}% off`}
+          </button>
+          {editing && <button type="button" onClick={() => { setEditing(false); setError('') }} disabled={saving} style={charityGhostBtn}>Cancel</button>}
+        </div>
+      </form>
+    </SettingCard>
+  )
+}
+const charityGhostBtn = { minHeight: 44, padding: '10px 16px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }
+
 function BillingSection({ org, session, isAdmin, refreshOrg }) {
   const isMobile = useIsMobile()
   const [plans, setPlans] = useState(null)      // null while loading
@@ -1173,6 +1266,7 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
 
   const currentEntitlement = (plans || []).find(p => p.plan === currentPlan)
   const sellable = (plans || []).filter(p => p.self_serve)
+  const charity = hasCharityDiscount(org)
 
   const handleChoose = async (plan) => {
     setError(''); setNotice('')
@@ -1275,6 +1369,8 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
         )}
       </SettingCard>
 
+      {isAdmin && <CharityDiscountCard org={org} refreshOrg={refreshOrg} />}
+
       {isAdmin && (
         <SettingCard title="Plans" description="Every plan starts with the 14-day trial. Change or cancel at any time.">
           {plansError && (
@@ -1302,13 +1398,16 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
                 {sellable.map(p => {
                   const isCurrent = currentPlan === p.plan
-                  const pence = cycle === 'annual' ? p.price_annual_pence : p.price_monthly_pence
+                  const listPence = cycle === 'annual' ? p.price_annual_pence : p.price_monthly_pence
+                  const pence = charity ? discountedPence(listPence) : listPence
                   return (
                     <div key={p.plan} style={{ border: isCurrent ? '2px solid var(--org-primary)' : '1.5px solid var(--border)', borderRadius: 14, padding: '18px 16px', background: 'var(--surface)' }}>
                       <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>{p.label}</div>
                       <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', margin: '4px 0' }}>
                         {pence == null ? '—' : <>{poundsPerMonth(pence)}<span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text3)' }}>/mo</span></>}
+                        {charity && listPence != null && <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text3)', textDecoration: 'line-through', marginLeft: 8 }}><span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>was </span>{poundsPerMonth(listPence)}</span>}
                       </div>
+                      {charity && <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--ok-text)', marginBottom: 2 }}>{CHARITY_DISCOUNT_PERCENT}% charity discount</div>}
                       <div style={{ fontSize: 11.5, color: 'var(--text3)', marginBottom: 8 }}>
                         {cycle === 'annual' ? 'billed annually' : 'billed monthly'}
                         {p.child_limit ? ` · up to ${p.child_limit} children` : ' · unlimited children'}
@@ -1337,8 +1436,7 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
               </div>
 
               <p style={{ fontSize: 12, color: 'var(--text3)', margin: '14px 0 0', lineHeight: 1.6 }}>
-                Registered charity? <a href="mailto:hello@launchsession.co.uk?subject=Charity%20discount" style={{ color: 'var(--org-ink)', fontWeight: 600 }}>Ask about our discount</a>.
-                {' '}Need something bespoke? <a href="mailto:hello@launchsession.co.uk?subject=Bespoke%20plan" style={{ color: 'var(--org-ink)', fontWeight: 600 }}>Talk to us</a>.
+                Need something bespoke? <a href="mailto:hello@launchsession.co.uk?subject=Bespoke%20plan" style={{ color: 'var(--org-ink)', fontWeight: 600 }}>Talk to us</a>.
               </p>
             </>
           )}

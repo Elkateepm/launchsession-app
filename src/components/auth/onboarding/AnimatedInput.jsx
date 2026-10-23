@@ -5,6 +5,10 @@ export default function AnimatedInput({ label, valid, error, inputProps, autoFoc
   const reducedMotion = useReducedMotion()
   const [nudgeKey, setNudgeKey] = React.useState(0)
   const prevErrorRef = React.useRef(error)
+  // Ties the visible label to its field, so a screen reader announces it and
+  // tapping the label focuses the input.
+  const autoId = React.useId()
+  const id = inputProps?.id || autoId
 
   React.useEffect(() => {
     if (error && !prevErrorRef.current) setNudgeKey(k => k + 1)
@@ -13,10 +17,11 @@ export default function AnimatedInput({ label, valid, error, inputProps, autoFoc
 
   return (
     <div>
-      {label && <label className="ls-input-label" style={{ ...labelStyle, color: error ? 'var(--danger-border)' : labelStyle.color }}>{label}</label>}
+      {label && <label htmlFor={id} className="ls-input-label" style={{ ...labelStyle, color: error ? 'var(--danger-border)' : labelStyle.color }}>{label}</label>}
       <div style={{ position: 'relative' }}>
         <input
           {...inputProps}
+          id={id}
           autoFocus={autoFocus}
           key={reducedMotion ? undefined : nudgeKey}
           className={`ls-input${!reducedMotion && error ? ' ls-input-error' : ''}`}

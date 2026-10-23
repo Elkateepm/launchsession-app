@@ -5,7 +5,9 @@ import Icon from '../../lib/icons'
 
 const ROLE_CONTENT = {
   admin: {
-    kicker: 'Thanks for joining as an admin',
+    // Said to a founder who has just created the workspace as well as to an
+    // admin who was invited, so it can't thank either of them for "joining".
+    kicker: "You're setting up as an admin",
     features: [
       { icon: '🏢', title: 'Run the whole show', body: "You'll manage settings, your team and everything in between." },
       { icon: '📊', title: 'See the full picture', body: 'Reports, safeguarding and impact — all in one workspace.' },
@@ -365,12 +367,12 @@ export default function CreatePassword() {
                   )}
 
                   <div style={{ marginBottom: 14 }}>
-                    <label style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 0.6, display: 'block', marginBottom: 8 }}>Password</label>
+                    <label htmlFor="cp-password" style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 0.6, display: 'block', marginBottom: 8 }}>Password</label>
                     <div style={{ position: 'relative' }}>
                       <span style={{ position: 'absolute', left: 15, top: '50%', transform: 'translateY(-50%)', fontSize: 15, opacity: 0.5 }}><Icon name="🔒" /></span>
-                      <input type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required placeholder="Min. 8 characters"
+                      <input id="cp-password" autoComplete="new-password" type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required placeholder="Min. 8 characters"
                         style={inputStyle(false)} />
-                      <button type="button" onClick={() => setShowPw(s => !s)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', fontSize: 15 }}>
+                      <button type="button" onClick={() => setShowPw(s => !s)} aria-label={showPw ? 'Hide password' : 'Show password'} aria-pressed={showPw} style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', width: 44, height: 44, background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', fontSize: 15 }}>
                         {showPw ? '🙈' : '👁'}
                       </button>
                     </div>
@@ -387,10 +389,10 @@ export default function CreatePassword() {
                   </div>
 
                   <div style={{ marginBottom: 22 }}>
-                    <label style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 0.6, display: 'block', marginBottom: 8 }}>Confirm Password</label>
+                    <label htmlFor="cp-confirm" style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 0.6, display: 'block', marginBottom: 8 }}>Confirm Password</label>
                     <div style={{ position: 'relative' }}>
                       <span style={{ position: 'absolute', left: 15, top: '50%', transform: 'translateY(-50%)', fontSize: 15, opacity: 0.5 }}><Icon name="🔒" /></span>
-                      <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required placeholder="Repeat password"
+                      <input id="cp-confirm" autoComplete="new-password" type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required placeholder="Repeat password"
                         style={{ ...inputStyle(false), border: `1.5px solid ${confirm && confirm !== password ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.12)'}`, paddingRight: 16 }} />
                     </div>
                     {confirm && confirm !== password && <div style={{ fontSize: 11, color: 'var(--danger-text)', marginTop: 6, fontWeight: 600 }}>Passwords don't match</div>}
@@ -417,7 +419,7 @@ export default function CreatePassword() {
                   <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <div style={{ width: 30, height: 30, borderRadius: 9, background: 'var(--org-a10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}><Icon name="💬" /></div>
                     <div>
-                      <div style={{ fontSize: 12.5, fontWeight: 800, color: '#fff' }}>Problem with your invite?</div>
+                      <div style={{ fontSize: 12.5, fontWeight: 800, color: '#fff' }}>Problem with this link?</div>
                       <a href="mailto:support@launchsession.co.uk" style={{ fontSize: 12, color: '#C4B5FD', fontWeight: 700, textDecoration: 'none' }}>Contact support@launchsession.co.uk</a>
                     </div>
                   </div>
@@ -445,13 +447,13 @@ export default function CreatePassword() {
                 </div>
 
                 <div style={{ marginBottom: 14 }}>
-                  <label style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 0.6, display: 'block', marginBottom: 8 }}>What should we call you?</label>
-                  <input value={preferredName} onChange={e => setPreferredName(e.target.value)} placeholder="Preferred name" style={plainInputStyle} />
+                  <label htmlFor="cp-preferred" style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 0.6, display: 'block', marginBottom: 8 }}>What should we call you?</label>
+                  <input id="cp-preferred" value={preferredName} onChange={e => setPreferredName(e.target.value)} placeholder="Preferred name" style={plainInputStyle} />
                 </div>
 
                 <div style={{ marginBottom: 24 }}>
-                  <label style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 0.6, display: 'block', marginBottom: 8 }}>Phone number <span style={{ textTransform: 'none', fontWeight: 500 }}>(optional)</span></label>
-                  <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="07..." style={plainInputStyle} />
+                  <label htmlFor="cp-phone" style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 0.6, display: 'block', marginBottom: 8 }}>Phone number <span style={{ textTransform: 'none', fontWeight: 500 }}>(optional)</span></label>
+                  <input id="cp-phone" type="tel" autoComplete="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="07..." style={plainInputStyle} />
                 </div>
 
                 <button onClick={saveProfileStep} style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', background: `linear-gradient(135deg, ${primary}, #6366F1)`, color: '#fff', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: `0 10px 30px -8px var(--org-a60)` }}>
@@ -489,7 +491,7 @@ export default function CreatePassword() {
                 <button onClick={finishFunStep} style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', background: `linear-gradient(135deg, ${primary}, #6366F1)`, color: '#fff', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: `0 10px 30px -8px var(--org-a60)`, marginBottom: 10 }}>
                   Finish & Launch 🚀
                 </button>
-                <button onClick={finishFunStep} style={{ width: '100%', padding: 8, borderRadius: 10, border: 'none', background: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>
+                <button onClick={finishFunStep} style={{ width: '100%', minHeight: 44, padding: 8, borderRadius: 10, border: 'none', background: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>
                   Skip for now
                 </button>
               </motion.div>

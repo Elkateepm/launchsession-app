@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import OnboardingLayout, { useReducedMotion } from './onboarding/OnboardingLayout'
+import OnboardingLayout, { ActionBar, useReducedMotion } from './onboarding/OnboardingLayout'
 import ProgressHeader from './onboarding/ProgressHeader'
 import SelectionCard from './onboarding/SelectionCard'
 import AnimatedInput from './onboarding/AnimatedInput'
@@ -11,6 +11,7 @@ import { Icon } from './onboarding/icons'
 // and that one takes a `name` prop too, so the names genuinely collide.
 import LSIcon from '../../lib/icons'
 import { withAlpha } from '../../lib/withAlpha'
+import { CHARITY_DISCOUNT_PERCENT } from '../../lib/charityDiscount'
 
 const DRAFT_KEY = 'ls_signup_draft_v2'
 
@@ -43,6 +44,7 @@ const ORG_TYPES = [
 ]
 
 const ORG_TYPE_TIP = "Whatever you run, LaunchSession adapts — enable only the modules your team actually needs. This never locks you in; change it anytime in Settings."
+const CHARITY_TIP = `Registered charities get ${CHARITY_DISCOUNT_PERCENT}% off whichever plan you choose. Add your charity number in Settings → Billing whenever you're ready — the trial itself is free either way.`
 
 const WHAT_YOU_GET_GROUPS = [
   { title: 'Run your sessions', color: '#60A5FA', items: [
@@ -55,7 +57,9 @@ const WHAT_YOU_GET_GROUPS = [
   ]},
   { title: 'Your people', color: '#4ADE80', items: [
     { icon: 'child', label: 'Children & Groups' }, { icon: 'heart', label: 'Volunteers' },
-    { icon: 'handshake', label: 'Mentoring' }, { icon: 'chat', label: 'Messaging' },
+    // Mentoring was taken out of the navigation, so it isn't listed here:
+    // a new workspace would not be able to find it.
+    { icon: 'users', label: 'Team & invites' }, { icon: 'chat', label: 'Messaging' },
   ]},
   // Only things the product actually does. Fundraising is hibernated and Events
   // & Trips is no longer a destination of its own, so advertising either here
@@ -429,7 +433,7 @@ export default function Signup() {
                   </div>
                 )}
 
-                {orgType && <Teach>{ORG_TYPE_TIP}</Teach>}
+                {orgType === 'charity' ? <Teach>{CHARITY_TIP}</Teach> : orgType && <Teach>{ORG_TYPE_TIP}</Teach>}
               </div>
             )}
 
@@ -520,21 +524,6 @@ export default function Signup() {
                     <Row k="Email" v={email} last />
                   </div>
 
-                  <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 16, cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={agreedToTerms}
-                      onChange={e => setAgreedToTerms(e.target.checked)}
-                      style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0, accentColor: '#3B82F6', cursor: 'pointer' }}
-                    />
-                    <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
-                      I agree to LaunchSession's{' '}
-                      <a href="/terms.html" onClick={e => { e.preventDefault(); setLegalModal('terms') }} style={{ color: '#60A5FA', fontWeight: 700, textDecoration: 'underline' }}>Terms of Service</a>
-                      {' '}and{' '}
-                      <a href="/privacy.html" onClick={e => { e.preventDefault(); setLegalModal('privacy') }} style={{ color: '#60A5FA', fontWeight: 700, textDecoration: 'underline' }}>Privacy Policy</a>.
-                    </span>
-                  </label>
-
                   {loading && submitStep && (
                     <div role="status" style={{ margin: '16px 0 0', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 12, padding: '14px 16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -552,7 +541,26 @@ export default function Signup() {
 
       {legalModal && <LegalModal doc={legalModal} onClose={() => setLegalModal(null)} onAgree={() => { setAgreedToTerms(true); setLegalModal(null) }} />}
 
-      <div style={isMobile ? mobileStickyNav : { display: 'flex', flexDirection: 'column', gap: 8, marginTop: 24, maxWidth: stepWide ? 460 : 'none', margin: !isMobile && stepWide ? '24px auto 0' : '24px 0 0' }}>
+      <ActionBar mobile={isMobile} style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 24, maxWidth: stepWide ? 460 : 'none', margin: stepWide ? '24px auto 0' : '24px 0 0' }}>
+        {/* The agreement sits with the button it unlocks. Below the list of
+            what the workspace gets, it was a full phone-screen of scrolling
+            away from a Create button that was greyed out for its sake. */}
+        {isReviewStep && (
+          <label style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 44, marginBottom: isMobile ? 6 : 0, cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={agreedToTerms}
+              onChange={e => setAgreedToTerms(e.target.checked)}
+              style={{ width: 20, height: 20, flexShrink: 0, accentColor: '#3B82F6', cursor: 'pointer' }}
+            />
+            <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>
+              I agree to LaunchSession's{' '}
+              <a href="/terms.html" onClick={e => { e.preventDefault(); setLegalModal('terms') }} style={{ color: '#60A5FA', fontWeight: 700, textDecoration: 'underline' }}>Terms of Service</a>
+              {' '}and{' '}
+              <a href="/privacy.html" onClick={e => { e.preventDefault(); setLegalModal('privacy') }} style={{ color: '#60A5FA', fontWeight: 700, textDecoration: 'underline' }}>Privacy Policy</a>.
+            </span>
+          </label>
+        )}
         <div style={{ display: 'flex', gap: 10 }}>
           {stepIndex > 0 && (
             <button type="button" onClick={goBack} disabled={loading || navLocked} style={ghostBtn}><LSIcon name="←" /> Back</button>
@@ -567,9 +575,9 @@ export default function Signup() {
             </button>
           )}
         </div>
-        {!canContinue && <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{disabledReason}</div>}
-      </div>
-      {isMobile && <div style={{ height: 84 }} />}
+        {!canContinue && !isReviewStep && <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.6)', textAlign: 'center' }}>{disabledReason}</div>}
+      </ActionBar>
+      {isMobile && <div style={{ height: isReviewStep ? 150 : 104 }} />}
     </OnboardingLayout>
   )
 }
@@ -635,4 +643,3 @@ const cardTitle = { fontSize: 22, margin: '0 0 8px', fontWeight: 900, color: '#f
 const cardSub   = { color: 'rgba(255,255,255,0.55)', margin: '0 0 20px', fontSize: 14, lineHeight: 1.6, maxWidth: 460 }
 const primaryBtn = { padding: '15px', borderRadius: 14, border: 'none', color: '#fff', fontWeight: 900, fontSize: 15, cursor: 'pointer', boxShadow: '0 12px 40px rgba(59,130,246,0.35)', fontFamily: 'inherit' }
 const ghostBtn  = { padding: '15px 18px', borderRadius: 14, border: '1.5px solid rgba(255,255,255,0.15)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }
-const mobileStickyNav = { position: 'fixed', left: 0, right: 0, bottom: 0, padding: '12px 16px calc(12px + env(safe-area-inset-bottom))', background: 'rgba(7,11,22,0.92)', backdropFilter: 'blur(16px)', borderTop: '1px solid rgba(255,255,255,0.1)', zIndex: 50 }

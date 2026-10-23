@@ -85,7 +85,7 @@
   --green:#22C55E;
   --text:#F1F5F9;
   --text2:#94A3B8;
-  --text3:#64748B;
+  --text3:#7C8BA1; /* 5.7:1 on the page background; #64748B was 4.2 */
   --border:rgba(255,255,255,0.07);
   --border2:rgba(255,255,255,0.12);
   --glass:rgba(255,255,255,0.04);
@@ -1427,10 +1427,10 @@ async function submitFoundingOffer(e) {
       </div>
       <div class="feature-card" style="--feat-color:#F59E0B;--feat-bg:rgba(245,158,11,0.1)" data-feat="notifications_centre" data-cat="run" role="button" tabindex="0" onclick="openFeature('notifications_centre')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('notifications_centre')}">
         <div class="feat-tag">Included</div>
-        <div class="feat-title">Notifications Centre</div>
-        <div class="feat-desc">Send targeted emails, SMS and in-app notifications. Keep your team, volunteers and parents always in the loop.</div>
+        <div class="feat-title">Messaging &amp; Newsletter</div>
+        <div class="feat-desc">Message your team in threads and announcements, and send branded email newsletters to parents, staff and volunteers.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
-        <div class="feat-icon-wrap"><img src="/icons/feat-notifications_centre.png" alt="Notifications Centre" loading="lazy" /></div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-notifications_centre.png" alt="Messaging &amp; Newsletter" loading="lazy" /></div>
       </div>
       <div class="feature-card" style="--feat-color:#14B8A6;--feat-bg:rgba(20,184,166,0.1)" data-feat="team_staff" data-cat="team" role="button" tabindex="0" onclick="openFeature('team_staff')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('team_staff')}">
         <div class="feat-tag">Part of Office · £59.99</div>
@@ -1453,45 +1453,45 @@ async function submitFoundingOffer(e) {
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-branding_centre.png" alt="Branding Centre" loading="lazy" /></div>
       </div>
-      <div class="feature-card" style="--feat-color:#F97316;--feat-bg:rgba(249,115,22,0.1)" data-feat="mentoring" data-cat="team" role="button" tabindex="0" onclick="openFeature('mentoring')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('mentoring')}">
+      <div class="feature-card" style="--feat-color:#F97316;--feat-bg:rgba(249,115,22,0.1)" data-feat="team_invites" data-cat="team" role="button" tabindex="0" onclick="openFeature('team_invites')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('team_invites')}">
         <div class="feat-tag">Included</div>
-        <div class="feat-title">Mentoring</div>
-        <div class="feat-desc">Match mentors and mentees, track session notes, log milestones and measure the impact of 1:1 relationships.</div>
+        <div class="feat-title">Team &amp; Join Link</div>
+        <div class="feat-desc">Invite people by email, or put a join link and QR code on the staffroom wall. Everyone who asks to join waits for your approval.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
-        <div class="feat-icon-wrap"><img src="/icons/feat-mentoring.png" alt="Mentoring" loading="lazy" /></div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-mentoring.png" alt="Team &amp; Join Link" loading="lazy" /></div>
       </div>
-      <div class="feature-card" style="--feat-color:#E11D48;--feat-bg:rgba(225,29,72,0.1)" data-feat="policies_docs" data-cat="safe" role="button" tabindex="0" onclick="openFeature('policies_docs')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('policies_docs')}">
+      <div class="feature-card" style="--feat-color:#E11D48;--feat-bg:rgba(225,29,72,0.1)" data-feat="forms_consent" data-cat="safe" role="button" tabindex="0" onclick="openFeature('forms_consent')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('forms_consent')}">
         <div class="feat-tag">Included</div>
-        <div class="feat-title">Policies & Documents</div>
-        <div class="feat-desc">Store, organise and share policies, consents and key documents with staff, volunteers and parents.</div>
+        <div class="feat-title">Forms &amp; Consent</div>
+        <div class="feat-desc">Registration, parent consent, trip and medical forms, sent as a link parents fill in on their phone. Start from a template or build your own.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
-        <div class="feat-icon-wrap"><img src="/icons/feat-policies_docs.png" alt="Policies & Documents" loading="lazy" /></div>
+        <div class="feat-icon-wrap"><img src="/icons/feat-policies_docs.png" alt="Forms &amp; Consent" loading="lazy" /></div>
       </div>
       <div class="feature-card" style="--feat-color:#DC2626;--feat-bg:rgba(220,38,38,0.1)" data-feat="risk_assessments" data-cat="safe" role="button" tabindex="0" onclick="openFeature('risk_assessments')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('risk_assessments')}">
         <div class="feat-tag">Included</div>
         <div class="feat-title">Risk Assessments</div>
-        <div class="feat-desc">HSE-standard 5×5 risk matrix, hazard tracking, session linking and one-click PDF export. Keep every activity properly assessed.</div>
+        <div class="feat-desc">HSE-standard 5×5 risk matrix, templates to start from, session linking and print-ready copies. Keep every activity properly assessed.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-risk_assessments.png" alt="Risk Assessments" loading="lazy" /></div>
       </div>
       <div class="feature-card" style="--feat-color:#14B8A6;--feat-bg:rgba(20,184,166,0.1)" data-feat="bulk_import" data-cat="run" role="button" tabindex="0" onclick="openFeature('bulk_import')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('bulk_import')}">
         <div class="feat-tag">Included</div>
         <div class="feat-title">Bulk Import</div>
-        <div class="feat-desc">Already have a spreadsheet of young people? Import up to thousands of records in seconds with our CSV import tool.</div>
+        <div class="feat-desc">Already have a spreadsheet of <span data-term="people">young people</span>? Import it from CSV or Excel: headings recognised, every row checked first.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-bulk_import.png" alt="Bulk Import" loading="lazy" /></div>
       </div>
       <div class="feature-card" style="--feat-color:#F59E0B;--feat-bg:rgba(245,158,11,0.1)" data-feat="volunteer_mgmt" data-cat="team" role="button" tabindex="0" onclick="openFeature('volunteer_mgmt')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('volunteer_mgmt')}">
         <div class="feat-tag">Included</div>
         <div class="feat-title">Volunteer Management</div>
-        <div class="feat-desc">Manage your volunteer workforce with sign-up flows, DBS tracking, availability matching and QR check-in.</div>
+        <div class="feat-desc">Sign-up forms and QR codes, DBS tracking, a portal of their own, and hours logged straight from the register.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-volunteer_mgmt.png" alt="Volunteer Management" loading="lazy" /></div>
       </div>
       <div class="feature-card" style="--feat-color:#1B9AAA;--feat-bg:rgba(27,154,170,0.1)" data-feat="impact_outcomes" data-cat="impact" role="button" tabindex="0" onclick="openFeature('impact_outcomes')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openFeature('impact_outcomes')}">
         <div class="feat-tag">Included</div>
         <div class="feat-title">Impact & Outcomes</div>
-        <div class="feat-desc">AI-refined insights, outcome tracking and visual reporting — generate funder-ready evidence of your programme's impact in one click.</div>
+        <div class="feat-desc">Outcome tracking, distance travelled and visual reporting — funder-ready evidence of your programme's impact, without a week in a spreadsheet.</div>
         <div class="feat-more">Learn more<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="18" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="feat-icon-wrap"><img src="/icons/feat-impact_outcomes.png" alt="Impact & Outcomes" loading="lazy" /></div>
       </div>
@@ -1780,7 +1780,7 @@ async function submitFoundingOffer(e) {
           <li><span class="chk">✓</span> <span>Forms, Messaging &amp; Newsletter</span></li>
           <li><span class="chk">✓</span> <span>Reports, Impact &amp; Outcomes</span></li>
           <li><span class="chk">✓</span> <span>Photo Gallery</span></li>
-          <li><span class="chk">✓</span> <span>Mentoring &amp; Templates</span></li>
+          <li><span class="chk">✓</span> <span>Templates &amp; Forms library</span></li>
         </ul>
       </div>
 
@@ -1803,6 +1803,12 @@ async function submitFoundingOffer(e) {
           <span class="pb-opt-body"><span class="pb-opt-name">Add your branding</span><span class="pb-opt-d">Your logo and colours across the app, forms, emails and reports. Comes with the Office.</span></span>
           <span class="pb-opt-price" id="pbBrandAdd">+£10</span>
         </label>
+        <label class="pb-opt pb-opt-charity" for="pbCharity">
+          <input type="checkbox" id="pbCharity" class="pb-input" />
+          <span class="pb-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+          <span class="pb-opt-body"><span class="pb-opt-name">We're a registered charity</span><span class="pb-opt-d">20% off every plan, monthly or annual. Add your charity number when you choose your plan.</span></span>
+          <span class="pb-opt-price">−20%</span>
+        </label>
         <div class="pb-total" aria-live="polite">
           <div>
             <div class="pb-plan" id="pbPlan">Complete Platform</div>
@@ -1815,7 +1821,7 @@ async function submitFoundingOffer(e) {
       </div>
     </div>
 
-    <p class="pricing-fine">Every price includes a 14-day free trial with full access. No contracts, no per-user fees, no limit on how many <span data-term="people">young people</span> you support. Registered charity? <a href="mailto:hello@launchsession.co.uk">Ask about our discount →</a></p>
+    <p class="pricing-fine">Every price includes a 14-day free trial with full access. No contracts, no per-user fees, no limit on how many <span data-term="people">young people</span> you support. Registered charities in England, Wales, Scotland and Northern Ireland get <strong>20% off every plan</strong>.</p>
   </div>
 </section>
 <style>
@@ -1859,6 +1865,9 @@ async function submitFoundingOffer(e) {
 .pb-note{font-size:12.5px;color:rgba(255,255,255,.5);text-align:center;line-height:1.5}
 .pricing-fine{margin-top:32px;font-size:13px;color:var(--text3);text-align:center}
 .pricing-fine a{color:#60A5FA;font-weight:600}
+.pricing-fine strong{color:#fff}
+.pb-opt-charity .pb-opt-price{color:#4ADE80}
+.pb-input:checked + .pb-check + .pb-opt-body .pb-opt-name{color:#fff}
 @media (hover:hover) and (pointer:fine){.pb-opt:not(.pb-opt-fixed):hover{border-color:rgba(96,165,250,.45)}}
 @media (max-width:860px){.pb-grid{grid-template-columns:1fr;max-width:520px}.pb-build{order:-1}}
 @media (max-width:600px){
@@ -2017,6 +2026,15 @@ async function submitWaitlist(e) {
         </div>
       </div>
       <div class="faq-item">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-a-charity" onclick="toggleFaq(this)">
+          <span>Do registered charities get a discount?</span>
+          <span class="faq-chevron">⌄</span>
+        </button>
+        <div class="faq-a" id="faq-a-charity" role="region">
+          <p>Yes: 20% off every plan, monthly or annual, for as long as you stay registered. When you choose your plan, add your number from the Charity Commission for England and Wales, OSCR or the Charity Commission for Northern Ireland in Settings → Billing, and the discount is applied at checkout. We check it against the public register afterwards. The trial is free either way.</p>
+        </div>
+      </div>
+      <div class="faq-item">
         <button class="faq-q" aria-expanded="false" aria-controls="faq-a-2" onclick="toggleFaq(this)">
           <span>Can we upgrade or downgrade our plan?</span>
           <span class="faq-chevron">⌄</span>
@@ -2067,7 +2085,7 @@ async function submitWaitlist(e) {
           <span class="faq-chevron">⌄</span>
         </button>
         <div class="faq-a" id="faq-a-6" role="region">
-          <p>Yes. You can bring in your existing spreadsheet of children, staff or volunteers during setup rather than starting from scratch.</p>
+          <p>Yes. Bring in your spreadsheet of <span data-term="people">young people</span> (CSV or Excel) rather than starting from scratch: headings are recognised, every row is checked before anything is saved, and possible duplicates are flagged. Staff and volunteers join by email invite or your team's join link, so each of them gets their own login.</p>
         </div>
       </div>
       <div class="faq-item">
@@ -2208,21 +2226,26 @@ const prices = { monthly: ['49.99', '59.99', '69.99'], annual: ['39.99', '47.99'
 // Mirrors plan_entitlements: Branding is only sold on top of the Office, so
 // there is no "platform + branding" tier for the builder to land on.
 const PLAN_NAMES = ['Complete Platform', 'Platform + Office', 'Platform + Office + Branding']
+// Registered charities pay 20% less on every plan: the coupon
+// api/create-checkout-session.js applies, rounded to the penny as Stripe does.
+const charityPrices = { monthly: ['39.99', '47.99', '55.99'], annual: ['31.99', '38.39', '44.79'] }
 
 function renderPlan() {
   const office = document.getElementById('pbOffice')
   const brand = document.getElementById('pbBrand')
   const tier = brand.checked ? 2 : office.checked ? 1 : 0
   const p = annual ? prices.annual : prices.monthly
+  const charity = document.getElementById('pbCharity').checked
+  const shown = charity ? (annual ? charityPrices.annual : charityPrices.monthly) : p
   const step = (Number(p[1]) - Number(p[0])).toFixed(0)
   document.getElementById('pbBase').textContent = p[0]
   document.getElementById('pbOfficeAdd').textContent = '+£' + step
   document.getElementById('pbBrandAdd').textContent = '+£' + step
   document.getElementById('pbPlan').textContent = PLAN_NAMES[tier]
-  document.getElementById('pbPeriod').textContent = annual ? 'per month, billed annually' : 'billed monthly'
+  document.getElementById('pbPeriod').textContent = (annual ? 'per month, billed annually' : 'billed monthly') + (charity ? ' · charity price, was £' + p[tier] : '')
   const priceEl = document.getElementById('pbPrice')
-  if (priceEl.textContent !== p[tier]) {
-    priceEl.textContent = p[tier]
+  if (priceEl.textContent !== shown[tier]) {
+    priceEl.textContent = shown[tier]
     const box = priceEl.parentElement
     box.classList.remove('pb-bump'); void box.offsetWidth; box.classList.add('pb-bump')
   }
@@ -2245,6 +2268,7 @@ document.getElementById('pbBrand').addEventListener('change', e => {
   if (e.target.checked) document.getElementById('pbOffice').checked = true
   renderPlan()
 })
+document.getElementById('pbCharity').addEventListener('change', renderPlan)
 renderPlan()
 </script>
 
@@ -2295,16 +2319,16 @@ if (new URLSearchParams(window.location.search).get('signin') === 'true') {
    Keys match the data-feat attribute on each .feature-card. */
 const FEATURES = {
   live_registers: {
-    lead: "The register is where a session actually happens. LaunchSession replaces the paper clipboard with a live, shared view that everyone on shift can see updating in real time.",
+    lead: "The register is where a session actually happens. LaunchSession replaces the paper clipboard with one shared register that refreshes every few seconds for everyone on shift.",
     points: [
-      "<b>Sign in and out with one tap.</b> Headcount updates instantly for everyone with the register open.",
+      "<b>Sign in and out with one tap.</b> The headcount catches up within seconds for everyone with the register open.",
       "<b>Medical and allergy alerts surface automatically</b> the moment a young person is signed in — no need to remember to check a folder.",
       "<b>Latecomers and early leavers are timestamped</b>, so your attendance records reflect what really happened.",
       "<b>Session lifecycle built in</b> — Upcoming, Register Open, Live, Ending and Closed, with a closure checklist at the end of every session.",
       "<b>Nobody gets left behind.</b> Closing a session is blocked while any young person is still signed in as on-site.",
       "<b>Historical registers stay editable</b> with a full audit trail of who changed what and when."
     ],
-    note: "<b>Works offline-friendly on any device.</b> Staff run registers from a phone or tablet in the room — no laptop, no separate app to install."
+    note: "<b>Works on any phone or tablet.</b> Staff run registers in the room — no laptop, no separate app to install. If the signal drops, the register says so and keeps showing the last copy."
   },
   session_planner: {
     lead: "Plan a term of activity in one place, then let the plan drive the register, the rota and the reporting automatically.",
@@ -2323,22 +2347,22 @@ const FEATURES = {
     points: [
       "<b>Log a cause for concern in minutes</b>, from any device, with a structured form that prompts for what matters.",
       "<b>Assign a case owner and track follow-up actions</b> so nothing sits unattended.",
-      "<b>Escalation links connect a concern to the session, staff member and young person</b> involved, giving full context at a glance.",
-      "<b>Strict access control.</b> Safeguarding records are visible only to the people you designate — enforced at the database level, not just hidden in the interface.",
-      "<b>Full audit trail</b> of every view, edit and status change, ready for inspection or a serious case review.",
+      "<b>Each concern is linked to the young person and the session</b> it came from, giving full context at a glance.",
+      "<b>You decide who can open case files</b>, person by person, and the database enforces it — not just the screen. Volunteers can raise a concern but never read one.",
+      "<b>An audit log</b> of every status change, assignment, escalation and DSL notification, ready for inspection or a serious case review.",
       "<b>Case history follows the young person</b> across sessions and years, so patterns become visible."
     ],
-    note: "<b>Built to withstand scrutiny.</b> Designed around UK safeguarding practice, with row-level security so records can't be accessed by staff outside your designated safeguarding team."
+    note: "<b>Built to withstand scrutiny.</b> Designed around UK safeguarding practice. Out of the box, staff and managers can open the Hub; switch it off for anyone who shouldn't in Settings → Role access, and the database refuses them too."
   },
   volunteer_mgmt: {
     lead: "Recruit, vet, schedule and check in your volunteer workforce without the spreadsheet sprawl.",
     points: [
       "<b>Public sign-up form</b> on your own link — volunteers apply themselves, and applications land in an approval queue.",
       "<b>DBS tracking with expiry dates</b>, so you know at a glance who's cleared and who's due for renewal.",
-      "<b>Availability matching</b> against your planned sessions — see who can actually cover next Thursday.",
-      "<b>QR check-in</b> for fast arrival logging on the day.",
-      "<b>A dedicated volunteer portal</b> where they see their own upcoming shifts, session details and key documents.",
-      "<b>Hours are logged automatically</b>, giving you volunteer contribution figures for funders without extra admin."
+      "<b>Availability on record</b> for every volunteer, so you can see who has said they're free.",
+      "<b>QR codes</b> for the sign-up form and the volunteer portal, ready to print for a noticeboard.",
+      "<b>A dedicated volunteer portal</b> where they see today's shift, their upcoming sessions and their own hours.",
+      "<b>Hours come from the register</b>: signing in and out on a session's Team tab logs them, giving you contribution figures for funders without extra admin."
     ],
     note: "<b>Volunteers see only what they need.</b> Their portal is scoped to their own sessions and contains no sensitive participant data."
   },
@@ -2348,9 +2372,9 @@ const FEATURES = {
       "<b>Outcome tracking against your own framework</b>, not a generic template someone else designed.",
       "<b>Attendance, engagement and participation figures</b> generated automatically from your registers.",
       "<b>Visual reporting</b> — charts and summaries you can drop straight into a funding application or trustee report.",
-      "<b>AI-refined insights</b> that surface patterns in your data you might not have gone looking for.",
-      "<b>Filter by programme, cohort, date range or demographic</b> to answer a specific funder's specific question.",
-      "<b>Export in one click</b> when a deadline is tomorrow."
+      "<b>A funder report written from your figures</b>, with the caveats a funder will ask about already stated.",
+      "<b>Drill into one outcome area</b>, or one young person's distance travelled, to answer a specific funder's specific question.",
+      "<b>Export the data</b> when a deadline is tomorrow."
     ],
     note: "<b>Available on every plan.</b> Proving your impact shouldn't be a premium feature."
   },
@@ -2358,23 +2382,23 @@ const FEATURES = {
     lead: "Assess every activity properly, keep the paperwork current, and put it in front of staff at the moment they actually need it.",
     points: [
       "<b>HSE-standard 5×5 risk matrix</b> — likelihood against severity, with automatic scoring.",
-      "<b>Hazard library</b> so you're not rewriting the same trampoline risks every term.",
+      "<b>Start from a template or reuse a past assessment</b>, so you're not rewriting the same trampoline risks every term.",
       "<b>Link an assessment to a session or venue</b> and it follows that activity wherever it's scheduled.",
       "<b>Surfaced on the live session card</b>, so staff on shift see the relevant risks without hunting for a folder.",
-      "<b>Review dates and version history</b>, so you can show an assessment was current on the day.",
-      "<b>One-click PDF export</b> for insurers, funders and inspections."
+      "<b>Review dates</b>, with anything due in the next fortnight flagged, so you can show an assessment was current on the day.",
+      "<b>Print or save as PDF</b> for insurers, funders and inspections."
     ],
     note: "<b>Assessments people actually read.</b> Putting the risks on the screen staff are already looking at is the difference between compliance and safety."
   },
   bulk_import: {
-    lead: "Already have years of records in a spreadsheet? Get them in without retyping a single row.",
+    lead: "Already have years of records in a spreadsheet? Get your young people in without retyping a single row.",
     points: [
-      "<b>CSV import for young people, volunteers and staff</b> — thousands of records in seconds.",
-      "<b>Column mapping</b> so your spreadsheet's headings don't have to match ours.",
-      "<b>Validation before anything is written</b>, showing you exactly which rows need attention and why.",
-      "<b>Duplicate detection</b> so you don't end up with the same child twice under two spellings.",
-      "<b>Historical attendance can be imported too</b>, so your reporting doesn't start from zero on day one.",
-      "<b>Reversible.</b> If an import isn't right, roll it back and try again."
+      "<b>CSV or Excel</b> — straight from the spreadsheet you already keep, or from our ready-made template.",
+      "<b>Headings recognised automatically</b>, so your spreadsheet's column names don't have to match ours.",
+      "<b>Every row checked before anything is saved</b>, showing you exactly which rows need attention and why.",
+      "<b>Possible duplicates flagged</b>, and you choose whether to bring them in, so you don't end up with the same child twice.",
+      "<b>Groups matched to the ones you already have</b>, whatever the spelling or spacing.",
+      "<b>Staff and volunteers join themselves</b> by email invite or your team's join link, so each gets their own login."
     ],
     note: "<b>Included on every plan.</b> Getting your data in shouldn't cost extra — it's the thing standing between you and using the platform."
   },
@@ -2383,48 +2407,46 @@ const FEATURES = {
     points: [
       "<b>Upload your logo and app icon</b>, set your brand colours with a full spectrum picker.",
       "<b>Automatic WCAG contrast checking</b> warns you if a colour choice would make text hard to read.",
-      "<b>Live preview</b> across the dashboard and the volunteer portal before you commit.",
+      "<b>Live preview</b> of the workspace, sign-in screen, emails and home-screen icon before you publish.",
       "<b>Branded install experience</b> — when parents add it to their home screen, they see your icon and your name.",
-      "<b>Applies everywhere automatically</b>, including emails sent from the platform.",
+      "<b>Applies everywhere automatically</b>, including the emails that support your branding.",
       "<b>Change it any time</b> without touching a line of code or waiting on a developer."
     ],
     note: "<b>Trust is visual.</b> Parents engage more readily with something that looks like the organisation they already know."
   },
-  mentoring: {
-    lead: "Structure and evidence your one-to-one work with the same rigour you apply to group sessions.",
+  team_invites: {
+    lead: "Getting your whole team in shouldn't mean typing out thirty email addresses.",
     points: [
-      "<b>Match mentors to mentees</b> and keep the pairing on record.",
-      "<b>Log session notes</b> against each relationship, with appropriate access restrictions.",
-      "<b>Track milestones and goals</b> over the life of the relationship.",
-      "<b>Measure distance travelled</b>, not just sessions attended.",
-      "<b>Flag concerns straight into the safeguarding module</b> when something needs escalating.",
-      "<b>Reporting on 1:1 outcomes</b> that sits alongside your group programme data."
+      "<b>Invite by email</b> with the role already chosen — admin, manager, staff or volunteer.",
+      "<b>Or share a join link and QR code</b> in the group chat or on the staffroom wall.",
+      "<b>Nobody gets in on the link alone.</b> Each person who asks to join waits for an admin or manager to approve them.",
+      "<b>Role-based access from the first sign-in</b>, so a new volunteer sees their sessions, not your safeguarding files.",
+      "<b>Pending invites stay visible</b>, so you can see who hasn't joined yet."
     ],
-    note: "<b>Included.</b> Built for organisations running structured mentoring alongside their open provision."
+    note: "<b>Included on every plan.</b> No per-user fees, so inviting everyone costs nothing extra."
   },
-  policies_docs: {
-    lead: "One place for the documents everyone is always asking for — and a record of who has actually seen them.",
+  forms_consent: {
+    lead: "The paperwork every session needs, filled in by parents on their own phones instead of on a clipboard at the door.",
     points: [
-      "<b>Store policies, consent forms, handbooks and guidance</b> in a structured library.",
-      "<b>Share by audience</b> — staff, volunteers and parents each see what's relevant to them.",
-      "<b>Version control</b>, so there's no ambiguity about which safeguarding policy is current.",
-      "<b>Acknowledgement tracking</b> — see who has read and confirmed each document.",
-      "<b>Review reminders</b> before a policy goes out of date.",
-      "<b>Accessible from the portals</b>, so nobody needs to email you asking for the trip consent form again."
+      "<b>Ready-made templates</b> for registration, parent consent, day trips, residentials, photography, medical updates, dietary and accessibility needs.",
+      "<b>Build your own</b> when a template doesn't fit.",
+      "<b>Share by link or QR code</b> — parents need no account.",
+      "<b>Responses land in one place</b> in your Office, not in someone's personal inbox.",
+      "<b>Report without an account.</b> Injury and concern forms anyone can file from a link in the first aid kit."
     ],
-    note: "<b>Useful when an inspector asks.</b> Being able to show both the policy and the read receipts is a materially stronger position."
+    note: "<b>Included on every plan.</b> Forms, the newsletter and templates come with every plan."
   },
   notifications_centre: {
-    lead: "Reach the right people through the channel they'll actually see, without exporting a contact list.",
+    lead: "Reach the right people without exporting a contact list into another tool.",
     points: [
-      "<b>Email, SMS and in-app notifications</b> from one composer.",
-      "<b>Target by group</b> — a single session's parents, all volunteers, one staff team.",
-      "<b>Automated reminders</b> for upcoming sessions, expiring DBS checks and outstanding consents.",
-      "<b>Templates</b> for the messages you send every week.",
-      "<b>Delivery tracking</b> so you know a cancellation actually landed.",
-      "<b>Branded with your organisation</b>, so messages don't look like spam."
+      "<b>Threads and announcements</b> for your team, inside the app.",
+      "<b>Email newsletters</b> to parents, staff or volunteers, from one composer.",
+      "<b>Saved audience lists</b>, so the autumn-term parents are one click away next time.",
+      "<b>Start from a past newsletter</b> — it opens as a copy, so the original is never overwritten.",
+      "<b>Branded with your organisation</b>, so messages don't look like spam.",
+      "<b>Volunteer broadcasts</b> by email and in their portal."
     ],
-    note: "<b>Contacts stay current automatically.</b> Because parents maintain their own details, you're not messaging a number that changed two years ago."
+    note: "<b>Email and in-app today.</b> Text messages aren't sent from LaunchSession yet."
   },
   team_staff: {
     lead: "Keep an accurate picture of your team — who they are, what they are qualified for, and what they are allowed to see.",
@@ -2465,6 +2487,7 @@ const STEPS = {
       "<b>The Office for £59.99</b> if you want HR (staff records, DBS and training expiry), resource booking and payments.",
       "<b>Branding with the Office for £69.99</b> if you also want the app, forms, emails and reports carrying your own identity.",
       "<b>Monthly or annual billing</b>, with roughly 20% off when you pay annually.",
+      "<b>Registered charities pay 20% less</b> on every plan, monthly or annual.",
       "<b>The trial is genuinely free.</b> No card details, and nothing charges automatically at the end."
     ],
     note: "<b>Nothing to weigh up.</b> The trial gives you everything for 14 days, so you find out what your team actually uses before you pay for anything."
