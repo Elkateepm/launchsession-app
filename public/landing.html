@@ -407,6 +407,11 @@ body.menu-open{overflow:hidden}
 .btn-hero-ghost{padding:14px 28px;border-radius:11px;font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border2);background:var(--glass);color:#fff}
 .btn-hero-ghost:hover{background:var(--glass2)}
 .hero-trust{display:flex;flex-wrap:wrap;gap:14px}
+/* Returning staff and volunteers land here too: the way in is said in words,
+   not only as the small Sign in button in the corner. */
+.hero-member{margin:22px 0 0;font-size:14px;color:var(--text2)}
+.hero-member a{color:#93C5FD;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;min-height:44px}
+.hero-member a:hover{text-decoration:underline}
 .trust-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);font-weight:600}
 .trust-dot{width:5px;height:5px;border-radius:50%;background:#22C55E}
 /* Hero visual */
@@ -748,7 +753,7 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
       <a href="#pricing">Pricing</a>
     </div>
     <div class="nav-right">
-      <button class="btn-signin" onclick="window.location.href='https://app.launchsession.co.uk'">Sign in</button>
+      <button class="btn-signin" onclick="window.location.href='https://app.launchsession.co.uk/members'">Sign in</button>
       <button class="btn-start" onclick="window.location.href='/signup'">Start free trial →</button>
       <button class="hamburger" id="hamBtn" onclick="toggleMenu()" aria-label="Menu" aria-expanded="false">
         <span></span><span></span><span></span>
@@ -814,7 +819,7 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
     <div class="mn-div"><span class="mn-div-ico">✦ 🚀 ✦</span></div>
 
     <div class="mn-cta">
-      <button class="mn-signin" onclick="window.location.href='https://app.launchsession.co.uk'">
+      <button class="mn-signin" onclick="window.location.href='https://app.launchsession.co.uk/members'">
         <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
         <span>Sign in</span>
         <div class="mn-chev">›</div>
@@ -853,6 +858,7 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
         <div class="trust-item"><div class="trust-dot"></div>No credit card needed</div>
         <div class="trust-item"><div class="trust-dot"></div>Set up in minutes</div>
       </div>
+      <p class="hero-member">Already a member? <a href="https://app.launchsession.co.uk/members">Sign in to your organisation →</a></p>
     </div>
     <div class="hero-visual">
       <div class="hero-badge hero-badge-2" aria-hidden="true">
@@ -964,6 +970,7 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
 @media (max-width:600px){
   .hero-ctas{margin-bottom:28px}
   .hero-trust{justify-content:center}
+  .hero-member{text-align:center}
   .demo-card{padding:16px;border-radius:16px}
   .demo-st{min-width:66px;padding:4px 7px}
   .demo-flag{font-size:10px;padding:3px 7px}
@@ -1355,7 +1362,7 @@ async function submitFoundingOffer(e) {
 
     <div class="jn-foot">
       <div class="jn-foot-row">
-        <button class="jn-foot-signin" onclick="window.location.href='https://app.launchsession.co.uk'">
+        <button class="jn-foot-signin" onclick="window.location.href='https://app.launchsession.co.uk/members'">
           <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
           <div>
             <div class="jn-foot-t">Sign in</div>
@@ -2152,6 +2159,7 @@ function toggleFaq(btn) {
       <a href="#faq">Common questions</a>
       <a href="/packages.html">Packages</a>
       <a href="/signup">Start free trial</a>
+      <a href="https://app.launchsession.co.uk/members">Members' sign in</a>
     </div>
     <div class="footer-col">
       <div class="footer-col-title">Company</div>
@@ -2276,7 +2284,7 @@ renderPlan()
 <script>
 // Sign in → go straight to the app, where org search + login takes over
 document.querySelectorAll('.btn-signin').forEach(btn => {
-  btn.onclick = () => { window.location.href = 'https://app.launchsession.co.uk' }
+  btn.onclick = () => { window.location.href = 'https://app.launchsession.co.uk/members' }
 })
 // NOTE: .btn-hero-ghost is a shared *style* class used by unrelated buttons
 // ("See packages", "Talk to us first") that each already carry their own
@@ -2285,7 +2293,7 @@ document.querySelectorAll('.btn-signin').forEach(btn => {
 
 // Legacy ?signin=true links also just go to the app now
 if (new URLSearchParams(window.location.search).get('signin') === 'true') {
-  window.location.href = 'https://app.launchsession.co.uk'
+  window.location.href = 'https://app.launchsession.co.uk/members'
 }
 </script>
 
