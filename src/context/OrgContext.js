@@ -59,7 +59,10 @@ export function OrgProvider({ children }) {
       // or a deep link other than the bare root). A bare '/' visit on the
       // app subdomain — or the login screen — should always offer org
       // search rather than silently re-entering the last workspace.
-      const isBareRoot = pathname === '/'
+      // /members is the dedicated sign-in page the website links to. It
+      // behaves exactly like the app's bare root: organisation search, unless
+      // this device opted in to "remember this organisation".
+      const isBareRoot = pathname === '/' || pathname === '/members'
       if (!slug && pathname !== '/login' && !isBareRoot) {
         slug = localStorage.getItem('launchsession_org_slug')
       }

@@ -82,3 +82,21 @@ test.each([true, false])('organisation confirmation applies the branding entitle
   expect(Boolean(screen.queryByText('Powered by LaunchSession'))).toBe(branding)
   if (!branding) expect(document.querySelector('img[src="https://assets.example/club.png"]')).toBeNull()
 })
+
+test('the members page says who it is for, answers the usual sign-in questions, and offers volunteers their portal', async () => {
+  render(<OrgLookup />)
+  expect(screen.getByRole('heading', { name: "Members' sign in" })).toBeInTheDocument()
+  const help = screen.getByRole('list', { name: 'Help signing in' })
+  expect(help).toHaveTextContent('Got an invite email?')
+  expect(help).toHaveTextContent('Forgotten your password?')
+  expect(screen.getByRole('link', { name: 'Start a free 14-day trial' })).toHaveAttribute('href', '/signup')
+
+  await search('Community Youth')
+  fireEvent.click(screen.getByRole('button', { name: 'Find my workspace' }))
+  await screen.findByRole('heading', { name: 'Is this your organisation?' })
+  // The portal is a link to the organisation's own portal, and choosing the
+  // organisation alone still never signs anyone in or saves it.
+  expect(screen.getByRole('link', { name: /Volunteer\? Open the volunteer portal/ })).toHaveAttribute('href', '/volunteer/community-youth')
+  expect(localStorage.getItem('launchsession_org_slug')).toBeNull()
+  expect(window.location.href).toBe('')
+})

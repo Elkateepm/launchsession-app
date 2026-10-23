@@ -1,4 +1,109 @@
 {
+  "redirects": [
+    {
+      "source": "/members",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.launchsession.co.uk"
+        }
+      ],
+      "destination": "https://app.launchsession.co.uk/members",
+      "permanent": false
+    },
+    {
+      "source": "/members",
+      "has": [
+        {
+          "type": "host",
+          "value": "launchsession.co.uk"
+        }
+      ],
+      "destination": "https://app.launchsession.co.uk/members",
+      "permanent": false
+    },
+    {
+      "source": "/member",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.launchsession.co.uk"
+        }
+      ],
+      "destination": "https://app.launchsession.co.uk/members",
+      "permanent": false
+    },
+    {
+      "source": "/member",
+      "has": [
+        {
+          "type": "host",
+          "value": "launchsession.co.uk"
+        }
+      ],
+      "destination": "https://app.launchsession.co.uk/members",
+      "permanent": false
+    },
+    {
+      "source": "/signin",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.launchsession.co.uk"
+        }
+      ],
+      "destination": "https://app.launchsession.co.uk/members",
+      "permanent": false
+    },
+    {
+      "source": "/signin",
+      "has": [
+        {
+          "type": "host",
+          "value": "launchsession.co.uk"
+        }
+      ],
+      "destination": "https://app.launchsession.co.uk/members",
+      "permanent": false
+    },
+    {
+      "source": "/sign-in",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.launchsession.co.uk"
+        }
+      ],
+      "destination": "https://app.launchsession.co.uk/members",
+      "permanent": false
+    },
+    {
+      "source": "/sign-in",
+      "has": [
+        {
+          "type": "host",
+          "value": "launchsession.co.uk"
+        }
+      ],
+      "destination": "https://app.launchsession.co.uk/members",
+      "permanent": false
+    },
+    {
+      "source": "/member",
+      "destination": "/members",
+      "permanent": false
+    },
+    {
+      "source": "/signin",
+      "destination": "/members",
+      "permanent": false
+    },
+    {
+      "source": "/sign-in",
+      "destination": "/members",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/((?!static|favicon|manifest|logo|landing|packages).*)",

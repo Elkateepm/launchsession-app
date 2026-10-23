@@ -194,8 +194,8 @@ export default function OrgLookup() {
 
   return <AuthLayout org={selectedOrg} stage="organisation">
     {step === 'org' && <>
-      <h1 style={heading}>Find your organisation</h1>
-      <p id="organisation-search-hint" style={description}>Start with the youth organisation, charity or community team you work with. Then sign in with your own account.</p>
+      <h1 style={heading}>Members' sign in</h1>
+      <p id="organisation-search-hint" style={description}>For staff, admins and volunteers of organisations that use LaunchSession. Find your organisation, then sign in with your own account.</p>
       <AuthError>{error}</AuthError>
       <form onSubmit={handleOrgSearch} aria-busy={loading}>
         <label htmlFor="organisation-search" style={authLabel}>Organisation name</label>
@@ -214,7 +214,19 @@ export default function OrgLookup() {
         </ul>}
         <button type="submit" disabled={loading || !orgName.trim()} style={{ ...authButton(loading || !orgName.trim()), marginTop: 18 }}>{loading ? 'Searching…' : 'Find my workspace'}</button>
       </form>
-      <p style={{ ...description, margin: '18px 0 0', fontSize: 12 }}>Not sure which name to use? Ask the person who invited you. New accounts are arranged by your organisation.</p>
+      {/* The questions people arrive here with, answered before they have to
+          go looking for a support address. */}
+      <ul aria-label="Help signing in" style={{ listStyle: 'none', margin: '22px 0 0', padding: 0, display: 'grid', gap: 10 }}>
+        {[
+          ['newsletter', 'Got an invite email?', 'Open the link in it first, to set your password.'],
+          ['lock', 'Forgotten your password?', 'Find your organisation, then choose “Forgot password”.'],
+          ['team', 'Not sure of the name?', 'Ask the person who invited you. Accounts are arranged by your organisation.'],
+        ].map(([icon, title, text]) => <li key={title} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 12, lineHeight: 1.6, color: AUTH.muted }}>
+          <span aria-hidden="true" style={{ flexShrink: 0, paddingTop: 1 }}><Icon name={icon} /></span>
+          <span><strong style={{ color: AUTH.ink, fontWeight: 650 }}>{title}</strong> {text}</span>
+        </li>)}
+      </ul>
+      <p style={{ ...description, margin: '4px 0 0', fontSize: 12 }}>Setting up a new organisation? <a href="/signup" style={{ color: 'var(--auth-link)', fontWeight: 700, display: 'inline-block', padding: '13px 0' }}>Start a free 14-day trial</a></p>
     </>}
 
     {selectedOrg && <>
@@ -227,7 +239,10 @@ export default function OrgLookup() {
         <span><span style={{ fontSize: 13, fontWeight: 650, color: AUTH.ink }}>Remember this organisation</span><span id="remember-org-hint" style={{ display: 'block', marginTop: 4, fontSize: 11, color: AUTH.muted, lineHeight: 1.6 }}>For future sign-ins on this device. This does not keep you signed in.</span></span>
       </label>
       <button type="button" onClick={() => handleContinue(selectedOrg)} style={authButton()}>Continue to sign in</button>
-      <button type="button" onClick={resetSearch} style={{ ...authLink, marginTop: 8 }}><Icon name="←" /> Choose a different organisation</button>
+      {/* Volunteers can sign in above too (the app sends them on to their
+          portal), but a poster that says "volunteer portal" should find one. */}
+      <a href={'/volunteer/' + encodeURIComponent(selectedOrg.slug)} style={{ ...authLink, marginTop: 8, textDecoration: 'none' }}>Volunteer? Open the volunteer portal <Icon name="chevron" /></a>
+      <button type="button" onClick={resetSearch} style={{ ...authLink, marginTop: 4 }}><Icon name="←" /> Choose a different organisation</button>
     </>}
 
     {step === 'multiple' && Array.isArray(org) && <>

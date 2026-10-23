@@ -338,7 +338,7 @@ export default function Signup() {
         </div>
         <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '14px 18px', fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, textAlign: 'left' }}>
           💡 Once you've set your password, you can sign in anytime at{' '}
-          <a href="https://app.launchsession.co.uk" target="_blank" rel="noreferrer" style={{ color: '#60A5FA', fontWeight: 700 }}>app.launchsession.co.uk</a>
+          <a href="https://app.launchsession.co.uk/members" target="_blank" rel="noreferrer" style={{ color: '#60A5FA', fontWeight: 700 }}>app.launchsession.co.uk/members</a>
         </div>
       </div>
     </OnboardingLayout>
