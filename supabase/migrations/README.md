@@ -62,3 +62,17 @@ in the live project. An owner or admin invite into an organisation with no
 approved owner, admin or manager is approved on claim, because nobody could
 ever approve it. The same file approves the one account already stranded that
 way.
+
+Deleting a login keeps its records, applied 15 Nov 2026:
+
+- `20261115_user_delete_keeps_records.sql`
+
+Deleting a user failed whenever they were linked to a session, case, risk
+assessment, safeguarding record, injury report or HR record: 32 attribution
+foreign keys had no ON DELETE action, and `hr_staff_user_org_fk` nulled its
+NOT NULL `org_id`. Those keys now clear just the person's id, and four triggers
+(`touch_child_injury`, `assert_session_planner`, `trg_risk_guard_approval`,
+`notify_session_created_or_edited`) let that cleared id through only when the
+login no longer exists (`user_account_removed()`). Tested on the live project
+in a rolled-back transaction, deleting through both `delete_auth_user` and a
+plain service-role delete, before it was applied.
