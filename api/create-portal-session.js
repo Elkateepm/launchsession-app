@@ -56,10 +56,21 @@ export default async function handler(req, res) {
     const stripe = new Stripe(STRIPE_SECRET_KEY)
     const origin = req.headers.origin || 'https://app.launchsession.co.uk'
 
-    const session = await stripe.billingPortal.sessions.create({
-      customer: org.stripe_customer_id,
-      return_url: return_url || `${origin}/?tab=settings&section=billing`,
-    })
+    let session
+    try {
+      session = await stripe.billingPortal.sessions.create({
+        customer: org.stripe_customer_id,
+        return_url: return_url || `${origin}/?tab=settings&section=billing`,
+      })
+    } catch (err) {
+      // A test-mode customer id does not exist under live keys. Choosing a
+      // plan replaces it (see create-checkout-session), so say that rather
+      // than failing with a 500.
+      if (err?.code === 'resource_missing') {
+        return res.status(400).json({ error: 'This organisation has no billing account yet. Upgrade a plan first.' })
+      }
+      throw err
+    }
 
     return res.status(200).json({ url: session.url })
   } catch (err) {

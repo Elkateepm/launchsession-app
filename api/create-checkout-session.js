@@ -154,6 +154,18 @@ export default async function handler(req, res) {
 
     // Reuse an existing Stripe customer for this org, or create one
     let customerId = org.stripe_customer_id
+    if (customerId) {
+      // A customer created in test mode does not exist in live mode (or was
+      // deleted in the dashboard); passing it to Checkout fails the whole
+      // upgrade with "No such customer". Treat it as absent and start afresh.
+      try {
+        const existing = await stripe.customers.retrieve(customerId)
+        if (existing?.deleted) customerId = null
+      } catch (err) {
+        console.warn('create-checkout-session: stored customer not found in Stripe', customerId, err?.message)
+        customerId = null
+      }
+    }
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: org.contact_email || profile.email,
