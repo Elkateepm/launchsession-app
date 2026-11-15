@@ -61,6 +61,10 @@ export default async function handler(req, res) {
       session = await stripe.billingPortal.sessions.create({
         customer: org.stripe_customer_id,
         return_url: return_url || `${origin}/?tab=settings&section=billing`,
+        // The live Stripe account is shared with LaunchNexus, whose portal is
+        // the account default. Without this, customers would manage their
+        // LaunchSession plan in LaunchNexus's portal, offered its products.
+        ...(process.env.STRIPE_PORTAL_CONFIGURATION ? { configuration: process.env.STRIPE_PORTAL_CONFIGURATION } : {}),
       })
     } catch (err) {
       // A test-mode customer id does not exist under live keys. Choosing a
