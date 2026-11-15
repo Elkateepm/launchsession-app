@@ -7,6 +7,7 @@ import StaffHRProfile from '../hr/StaffHRProfile'
 import { InviteStaffModal } from '../hr/HRCentre'
 import JoinRequests from './JoinRequests'
 import Icon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
 // The Team tab: who is in the organisation, what they are allowed to reach,
 // and who is still waiting to be let in.
@@ -223,7 +224,7 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
       <div className="team-enter" style={{ marginBottom: 20, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div style={{ minWidth: 0, flex: '1 1 280px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, color: 'var(--text3)', fontSize: 11, fontWeight: 800, letterSpacing: 1.1, textTransform: 'uppercase', marginBottom: 5 }}>
-            <span style={{ width: 8, height: 8, borderRadius: 99, background: primary, boxShadow: `0 0 0 4px ${primary}1c` }} />
+            <span style={{ width: 8, height: 8, borderRadius: 99, background: primary, boxShadow: `0 0 0 4px ${withAlpha(primary, '1c')}` }} />
             People &amp; access
           </div>
           <div style={{ fontSize: isMobile ? 25 : 30, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.8, lineHeight: 1.12 }}>Your team</div>
@@ -242,7 +243,7 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
             <button onClick={() => setInviting(true)} style={{
               minHeight: 44, padding: '0 16px', borderRadius: 12, border: 'none', cursor: 'pointer',
               background: primary, color: '#fff', fontSize: 14, fontWeight: 800, fontFamily: 'inherit',
-              display: 'inline-flex', alignItems: 'center', gap: 8, boxShadow: `0 7px 16px ${primary}35`,
+              display: 'inline-flex', alignItems: 'center', gap: 8, boxShadow: `0 7px 16px ${withAlpha(primary, '35')}`,
             }}><Icon name="✉️" /> Invite someone</button>
           )}
         </div>
@@ -374,7 +375,7 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
                   onClick={() => setRoleFilter(option.key)} style={{
                     minHeight: 37, padding: '0 12px', borderRadius: 99, cursor: 'pointer',
                     border: `1px solid ${roleFilter === option.key ? primary : 'var(--border)'}`,
-                    background: roleFilter === option.key ? `${primary}14` : 'var(--surface)',
+                    background: roleFilter === option.key ? withAlpha(primary, '14') : 'var(--surface)',
                     color: roleFilter === option.key ? primary : 'var(--text3)',
                     fontSize: 12.5, fontWeight: roleFilter === option.key ? 800 : 650, fontFamily: 'inherit',
                     display: 'inline-flex', alignItems: 'center', gap: 7,

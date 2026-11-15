@@ -10,6 +10,7 @@ import { Avatar, glass, inputStyle, btnGhost, btnPrimary } from '../volunteers/v
 import ChildPaymentsCard from '../payments/ChildPaymentsCard'
 import { useTerms } from '../../context/OrgContext'
 import Icon from '../../lib/icons'
+import OverlayPortal from '../shared/OverlayPortal'
 import { readableDbError } from '../../lib/dbErrors'
 import { uploadChildPhoto } from '../../lib/childPhoto'
 
@@ -227,7 +228,7 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
       {/* Reload on the way out so anything the parent submitted shows up in
           Registration Requests without a refresh. */}
       {showHandover && <HandoverRegistration org={org} onExit={() => { setShowHandover(false); load() }} />}
-      {showAdd && <AddChildQuickModal org={org} onClose={() => setShowAdd(false)} onAdded={() => { setShowAdd(false); load() }} />}
+      {showAdd && <AddChildQuickModal org={org} onClose={() => setShowAdd(false)} onSaved={load} onAdded={() => { setShowAdd(false); load() }} />}
       {showInvite && <InviteParentModal org={org} onClose={() => setShowInvite(false)} />}
       {showQR && <QRShareSheet org={org} onClose={() => setShowQR(false)} />}
     </div>
@@ -454,45 +455,98 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
   )
 }
 
-export function AddChildQuickModal({ org, onClose, onAdded }) {
-  const [form, setForm] = useState({ first_name: '', last_name: '', date_of_birth: '', group_name: '', parent_name: '', parent_phone: '', parent_email: '', school: '' })
+export function AddChildQuickModal({ org, onClose, onAdded, onSaved }) {
+  const terms = useTerms()
+  const { groups: orgGroups } = useOrgSettings(org?.id)
+  const blank = { first_name: '', last_name: '', date_of_birth: '', group_name: '', parent_name: '', parent_phone: '', parent_email: '', school: '' }
+  const [form, setForm] = useState(blank)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  // Names added in this sitting. Staff entering a whole group at a desk add
+  // one after another, so the form stays open and says who has gone in.
+  const [added, setAdded] = useState([])
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+  const primary = org?.primary_color || '#1B9AAA'
+  const groupChoices = (orgGroups || []).map(g => g.label).filter(Boolean)
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date())
 
   const save = async () => {
-    if (!form.first_name.trim()) return
+    if (!form.first_name.trim()) { setError('Add a first name to continue.'); return }
+    if (form.date_of_birth && form.date_of_birth > today) { setError('The date of birth is in the future.'); return }
     setSaving(true)
-    const { error } = await supabase.from('children').insert({
+    setError('')
+    const { error: saveError } = await supabase.from('children').insert({
       org_id: org.id, first_name: form.first_name.trim(), last_name: form.last_name.trim(),
       date_of_birth: form.date_of_birth || null, group_name: form.group_name || null,
-      parent_name: form.parent_name || null, parent_phone: form.parent_phone || null,
-      parent_email: form.parent_email.trim() || null, school: form.school || null,
-      active: true, profile_incomplete: !form.date_of_birth || !form.parent_phone,
+      parent_name: form.parent_name.trim() || null, parent_phone: form.parent_phone.trim() || null,
+      parent_email: form.parent_email.trim() || null, school: form.school.trim() || null,
+      active: true, profile_incomplete: !form.date_of_birth || !form.parent_phone.trim(),
     })
     setSaving(false)
-    if (!error) onAdded()
+    // This used to close nothing and say nothing on failure, so a refused
+    // insert (child limit, read-only trial) looked like a button that did not work.
+    if (saveError) { setError(readableDbError(saveError, `Could not add this ${terms.person}. Please try again.`)); return }
+    setAdded(prev => [...prev, `${form.first_name.trim()} ${form.last_name.trim()}`.trim()])
+    // Keep the group: the next person is usually in the same one.
+    setForm({ ...blank, group_name: form.group_name })
+    if (onSaved) onSaved()
   }
 
+  const finish = () => (added.length ? onAdded() : onClose())
+  const fields = [
+    ['first_name', 'First name *', 'text', 'given-name'], ['last_name', 'Last name', 'text', 'family-name'],
+    ['date_of_birth', 'Date of birth', 'date'], ['school', 'School', 'text'],
+    ['parent_name', 'Parent / carer name', 'text'], ['parent_phone', 'Parent / carer phone', 'tel'],
+    ['parent_email', 'Parent / carer email', 'email'],
+  ]
+  const field = ([key, label, type, autoComplete]) => (
+    <div key={key} style={{ marginBottom: 10 }}>
+      <label htmlFor={`add-child-${key}`} style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 4 }}>{label}</label>
+      <input id={`add-child-${key}`} type={type} value={form[key]} onChange={e => set(key, e.target.value)}
+        max={type === 'date' ? today : undefined} autoComplete={autoComplete || 'off'}
+        inputMode={type === 'tel' ? 'tel' : undefined} style={inputStyle} />
+    </div>
+  )
+
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 20, padding: 24, width: '100%', maxWidth: 420, maxHeight: '85vh', overflowY: 'auto' }}>
-        <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)', marginBottom: 14 }}>Add young person</div>
-        {[
-          ['first_name', 'First name *'], ['last_name', 'Last name'], ['date_of_birth', 'Date of birth', 'date'],
-          ['group_name', 'Group'], ['school', 'School'], ['parent_name', 'Parent / carer name'], ['parent_phone', 'Parent / carer phone'],
-          ['parent_email', 'Parent / carer email', 'email'],
-        ].map(([key, label, type]) => (
-          <div key={key} style={{ marginBottom: 10 }}>
-            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 4 }}>{label}</label>
-            <input type={type || 'text'} value={form[key]} onChange={e => set(key, e.target.value)} style={inputStyle} />
+    <OverlayPortal>
+      {/* Above the mobile dock (9999): at 200 the dock sat over the dim layer
+          and stayed tappable, so a stray tap navigated away mid-entry. */}
+      <div onClick={finish} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)', zIndex: 10700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+        <div role="dialog" aria-modal="true" aria-labelledby="add-child-title" onClick={e => e.stopPropagation()}
+          style={{ background: 'var(--surface)', borderRadius: 20, padding: 24, width: '100%', maxWidth: 420, maxHeight: '85dvh', overflowY: 'auto' }}>
+          <div id="add-child-title" style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)', marginBottom: 14 }}>Add {terms.person}</div>
+          {added.length > 0 && (
+            <div role="status" style={{ marginBottom: 14, padding: '10px 12px', borderRadius: 12, background: 'var(--ok-bg)', color: 'var(--ok-text)', fontSize: 13, fontWeight: 700 }}>
+              <Icon name="✓" /> {added.length === 1 ? `${added[0]} added.` : `${added.length} added: ${added.join(', ')}.`} Add another, or tap Done.
+            </div>
+          )}
+          {fields.slice(0, 3).map(field)}
+          <div style={{ marginBottom: 10 }}>
+            <label htmlFor="add-child-group_name" style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 4 }}>Group</label>
+            {groupChoices.length ? (
+              // Picked from the organisation's own groups: free text let a typo
+              // quietly start a new group that no filter or register used.
+              <select id="add-child-group_name" value={form.group_name} onChange={e => set('group_name', e.target.value)} style={inputStyle}>
+                <option value="">No group yet</option>
+                {groupChoices.map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
+            ) : (
+              <input id="add-child-group_name" type="text" value={form.group_name} onChange={e => set('group_name', e.target.value)} style={inputStyle} />
+            )}
           </div>
-        ))}
-        <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-          <button onClick={onClose} style={{ flex: 1, ...btnGhost }}>Cancel</button>
-          <button onClick={save} disabled={saving || !form.first_name.trim()} style={{ flex: 1, ...btnPrimary('#7C5CFC'), border: 'none', cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Add'}</button>
+          {fields.slice(3).map(field)}
+          {error && <div role="alert" style={{ marginTop: 6, padding: '9px 12px', borderRadius: 10, background: 'var(--danger-bg)', color: 'var(--danger-text)', fontSize: 12.5, fontWeight: 600 }}>{error}</div>}
+          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+            <button type="button" onClick={finish} style={{ flex: 1, minHeight: 44, ...btnGhost }}>{added.length ? 'Done' : 'Cancel'}</button>
+            <button type="button" onClick={save} disabled={saving || !form.first_name.trim()}
+              style={{ flex: 1, minHeight: 44, ...btnPrimary(primary), border: 'none', cursor: 'pointer', opacity: saving || !form.first_name.trim() ? 0.6 : 1 }}>
+              {saving ? 'Saving…' : added.length ? 'Add another' : 'Add'}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </OverlayPortal>
   )
 }
 

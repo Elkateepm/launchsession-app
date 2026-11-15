@@ -358,7 +358,12 @@ function AutoResolveOrg({ session }) {
         const slug = data?.organisations?.slug
         if (slug) {
           try { localStorage.setItem('launchsession_org_slug', slug) } catch (e) {}
-          window.location.replace(window.location.origin + '/dashboard?org=' + slug)
+          // Keep the rest of the query string. Stripe's return URL and the
+          // trial reminder emails link to /?tab=settings&section=billing, and
+          // rebuilding the URL from the slug alone landed them on Home.
+          const params = new URLSearchParams(window.location.search)
+          params.set('org', slug)
+          window.location.replace(window.location.origin + '/dashboard?' + params.toString())
         } else {
           setError(true)
         }
@@ -424,6 +429,13 @@ function AppContent() {
   useIdleLogout(!!session)
   // Mobile/iPad: stay signed in until manual logout, or 7 days of no use.
   useMobileInactivityLogout(!!session)
+
+  // Signing in on /login renders the app in place, which left /login in the
+  // address bar: a reload or a shared link then reopened the sign-in screen.
+  const signedInOnLogin = !!session && !!org && typeof window !== 'undefined' && window.location.pathname === '/login'
+  useEffect(() => {
+    if (signedInOnLogin) window.history.replaceState(null, '', '/dashboard' + window.location.search + window.location.hash)
+  }, [signedInOnLogin])
 
   // Redirect to landing immediately if this looks like a bare/fresh visit.
   if (shouldGoToLanding() && !checkedSession) {

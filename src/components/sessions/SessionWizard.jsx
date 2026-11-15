@@ -482,6 +482,20 @@ function StepPeople({ form, setForm, staff, children, expectedCount, bubbleDefs,
   const [showGroupsModal, setShowGroupsModal] = useState(false)
 
   const toggleChild = (id) => set('child_ids', form.child_ids.includes(id) ? form.child_ids.filter(x => x !== id) : [...form.child_ids, id])
+  // Organisations bring hundreds of young people with them; an unfiltered
+  // list of 276 checkboxes is not a way to pick eight of them.
+  const terms = useTerms()
+  const [childSearch, setChildSearch] = useState('')
+  const shownChildren = useMemo(() => {
+    const q = childSearch.trim().toLowerCase()
+    if (!q) return children
+    return children.filter(c => `${c.first_name} ${c.last_name} ${c.group_name || ''}`.toLowerCase().includes(q))
+  }, [children, childSearch])
+  const allShownPicked = shownChildren.length > 0 && shownChildren.every(c => form.child_ids.includes(c.id))
+  const toggleAllShown = () => {
+    const ids = shownChildren.map(c => c.id)
+    set('child_ids', allShownPicked ? form.child_ids.filter(id => !ids.includes(id)) : [...new Set([...form.child_ids, ...ids])])
+  }
   const toggleSupport = (id) => set('supporting_staff_ids', form.supporting_staff_ids.includes(id) ? form.supporting_staff_ids.filter(x => x !== id) : [...form.supporting_staff_ids, id])
 
   const addVolunteerSlot = () => set('volunteer_slots', [...form.volunteer_slots, { role: '', spaces_required: 1 }])
@@ -527,13 +541,27 @@ function StepPeople({ form, setForm, staff, children, expectedCount, bubbleDefs,
           </div>
         )}
         {form.participant_mode === 'individual' && (
-          <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 10, padding: 8 }}>
-            {children.map(c => (
-              <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '6px 8px', cursor: 'pointer', fontSize: 13 }}>
-                <input type="checkbox" style={CHECKBOX} checked={form.child_ids.includes(c.id)} onChange={() => toggleChild(c.id)} />
-                {c.first_name} {c.last_name} <span style={{ color: 'var(--text3)', fontSize: 11 }}>({c.group_name})</span>
-              </label>
-            ))}
+          <div>
+            {children.length > 8 && (
+              <div style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+                <input type="search" value={childSearch} onChange={e => setChildSearch(e.target.value)} placeholder="Search by name or group"
+                  aria-label={`Search ${terms.people}`} style={{ flex: 1, minHeight: 44, padding: '0 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 16 }} />
+                <button type="button" onClick={toggleAllShown} disabled={!shownChildren.length}
+                  style={{ minHeight: 44, padding: '0 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  {allShownPicked ? 'Clear shown' : childSearch.trim() ? `Select ${shownChildren.length} shown` : 'Select all'}
+                </button>
+              </div>
+            )}
+            <div style={{ maxHeight: 260, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 10, padding: 8 }}>
+              {shownChildren.map(c => (
+                <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '6px 8px', cursor: 'pointer', fontSize: 13 }}>
+                  <input type="checkbox" style={CHECKBOX} checked={form.child_ids.includes(c.id)} onChange={() => toggleChild(c.id)} />
+                  {c.first_name} {c.last_name}
+                  {c.group_name && <span style={{ color: 'var(--text3)', fontSize: 11 }}>({c.group_name})</span>}
+                </label>
+              ))}
+              {shownChildren.length === 0 && <div style={{ padding: 10, fontSize: 12.5, color: 'var(--text3)' }}>{children.length ? 'Nobody matches that search.' : `No ${terms.people} added yet.`}</div>}
+            </div>
           </div>
         )}
         {form.participant_mode === 'walk_ins' && (

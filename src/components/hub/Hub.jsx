@@ -3248,6 +3248,10 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             {!isMobile && <DateTimeInline primary={primary} />}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '5px 10px 5px 5px', borderRadius: 12, border: `1.5px solid var(--org-a10)`, background: 'var(--surface)', transition: 'all 0.2s', boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px var(--org-a10)` }}
               onClick={onAvatarClick}
+              // A div, so it needs to say what it is: it is the only way to
+              // the profile and Sign out, and screen readers could not find it.
+              role="button" tabIndex={0} aria-label="Your profile, settings and sign out"
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onAvatarClick && onAvatarClick() } }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = primary + '50'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 6px 16px -6px var(--org-a20)` }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = primary + '22'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 6px -3px var(--org-a10)` }}>
               <div style={{ width: 30, height: 30, borderRadius: '50%', background: `linear-gradient(135deg, ${primary}, ${secondary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff', overflow: 'hidden', flexShrink: 0, boxShadow: `0 1px 0 rgba(255,255,255,0.35) inset, 0 3px 10px -2px var(--org-a35)` }}>

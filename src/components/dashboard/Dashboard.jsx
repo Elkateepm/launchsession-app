@@ -452,6 +452,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
 
         <motion.button
           onClick={onProfileClick}
+          aria-label="Your profile, settings and sign out"
           whileHover={{ y: -2, backgroundColor: 'rgba(255,255,255,0.75)' }}
           whileTap={{ scale: 0.97 }}
           style={{ display: 'flex', alignItems: 'center', gap: 8, padding: isMobile ? '4px' : '6px 12px 6px 6px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.5)', cursor: 'pointer', flexShrink: 0 }}
