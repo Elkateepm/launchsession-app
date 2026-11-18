@@ -6,6 +6,7 @@ import { useTerms } from '../../context/OrgContext'
 import AuthLayout, { AUTH, AuthError, OrganisationIdentity, authInput, authLabel, authLink, authButton } from './AuthLayout'
 import Icon from '../../lib/icons'
 import { getAuthBranding } from './authBranding'
+import { SUSPENDED_MESSAGE, isSuspendedSignInError, hasSuspensionNotice, clearSuspensionNotice } from '../../lib/accessBlock'
 
 const STEPS = { EMAIL: 'email', PASSWORD: 'password', FORGOT: 'forgot' }
 
@@ -24,7 +25,9 @@ export default function Login({ org }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  // A session ended because the account or organisation was suspended
+  // arrives here with the reason, so say it rather than show a blank form.
+  const [error, setError] = useState(() => hasSuspensionNotice() ? SUSPENDED_MESSAGE : '')
   const [forgotSent, setForgotSent] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   // A phone or tablet can also be shared. Persistence is an explicit choice
@@ -38,6 +41,7 @@ export default function Login({ org }) {
   const changeStep = next => { setStep(next); setError(''); setForgotSent(false); setShowPassword(false) }
   const heading = { margin: '0 0 10px', color: AUTH.ink, fontSize: isDesktop ? 28 : 25, fontWeight: 800, lineHeight: 1.25, letterSpacing: -0.8 }
   const description = { fontSize: 13, color: AUTH.muted, lineHeight: 1.7, margin: '0 0 22px' }
+  React.useEffect(() => { clearSuspensionNotice() }, [])
 
   const handleEmailContinue = event => {
     event.preventDefault()
@@ -54,7 +58,9 @@ export default function Login({ org }) {
       try { localStorage.setItem('ls_remember_me', rememberMe ? 'true' : 'false') } catch (e) {}
       const { error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
       if (authError) {
-        const message = authError.message === 'Invalid login credentials'
+        const message = isSuspendedSignInError(authError)
+          ? SUSPENDED_MESSAGE
+          : authError.message === 'Invalid login credentials'
           ? 'Incorrect email or password. Please try again.'
           : authError.message === 'Email not confirmed'
             ? 'Please confirm your email address using the link in your inbox. If you need a new invitation, contact your organisation administrator.'

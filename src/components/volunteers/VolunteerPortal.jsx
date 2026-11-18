@@ -20,6 +20,7 @@ import { signOne } from '../../lib/storageUrl'
 import { uploadStaffPhoto } from '../../lib/staffPhoto'
 import Icon from '../../lib/icons'
 import { withAlpha } from '../../lib/withAlpha'
+import { SUSPENDED_MESSAGE, fetchAccessBlock, isSuspendedSignInError } from '../../lib/accessBlock'
 
 const SLUG = window.location.pathname.split('/volunteer/')[1]?.split('/')[0]
 
@@ -411,6 +412,11 @@ export default function VolunteerPortal() {
 
   async function validateAndLoad() {
     setView('loading')
+    if (await fetchAccessBlock()) {
+      try { await supabase.auth.signOut({ scope: 'local' }) } catch (e) { /* best effort */ }
+      setAuthUser(null); setView('login'); setError(SUSPENDED_MESSAGE)
+      return
+    }
     const {data:p} = await supabase.from('user_profiles').select('*').eq('id',authUser.id).eq('org_id',org.id).single()
     if(!p) {
       const {data:any} = await supabase.from('user_profiles').select('role').eq('id',authUser.id).eq('org_id',org.id).single()
@@ -445,7 +451,7 @@ export default function VolunteerPortal() {
   async function handleAuth(e) {
     e.preventDefault(); setAuthLoading(true); setError('')
     const {error:err} = await supabase.auth.signInWithPassword({email,password})
-    if(err){setError(err.message);setAuthLoading(false);return}
+    if(err){setError(isSuspendedSignInError(err) ? SUSPENDED_MESSAGE : err.message);setAuthLoading(false);return}
     setAuthLoading(false)
   }
 

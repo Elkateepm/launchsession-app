@@ -7,6 +7,7 @@ import { markSignedIn } from './lib/idleClock'
 import { isEnrolledFor, isLocked, setLocked, getLockAfterMs, isAppLockPlatform } from './lib/biometricLock'
 import BiometricLockScreen from './components/auth/BiometricLockScreen'
 import { redirectToSignIn } from './lib/authRedirect'
+import { fetchAccessBlock, rememberSuspension } from './lib/accessBlock'
 import { ModuleAccessProvider } from './context/ModuleAccessContext'
 import { applyTheme, watchSystemTheme } from './lib/theme'
 import { startTour } from './components/tour/tourStorage'
@@ -199,7 +200,25 @@ export function AuthedApp({ session, org, onReady }) {
   // { ok: true } once the account is confirmed to belong to this organisation;
   // { ok: false, home } when it belongs elsewhere (home) or nowhere (null).
   const [membership, setMembership] = React.useState(null)
+  // false until the suspension check has answered; the splash stays up until then.
+  const [accessChecked, setAccessChecked] = React.useState(false)
   const { locked, unlock } = useBiometricLock(session?.user?.id)
+
+  // A suspended person or organisation is blocked in the database: data stops
+  // coming back and the session cannot refresh. Saying so, and signing out,
+  // beats leaving them in an empty workspace until the token runs out.
+  React.useEffect(() => {
+    let cancelled = false
+    setAccessChecked(false)
+    fetchAccessBlock().then(async block => {
+      if (cancelled) return
+      if (!block) { setAccessChecked(true); return }
+      rememberSuspension()
+      try { await supabase.auth.signOut({ scope: 'local' }) } catch (e) { /* best effort */ }
+      redirectToSignIn()
+    })
+    return () => { cancelled = true }
+  }, [session.user.id])
 
   React.useEffect(() => {
     supabase.from('user_profiles')
@@ -242,8 +261,8 @@ export function AuthedApp({ session, org, onReady }) {
   }, [session.user.id, session.user.email, org?.id, org?.onboarding_complete])
 
   React.useEffect(() => {
-    if (onboardingDone !== null && userRole !== null && approval !== null && membership !== null && onReady) onReady()
-  }, [onboardingDone, userRole, approval, membership, onReady])
+    if (accessChecked && onboardingDone !== null && userRole !== null && approval !== null && membership !== null && onReady) onReady()
+  }, [accessChecked, onboardingDone, userRole, approval, membership, onReady])
 
   // Gate before anything else renders, including the role redirects below --
   // otherwise a locked device would still bounce a volunteer into their portal.
@@ -262,7 +281,8 @@ export function AuthedApp({ session, org, onReady }) {
     )
   }
 
-  if (onboardingDone === null || userRole === null || approval === null || membership === null) return null
+  // Nothing renders, not even a role redirect, until the suspension check answers.
+  if (!accessChecked || onboardingDone === null || userRole === null || approval === null || membership === null) return null
 
   // Before approval, roles and onboarding: none of them mean anything for an
   // account that is not a member of this organisation.

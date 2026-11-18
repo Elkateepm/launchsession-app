@@ -2,8 +2,9 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { AuthedApp } from './App'
 import { supabase } from './lib/supabase'
+import { redirectToSignIn } from './lib/authRedirect'
 
-jest.mock('./lib/supabase', () => ({ supabase: { from: jest.fn(), auth: { signOut: jest.fn(), onAuthStateChange: jest.fn(() => ({ data: { subscription: { unsubscribe() {} } } })), getSession: jest.fn() } } }))
+jest.mock('./lib/supabase', () => ({ supabase: { from: jest.fn(), rpc: jest.fn(), auth: { signOut: jest.fn(), onAuthStateChange: jest.fn(() => ({ data: { subscription: { unsubscribe() {} } } })), getSession: jest.fn() } } }))
 jest.mock('./lib/authRedirect', () => ({ redirectToSignIn: jest.fn() }))
 jest.mock('./components/dashboard/Dashboard', () => () => <div>Dashboard for members</div>)
 jest.mock('./components/onboarding/Onboarding', () => () => <div>Onboarding</div>)
@@ -16,6 +17,9 @@ let profile, upsert
 
 beforeEach(() => {
   upsert = jest.fn()
+  sessionStorage.clear()
+  supabase.rpc.mockResolvedValue({ data: null, error: null })
+  supabase.auth.signOut.mockResolvedValue({ error: null })
   supabase.from.mockImplementation(table => {
     const q = { select: () => q, eq: () => q, upsert,
       maybeSingle: () => Promise.resolve(table === 'organisations_safe'
@@ -52,4 +56,26 @@ test('a member of the organisation gets the app', async () => {
   show()
   expect(await screen.findByText('Dashboard for members')).toBeInTheDocument()
   expect(screen.queryByRole('alert')).toBeNull()
+})
+
+test.each([
+  ['user_suspended', 'a suspended account'],
+  ['org_suspended', 'a member of a suspended organisation'],
+])('%s: %s is signed out and sent to sign in with the reason, never shown the workspace', async reason => {
+  profile = { org_id: 'org-ss', role: 'admin', approval_status: 'approved', onboarding_complete: true }
+  supabase.rpc.mockResolvedValue({ data: { reason, organisation: 'Solidarity Sports' }, error: null })
+  show()
+  await waitFor(() => expect(redirectToSignIn).toHaveBeenCalled())
+  expect(supabase.rpc).toHaveBeenCalledWith('my_access_block')
+  expect(supabase.auth.signOut).toHaveBeenCalledWith({ scope: 'local' })
+  expect(sessionStorage.getItem('ls_access_suspended')).toBe('1')
+  expect(screen.queryByText('Dashboard for members')).toBeNull()
+})
+
+test('if the suspension check cannot be reached, a member still gets the app', async () => {
+  profile = { org_id: 'org-ss', role: 'admin', approval_status: 'approved', onboarding_complete: true }
+  supabase.rpc.mockRejectedValue(new Error('offline'))
+  show()
+  expect(await screen.findByText('Dashboard for members')).toBeInTheDocument()
+  expect(supabase.auth.signOut).not.toHaveBeenCalled()
 })
