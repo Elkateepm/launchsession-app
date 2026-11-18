@@ -76,3 +76,17 @@ NOT NULL `org_id`. Those keys now clear just the person's id, and four triggers
 login no longer exists (`user_account_removed()`). Tested on the live project
 in a rolled-back transaction, deleting through both `delete_auth_user` and a
 plain service-role delete, before it was applied.
+
+Command Centre lockdown, applied 18 Nov 2026:
+
+- `20261118_command_centre_lockdown.sql`
+
+Org admins can no longer write global templates (an org admin could publish a
+template to every organisation by setting `is_global`). Adds
+`admin_delete_organisation(p_org_id)`, super admins only, which deletes an
+organisation in one transaction (every FK to organisations cascades;
+`child_injuries` is cleared first because its FK to `children` is RESTRICT),
+removes its signup record and its members' logins, and keeps the logins of
+super admins and platform users. Tested in a rolled-back transaction by
+deleting Solidarity Sports as the super admin and trying both changes as a
+Livity Youth Edinburgh admin.
