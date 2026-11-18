@@ -8,7 +8,7 @@ jest.mock('../../hooks/useIsMobile', () => ({ useBreakpoint: () => ({ isDesktop:
 jest.mock('../../lib/nativeEnv', () => ({ isNativeApp: () => false }))
 jest.mock('../../lib/icons', () => () => null)
 const org = { id: 'org-a', name: 'Community Youth Project', slug: 'community-youth', primary_color: '#4562BC', branding_enabled: true }
-beforeEach(() => { jest.clearAllMocks(); localStorage.clear(); mockDesktop = false })
+beforeEach(() => { jest.clearAllMocks(); localStorage.clear(); sessionStorage.clear(); mockDesktop = false })
 const start = () => render(<Login org={org} />)
 const passwordStep = () => {
   fireEvent.change(screen.getByRole('textbox', { name: 'Email address' }), { target: { value: 'staff@example.com' } })
@@ -97,4 +97,22 @@ test('a standard organisation sends LaunchSession styling with its reset request
   fireEvent.click(screen.getByRole('button', { name: 'Send reset link' }))
   await screen.findByRole('heading', { name: 'Reset link sent' })
   expect(supabase.functions.invoke).toHaveBeenCalledWith('send-password-reset-email', expect.objectContaining({ body: expect.objectContaining({ org_slug: org.slug, org_name: org.name, org_color: '#3B82F6', org_logo: window.location.origin + '/logo.png' }) }))
+})
+
+test('a suspended account is told it has been suspended, not that the password is wrong', async () => {
+  supabase.auth.signInWithPassword.mockResolvedValue({ error: { code: 'user_banned', message: 'User is banned' } })
+  start(); passwordStep()
+  fireEvent.click(screen.getByRole('button', { name: 'Sign in', exact: true }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('Your access to LaunchSession has been suspended')
+  expect(screen.getByRole('alert')).toHaveTextContent('support@launchsession.co.uk')
+})
+
+test('arriving after a suspended session was ended shows the reason once', () => {
+  sessionStorage.setItem('ls_access_suspended', '1')
+  const { unmount } = start()
+  expect(screen.getByRole('alert')).toHaveTextContent('Your access to LaunchSession has been suspended')
+  expect(sessionStorage.getItem('ls_access_suspended')).toBeNull()
+  unmount()
+  start()
+  expect(screen.queryByRole('alert')).toBeNull()
 })
