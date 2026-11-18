@@ -851,4 +851,4 @@ function InternalMail({ org, people, primary, isMobile, onFlash }) {
   )
 }
 
-const inviteAction = { minHeight: 36, padding: '6px 12px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 12, fontWeight: 750, cursor: 'pointer', whiteSpace: 'nowrap' }
+const inviteAction = { minHeight: 44, padding: '0 14px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 12, fontWeight: 750, cursor: 'pointer', whiteSpace: 'nowrap' }

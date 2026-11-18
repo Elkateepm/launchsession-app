@@ -868,7 +868,7 @@ export function InviteStaffModal({ org, primary, onClose, onSent, inviterRole = 
               <div role="tablist" aria-label="How to invite" style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 12, background: 'var(--surface2)', marginBottom: 16 }}>
                 {[['email', 'Email an invite'], ['link', 'Share a link or QR']].map(([key, text]) => (
                   <button key={key} role="tab" aria-selected={mode === key} onClick={() => setMode(key)} style={{
-                    flex: 1, minHeight: 40, borderRadius: 9, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                    flex: 1, minHeight: 44, borderRadius: 9, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
                     background: mode === key ? 'var(--surface)' : 'transparent',
                     boxShadow: mode === key ? '0 1px 3px rgba(15,23,42,0.12)' : 'none',
                     color: mode === key ? 'var(--text)' : 'var(--text3)', fontSize: 13, fontWeight: 800,
