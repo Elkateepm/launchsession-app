@@ -1,5 +1,58 @@
 import { createClient } from '@supabase/supabase-js'
 import webpush from 'web-push'
+import Stripe from 'stripe'
+
+// ── Charity discount for organisations that already pay ──────────────────
+// Checkout gives a registered charity 20% off (create-checkout-session.js),
+// but an organisation that subscribed first and was verified afterwards kept
+// paying full price until it happened to change plan. When LaunchSession
+// marks a charity number verified, organisations_charity_verified() posts
+// here and the coupon goes onto the live subscription, from the next invoice.
+// Same coupon id and terms as checkout; keep the two in step (api/ is capped
+// at 12 functions, so they cannot share a module).
+const CHARITY_COUPON_ID = 'launchsession-registered-charity-20'
+const isCharityEligible = org => !!org?.charity_number && ['claimed', 'verified'].includes(org?.charity_status)
+
+async function charityCoupon(stripe) {
+  try {
+    return (await stripe.coupons.retrieve(CHARITY_COUPON_ID)).id
+  } catch (err) {
+    if (err?.code !== 'resource_missing') throw err
+  }
+  try {
+    return (await stripe.coupons.create({ id: CHARITY_COUPON_ID, percent_off: 20, duration: 'forever', name: 'Registered charity (20% off)' })).id
+  } catch (err) {
+    if (err?.code === 'resource_already_exists') return CHARITY_COUPON_ID
+    throw err
+  }
+}
+
+const couponIdsOn = sub => [
+  ...(sub.discounts || []).map(d => (typeof d === 'string' ? null : d?.coupon?.id || d?.coupon)).filter(Boolean),
+  ...(sub.discount?.coupon?.id ? [sub.discount.coupon.id] : []),
+]
+
+// Returns what happened, so the caller (and the tests) can tell the cases
+// apart: applied, already had it, no subscription yet, or why it was left.
+export async function applyCharityDiscount({ stripe, org }) {
+  if (!isCharityEligible(org)) return { applied: false, reason: 'not_eligible' }
+  if (!org.stripe_subscription_id) return { applied: false, reason: 'no_subscription' } // checkout applies it
+  let sub
+  try {
+    sub = await stripe.subscriptions.retrieve(org.stripe_subscription_id, { expand: ['discounts'] })
+  } catch (err) {
+    if (err?.code === 'resource_missing') return { applied: false, reason: 'subscription_missing' }
+    throw err
+  }
+  if (['canceled', 'incomplete_expired'].includes(sub.status)) return { applied: false, reason: 'subscription_ended' }
+  const coupons = couponIdsOn(sub)
+  if (coupons.includes(CHARITY_COUPON_ID)) return { applied: false, reason: 'already_applied' }
+  // A subscription that already carries another discount (a promotion code)
+  // keeps it, exactly as checkout does, rather than stacking the two.
+  if (coupons.length || (sub.discounts || []).length) return { applied: false, reason: 'other_discount', coupons }
+  await stripe.subscriptions.update(sub.id, { discounts: [{ coupon: await charityCoupon(stripe) }] })
+  return { applied: true, reason: 'applied', subscription: sub.id }
+}
 
 
 // Server-generated notification copy — the frontend only ever sends an
@@ -200,6 +253,51 @@ export default async function handler(req, res) {
     // pg_cron job, which posts here with the same vault secret the signup
     // mailer uses. Lives in this handler rather than its own file because
     // Vercel's Hobby plan caps api/ at 12 serverless functions. ──
+    // ── Charity verified → 20% off an existing subscription. Posted by the
+    // organisations_charity_verified trigger with the shared vault secret. ──
+    if (req.body?.type === 'charity_discount_sync') {
+      const providedSecret = req.headers['x-db-event-secret']
+      const { DB_EVENT_SECRET, REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY, STRIPE_SECRET_KEY } = process.env
+      if (!DB_EVENT_SECRET || providedSecret !== DB_EVENT_SECRET) return res.status(401).json({ error: 'Unauthorized' })
+      if (!REACT_APP_SUPABASE_URL || !REACT_APP_SUPABASE_SERVICE_KEY || !STRIPE_SECRET_KEY) {
+        console.error('send-form-email(charity_discount_sync): missing env vars')
+        return res.status(500).json({ error: 'Server misconfiguration' })
+      }
+      const { org_id } = req.body
+      if (!org_id) return res.status(400).json({ error: 'Missing org_id' })
+
+      const adminClient = createClient(REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY)
+      const { data: org, error: orgErr } = await adminClient
+        .from('organisations')
+        .select('id, name, charity_number, charity_status, stripe_subscription_id')
+        .eq('id', org_id).maybeSingle()
+      if (orgErr || !org) return res.status(404).json({ error: 'Organisation not found' })
+
+      // The discount first: if Stripe fails, no email promises it.
+      const result = await applyCharityDiscount({ stripe: new Stripe(STRIPE_SECRET_KEY), org })
+
+      // Then tell them, through Resend, in words that match what Stripe now
+      // shows (see supabase/functions/send-charity-verified-email).
+      let emailed = false
+      if (org.charity_status === 'verified') {
+        const { error: mailErr } = await adminClient.functions.invoke('send-charity-verified-email', {
+          body: { org_id: org.id, discount_result: result.reason },
+        })
+        if (mailErr) console.error('send-form-email(charity_discount_sync): email failed', mailErr.message)
+        emailed = !mailErr
+      }
+
+      // Recorded where Command Centre's activity log shows it.
+      await adminClient.from('admin_audit_log').insert([{
+        actor_email: 'billing@launchsession.co.uk',
+        action: result.applied ? 'charity_discount_applied' : 'charity_discount_checked',
+        target_type: 'organisation', target_id: org.id, target_label: org.name,
+        detail: { result: result.reason, email_sent: emailed },
+      }])
+      console.log('send-form-email(charity_discount_sync):', org.id, result.reason, emailed ? 'emailed' : 'not emailed')
+      return res.status(200).json({ ok: true, ...result, emailed })
+    }
+
     if (req.body?.type === 'trial_reminders') {
       const providedSecret = req.headers['x-db-event-secret']
       const { DB_EVENT_SECRET, REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY } = process.env
