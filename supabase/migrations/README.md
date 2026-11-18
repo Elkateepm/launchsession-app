@@ -90,3 +90,15 @@ removes its signup record and its members' logins, and keeps the logins of
 super admins and platform users. Tested in a rolled-back transaction by
 deleting Solidarity Sports as the super admin and trying both changes as a
 Livity Youth Edinburgh admin.
+
+Command Centre account health, applied 18 Nov 2026:
+
+- `20261118_command_centre_health.sql`
+
+Two read-only functions for the redesigned Command Centre, super admins only:
+`admin_org_health()` (per organisation: members, awaiting approval, pending
+invites and the oldest one, children, sessions in total / last 30 days /
+upcoming, last session date, last sign-in by a non-platform member, attendance
+in the last 30 days) and `admin_list_users()` (every profile with its
+organisation and last sign-in). Tested as the super admin and refused for an
+organisation admin in a rolled-back transaction.
