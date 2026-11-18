@@ -26,11 +26,13 @@ function serve(sessions) {
 
 beforeEach(() => { sessionStorage.clear() })
 
-test('the page carries the organisation logo, name and strapline', async () => {
+test('the page carries the organisation logo and name, and says what the page is for', async () => {
   serve([])
   const { container } = render(<SessionPlanner org={org} onNavigate={() => {}} />)
   expect(await screen.findByText('Example organisation')).toBeInTheDocument()
-  expect(screen.getByText('Every child counts here')).toBeInTheDocument()
+  // The page's own line, not the organisation's slogan repeated on every page.
+  expect(screen.getByText('Your plans, people and registers in one place.')).toBeInTheDocument()
+  expect(screen.queryByText('Every child counts here')).toBeNull()
   expect(container.querySelector('img[src="https://example.test/logo.png"]')).not.toBeNull()
 })
 

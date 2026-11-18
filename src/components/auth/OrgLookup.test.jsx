@@ -33,28 +33,20 @@ test('organisation search clears both saved selections and only reads public bra
   expect(select).toHaveBeenCalledWith(AUTH_DIRECTORY_COLUMNS)
   expect(window.location.href).toBe('')
 })
-test('keyboard suggestions require organisation confirmation before navigating to sign-in', async () => {
+test('choosing a suggestion goes straight to that organisation\'s sign-in, without remembering it', async () => {
   render(<OrgLookup />); const input = await search('Community Youth')
   await screen.findByRole('listbox')
   fireEvent.keyDown(input, { key: 'ArrowDown' }); fireEvent.keyDown(input, { key: 'Enter' })
-  expect(screen.getByRole('heading', { name: 'Is this your organisation?' })).toBeInTheDocument()
-  expect(screen.queryByText('Verified Organisation')).not.toBeInTheDocument()
-  expect(window.location.href).toBe('')
-  expect(screen.getByRole('checkbox')).not.toBeChecked()
-  fireEvent.click(screen.getByRole('button', { name: 'Continue to sign in' }))
   expect(localStorage.getItem('launchsession_org_slug')).toBe('community-youth')
   expect(localStorage.getItem('launchsession_remembered_org_slug')).toBeNull()
   expect(window.location.href).toBe('https://app.launchsession.co.uk/login?org=community-youth')
 })
-test('multiple results use the same confirmation and explicit remembering choice', async () => {
+test('several matches: choosing one goes straight to its sign-in', async () => {
   render(<OrgLookup />); await search('Community')
   fireEvent.click(screen.getByRole('button', { name: 'Find my workspace' }))
   expect(await screen.findByRole('heading', { name: 'Choose your organisation' })).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Select Community Sports Club' }))
-  fireEvent.click(screen.getByRole('checkbox'))
-  fireEvent.click(screen.getByRole('button', { name: 'Continue to sign in' }))
-  expect(localStorage.getItem('launchsession_remembered_org_slug')).toBe('community-sport')
-  expect(window.location.href).toContain('/login?org=community-sport')
+  expect(window.location.href).toBe('https://app.launchsession.co.uk/login?org=community-sport')
 })
 test('failed directory requests show an error and can be retried', async () => {
   select.mockRejectedValue(new Error('Offline'))
@@ -63,7 +55,7 @@ test('failed directory requests show an error and can be retried', async () => {
   expect(await screen.findByRole('alert')).toHaveTextContent('could not load organisations')
   select.mockResolvedValue({ data: orgs, error: null })
   fireEvent.click(screen.getByRole('button', { name: 'Find my workspace' }))
-  expect(await screen.findByRole('heading', { name: 'Is this your organisation?' })).toBeInTheDocument()
+  await waitFor(() => expect(window.location.href).toBe('https://app.launchsession.co.uk/login?org=community-youth'))
 })
 test('no match stays on search and never selects a default organisation', async () => {
   render(<OrgLookup />); await search('Missing organisation')
@@ -73,17 +65,7 @@ test('no match stays on search and never selects a default organisation', async 
   expect(localStorage.getItem('launchsession_org_slug')).toBeNull()
 })
 
-test.each([true, false])('organisation confirmation applies the branding entitlement: %s', async branding => {
-  select.mockResolvedValue({ data: [{ ...orgs[0], branding_enabled: branding, primary_color: '#C8102E', logo_url: 'https://assets.example/club.png', slogan: 'Together we thrive' }], error: null })
-  render(<OrgLookup />); await search('Community Youth')
-  fireEvent.click(screen.getByRole('button', { name: 'Find my workspace' }))
-  await screen.findByRole('heading', { name: 'Is this your organisation?' })
-  expect(Boolean(screen.queryByRole('img', { name: 'Community Youth Project logo' }))).toBe(branding)
-  expect(Boolean(screen.queryByText('Powered by LaunchSession'))).toBe(branding)
-  if (!branding) expect(document.querySelector('img[src="https://assets.example/club.png"]')).toBeNull()
-})
-
-test('the members page says who it is for, answers the usual sign-in questions, and offers volunteers their portal', async () => {
+test('the members page says who it is for and answers the usual sign-in questions', async () => {
   render(<OrgLookup />)
   expect(screen.getByRole('heading', { name: "Members' sign in" })).toBeInTheDocument()
   const help = screen.getByRole('list', { name: 'Help signing in' })
@@ -91,12 +73,4 @@ test('the members page says who it is for, answers the usual sign-in questions, 
   expect(help).toHaveTextContent('Forgotten your password?')
   expect(screen.getByRole('link', { name: 'Start a free 14-day trial' })).toHaveAttribute('href', '/signup')
 
-  await search('Community Youth')
-  fireEvent.click(screen.getByRole('button', { name: 'Find my workspace' }))
-  await screen.findByRole('heading', { name: 'Is this your organisation?' })
-  // The portal is a link to the organisation's own portal, and choosing the
-  // organisation alone still never signs anyone in or saves it.
-  expect(screen.getByRole('link', { name: /Volunteer\? Open the volunteer portal/ })).toHaveAttribute('href', '/volunteer/community-youth')
-  expect(localStorage.getItem('launchsession_org_slug')).toBeNull()
-  expect(window.location.href).toBe('')
 })

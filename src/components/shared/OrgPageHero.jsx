@@ -89,7 +89,9 @@ export default function OrgPageHero({ org, mobile, title, subtitle, label, detai
         <span style={{ fontSize: mobile ? 11 : 12, fontWeight: 800, letterSpacing: 1.6, textTransform: 'uppercase', color: '#ffffffe0', overflowWrap: 'anywhere' }}>{name}</span>
       </div>
       <h1 style={{ fontFamily: 'var(--font-display, inherit)', fontSize: mobile ? 30 : 42, lineHeight: 1.08, fontWeight: 800, letterSpacing: -1, margin: 0, color: '#fff' }}>{title}</h1>
-      {(org?.slogan || subtitle) && <p style={{ margin: '8px 0 0', fontSize: mobile ? 13 : 15, lineHeight: 1.5, color: '#ffffffd6', maxWidth: 560 }}>{org?.slogan || subtitle}</p>}
+      {/* What this page is for comes first; the organisation's own strapline
+          is the fallback (it still leads on Home and at sign-in). */}
+      {(subtitle || org?.slogan) && <p style={{ margin: '8px 0 0', fontSize: mobile ? 13 : 15, lineHeight: 1.5, color: '#ffffffd6', maxWidth: 560 }}>{subtitle || org?.slogan}</p>}
       {(actions || shortcuts) && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginTop: mobile ? 16 : 22 }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, width: mobile ? '100%' : undefined }}>{actions}</div>
         {!mobile && shortcuts && <nav aria-label="Delivery shortcuts" style={{ display: 'flex', gap: 4 }}>{shortcuts}</nav>}

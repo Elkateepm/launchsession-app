@@ -277,7 +277,7 @@ function StepType({ form, setForm, templates, appliedTemplateId, onApplyTemplate
                   <div style={{ fontSize: 20, marginBottom: 6 }}>{t.icon || '📋'}</div>
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</div>
                   {t.start_time && t.end_time && (
-                    <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>{t.start_time}–{t.end_time}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>{t.start_time.slice(0, 5)}–{t.end_time.slice(0, 5)}</div>
                   )}
                 </motion.button>
               )
@@ -1032,9 +1032,9 @@ function StepReview({ form, staff, expectedCount, primary, riskAssessments = [],
             {outstanding.length === 0 ? (
               <span style={{ fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.6, color: 'var(--ok-text)', background: 'var(--ok-bg)', border: '1px solid var(--ok-border)', borderRadius: 99, padding: '3px 10px' }}>Ready to publish</span>
             ) : (
-              <span style={{ fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.6, color: blockers ? 'var(--danger-text)' : 'var(--warn-text)', background: blockers ? 'var(--danger-bg)' : 'var(--warn-bg)', border: `1px solid ${blockers ? 'var(--danger-border)' : 'var(--warn-border)'}`, borderRadius: 99, padding: '3px 10px' }}>
-                {outstanding.length} outstanding
-              </span>
+              <button type="button" onClick={() => document.getElementById('session-readiness')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} title="See what's left to do" style={{ cursor: 'pointer', font: 'inherit', textAlign: 'left', fontSize: 10.5, fontWeight: 800, textTransform: 'none', letterSpacing: 0, color: blockers ? 'var(--danger-text)' : 'var(--warn-text)', background: blockers ? 'var(--danger-bg)' : 'var(--warn-bg)', border: `1px solid ${blockers ? 'var(--danger-border)' : 'var(--warn-border)'}`, borderRadius: 99, padding: '3px 10px' }}>
+                {outstanding.length === 1 ? outstanding[0].label : `${outstanding.length} to resolve`} ↓
+              </button>
             )}
           </div>
           <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.5, lineHeight: 1.15, marginBottom: 6 }}>
@@ -1094,7 +1094,7 @@ function StepReview({ form, staff, expectedCount, primary, riskAssessments = [],
         </div>
       )}
 
-      <div style={{ ...card, borderColor: outstanding.length === 0 ? 'var(--ok-border)' : (blockers ? 'var(--danger-border)' : 'var(--warn-border)') }}>
+      <div id="session-readiness" style={{ ...card, scrollMarginTop: 16, borderColor: outstanding.length === 0 ? 'var(--ok-border)' : (blockers ? 'var(--danger-border)' : 'var(--warn-border)') }}>
         <SectionHeader icon={outstanding.length === 0 ? '✅' : '⚠️'} title="Readiness"
           subtitle={outstanding.length === 0 ? 'Everything checks out.' : `${outstanding.length} item${outstanding.length === 1 ? '' : 's'} to resolve — you can still publish and finish these later.`}
           color={outstanding.length === 0 ? '#16A34A' : (blockers ? '#DC2626' : '#D97706')} />
@@ -1477,7 +1477,14 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
       }
 
       setSaving(false)
-      setDone({ session: { ...editSession, ...sessionPatch }, publishedAs: status || (editSession.status === 'draft' ? 'draft' : 'edited') })
+      // notify_session_created_or_edited tells the staff booked on a session
+      // (in the app, and by push where they allow it) when its date, time or
+      // place changes; say so, so nobody texts the team as well, or forgets to.
+      const WHEN_WHERE = ['session_date', 'end_date', 'start_time', 'end_time', 'location', 'meeting_point']
+      const norm = (k, v) => { const t = String(v ?? '').trim(); return k.endsWith('_time') ? t.slice(0, 5) : t }
+      const movedFields = WHEN_WHERE.filter(k => k in sessionPatch && norm(k, sessionPatch[k]) !== norm(k, editSession[k]))
+      const bookedStaff = new Set([form.lead_staff_id, ...form.supporting_staff_ids].filter(Boolean)).size
+      setDone({ session: { ...editSession, ...sessionPatch }, publishedAs: status || (editSession.status === 'draft' ? 'draft' : 'edited'), moved: movedFields.length > 0, bookedStaff })
       if (onPublished) onPublished({ ...editSession, ...sessionPatch })
       return
     }
@@ -1543,7 +1550,15 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
   if (done) {
     const draft = done.publishedAs === 'draft'
     const label = done.publishedAs === 'edited' ? 'Changes saved' : draft ? 'Draft saved' : done.publishedAs === 'scheduled' ? `${terms.Session} scheduled` : `${terms.Session} published`
-    return screen(<div style={{ ...(compact ? { position: 'fixed', inset: 0, zIndex: 10700, overflowY: 'auto' } : { minHeight: '100%' }), background: 'var(--surface2)', display: 'grid', placeItems: 'center', padding: 24, boxSizing: 'border-box' }}><div style={{ width: '100%', maxWidth: 460, textAlign: 'center' }}><div style={{ fontSize: 32, color: 'var(--org-ink)' }}>✓</div><h1 style={{ fontSize: 28, color: 'var(--text)' }}>{label}</h1><p style={{ color: 'var(--text3)', lineHeight: 1.6 }}><strong>{done.session.title}</strong>{draft ? ' is in Drafts. Come back when you are ready to finish planning.' : ` is saved. You can now open its register or go back to your ${terms.sessions}.`}</p><div style={{ display: 'grid', gap: 10, marginTop: 24 }}>{!draft && onNavigate && <button onClick={() => onNavigate('registers', { sessionId: done.session.id, returnTo: 'planner' })} style={{ ...flowButton, background: primary, color: '#fff', borderColor: primary }}>Open register →</button>}<button onClick={onCancel} style={flowButton}>Back to {terms.sessions}</button>{!draft && form.risk_assessment_required && !form.pending_risk_assessment_id && onNavigate && <button onClick={() => onNavigate('risk_assessments')} style={flowButton}>Complete risk assessment</button>}</div></div></div>)
+    return screen(<div style={{ ...(compact ? { position: 'fixed', inset: 0, zIndex: 10700, overflowY: 'auto' } : { minHeight: '100%' }), background: 'var(--surface2)', display: 'grid', placeItems: 'center', padding: 24, boxSizing: 'border-box' }}><div style={{ width: '100%', maxWidth: 460, textAlign: 'center' }}><div style={{ fontSize: 32, color: 'var(--org-ink)' }}>✓</div><h1 style={{ fontSize: 28, color: 'var(--text)' }}>{label}</h1><p style={{ color: 'var(--text3)', lineHeight: 1.6 }}><strong>{done.session.title}</strong>{draft ? ' is in Drafts. Come back when you are ready to finish planning.' : done.publishedAs === 'edited' && done.moved ? (done.bookedStaff ? ` is saved. The ${done.bookedStaff === 1 ? 'staff member' : `${done.bookedStaff} staff`} booked on it ${done.bookedStaff === 1 ? 'has' : 'have'} been told about the new time or place in LaunchSession.` : ' is saved. Nobody is booked on it yet, so nobody needed telling.') : ' is saved.'}</p><div style={{ display: 'grid', gap: 10, marginTop: 24 }}>{(() => {
+      // The register is the next step only on the day itself; for anything
+      // later, going back to the plan is.
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' })
+      const isToday = done.session.session_date === today
+      const registerBtn = !draft && onNavigate && <button key="reg" onClick={() => onNavigate('registers', { sessionId: done.session.id, returnTo: 'planner' })} style={isToday ? { ...flowButton, background: primary, color: '#fff', borderColor: primary } : flowButton}>{isToday ? 'Open register →' : 'View register'}</button>
+      const backBtn = <button key="back" onClick={onCancel} style={!isToday || draft ? { ...flowButton, background: primary, color: '#fff', borderColor: primary } : flowButton}>Back to {terms.sessions}</button>
+      return isToday ? [registerBtn, backBtn] : [backBtn, registerBtn]
+    })()}{!draft && form.risk_assessment_required && !form.pending_risk_assessment_id && onNavigate && <button onClick={() => onNavigate('risk_assessments')} style={flowButton}>Complete risk assessment</button>}</div></div></div>)
   }
   return screen(<div style={{ ...(compact ? { position: 'fixed', inset: 0, zIndex: 10700, height: '100dvh' } : { height: '100%', minHeight: 600 }), overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--surface2)', color: 'var(--text)' }}>
     <header style={{ padding: compact ? '12px 16px' : '20px 28px', paddingTop: compact ? 'max(12px, env(safe-area-inset-top))' : 20, borderBottom: '1px solid var(--border)', background: 'var(--surface)', flexShrink: 0 }}><div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between', marginBottom: 12 }}><h1 ref={headingRef} tabIndex={-1} style={{ fontSize: compact ? 19 : 23, margin: 0, outline: 'none' }}>{isEditing ? 'Edit' : 'New'} {terms.session}</h1><button onClick={closeWizard} disabled={saving} style={{ ...flowButton, border: 0, color: 'var(--text3)' }}>Close</button></div>

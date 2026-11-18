@@ -364,8 +364,8 @@ function SessionForm({ initial, onSave, onCancel, saving, bubbleDefs, org, sessi
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {[
                   { icon: type.icon, label: form.title || '—' },
-                  { icon: '📅', label: form.session_date ? `${form.session_date}${form.end_date && form.end_date !== form.session_date ? ` → ${form.end_date}` : ''}` : '—' },
-                  { icon: '🕐', label: form.start_time ? `${form.start_time}${form.end_time ? ` – ${form.end_time}` : ''}` : '—' },
+                  { icon: '📅', label: form.session_date ? `${fmtDayLabel(form.session_date)}${form.end_date && form.end_date !== form.session_date ? ` → ${fmtDayLabel(form.end_date)}` : ''}` : '—' },
+                  { icon: '🕐', label: form.start_time ? `${form.start_time.slice(0, 5)}${form.end_time ? ` – ${form.end_time.slice(0, 5)}` : ''}` : '—' },
                   { icon: '📍', label: form.location || 'No location set' },
                   { icon: '👥', label: form.bubbles?.length ? form.bubbles.join(', ') : 'All groups' },
                   { icon: '🔢', label: `${form.max_capacity || '—'} young people · ${form.volunteer_limit || '—'} volunteers` },

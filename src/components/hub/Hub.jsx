@@ -3148,12 +3148,14 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             ) : (
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text, #111)', lineHeight: 1.25, fontFamily: 'var(--font-display, sans-serif)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120 }}>{orgName}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2, fontSize: 10.5, fontWeight: 700, color: todayHasLiveSession ? '#DC2626' : '#16A34A' }}>
-                  <span style={{ fontSize: 7 }}>●</span>
-                  {showTrialDays
-                    ? <span style={{ color: trialDaysLeft <= 3 ? '#DC2626' : 'var(--text3, #6b7280)' }}>Trial · {trialDaysLeft}d left</span>
-                    : (todayHasLiveSession ? 'Live now' : 'Online')}
-                </div>
+                {/* Only something worth reading: a live session or the trial
+                    countdown. "Online" said nothing and cost the name space. */}
+                {(showTrialDays || todayHasLiveSession) && <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2, fontSize: 10.5, fontWeight: 700, color: todayHasLiveSession ? '#DC2626' : '#16A34A' }}>
+                  <span aria-hidden="true" style={{ fontSize: 7 }}>●</span>
+                  {todayHasLiveSession
+                    ? 'Live now'
+                    : <span style={{ color: trialDaysLeft <= 3 ? '#DC2626' : 'var(--text3, #6b7280)' }}>Trial · {trialDaysLeft}d left</span>}
+                </div>}
               </div>
             )}
           </div>

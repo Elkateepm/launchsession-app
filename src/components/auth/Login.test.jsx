@@ -10,9 +10,9 @@ jest.mock('../../lib/icons', () => () => null)
 const org = { id: 'org-a', name: 'Community Youth Project', slug: 'community-youth', primary_color: '#4562BC', branding_enabled: true }
 beforeEach(() => { jest.clearAllMocks(); localStorage.clear(); sessionStorage.clear(); mockDesktop = false })
 const start = () => render(<Login org={org} />)
+// Email and password are on the same form.
 const passwordStep = () => {
   fireEvent.change(screen.getByRole('textbox', { name: 'Email address' }), { target: { value: 'staff@example.com' } })
-  fireEvent.click(screen.getByRole('button', { name: /Continue/ }))
   fireEvent.change(screen.getByLabelText('Password', { exact: true }), { target: { value: 'test-password' } })
 }
 
@@ -29,20 +29,38 @@ test.each([false, true])('persistent sign-in is off by default on desktop=%s', a
   await waitFor(() => expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({ email: 'staff@example.com', password: 'test-password' }))
   expect(localStorage.getItem('ls_remember_me')).toBe('false')
 })
-test('users can opt into persistent sign-in on a device they control', async () => {
+test('keeping signed in on a device they control also remembers the organisation', async () => {
   supabase.auth.signInWithPassword.mockResolvedValue({ error: null }); start(); passwordStep()
   fireEvent.click(screen.getByRole('checkbox'))
   fireEvent.click(screen.getByRole('button', { name: 'Sign in', exact: true }))
   await waitFor(() => expect(localStorage.getItem('ls_remember_me')).toBe('true'))
+  expect(localStorage.getItem('launchsession_remembered_org_slug')).toBe('community-youth')
 })
-test('password visibility is accessible and changing email clears the old password', () => {
+test('leaving it off forgets a previously remembered organisation', async () => {
+  localStorage.setItem('launchsession_remembered_org_slug', 'community-youth')
+  supabase.auth.signInWithPassword.mockResolvedValue({ error: null }); start(); passwordStep()
+  fireEvent.click(screen.getByRole('button', { name: 'Sign in', exact: true }))
+  await waitFor(() => expect(localStorage.getItem('ls_remember_me')).toBe('false'))
+  expect(localStorage.getItem('launchsession_remembered_org_slug')).toBeNull()
+})
+test('email and password are on one form, and sign in stays off until both are filled', () => {
+  start()
+  expect(screen.getByRole('textbox', { name: 'Email address' })).toBeInTheDocument()
+  expect(screen.getByLabelText('Password', { exact: true })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Sign in', exact: true })).toBeDisabled()
+  passwordStep()
+  expect(screen.getByRole('button', { name: 'Sign in', exact: true })).toBeEnabled()
+})
+test('password visibility is accessible', () => {
   start(); passwordStep()
   fireEvent.click(screen.getByRole('button', { name: 'Show password' }))
   expect(screen.getByLabelText('Password', { exact: true })).toHaveAttribute('type', 'text')
-  fireEvent.click(screen.getByRole('button', { name: 'Change email' }))
-  fireEvent.click(screen.getByRole('button', { name: /Continue/ }))
-  expect(screen.getByLabelText('Password', { exact: true })).toHaveValue('')
+  fireEvent.click(screen.getByRole('button', { name: 'Hide password' }))
   expect(screen.getByLabelText('Password', { exact: true })).toHaveAttribute('type', 'password')
+})
+test('volunteers are offered their organisation\'s portal', () => {
+  start()
+  expect(screen.getByRole('link', { name: 'Open the volunteer portal' })).toHaveAttribute('href', '/volunteer/community-youth')
 })
 test('invalid credentials and network failures unlock the form for retry', async () => {
   supabase.auth.signInWithPassword.mockResolvedValueOnce({ error: { message: 'Invalid login credentials' } }).mockRejectedValueOnce(new Error('Offline'))

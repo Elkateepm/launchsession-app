@@ -4,19 +4,19 @@ import OrgPageHero, { orgBrand } from './OrgPageHero'
 
 const org = { name: 'Solidarity Sports', slogan: 'Every Child Deserves happiness', primary_color: '#4714ff', secondary_color: '#A4B896', accent_color: '#D6AD73', logo_url: 'https://example.test/logo.png' }
 
-test('leads with the organisation: logo, name, title and strapline', () => {
+test('leads with the organisation: logo, name, title, and says what the page is for', () => {
   const { container } = render(<OrgPageHero org={org} title="Registers" subtitle="A clear view." label="Today's register" detail="Wednesday 7 October" />)
   expect(screen.getByRole('region', { name: 'Solidarity Sports Registers' })).toBeInTheDocument()
   expect(screen.getByRole('heading', { level: 1, name: 'Registers' })).toBeInTheDocument()
   expect(screen.getByText('Solidarity Sports')).toBeInTheDocument()
-  expect(screen.getByText('Every Child Deserves happiness')).toBeInTheDocument()
-  expect(screen.queryByText('A clear view.')).toBeNull()
+  expect(screen.getByText('A clear view.')).toBeInTheDocument()
+  expect(screen.queryByText('Every Child Deserves happiness')).toBeNull()
   expect(container.querySelector('[data-org-logo] img').getAttribute('src')).toBe('https://example.test/logo.png')
 })
 
-test('falls back to the page description when there is no strapline', () => {
-  render(<OrgPageHero org={{ ...org, slogan: '' }} title="Registers" subtitle="A clear view." />)
-  expect(screen.getByText('A clear view.')).toBeInTheDocument()
+test('falls back to the strapline when a page gives no description', () => {
+  render(<OrgPageHero org={org} title="Registers" />)
+  expect(screen.getByText('Every Child Deserves happiness')).toBeInTheDocument()
 })
 
 test('a missing or broken logo shows the organisation initials, not LaunchSession', () => {

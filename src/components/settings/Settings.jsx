@@ -1207,7 +1207,7 @@ function CharityDiscountCard({ org, refreshOrg }) {
         {touched && numberError && <div role="alert" style={{ fontSize: 13, color: 'var(--danger-text)', margin: '-8px 0 12px' }}>{numberError}</div>}
         {error && <div role="alert" style={{ fontSize: 13, color: 'var(--danger-text)', margin: '0 0 12px' }}>{error}</div>}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button type="submit" disabled={saving} style={{ minHeight: 44, padding: '10px 18px', borderRadius: 10, border: 'none', background: 'var(--org-primary)', color: 'var(--org-on-primary, #fff)', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>
+          <button type="submit" disabled={saving} style={{ minHeight: 44, padding: '10px 18px', borderRadius: 10, border: 'none', background: 'var(--org-solid, var(--org-primary))', color: 'var(--org-on-solid, #fff)', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>
             {saving ? 'Saving…' : `Claim ${CHARITY_DISCOUNT_PERCENT}% off`}
           </button>
           {editing && <button type="button" onClick={() => { setEditing(false); setError('') }} disabled={saving} style={charityGhostBtn}>Cancel</button>}
@@ -1385,9 +1385,9 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
                   <button key={c.key} onClick={() => setCycle(c.key)}
                     aria-pressed={cycle === c.key}
                     style={{ minWidth: 44,
-                      minHeight: 36, padding: '7px 16px', borderRadius: 7, border: 'none', cursor: 'pointer',
-                      background: cycle === c.key ? 'var(--org-primary)' : 'transparent',
-                      color: cycle === c.key ? '#fff' : 'var(--text3)',
+                      minHeight: 44, padding: '0 16px', borderRadius: 7, border: 'none', cursor: 'pointer',
+                      background: cycle === c.key ? 'var(--org-solid, var(--org-primary))' : 'transparent',
+                      color: cycle === c.key ? 'var(--org-on-solid, #fff)' : 'var(--text2)',
                       fontSize: 13, fontWeight: 700, fontFamily: 'inherit',
                     }}>
                     {c.key === 'annual' ? 'Annual · save ~20%' : c.label}
@@ -1426,7 +1426,7 @@ function BillingSection({ org, session, isAdmin, refreshOrg }) {
                         <div style={{ textAlign: 'center', padding: '12px 0', borderRadius: 8, background: 'var(--ok-bg)', color: 'var(--ok-text)', fontWeight: 700, fontSize: 13 }}>Current Plan</div>
                       ) : (
                         <button onClick={() => handleChoose(p.plan)} disabled={loadingPlan === p.plan}
-                          style={{ minWidth: 44,  width: '100%', minHeight: 44, borderRadius: 8, border: 'none', background: loadingPlan === p.plan ? 'var(--text-faint)' : 'var(--org-primary)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
+                          style={{ minWidth: 44,  width: '100%', minHeight: 44, borderRadius: 8, border: 'none', background: loadingPlan === p.plan ? 'var(--text-faint)' : 'var(--org-solid, var(--org-primary))', color: 'var(--org-on-solid, #fff)', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
                           {loadingPlan === p.plan ? 'Redirecting...' : org?.stripe_subscription_id ? `Switch to ${p.label}` : `Choose ${p.label}`}
                         </button>
                       )}

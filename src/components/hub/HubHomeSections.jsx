@@ -145,7 +145,7 @@ export function DaySpine({ sessions, statsFor, primary, secondary, isMobile, onO
               tabIndex={0}
               onClick={() => onOpenSession && onOpenSession(s)}
               onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpenSession && onOpenSession(s) } }}
-              title={`${s.title} — ${s.start_time || ''}${s.end_time ? `–${s.end_time}` : ''}`}
+              title={`${s.title} — ${(s.start_time || '').slice(0, 5)}${s.end_time ? `–${s.end_time.slice(0, 5)}` : ''}`}
               style={{
                 position: 'absolute', top: 7, bottom: 7, left: `${left}%`, right: `${Math.max(0, right)}%`,
                 minWidth: compact ? 26 : isMobile ? 56 : 72, borderRadius: 11, cursor: 'pointer', overflow: 'hidden',

@@ -82,6 +82,17 @@ export function brandPalette(primary, dark = isDarkTheme()) {
   // White or near-black on top of the brand colour, whichever is readable.
   const onPrimary = contrastRatio(base, '#ffffff') >= 3.2 ? '#ffffff' : '#10131A'
 
+  // A button fill that carries ordinary-sized text at 4.5:1. onPrimary's 3.2
+  // bar is fine for big headline buttons, but a 13-14px label on a teal brand
+  // only reaches 3.36:1. So darken the brand until white text passes, or,
+  // for a pale brand that already takes dark text, keep it as it is.
+  let solid = base
+  let onSolid = onPrimary
+  if (onPrimary === '#ffffff') {
+    let g = 0
+    while (contrastRatio(solid, '#ffffff') < 4.5 && g < 20) { solid = darken(solid, 0.06); g++ }
+  }
+
   // In dark, a wash made by lightening toward white is still a pale pastel --
   // it does not know what it is sitting on. The same chip that reads as a
   // gentle tint on a white page becomes a bright card on a dark one, and its
@@ -100,6 +111,8 @@ export function brandPalette(primary, dark = isDarkTheme()) {
       primary: base,
       ink: darkInk,
       onPrimary,
+      solid,
+      onSolid,
       tint: darken(base, 0.80),
       soft: darken(base, 0.70),
       border: darken(base, 0.45),
@@ -111,6 +124,8 @@ export function brandPalette(primary, dark = isDarkTheme()) {
     primary: base,
     ink,
     onPrimary,
+    solid,
+    onSolid,
     tint: lighten(base, 0.92),   // page-level wash
     soft: lighten(base, 0.85),   // selected chip / hovered row
     border: lighten(base, 0.65), // brand-tinted border
@@ -173,6 +188,8 @@ export function applyBrandPalette(primary) {
   root.setProperty('--org-primary', p.primary)
   root.setProperty('--org-ink', p.ink)
   root.setProperty('--org-on-primary', p.onPrimary)
+  root.setProperty('--org-solid', p.solid)
+  root.setProperty('--org-on-solid', p.onSolid)
   root.setProperty('--org-tint', p.tint)
   root.setProperty('--org-soft', p.soft)
   root.setProperty('--org-border', p.border)
