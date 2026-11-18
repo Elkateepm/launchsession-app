@@ -90,3 +90,22 @@ removes its signup record and its members' logins, and keeps the logins of
 super admins and platform users. Tested in a rolled-back transaction by
 deleting Solidarity Sports as the super admin and trying both changes as a
 Livity Youth Edinburgh admin.
+
+Suspend blocks access, applied 18 Nov 2026:
+
+- `20261118_suspend_blocks_access.sql`
+
+Command Centre's Suspend buttons set `user_profiles.status` or
+`organisations.status` to `suspended`, which nothing read. A person is now
+blocked when their profile or their organisation is suspended: Supabase Auth
+refuses their login (`banned_until` set to the 2999-01-01 sentinel), their
+sessions are deleted, and the org-scope helpers (`get_my_org_id`,
+`get_user_org_id`, `get_admin_org_id`, `is_org_admin`, `is_org_manager`) answer
+NULL for them. Restoring to `active` lifts only the sentinel ban. Super admins
+and platform users are never blocked. Only the service role or a super admin
+can move a profile into or out of `suspended` (`trg_guard_profile_suspension`).
+`my_access_block()` tells the app why. Nine policies still look up the org
+inline (newsletters, volunteer broadcasts/recognition/training, admin invites);
+for those the ban and session sign-out are the block. Tested in a rolled-back
+transaction (person and organisation suspend/restore, guard, super admin kept,
+existing bans kept, nobody else touched) before it was applied.
