@@ -109,3 +109,15 @@ inline (newsletters, volunteer broadcasts/recognition/training, admin invites);
 for those the ban and session sign-out are the block. Tested in a rolled-back
 transaction (person and organisation suspend/restore, guard, super admin kept,
 existing bans kept, nobody else touched) before it was applied.
+
+Command Centre account health, applied 18 Nov 2026:
+
+- `20261118_command_centre_health.sql`
+
+Two read-only functions for the redesigned Command Centre, super admins only:
+`admin_org_health()` (per organisation: members, awaiting approval, pending
+invites and the oldest one, children, sessions in total / last 30 days /
+upcoming, last session date, last sign-in by a non-platform member, attendance
+in the last 30 days) and `admin_list_users()` (every profile with its
+organisation and last sign-in). Tested as the super admin and refused for an
+organisation admin in a rolled-back transaction.
