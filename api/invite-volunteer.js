@@ -24,15 +24,15 @@ export default async function handler(req, res) {
     const { data: { user }, error: userErr } = await anonClient.auth.getUser(token)
     if (userErr || !user) return res.status(401).json({ error: 'Invalid session' })
 
-    const { email, name, org_id, org_slug, redirect_to, role } = req.body || {}
-    if (!email || !org_id) return res.status(400).json({ error: 'Missing email or org_id' })
+    const { email, name, org_id, org_slug, redirect_to, role, resend_invite_id } = req.body || {}
+    if (!org_id || (!email && !resend_invite_id)) return res.status(400).json({ error: 'Missing email or org_id' })
     // 'manager' has to be in this list. The Invite Staff dropdown offers it,
     // and without it every manager invite was silently downgraded to volunteer
     // -- which routes the person into the volunteer portal instead of the
     // dashboard they were invited to.
     const inviteRole = ['admin', 'manager', 'staff', 'volunteer'].includes(role) ? role : 'volunteer'
-    const cleanEmail = email.trim().toLowerCase()
-    const fullName = name || email.split('@')[0]
+    const cleanEmail = (email || '').trim().toLowerCase()
+    const fullName = name || (email || '').split('@')[0]
 
     // Use service role for all admin operations
     const adminClient = createClient(REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY)
@@ -58,6 +58,41 @@ export default async function handler(req, res) {
       manager: ['staff', 'volunteer'],
       staff: ['volunteer'],
     }[caller.role] || []
+
+    // ── Resend a pending invite from Team: same token, same email, same
+    // role rules as sending it in the first place. ──
+    if (resend_invite_id) {
+      const { data: invite } = await adminClient
+        .from('admin_invites')
+        .select('id, org_id, email, full_name, role, token, status')
+        .eq('id', resend_invite_id).maybeSingle()
+      if (!invite || invite.org_id !== org_id || invite.status !== 'pending') {
+        return res.status(404).json({ error: 'That invite is no longer waiting. Refresh the page.' })
+      }
+      if (!canInvite.includes(invite.role)) {
+        return res.status(403).json({ error: `Your role can't invite someone as ${invite.role}` })
+      }
+      const { data: o } = await adminClient
+        .from('organisations').select('name, slug, primary_color, email_logo_url, logo_url').eq('id', org_id).maybeSingle()
+      const { error: fnError } = await adminClient.functions.invoke('send-invite-email', {
+        body: {
+          email: invite.email,
+          full_name: invite.full_name,
+          org_name: o?.name || 'your organisation',
+          org_slug: o?.slug || org_slug,
+          org_color: o?.primary_color || '#3B82F6',
+          org_logo: o?.email_logo_url || o?.logo_url || null,
+          role: invite.role,
+          token: invite.token,
+        },
+      })
+      if (fnError) {
+        console.error('invite-volunteer: resend failed', fnError)
+        return res.status(502).json({ error: 'The email could not be sent. Try again in a minute.' })
+      }
+      return res.status(200).json({ success: true, resent: true })
+    }
+
     if (!canInvite.includes(inviteRole)) {
       return res.status(403).json({ error: `Your role can't invite someone as ${inviteRole}` })
     }

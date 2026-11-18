@@ -583,14 +583,20 @@ export default function Signup() {
 }
 
 const LEGAL_DOCS = {
-  terms:   { title: 'Terms of Service', src: '/terms.html' },
-  privacy: { title: 'Privacy Policy',   src: '/privacy.html' },
+  terms:   { title: 'Terms of Service', src: '/terms.html?embed=1' },
+  privacy: { title: 'Privacy Policy',   src: '/privacy.html?embed=1' },
 }
 
 function LegalModal({ doc, onClose, onAgree }) {
   const { title, src } = LEGAL_DOCS[doc]
+  useEffect(() => {
+    const onKey = e => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
   return (
     <div
+      role="dialog" aria-modal="true" aria-label={title}
       onClick={onClose}
       style={{ position: 'fixed', inset: 0, background: 'rgba(2,7,17,0.75)', backdropFilter: 'blur(4px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
     >
@@ -600,7 +606,7 @@ function LegalModal({ doc, onClose, onAgree }) {
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
           <span style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>{title}</span>
-          <button type="button" onClick={onClose} aria-label="Close" style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: 'rgba(255,255,255,0.6)', width: 30, height: 30, borderRadius: 9, cursor: 'pointer', fontSize: 16, lineHeight: 1 }}><LSIcon name="✕" /></button>
+          <button type="button" onClick={onClose} aria-label="Close" style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: 'rgba(255,255,255,0.6)', width: 44, height: 44, borderRadius: 10, cursor: 'pointer', fontSize: 16, lineHeight: 1 }}><LSIcon name="✕" /></button>
         </div>
         <iframe title={title} src={src} style={{ flex: 1, width: '100%', border: 'none', background: '#06091A' }} />
         <div style={{ display: 'flex', gap: 10, padding: '14px 20px', borderTop: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>

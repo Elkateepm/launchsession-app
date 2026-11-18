@@ -1,7 +1,7 @@
 // AUTH FLOW LOCK: org lookup must save selected org then route to /login?org=slug.
 import React, { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
-import AuthLayout, { AUTH, AuthError, OrganisationIdentity, authInput, authLabel, authLink, authButton } from './AuthLayout'
+import AuthLayout, { AUTH, AuthError, authInput, authLabel, authLink, authButton } from './AuthLayout'
 import { useBreakpoint } from '../../hooks/useIsMobile'
 import Icon from '../../lib/icons'
 import { AUTH_DIRECTORY_COLUMNS, getAuthBranding } from './authBranding'
@@ -20,7 +20,6 @@ export default function OrgLookup() {
   const [step, setStep] = useState('org')
   const [org, setOrg] = useState(null)
   const [inputFocused, setInputFocused] = useState(false)
-  const [rememberOrg, setRememberOrg] = useState(false)
   const [allOrgs, setAllOrgs] = useState(null)
   const [suggestions, setSuggestions] = useState([])
   const [highlight, setHighlight] = useState(-1)
@@ -87,15 +86,15 @@ export default function OrgLookup() {
     if (error) setError('')
   }
 
-  // Picking a suggestion lands on the confirmation step rather than jumping
-  // straight to /login, so the logo and the "remember this
-  // organisation" checkbox all still get their turn.
+  // Picking an organisation is the selection: go straight to its sign-in
+  // page, which shows the organisation's name and logo with "Change
+  // organisation", so a wrong pick is one click from undone. Remembering the
+  // organisation is offered there, with "Keep me signed in on this device".
   const handlePick = (selected) => {
     setSuggestions([])
     setDismissed(true)
     setOrgName(selected.name || selected.slug)
-    setOrg(selected)
-    setStep('found')
+    handleContinue(selected)
   }
 
   const handleKeyDown = (e) => {
@@ -157,8 +156,7 @@ export default function OrgLookup() {
     const matches = exact.length ? exact : ranked.slice(0, 8)
 
     if (matches.length === 1) {
-      setOrg(matches[0])
-      setStep('found')
+      handleContinue(matches[0])
     } else if (matches.length > 1) {
       setOrg(matches)
       setStep('multiple')
@@ -167,21 +165,14 @@ export default function OrgLookup() {
     }
   }
 
-  const handleContinue = (selectedOrg) => {
-    localStorage.setItem('launchsession_org_slug', selectedOrg.slug)
-    if (rememberOrg) {
-      localStorage.setItem('launchsession_remembered_org_slug', selectedOrg.slug)
-    } else {
-      localStorage.removeItem('launchsession_remembered_org_slug')
-    }
+  function handleContinue(selectedOrg) {
+    try { localStorage.setItem('launchsession_org_slug', selectedOrg.slug) } catch (e) {}
     window.location.href = window.location.origin + '/login?org=' + encodeURIComponent(selectedOrg.slug)
   }
 
-  const selectedOrg = step === 'found' && org && !Array.isArray(org) ? org : null
-  const primary = getAuthBranding(selectedOrg).primary
   const heading = { margin: '0 0 10px', fontSize: isDesktop ? 28 : 25, lineHeight: 1.25, letterSpacing: -0.8, color: AUTH.ink, fontWeight: 800 }
   const description = { margin: '0 0 24px', fontSize: 13, lineHeight: 1.7, color: AUTH.muted }
-  const resetSearch = () => { setStep('org'); setError(''); setOrg(null); setOrgName(''); setSuggestions([]); setHighlight(-1); setRememberOrg(false) }
+  const resetSearch = () => { setStep('org'); setError(''); setOrg(null); setOrgName(''); setSuggestions([]); setHighlight(-1) }
   const showSuggestions = inputFocused && suggestions.length > 0 && !dismissed
   const orgOption = (o, i, suggestion) => {
     const optionBrand = getAuthBranding(o)
@@ -192,7 +183,7 @@ export default function OrgLookup() {
   </button>
   }
 
-  return <AuthLayout org={selectedOrg} stage="organisation">
+  return <AuthLayout org={null} stage="organisation">
     {step === 'org' && <>
       <h1 style={heading}>Members' sign in</h1>
       <p id="organisation-search-hint" style={description}>For staff, admins and volunteers of organisations that use LaunchSession. Find your organisation, then sign in with your own account.</p>
@@ -227,22 +218,6 @@ export default function OrgLookup() {
         </li>)}
       </ul>
       <p style={{ ...description, margin: '4px 0 0', fontSize: 12 }}>Setting up a new organisation? <a href="/signup" style={{ color: 'var(--auth-link)', fontWeight: 700, display: 'inline-block', padding: '13px 0' }}>Start a free 14-day trial</a></p>
-    </>}
-
-    {selectedOrg && <>
-      <h1 style={heading}>Is this your organisation?</h1>
-      <p style={description}>Check the details before continuing to your account.</p>
-      <OrganisationIdentity org={selectedOrg} />
-      <p style={{ fontSize: 12, color: AUTH.muted, margin: '10px 0 22px', overflowWrap: 'anywhere' }}>Workspace: {selectedOrg.slug}</p>
-      <label style={{ display: 'flex', alignItems: 'flex-start', gap: 11, minHeight: 44, marginBottom: 20, cursor: 'pointer' }}>
-        <input type="checkbox" checked={rememberOrg} onChange={e => setRememberOrg(e.target.checked)} aria-describedby="remember-org-hint" style={{ width: 19, height: 19, margin: '2px 0 0', flexShrink: 0, accentColor: primary }} />
-        <span><span style={{ fontSize: 13, fontWeight: 650, color: AUTH.ink }}>Remember this organisation</span><span id="remember-org-hint" style={{ display: 'block', marginTop: 4, fontSize: 11, color: AUTH.muted, lineHeight: 1.6 }}>For future sign-ins on this device. This does not keep you signed in.</span></span>
-      </label>
-      <button type="button" onClick={() => handleContinue(selectedOrg)} style={authButton()}>Continue to sign in</button>
-      {/* Volunteers can sign in above too (the app sends them on to their
-          portal), but a poster that says "volunteer portal" should find one. */}
-      <a href={'/volunteer/' + encodeURIComponent(selectedOrg.slug)} style={{ ...authLink, marginTop: 8, textDecoration: 'none' }}>Volunteer? Open the volunteer portal <Icon name="chevron" /></a>
-      <button type="button" onClick={resetSearch} style={{ ...authLink, marginTop: 4 }}><Icon name="←" /> Choose a different organisation</button>
     </>}
 
     {step === 'multiple' && Array.isArray(org) && <>

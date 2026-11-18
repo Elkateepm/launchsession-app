@@ -69,6 +69,17 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:56px 2
 .footer-bottom{max-width:1200px;margin:40px auto 0;padding-top:24px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:13px;color:var(--text3);flex-wrap:wrap;gap:10px}
 @media(max-width:700px){.footer-inner{grid-template-columns:1fr}}
 </style>
+<script>
+/* Shown inside the sign-up form's Terms/Privacy window: drop the site nav and
+   footer so nobody wanders off mid-sign-up, and open any links in a new tab. */
+if (/[?&]embed=1(&|$)/.test(location.search)) {
+  document.documentElement.classList.add('embed');
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('a[href]').forEach(function (a) { a.target = '_blank'; a.rel = 'noopener'; });
+  });
+}
+</script>
+<style>.embed .nav-wrap,.embed footer{display:none}.embed .legal-wrap{padding:24px 20px 40px}</style>
 </head>
 <body>
 <div class="nav-wrap" id="navWrap">
