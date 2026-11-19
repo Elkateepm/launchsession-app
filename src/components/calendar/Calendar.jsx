@@ -477,8 +477,10 @@ function EntryChip({ entry: e, onOpen, wrap, past }) {
       style={{ display: 'flex', alignItems: wrap ? 'flex-start' : 'center', gap: 5, width: '100%', minWidth: 0, padding: wrap ? '7px 8px' : '3px 6px', borderRadius: 7, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
         border: draft ? `1px dashed ${withAlpha(color, '99')}` : '1px solid transparent',
         borderLeft: `3px solid ${cancelled ? 'var(--text-faint)' : color}`,
-        background: cancelled ? 'transparent' : withAlpha(color, '14'),
-        color: cancelled ? 'var(--text3)' : 'var(--text)', fontSize: 11.5, lineHeight: 1.3, flexDirection: wrap ? 'column' : 'row', opacity: past ? .6 : 1 }}>
+        // Past entries go grey rather than translucent, which would drop the
+        // text below contrast.
+        background: cancelled ? 'transparent' : past ? 'var(--surface2)' : withAlpha(color, '14'),
+        color: cancelled ? 'var(--text3)' : past ? 'var(--text2)' : 'var(--text)', fontSize: 11.5, lineHeight: 1.3, flexDirection: wrap ? 'column' : 'row' }}>
       {e.time && e.time !== 'All day' && <span style={{ fontWeight: 800, color: 'var(--text2)', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>{e.time.split('–')[0]}</span>}
       <span style={{ fontWeight: 700, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: wrap ? 'normal' : 'nowrap', textDecoration: cancelled ? 'line-through' : 'none' }}>{e.title}</span>
     </button>
