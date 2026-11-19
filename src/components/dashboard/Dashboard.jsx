@@ -542,6 +542,12 @@ export default function Dashboard({ session, org }) {
   const [initialThreadId, setInitialThreadId] = useState(null)
   const [autoOpenWizard, setAutoOpenWizard] = useState(false)
   const [editSessionId, setEditSessionId] = useState(null)
+  // Where the Calendar sends the planner: a date/type to start a plan from, a
+  // session whose panel to open, or the "copy an earlier plan" picker.
+  const [planPreset, setPlanPreset] = useState(null)
+  const [viewSessionId, setViewSessionId] = useState(null)
+  const [openDuplicate, setOpenDuplicate] = useState(false)
+  const [calendarDate, setCalendarDate] = useState(null)
   const [openProjectId, setOpenProjectId] = useState(null)
   const [autoOpenAddChild, setAutoOpenAddChild] = useState(false)
   const [openRegRequestsTab, setOpenRegRequestsTab] = useState(false)
@@ -620,6 +626,10 @@ export default function Dashboard({ session, org }) {
     setInitialThreadId(t === 'messaging' && payload?.initialThreadId ? payload.initialThreadId : null)
     setAutoOpenWizard(t === 'planner' && !!payload?.autoOpenWizard)
     setEditSessionId(t === 'planner' && payload?.editSessionId ? payload.editSessionId : null)
+    setPlanPreset(t === 'planner' && (payload?.planDate || payload?.planType) ? { date: payload.planDate || null, type: payload.planType || null } : null)
+    setViewSessionId(t === 'planner' && payload?.viewSessionId ? payload.viewSessionId : null)
+    setOpenDuplicate(t === 'planner' && !!payload?.openDuplicate)
+    setCalendarDate(t === 'calendar' && payload?.date ? payload.date : null)
     setOpenProjectId(t === 'projects' && payload?.projectId ? payload.projectId : null)
     setAutoOpenAddChild(t === 'registers' && !!payload?.autoOpenAdd)
     setOpenRegRequestsTab(t === 'children' && !!payload?.openRegistrationRequests)
@@ -1112,10 +1122,18 @@ export default function Dashboard({ session, org }) {
                 }} />
             : <RestrictedModule label="Today" icon="⚡" onNavigate={handleSetTab} />)}
           {effectiveTab === 'home'       && <Hub key={sessionVersion} org={org} session={session} onNavigate={handleSetTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
-          {effectiveTab === 'planner'    && <SessionPlanner org={org} session={session} onSessionSaved={bumpSessions} initialReflectSessionId={reflectSessionId} autoOpenWizard={autoOpenWizard} initialEditSessionId={editSessionId} onNavigate={handleSetTab} />}
+          {effectiveTab === 'planner'    && <SessionPlanner org={org} session={session} onSessionSaved={bumpSessions} initialReflectSessionId={reflectSessionId} autoOpenWizard={autoOpenWizard} initialEditSessionId={editSessionId} initialPlanDate={planPreset?.date} initialPlanType={planPreset?.type} initialViewSessionId={viewSessionId} autoOpenDuplicate={openDuplicate} onNavigate={handleSetTab} />}
           {effectiveTab === 'projects'   && <ProjectOverview org={org} session={session} projectId={openProjectId} onNavigate={handleSetTab} onBack={() => handleSetTab('projects_list')} />}
           {effectiveTab === 'projects_list' && <ProjectsList org={org} session={session} onNavigate={handleSetTab} />}
-          {effectiveTab === 'calendar'   && <Calendar key={sessionVersion} org={org} session={session} onSessionChanged={bumpSessions} onNavigate={handleSetTab} />}
+          {effectiveTab === 'calendar'   && <Calendar key={sessionVersion} org={org} session={session} onNavigate={handleSetTab} initialDate={calendarDate}
+                access={{
+                  plan: moduleLevel('planner') === 'edit' && moduleLevel('calendar') === 'edit' && !hiddenItems.includes('planner') && !planEnded,
+                  planner: moduleLevel('planner') !== 'none' && !hiddenItems.includes('planner'),
+                  registers: hasModule('registers') && moduleLevel('registers') !== 'none' && !hiddenItems.includes('registers'),
+                  risk: hasModule('risk_assessments') && moduleLevel('risk_assessments') !== 'none' && !hiddenItems.includes('risk_assessments'),
+                  bookings: hasModule('resource_booking') && moduleLevel('resource_booking') !== 'none' && !hiddenItems.includes('resource_booking'),
+                  funding: hasModule('fundraising') && moduleLevel('fundraising') !== 'none' && !hiddenItems.includes('fundraising'),
+                }} />}
           {effectiveTab === 'events_trips' && <EventsTrips org={org} session={session} onNavigate={handleSetTab} />}
           {effectiveTab === 'children'    && <ChildrenGate org={org} session={session}><ChildrenDirectory org={org} session={session} onNavigate={handleSetTab} initialOpenRequestsTab={openRegRequestsTab} /></ChildrenGate>}
           {effectiveTab === 'medical_alerts' && <MedicalAlerts org={org} session={session} onNavigate={handleSetTab} />}

@@ -36,7 +36,7 @@ export const EVENT_TYPE_KEYS = ['trip', 'sports', 'residential', 'theatre', 'com
 export const EVENT_TYPE_META = Object.fromEntries(WIZARD_TYPES.map(t => [t.key, t]))
 
 // Fields/requirements a type turns on by default when first selected
-const TYPE_PRESETS = {
+export const TYPE_PRESETS = {
   trip: {
     transport_required: true, consent_required: true, packed_lunch: true,
     emergency_contact_sheet_required: true, risk_assessment_required: true,

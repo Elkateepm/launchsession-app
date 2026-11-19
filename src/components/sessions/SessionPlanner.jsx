@@ -6,7 +6,7 @@ import ProjectWizard from '../projects/ProjectWizard'
 import { useIsMobile, useBreakpoint } from '../../hooks/useIsMobile'
 import { motion, AnimatePresence } from 'framer-motion'
 import RASessionCard from '../riskassessments/RASessionCard'
-import SessionWizard from './SessionWizard'
+import SessionWizard, { TYPE_PRESETS } from './SessionWizard'
 import SignedImg from '../shared/SignedImg'
 import Icon from '../../lib/icons'
 import { useTerms } from '../../context/OrgContext'
@@ -1443,7 +1443,7 @@ function InsightsStrip({ completed, attendancePct, noShows, reached }) {
   )
 }
 
-export default function SessionPlanner({ org, session, onSessionSaved, initialReflectSessionId, autoOpenWizard, initialEditSessionId, onNavigate }) {
+export default function SessionPlanner({ org, session, onSessionSaved, initialReflectSessionId, autoOpenWizard, initialEditSessionId, initialPlanDate, initialPlanType, initialViewSessionId, autoOpenDuplicate, onNavigate }) {
   const orgId = org?.id
   const terms = useTerms()
   const preferencesKey = `ls_planner_view_${orgId}`
@@ -1772,18 +1772,38 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
     setView('wizard')
   }
 
-  const openNew = (date) => {
+  // A date and/or type to start from, e.g. "Plan on Thu 19 Nov" in the
+  // Calendar. The type brings its usual requirements (a trip asks for
+  // consent, transport and a risk assessment) as if it had been picked here.
+  const openNew = (date, type) => {
     setInitialTemplate(null)
-    setEditing(date ? { ...EMPTY_FORM, session_date: date, end_date: date, session_type: typeFilter === 'trips' ? 'trip' : 'activity' } : null)
+    const sessionType = type || (typeFilter === 'trips' ? 'trip' : 'activity')
+    setEditing(date || type ? { ...EMPTY_FORM, ...(date ? { session_date: date, end_date: date } : {}), session_type: sessionType, ...(TYPE_PRESETS[sessionType] || {}) } : null)
     setView('wizard')
   }
 
   // Jump straight into the creation wizard when arriving here via the "New Session" nav
   // button or Launch menu, instead of landing on the plain list first.
   useEffect(() => {
-    if (autoOpenWizard) openNew()
+    if (autoOpenWizard) openNew(initialPlanDate, initialPlanType)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoOpenWizard])
+
+  // Arriving from the Calendar's "Copy an earlier plan".
+  useEffect(() => {
+    if (autoOpenDuplicate) setShowDuplicatePicker(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenDuplicate])
+
+  // Arriving from the Calendar's "Open in Sessions": show that session's panel
+  // (staff, reflection, attendance) once the list has loaded.
+  const [viewedInitial, setViewedInitial] = useState(false)
+  useEffect(() => {
+    if (!initialViewSessionId || viewedInitial || loading) return
+    const match = sessions.find(s => s.id === initialViewSessionId)
+    if (match) setViewingSession(match)
+    setViewedInitial(true)
+  }, [initialViewSessionId, viewedInitial, loading, sessions])
 
   // Jump straight into editing a specific session when arriving via an Edit action
   // elsewhere in the app (e.g. Home's session cards) — waits for sessions to load
