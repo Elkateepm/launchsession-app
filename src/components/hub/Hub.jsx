@@ -24,7 +24,7 @@ import { useTrialClock } from '../../hooks/useTrialClock'
 import { useModuleAccess } from '../../context/ModuleAccessContext'
 import { todayOverview, monthReflectionCount } from './homeOverview'
 import GettingStarted from './GettingStarted'
-import { DaySpine, ActionRow, AllClear, GlanceStats, QuickJump, LearningBrief, WeatherStrip, hubHomeKeyframes } from './HubHomeSections'
+import { DaySpine, ActionRow, AllClear, GlanceStats, QuickJump, LearningBrief, WeatherStrip, HeroStats, hubHomeKeyframes } from './HubHomeSections'
 import { monthAttendance as calcMonthAttendance, reachedThisMonth as calcReachedThisMonth } from './glanceStats'
 import { useTerms } from '../../context/OrgContext'
 import SignedImg from '../shared/SignedImg'
@@ -437,11 +437,13 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
 
   const visible = expanded ? announcements : announcements.slice(0, 3)
 
+  // A card like every other Home section, so its link is not sitting on the
+  // grey page (where the brand ink fell just short of contrast).
   return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-        <h3 style={{ fontSize: 14, fontWeight: 800, color: 'var(--text,#111)', margin: 0 }}><Icon name="📣" /> Announcements</h3>
-        <button onClick={() => setComposing(c => !c)} style={sectionLinkBtn(primary)}>
+    <section aria-label="Announcements" style={railPanel}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <h2 style={{ fontSize: 17, fontWeight: 800, color: 'var(--text,#111)', margin: 0, fontFamily: 'var(--font-display)', letterSpacing: -0.3 }}>Announcements</h2>
+        <button onClick={() => setComposing(c => !c)} style={{ ...sectionLinkBtn('var(--org-ink)'), minHeight: 44, padding: '0 4px' }}>
           {composing ? 'Cancel' : '+ Post announcement'}
         </button>
       </div>
@@ -486,10 +488,14 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
       )}
 
       {announcements.length === 0 && !composing ? (
-        <div style={{ background: `linear-gradient(135deg, var(--org-a05), var(--org-a05))`, border: `1.5px dashed var(--org-a20)`, borderRadius: 20, padding: '28px 24px', textAlign: 'center' }}>
-          <div style={{ fontSize: 32, marginBottom: 8 }}><Icon name="📣" /></div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text,#111)', marginBottom: 4 }}>No announcements yet</div>
-          <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>Share news, shout-outs, or reminders with your team</div>
+        // One line, not a large empty card: the "+ Post announcement" link
+        // above is the action, this only says why the space is empty.
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, border: '1px dashed var(--border)', borderRadius: 16, padding: '12px 16px', background: 'var(--surface)' }}>
+          <span aria-hidden="true" style={{ width: 34, height: 34, borderRadius: 10, display: 'grid', placeItems: 'center', background: 'var(--org-a10)', color: 'var(--org-ink)', fontSize: 16, flexShrink: 0 }}><Icon name="📣" /></span>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text, #111)' }}>No announcements yet</div>
+            <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 1 }}>Share news, shout-outs or reminders with your team.</div>
+          </div>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -522,7 +528,7 @@ function AnnouncementsPanel({ orgId, primary, userId }) {
           )}
         </div>
       )}
-    </div>
+    </section>
   )
 }
 
@@ -3034,15 +3040,23 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     return sessions.filter(s => !s.cancelled_at && s.session_date >= monthStart && s.session_date <= today && (s.closed_at || s.session_date < today)).length
   }, [sessions, today]);
 
+  // Shortcuts the hero is not already showing. The hero carries the
+  // register button when something is on today, "Plan a session" when
+  // nothing is, and the concern / injury chips whenever nothing is live, so
+  // repeating them here put the same button on screen twice.
   const quickJumpActions = (() => {
+    const heroHasRegister = todaySessions.length > 0 && hasModule('registers')
+    const heroHasPlan = todaySessions.length === 0 && canEdit('planner')
+    const heroHasReports = !todayHasLiveSession
     const list = []
-    if (hasModule('registers')) list.push({ key: 'register', icon: '▶️', label: 'Start a register', onClick: () => go('registers') })
-    if (canEdit('planner')) list.push({ key: 'session', icon: '➕', label: `New ${terms.session}`, onClick: () => go('planner', { autoOpenWizard: true }) })
-    if (canEdit('people')) list.push({ key: 'child', icon: '🧒', label: `Add ${terms.person}`, onClick: () => setAddPersonWay('choose') })
+    if (hasModule('registers') && !heroHasRegister) list.push({ key: 'register', icon: 'registers', label: 'Registers', onClick: () => go('registers') })
+    if (canEdit('planner') && !heroHasPlan) list.push({ key: 'session', icon: 'add', label: `New ${terms.session}`, onClick: () => go('planner', { autoOpenWizard: true }) })
+    if (canEdit('people')) list.push({ key: 'child', icon: 'addChild', label: `Add ${terms.person}`, onClick: () => setAddPersonWay('choose') })
     if (canEdit('risk_assessments')) list.push({ key: 'risk', icon: '🛡️', label: 'Risk assessments', onClick: () => go('risk_assessments') })
-    if (canEdit('messaging')) list.push({ key: 'message', icon: '💬', label: 'Send communication', onClick: () => go('messaging') })
-    if (canEdit('forms')) list.push({ key: 'forms', icon: '📋', label: 'Send a form', onClick: () => go('forms') })
-    if (hasModule('safeguarding')) list.push({ key: 'concern', icon: '🚨', label: 'Report a concern', onClick: () => raiseConcern(null) })
+    if (canEdit('messaging')) list.push({ key: 'message', icon: 'messaging', label: 'Send a message', onClick: () => go('messaging') })
+    if (canEdit('forms')) list.push({ key: 'forms', icon: 'forms', label: 'Send a form', onClick: () => go('forms') })
+    if (hasModule('planner') || hasModule('calendar')) list.push({ key: 'calendar', icon: 'calendar', label: 'Calendar', onClick: () => go('calendar') })
+    if (hasModule('safeguarding') && !heroHasReports) list.push({ key: 'concern', icon: '🚨', label: 'Report a concern', tone: 'alert', onClick: () => raiseConcern(null) })
     // The accident book lives in the Safeguarding Hub, three clicks from Home.
     // Asked for on the spot by an inspector or a parent, it should be one.
     if (hasModule('safeguarding')) list.push({ key: 'accident_book', icon: '🩹', label: 'Accident book', onClick: openAccidentBook })
@@ -3100,6 +3114,8 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
   const dayOverview = todayOverview(sessions, attendance, sessionStaffList, today);
   const pad = isMobile ? 16 : 22;
+  // Staggered entrance for Home's sections, top to bottom.
+  const rise = (n) => ({ className: 'ls-rise', style: { animationDelay: `${80 + n * 70}ms` } });
 
   return (
     <div style={styles.page}>
@@ -3441,26 +3457,20 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             </div>
           )}
 
-          {(() => {
-            const pulse = [
-              { key: 'today', icon: '📅', value: dayOverview.sessions, label: `${terms.Sessions} today`, detail: 'Your delivery schedule', onClick: () => go('calendar') },
-              { key: 'expected', icon: '🧒', value: dayOverview.people, label: `${terms.People} booked`, detail: 'Unique people across today', onClick: () => go('registers') },
-              { key: 'arrived', icon: '✅', value: dayOverview.arrived, label: 'Arrived today', detail: 'Includes those signed out', onClick: () => go('registers') },
-              { key: 'staff', icon: '🤝', value: dayOverview.staff, label: 'Team assigned', detail: 'Unique staff and volunteers', onClick: () => go('planner') },
-            ].filter(item => !['expected', 'arrived'].includes(item.key) || hasModule('registers'))
-            // On a phone, four tiles that all read 0 filled the screen and
-            // pushed Getting started below it on day one. The banner already
-            // says nothing is on today.
-            if (isMobile && pulse.every(item => !item.value)) return null
-            return (
-              /* Positioned so it paints above the rings: the accent ring was
-                 drawing across the white stat cards. */
-              <div style={{ marginTop: 18, position: 'relative', zIndex: 2 }}>
-                <OperationalPulse isMobile={isMobile} primary={primary} items={pulse} />
-              </div>
-            )
-          })()}
-          <div style={{ position: 'relative', zIndex: 2 }}>
+          {/* Today's numbers as frosted pills on the banner. Hidden when they
+              would all read 0: the summary line already says nothing is on. */}
+          <div style={{ marginTop: 16, position: 'relative', zIndex: 2 }}>
+            <HeroStats isMobile={isMobile} items={[
+              { key: 'today', icon: 'calendar', value: dayOverview.sessions, label: `${terms.Sessions} today`, onClick: () => go('calendar') },
+              hasModule('registers') && { key: 'expected', icon: 'children', value: dayOverview.people, label: `${terms.People} booked`, onClick: () => go('registers') },
+              hasModule('registers') && { key: 'arrived', icon: 'check', value: dayOverview.arrived, label: 'Arrived', onClick: () => go('registers') },
+              { key: 'staff', icon: 'team', value: dayOverview.staff, label: 'Team on', onClick: () => go('planner') },
+            ].filter(Boolean)} />
+          </div>
+          {/* The ribbon earns its place when there are several things to fit
+              into the day. With one, the session card below already says
+              when, where and who, so the ribbon only repeated it. */}
+          {strictlyTodaySessions.length > 1 && <div style={{ position: 'relative', zIndex: 2 }}>
             <DaySpine
               sessions={strictlyTodaySessions}
               statsFor={getLiveSessionStats}
@@ -3470,7 +3480,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               todayStr={today}
               onOpenSession={(s) => hasModule('registers') ? openRegisterForSession(s.id) : setInfoModalSession(s)}
             />
-          </div>
+          </div>}
         </div>
       </header>
 
@@ -3929,8 +3939,11 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       ) : null}
       </div>
 
+      {/* Sections rise in one after another (rise(n) staggers them), so the
+          page settles top-down instead of everything appearing at once.
+          Reduced-motion users get it all immediately; see hubHomeKeyframes. */}
       <section aria-label="Daily command centre" style={{ display: 'grid', gridTemplateColumns: isMobile ? 'minmax(0,1fr)' : 'repeat(2,minmax(0,1fr))', alignItems: 'start', gap: 16, padding: pad, paddingBottom: 100 }}>
-        <div style={{ gridColumn: '1 / -1', minWidth: 0 }}>
+        <div {...rise(0)} style={{ ...rise(0).style, gridColumn: '1 / -1', minWidth: 0 }}>
           <h2 style={{ fontSize: 17, margin: '0 0 12px', fontFamily: 'var(--font-display)' }}>Needs attention</h2>
           {(() => {
             const items = []
@@ -3954,7 +3967,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
               const oldest = completedWithoutReflection[completedWithoutReflection.length - 1]
               const days = oldest ? Math.floor((Date.now() - new Date(oldest.session_date).getTime()) / 86400000) : 0
               items.push({
-                key: 'reflections', icon: '✍️', tone: 'amber',
+                key: 'reflections', icon: 'edit', tone: 'amber',
                 title: `${completedWithoutReflection.length} reflection${completedWithoutReflection.length > 1 ? 's' : ''} to write up`,
                 detail: days > 0 ? `Oldest is ${days} day${days > 1 ? 's' : ''} old` : 'From sessions that have ended',
                 onClick: () => setShowReflectionsModal(true),
@@ -3994,10 +4007,15 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             return <ActionRow items={items} isMobile={isMobile} />
           })()}
         </div>
-        <div style={{ gridColumn: '1 / -1', minWidth: 0 }}>
+        {quickJumpActions.length > 0 && <div {...rise(1)} style={{ ...rise(1).style, minWidth: 0 }}>
           <Panel title="Quick actions"><QuickJump isMobile={isMobile} primary={primary} actions={quickJumpActions} wide /></Panel>
+        </div>}
+        <div {...rise(2)} style={{ ...rise(2).style, minWidth: 0 }}>
+          <WeekAheadCard sessions={upcomingSessions.filter(s => s.session_date > today)} today={today} primary={primary} terms={terms}
+            onOpenSession={setInfoModalSession} onPlan={canEdit('planner') ? () => go('planner', { autoOpenWizard: true }) : null}
+            onCalendar={() => go('calendar')} onRegisters={hasModule('registers') ? () => go('registers') : null} />
         </div>
-        {activeProject && <div style={{ gridColumn: '1 / -1', minWidth: 0 }}>
+        {activeProject && <div {...rise(3)} style={{ ...rise(3).style, gridColumn: '1 / -1', minWidth: 0 }}>
           {activeProject && (
             <div style={{
               background: 'linear-gradient(135deg, var(--org-a10), var(--org-secondary-soft))',
@@ -4032,11 +4050,14 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
 
         </div>}
-        <WeekAheadCard sessions={upcomingSessions.filter(s => s.session_date > today)} today={today} primary={primary} terms={terms}
-          onOpenSession={setInfoModalSession} onPlan={canEdit('planner') ? () => go('planner', { autoOpenWizard: true }) : null}
-          onCalendar={() => go('calendar')} onRegisters={hasModule('registers') ? () => go('registers') : null} />
-        {hasModule('reports') && <LearningBrief reflections={reflections} sessions={sessions} today={today} primary={primary} terms={terms} onOpen={() => go('reports')} />}
-        {hasModule('reports') && <div style={{ gridColumn: '1 / -1', minWidth: 0 }}>
+        {/* Learning and impact wait until there is something to learn from:
+            on day one they were two panels of zeros explaining themselves. */}
+        {hasModule('reports') && sessionsRunThisMonth > 0 && <div {...rise(4)} style={{ ...rise(4).style, minWidth: 0 }}><LearningBrief reflections={reflections} sessions={sessions} today={today} primary={primary} terms={terms} onOpen={() => go('reports')} /></div>}
+        {(weather || (weatherError && ['owner', 'admin'].includes(userProfile?.role))) && <div {...rise(5)} style={{ ...rise(5).style, minWidth: 0 }}>
+          <WeatherStrip weather={weather} weatherError={weatherError} icon={weather ? weatherFromCode(weather.code).icon : '🌡️'} label={weather ? weatherFromCode(weather.code).label : ''} primary={primary}
+            onSetup={['owner', 'admin'].includes(userProfile?.role) ? () => go('settings') : null} />
+        </div>}
+        {hasModule('reports') && (sessionsRunThisMonth > 0 || reachedThisMonth > 0) && <div {...rise(6)} style={{ ...rise(6).style, gridColumn: '1 / -1', minWidth: 0 }}>
           <Panel title="Impact snapshot · this month" right={<button onClick={() => go('reports')} style={sectionLinkBtn('var(--org-ink)')}>Explore reports →</button>}>
             <GlanceStats isMobile={isMobile} stats={[
               { key: 'children', value: reachedThisMonth, label: `${terms.People} reached`, bg: 'var(--org-a10)', colour: 'var(--org-ink)', onClick: () => go('reports') },
@@ -4049,8 +4070,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             </p>
           </Panel>
         </div>}
-        <WeatherStrip weather={weather} weatherError={weatherError} icon={weather ? weatherFromCode(weather.code).icon : '🌡️'} label={weather ? weatherFromCode(weather.code).label : ''} primary={primary} />
-        {hasModule('messaging') && ['admin', 'owner', 'manager', 'staff'].includes(userProfile?.role) && <div style={{ gridColumn: '1 / -1' }}><AnnouncementsPanel orgId={orgId} primary={primary} userId={session?.user?.id} /></div>}
+        {hasModule('messaging') && ['admin', 'owner', 'manager', 'staff'].includes(userProfile?.role) && <div {...rise(7)} style={{ ...rise(7).style, gridColumn: '1 / -1' }}><AnnouncementsPanel orgId={orgId} primary={primary} userId={session?.user?.id} /></div>}
       </section>
 
       {/* The floating "Report a Cause for Concern" button that sat here is gone.
@@ -4190,83 +4210,60 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   );
 }
 
-function OperationalPulse({ items, isMobile, primary }) {
-  const tone = {
-    good: { bg: 'var(--ok-bg)', color: 'var(--ok-text)', border: 'var(--ok-border)' },
-    amber: { bg: 'var(--warn-bg)', color: 'var(--warn-text)', border: '#FED7AA' },
-    sky: { bg: 'var(--info-bg)', color: 'var(--info-text)', border: 'var(--info-border)' },
-    calm: { bg: 'var(--surface, #fff)', color: 'var(--org-ink)', border: 'var(--org-a20)' },
-  }
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0,1fr))' : 'repeat(auto-fit, minmax(140px,1fr))', gap: 10 }}>
-      {items.map(item => {
-        const t = tone[item.tone] || tone.calm
-        return (
-          <button
-            key={item.key}
-            type="button"
-            onClick={item.onClick}
-            style={{
-              minHeight: 108, textAlign: 'left', border: `1px solid ${t.border}`, borderRadius: 14,
-              background: t.bg, color: t.color, padding: '13px 14px', cursor: 'pointer',
-              fontFamily: 'inherit', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-              gap: 10, minWidth: 0,
-            }}
-          >
-            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-              <span style={{ fontSize: 17 }}><Icon name={item.icon} /></span>
-              <strong style={{ fontSize: 24, lineHeight: 1, fontWeight: 950, fontFamily: 'var(--font-display, sans-serif)', fontVariantNumeric: 'tabular-nums' }}>{item.value}</strong>
-            </span>
-            <span>
-              <span style={{ display: 'block', fontSize: 12, fontWeight: 900, lineHeight: 1.3, color: 'var(--text, #0F172A)' }}>{item.label}</span>
-              <span style={{ display: 'block', fontSize: 11, lineHeight: 1.45, marginTop: 4, color: 'var(--text3, #64748B)' }}>{item.detail}</span>
-            </span>
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
+// The next seven days. Each row leads with a date tile (day and number) so the
+// list can be scanned by when, not read line by line; tomorrow is called out.
+// The empty state is one line and a link: on day one, Getting started and the
+// hero both already offer "Plan a session", so a third big button was noise.
 function WeekAheadCard({ sessions, today, primary, terms, onOpenSession, onPlan, onCalendar, onRegisters }) {
   const list = (sessions || []).filter(s => !s.closed_at && !s.cancelled_at).slice(0, 5)
+  const dayTile = (iso) => {
+    const d = new Date(`${iso}T00:00:00Z`)
+    return {
+      dow: new Intl.DateTimeFormat('en-GB', { weekday: 'short', timeZone: 'UTC' }).format(d),
+      day: d.getUTCDate(),
+    }
+  }
   return (
-    <section style={railPanel}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 14 }}>
-        <div>
-          <div style={{ fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--org-ink)', fontWeight: 900 }}>Planning</div>
-          <h2 style={{ margin: '5px 0 0', fontSize: 17, color: 'var(--text)', letterSpacing: -0.3 }}>Week ahead</h2>
-        </div>
-        <button onClick={onCalendar} style={{ border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 10, color: 'var(--org-ink)', fontSize: 11, fontWeight: 800, minHeight: 44, padding: '0 10px', cursor: 'pointer' }}>Calendar</button>
+    <section aria-label="Week ahead" style={railPanel}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
+        <h2 style={{ margin: 0, fontSize: 17, color: 'var(--text)', letterSpacing: -0.3, fontFamily: 'var(--font-display)' }}>Week ahead</h2>
+        <button onClick={onCalendar} style={{ ...sectionLinkBtn('var(--org-ink)'), minHeight: 44, padding: '0 4px' }}>Calendar →</button>
       </div>
       {list.length === 0 ? (
-        <div style={{ border: '1px dashed var(--org-a20)', borderRadius: 14, padding: 16, background: 'var(--org-a05)' }}>
-          <div style={{ fontSize: 13, fontWeight: 900, color: 'var(--text)' }}>No {terms.sessions} booked this week</div>
-          <p style={{ margin: '6px 0 13px', fontSize: 12, lineHeight: 1.55, color: 'var(--text3)' }}>Use this space to get the next delivery date into the plan.</p>
-          {onPlan && <button onClick={onPlan} style={{ width: '100%', minHeight: 44, border: 'none', borderRadius: 10, background: primary, color: '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer' }}>Plan a {terms.session}</button>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '6px 6px 6px 14px', borderRadius: 14, border: '1px dashed var(--border)', background: 'var(--surface)', fontSize: 13, color: 'var(--text2)' }}>
+          <span style={{ flex: 1, minWidth: 160 }}>Nothing booked in the next seven days.</span>
+          {onPlan && <button onClick={onPlan} style={{ ...sectionLinkBtn('var(--org-ink)'), minHeight: 44, padding: '0 4px' }}>Plan a {terms.session} →</button>}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-          {list.map(s => {
-            const time = s.start_time ? `${s.start_time.slice(0, 5)}${s.end_time ? `-${s.end_time.slice(0, 5)}` : ''}` : 'Time TBC'
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {list.map((s, i) => {
+            const time = s.start_time ? `${s.start_time.slice(0, 5)}${s.end_time ? `–${s.end_time.slice(0, 5)}` : ''}` : 'Time TBC'
+            const tile = dayTile(s.session_date)
+            const rel = relativeDay(s.session_date, today)
+            const soon = rel === 'Tomorrow'
             return (
               <button
                 key={s.id}
                 type="button"
+                className="ls-row ls-rise"
                 onClick={() => onOpenSession && onOpenSession(s)}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', border: '1px solid var(--border)', borderRadius: 12, background: 'var(--surface)', padding: '10px 11px', cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ animationDelay: `${200 + i * 60}ms`, display: 'flex', alignItems: 'center', gap: 12, width: '100%', minHeight: 56, textAlign: 'left', border: '1px solid var(--border)', borderRadius: 14, background: 'var(--surface)', padding: '8px 12px 8px 8px', cursor: 'pointer', fontFamily: 'inherit', transition: 'transform .18s ease, border-color .18s ease' }}
               >
-                <span style={{ width: 36, height: 36, borderRadius: 10, display: 'grid', placeItems: 'center', background: 'var(--org-a10)', color: 'var(--org-ink)', fontSize: 16, flexShrink: 0 }}><Icon name="📅" /></span>
-                <span style={{ minWidth: 0, flex: 1 }}>
-                  <strong style={{ display: 'block', fontSize: 12.5, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</strong>
-                  <span style={{ display: 'block', marginTop: 3, fontSize: 11, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{relativeDay(s.session_date, today)} · {time}{s.location ? ` · ${s.location.split(',')[0]}` : ''}</span>
+                <span aria-hidden="true" style={{ width: 44, height: 44, borderRadius: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: soon ? 'var(--org-solid, var(--org-primary))' : 'var(--org-a10)', color: soon ? 'var(--org-on-solid, #fff)' : 'var(--org-ink)', lineHeight: 1 }}>
+                  <span style={{ fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: .5 }}>{tile.dow}</span>
+                  <span style={{ fontSize: 17, fontWeight: 900, marginTop: 2 }}>{tile.day}</span>
                 </span>
+                <span style={{ minWidth: 0, flex: 1 }}>
+                  <strong style={{ display: 'block', fontSize: 13.5, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</strong>
+                  <span style={{ display: 'block', marginTop: 3, fontSize: 12, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{soon ? 'Tomorrow · ' : ''}{time}{s.location ? ` · ${s.location.split(',')[0]}` : ''}</span>
+                </span>
+                <span className="ls-row-go" aria-hidden="true" style={{ color: 'var(--org-ink)', opacity: .45, transform: 'translateX(-3px)', transition: 'opacity .18s ease, transform .18s ease' }}><Icon name="→" /></span>
               </button>
             )
           })}
         </div>
       )}
-      {onRegisters && <button onClick={onRegisters} style={{ ...sectionLinkBtn('var(--org-ink)'), margin: '12px 0 0', width: '100%' }}>View current and past registers →</button>}
+      {onRegisters && <button onClick={onRegisters} style={{ ...sectionLinkBtn('var(--org-ink)'), margin: '10px 0 0', width: '100%', minHeight: 44 }}>View current and past registers →</button>}
     </section>
   )
 }

@@ -53,7 +53,7 @@ export default function GettingStarted({ org, userRole, onNavigate, pad = 16 }) 
           <button onClick={hide} style={{ minHeight: 44, padding: '0 12px', border: 'none', background: 'none', color: 'var(--text3)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>Hide</button>
         </div>
         <div aria-hidden="true" style={{ height: 6, borderRadius: 99, background: 'var(--border-soft, var(--border))', overflow: 'hidden', marginBottom: 12 }}>
-          <div style={{ width: `${(done / steps.length) * 100}%`, height: '100%', borderRadius: 99, background: 'var(--org-primary)', transition: 'width 0.4s ease' }} />
+          <div className="ls-fill" style={{ width: `${(done / steps.length) * 100}%`, height: '100%', borderRadius: 99, background: 'var(--org-primary)', transition: 'width 0.4s ease' }} />
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 8 }}>
           {steps.map(step => step.done ? (

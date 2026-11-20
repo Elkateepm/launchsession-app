@@ -27,11 +27,21 @@ export const hubHomeKeyframes = `
 .ls-q:hover{transform:translateY(-2px)}
 .ls-q:hover .ls-q-ico{transform:scale(1.16) rotate(-6deg)}
 .ls-stat:hover{transform:translateY(-2px)}
-.ls-act:focus-visible,.ls-q:focus-visible,.ls-stat:focus-visible{outline:3px solid var(--org-primary,#1B9AAA)!important;outline-offset:3px}
+.ls-q:active,.ls-act:active,.ls-pill:active,.ls-row:active{transform:scale(.97)}
+.ls-pill:hover{background:rgba(255,255,255,.2)!important}
+.ls-row:hover{border-color:var(--org-a35,#CBD5E1)!important;transform:translateX(3px)}
+.ls-row:hover .ls-row-go{opacity:1;transform:translateX(0)}
+@keyframes lsPop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.15);opacity:1}100%{transform:scale(1)}}
+.ls-pop{animation:lsPop .5s cubic-bezier(.22,1,.36,1) .25s both}
+@keyframes lsFill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.ls-fill{transform-origin:left center;animation:lsFill .9s cubic-bezier(.22,1,.36,1) .2s both}
+.ls-act:focus-visible,.ls-q:focus-visible,.ls-stat:focus-visible,.ls-pill:focus-visible,.ls-row:focus-visible{outline:3px solid var(--org-primary,#1B9AAA)!important;outline-offset:3px}
 @media (prefers-reduced-motion: reduce){
   .ls-rise{opacity:1;transform:none;animation:none}
-  .ls-act:hover,.ls-q:hover,.ls-stat:hover{transform:none}
+  .ls-act:hover,.ls-q:hover,.ls-stat:hover,.ls-row:hover{transform:none}
+  .ls-q:active,.ls-act:active,.ls-pill:active,.ls-row:active{transform:none}
   .ls-q:hover .ls-q-ico{transform:none}
+  .ls-pop,.ls-fill{animation:none}
   [style*="lsWave"]{animation:none!important}
 }
 `
@@ -302,7 +312,7 @@ export function ActionRow({ items, isMobile }) {
 export function AllClear({ label }) {
   return (
     <div className="ls-rise" style={{ background: 'var(--ok-bg)', border: '1px solid var(--ok-border)', borderRadius: 18, padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5, fontWeight: 700, color: 'var(--ok-text)', lineHeight: 1.4 }}>
-      <Icon name="✅" size={16} />{label}
+      <span className="ls-pop" style={{ display: 'inline-flex' }}><Icon name="✅" size={16} /></span>{label}
     </div>
   )
 }
@@ -310,7 +320,7 @@ export function AllClear({ label }) {
 // ─── Animated stats ──────────────────────────────────────────────────────────
 // A number that counts up reads as alive; the sparkline answers "is that good?",
 // which a bare figure never does.
-function useCountUp(target, duration = 1000) {
+export function useCountUp(target, duration = 1000) {
   const [val, setVal] = React.useState(0)
   React.useEffect(() => {
     if (typeof target !== 'number' || !Number.isFinite(target)) {
@@ -371,27 +381,67 @@ function GlanceStatTile({ value, suffix, label, bg, colour, trend, onClick }) {
 }
 
 // ─── Quick jump ──────────────────────────────────────────────────────────────
+// Small square tiles, three across on a phone: the old two-across cards made
+// eight shortcuts a full screen of scrolling. Each icon sits in a brand-tinted
+// well so the grid reads as one set rather than eight unrelated glyphs.
 export function QuickJump({ actions, isMobile, primary, wide = false }) {
   if (!actions || actions.length === 0) return null
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0,1fr))' : wide ? 'repeat(auto-fit, minmax(120px,1fr))' : 'repeat(2, minmax(0,1fr))', gap: 10 }}>
-      {actions.map(a => (
-        <div
+    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, minmax(0,1fr))' : wide ? 'repeat(auto-fill, minmax(112px,1fr))' : 'repeat(3, minmax(0,1fr))', gap: isMobile ? 8 : 10 }}>
+      {actions.map((a, i) => (
+        <button
           key={a.key}
-          className="ls-q"
-          role="button"
-          tabIndex={0}
+          type="button"
+          className="ls-q ls-rise"
           onClick={a.onClick}
-          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); a.onClick() } }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = primary; e.currentTarget.style.background = 'var(--org-a05)' }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--org-a35)'; e.currentTarget.style.background = 'var(--org-a05)' }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border, #E6EAF4)'; e.currentTarget.style.background = 'var(--surface, #fff)' }}
-          style={{ border: '1px solid var(--border, #E6EAF4)', borderRadius: 14, padding: '15px 11px', textAlign: 'center', cursor: 'pointer', transition: 'transform .2s ease, border-color .2s ease, background .2s ease', background: 'var(--surface, #fff)', minWidth: 0, outline: 'none' }}
+          style={{
+            animationDelay: `${120 + i * 45}ms`,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8,
+            minHeight: isMobile ? 92 : 98, padding: '12px 6px', border: '1px solid var(--border, #E6EAF4)', borderRadius: 16,
+            textAlign: 'center', cursor: 'pointer', fontFamily: 'inherit', background: 'var(--surface, #fff)', minWidth: 0,
+            transition: 'transform .2s ease, border-color .2s ease, background .2s ease',
+          }}
         >
-          <span className="ls-q-ico" style={{ fontSize: 21, display: 'block', marginBottom: 7, transition: 'transform .2s ease' }}><Icon name={a.icon} /></span>
-          <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text, #141A2E)' }}>{a.label}</span>
-        </div>
+          <span className="ls-q-ico" aria-hidden="true" style={{ width: 40, height: 40, borderRadius: 12, display: 'grid', placeItems: 'center', fontSize: 19, background: a.tone === 'alert' ? 'var(--danger-bg, #FEE2E2)' : 'var(--org-a10)', color: a.tone === 'alert' ? 'var(--danger-text, #B91C1C)' : 'var(--org-ink)', transition: 'transform .2s ease' }}><Icon name={a.icon} /></span>
+          <span style={{ fontSize: 12, fontWeight: 750, lineHeight: 1.25, color: 'var(--text, #141A2E)' }}>{a.label}</span>
+        </button>
       ))}
     </div>
+  )
+}
+
+// ─── Hero stats ──────────────────────────────────────────────────────────────
+// Today's numbers as frosted pills on the hero itself. They replace four large
+// white tiles that sat inside the banner, took half a phone screen, and mostly
+// said "0". Each one counts up and opens the page it summarises.
+export function HeroStats({ items, isMobile }) {
+  if (!items || items.length === 0 || items.every(i => !i.value)) return null
+  return (
+    <div role="list" aria-label="Today at a glance" style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0,1fr))' : `repeat(${items.length}, minmax(0, 210px))`, gap: 8 }}>
+      {items.map((item, i) => <HeroStat key={item.key} item={item} delay={i * 70} />)}
+    </div>
+  )
+}
+
+function HeroStat({ item, delay }) {
+  const n = useCountUp(item.value, 900)
+  return (
+    <button role="listitem" type="button" onClick={item.onClick} className="ls-pill ls-rise"
+      aria-label={`${item.value} ${item.label}`}
+      style={{
+        animationDelay: `${delay + 150}ms`, display: 'flex', alignItems: 'center', gap: 10, minHeight: 56, padding: '9px 12px',
+        borderRadius: 14, border: '1px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.1)', color: '#fff',
+        cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', minWidth: 0, transition: 'background .18s ease, transform .18s ease',
+        backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+      }}>
+      <span aria-hidden="true" style={{ width: 32, height: 32, borderRadius: 10, display: 'grid', placeItems: 'center', background: 'rgba(255,255,255,0.14)', fontSize: 15, flexShrink: 0 }}><Icon name={item.icon} /></span>
+      <span style={{ minWidth: 0 }}>
+        <span style={{ display: 'block', fontSize: 20, fontWeight: 900, lineHeight: 1, fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-display, sans-serif)' }}>{n}</span>
+        <span style={{ display: 'block', fontSize: 11, fontWeight: 700, marginTop: 3, color: 'rgba(255,255,255,0.86)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</span>
+      </span>
+    </button>
   )
 }
 
@@ -420,7 +470,7 @@ export function LearningBrief({ reflections, sessions, today, primary, terms, on
 // ─── Weather strip ───────────────────────────────────────────────────────────
 // Weather only matters as a delivery decision, so it gets a verdict attached
 // and a strip rather than the large tile it used to occupy.
-export function WeatherStrip({ weather, weatherError, icon, label, primary }) {
+export function WeatherStrip({ weather, weatherError, icon, label, primary, onSetup }) {
   // Plain card, same as every other panel on the page. This used to be a blue
   // gradient tile, which read as a fourth brand colour on a page that already
   // has the org's primary and secondary.
@@ -430,20 +480,21 @@ export function WeatherStrip({ weather, weatherError, icon, label, primary }) {
     border: '1px solid var(--border, #E6EAF4)', flexWrap: 'wrap',
     boxShadow: '0 1px 0 rgba(255,255,255,0.7) inset, 0 4px 16px -12px rgba(15,23,42,0.18)',
   }
+  // No town set (or the lookup failed). Staff and volunteers cannot do
+  // anything about that, so they see nothing; an admin gets one quiet line
+  // that goes straight to the setting, not a card announcing a failure.
   if (weatherError) {
+    if (!onSetup) return null
     return (
-      <div style={{ ...shell, fontSize: 12, color: 'var(--text3, #5A6484)', fontWeight: 600 }}>
-        <span style={{ fontSize: 19 }}>🌡️</span> Weather unavailable — add a city in Settings
-      </div>
+      <button type="button" onClick={onSetup} className="ls-row" style={{ ...shell, width: '100%', boxSizing: 'border-box', minHeight: 52, fontSize: 12.5, color: 'var(--text2, #334155)', fontWeight: 650, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'transform .18s ease, border-color .18s ease' }}>
+        <span aria-hidden="true" style={{ fontSize: 18 }}>⛅</span>
+        <span style={{ flex: 1 }}>Add your town in Settings to see the weather for your sessions</span>
+        <span className="ls-row-go" aria-hidden="true" style={{ color: 'var(--org-ink)', opacity: .6, transform: 'translateX(-3px)', transition: 'opacity .18s ease, transform .18s ease' }}><Icon name="→" /></span>
+      </button>
     )
   }
-  if (!weather) {
-    return (
-      <div style={{ ...shell, fontSize: 12, color: 'var(--text3, #5A6484)', fontWeight: 600 }}>
-        Loading weather…
-      </div>
-    )
-  }
+  // Loading: no placeholder card that pops in and then turns into something else.
+  if (!weather) return null
 
   const wet = weather.rainChance != null && weather.rainChance >= 50
   const windy = weather.wind >= 25
