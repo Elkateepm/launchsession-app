@@ -24,9 +24,10 @@ import { useTrialClock } from '../../hooks/useTrialClock'
 import { useModuleAccess } from '../../context/ModuleAccessContext'
 import { todayOverview, monthReflectionCount } from './homeOverview'
 import GettingStarted from './GettingStarted'
-import { DaySpine, ActionRow, AllClear, GlanceStats, QuickJump, LearningBrief, WeatherStrip, HeroStats, hubHomeKeyframes } from './HubHomeSections'
+import { DaySpine, GlanceStats, QuickJump, LearningBrief, WeatherStrip, HeroStats, hubHomeKeyframes } from './HubHomeSections'
 import { RiskRow, useSessionRisk } from '../riskassessments/SessionRiskRow'
 import { WeekStrip, NextUpCard, BirthdaysCard, ComingUpCard, ArrivalsCard } from './HomeWidgets'
+import AttentionList from './AttentionList'
 import { weekStrip, birthdaysSoon, comingUp, weeklyArrivals } from './homeWidgetData'
 import { monthAttendance as calcMonthAttendance, reachedThisMonth as calcReachedThisMonth } from './glanceStats'
 import { useTerms } from '../../context/OrgContext'
@@ -3935,67 +3936,69 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
           Reduced-motion users get it all immediately; see hubHomeKeyframes. */}
       <section aria-label="Daily command centre" style={{ display: 'grid', gridTemplateColumns: isMobile ? 'minmax(0,1fr)' : 'repeat(2,minmax(0,1fr))', alignItems: 'start', gap: 16, padding: pad, paddingBottom: 100 }}>
         <div {...rise(0)} style={{ ...rise(0).style, gridColumn: '1 / -1', minWidth: 0 }}>
-          <h2 style={{ fontSize: 17, margin: '0 0 12px', fontFamily: 'var(--font-display)' }}>Needs attention</h2>
           {(() => {
+            // Plain words, how urgent it is, and the one next step for each.
+            const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`
             const items = []
             if (hasModule('safeguarding') && concerns.length > 0) {
               items.push({
-                key: 'safeguarding', icon: '🛡️', tone: 'punch',
-                title: `${concerns.length} open safeguarding concern${concerns.length > 1 ? 's' : ''}`,
-                detail: 'Review and record next steps',
-                onClick: () => go('safeguarding'),
+                key: 'safeguarding', icon: '🛡️', urgency: 'urgent', snoozable: false,
+                title: `${plural(concerns.length, 'safeguarding concern', 'safeguarding concerns')} to review`,
+                detail: 'Open and waiting for next steps. These need someone today.',
+                action: 'Review now', onAction: () => go('safeguarding'),
               })
             }
             if (canEdit('people') && ['owner', 'admin'].includes(userProfile?.role) && pendingRegistrations > 0) {
               items.push({
-                key: 'registrations', icon: '🧒', tone: 'punch',
-                title: `${pendingRegistrations} registration${pendingRegistrations > 1 ? 's' : ''} to authorise`,
-                detail: 'Submitted by parents, awaiting approval',
-                onClick: () => go('children', { openRegistrationRequests: true }),
+                key: 'registrations', icon: '🧒', urgency: 'soon',
+                title: `${plural(pendingRegistrations, 'new registration', 'new registrations')} to approve`,
+                detail: 'Sent in by parents, who are waiting to hear back.',
+                action: 'Review', onAction: () => go('children', { openRegistrationRequests: true }),
               })
             }
             if (canEdit('planner') && completedWithoutReflection.length > 0) {
-              const oldest = completedWithoutReflection[completedWithoutReflection.length - 1]
+              const n = completedWithoutReflection.length
+              const newest = completedWithoutReflection[0]
+              const oldest = completedWithoutReflection[n - 1]
               const days = oldest ? Math.floor((Date.now() - new Date(oldest.session_date).getTime()) / 86400000) : 0
               items.push({
-                key: 'reflections', icon: 'edit', tone: 'amber',
-                title: `${completedWithoutReflection.length} reflection${completedWithoutReflection.length > 1 ? 's' : ''} to write up`,
-                detail: days > 0 ? `Oldest is ${days} day${days > 1 ? 's' : ''} old` : 'From sessions that have ended',
-                onClick: () => setShowReflectionsModal(true),
+                key: 'reflections', icon: 'edit', urgency: days > 14 ? 'soon' : 'later',
+                title: `${plural(n, 'reflection', 'reflections')} to write`,
+                // The most recent first: it is the one people still remember.
+                detail: n === 1
+                  ? `For "${newest.title || terms.Session}" on ${formatDate(newest.session_date)}. A few lines while it's fresh.`
+                  : `Start with the latest, "${newest.title || terms.Session}" on ${formatDate(newest.session_date)}, while it's fresh.${days > 0 ? ` The oldest is ${days} day${days === 1 ? '' : 's'} old.` : ''}`,
+                action: 'Write this one', onAction: () => go('planner', { reflectSessionId: newest.id }),
+                secondary: n > 1 ? { label: 'See all', onClick: () => setShowReflectionsModal(true) } : null,
               })
             }
             if (hasModule('medical_alerts') && medicalAlertsNeedingReview > 0) {
               items.push({
-                key: 'medical', icon: '💊', tone: 'amber',
-                title: `${medicalAlertsNeedingReview} medical record${medicalAlertsNeedingReview > 1 ? 's' : ''} to review`,
-                detail: 'Not confirmed in the last six months',
-                onClick: () => go('medical_alerts'),
+                key: 'medical', icon: '💊', urgency: 'soon',
+                title: `${plural(medicalAlertsNeedingReview, 'medical record', 'medical records')} to check`,
+                detail: 'Not confirmed in the last six months. A quick check keeps the register safe.',
+                action: 'Check them', onAction: () => go('medical_alerts'),
               })
             }
             if (hasModule('resource_booking') && checkedOutCount > 0) {
               items.push({
-                key: 'resources', icon: '📦', tone: 'sky',
-                title: `${checkedOutCount} item${checkedOutCount > 1 ? 's' : ''} still checked out`,
-                detail: 'Chase or mark as returned',
-                onClick: () => go('resource_booking'),
+                key: 'resources', icon: '📦', urgency: 'later',
+                title: `${plural(checkedOutCount, 'item', 'items')} still signed out`,
+                detail: 'Kit or equipment that has not been marked as returned.',
+                action: "See what's out", onAction: () => go('resource_booking'),
               })
             }
-
             if (hrAttention.show) {
               items.push({
-                key: 'hr', icon: '🧑‍💼', tone: hrAttention.urgent > 0 ? 'amber' : 'sky',
-                title: `${hrAttention.count} HR item${hrAttention.count > 1 ? 's' : ''} to deal with`,
+                key: 'hr', icon: 'hr', urgency: hrAttention.urgent > 0 ? 'soon' : 'later',
+                title: plural(hrAttention.count, 'HR task', 'HR tasks'),
                 detail: hrAttention.urgent > 0
-                  ? `${hrAttention.urgent} overdue — compliance, cases or reviews`
-                  : 'Compliance, supervisions and case actions',
-                onClick: () => go('hr'),
+                  ? `${hrAttention.urgent} overdue. Compliance checks, supervisions or case actions.`
+                  : 'Compliance checks, supervisions and case actions.',
+                action: 'Open HR', onAction: () => go('hr'),
               })
             }
-
-            if (items.length === 0) {
-              return <AllClear label="Nothing needs you right now." />
-            }
-            return <ActionRow items={items} isMobile={isMobile} />
+            return <AttentionList items={items} today={today} isMobile={isMobile} storageKey={`ls_attention_hidden_${orgId}_${session?.user?.id || 'me'}`} />
           })()}
         </div>
         {/* Widgets: the week at a glance, the next session counting down,
