@@ -67,6 +67,19 @@ describe('buildAttentionItems', () => {
   })
 })
 
+test('an assessment that is both behind and covering a session is listed once, under the session', () => {
+  const draft = { id: 'a1', name: 'Day trip to the coast', status: 'draft', next_review_date: day(90) }
+  const items = buildAttentionItems({
+    assessments: [draft],
+    sessions: [{ id: 's1', title: 'Day trip to the coast', session_date: day(3) }],
+    coverage: { s1: draft },
+    outstandingByAssessment: { a1: 2 },
+  })
+  expect(items).toHaveLength(1)
+  expect(items[0].session.id).toBe('s1')
+  expect(items[0].detail).toBe('Starts in 3 days — assessment still a draft · 2 controls still to complete')
+})
+
 test('expired and review-due records remain actionable without a review date', () => {
   const items = buildAttentionItems({ assessments: [
     { id: 'expired', name: 'Old assessment', status: 'expired', approval_required: false },

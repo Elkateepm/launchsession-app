@@ -25,6 +25,7 @@ import { useModuleAccess } from '../../context/ModuleAccessContext'
 import { todayOverview, monthReflectionCount } from './homeOverview'
 import GettingStarted from './GettingStarted'
 import { DaySpine, ActionRow, AllClear, GlanceStats, QuickJump, LearningBrief, WeatherStrip, HeroStats, hubHomeKeyframes } from './HubHomeSections'
+import { RiskRow, useSessionRisk } from '../riskassessments/SessionRiskRow'
 import { monthAttendance as calcMonthAttendance, reachedThisMonth as calcReachedThisMonth } from './glanceStats'
 import { useTerms } from '../../context/OrgContext'
 import SignedImg from '../shared/SignedImg'
@@ -1734,7 +1735,8 @@ function KioskPinModal({ mode, onSetupComplete, onUnlockAttempt, onCancel }) {
 
 // Risk assessment actions for the selected session.
 export function SessionQuickActions({ session, org, orgId, authUserId, onNavigate }) {
-  const [linkedRA, setLinkedRA] = useState(undefined) // undefined = loading, null = none, object = found
+  // undefined = loading, null = none, object = found. Shared with the register.
+  const [linkedRA, , setLinkedRA] = useSessionRisk(session?.id, orgId)
   const [showRAPicker, setShowRAPicker] = useState(false)
   const [viewingRA, setViewingRA] = useState(false)
   const [raOptions, setRaOptions] = useState([])
@@ -1742,18 +1744,6 @@ export function SessionQuickActions({ session, org, orgId, authUserId, onNavigat
   const [raPickerBusy, setRaPickerBusy] = useState(false)
   const [raPickerError, setRaPickerError] = useState('')
 
-  const loadLinkedRA = React.useCallback(() => {
-    if (!session?.id) { setLinkedRA(null); return }
-    supabase.from('risk_assessment_sessions').select('risk_assessments!ras_assessment_org_fk(id, name, risk_rating, status)').eq('org_id', orgId).eq('session_id', session.id).limit(1)
-      .then(({ data, error }) => {
-        if (error) { setLinkedRA(null); return }
-        setLinkedRA(data && data.length > 0 ? data[0].risk_assessments : null)
-      })
-      .catch(() => setLinkedRA(null))
-  }, [session?.id, orgId])
-
-  React.useEffect(() => { setLinkedRA(undefined); loadLinkedRA() }, [loadLinkedRA])
-  useRealtimeTable('risk_assessment_sessions', loadLinkedRA, { filter: session?.id ? `session_id=eq.${session.id}` : undefined, enabled: !!session?.id, pollInterval: 5000 })
 
   const openRAPicker = async (e) => {
     e.stopPropagation()
@@ -1818,27 +1808,12 @@ export function SessionQuickActions({ session, org, orgId, authUserId, onNavigat
 
   return (
     <>
-      {linkedRA === undefined ? null : linkedRA ? (
-        <button
-          className="ls-tap"
-          onClick={(e) => { e.stopPropagation(); setViewingRA(true) }}
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 800, color: 'var(--ok-text)',
-            background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 99, padding: '5px 10px', cursor: 'pointer', whiteSpace: 'nowrap',
-          }}>
-          🛡 Risk Assessment Attached
-        </button>
-      ) : (
-        <button
-          onClick={openRAPicker}
-          className="ls-tap"
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 800, color: '#FCD34D',
-            background: 'rgba(251,191,36,0.1)', border: '1px dashed rgba(251,191,36,0.4)', borderRadius: 99, padding: '5px 10px', cursor: 'pointer', whiteSpace: 'nowrap',
-          }}>
-          🛡 Attach Risk Assessment
-        </button>
-      )}
+      <RiskRow
+        assessment={linkedRA}
+        required={session?.risk_assessment_required !== false}
+        onOpen={() => setViewingRA(true)}
+        onAttach={openRAPicker}
+      />
 
       {!showRAPicker && raPickerError && <span role="alert">{raPickerError}</span>}
       {showRAPicker && (
@@ -3708,9 +3683,17 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                       )}
                     </div>
 
-                    {cardStatus !== 'upcoming' && !isClosed && (
-                      <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+                    {/* The session's risk assessment as its own row: covered,
+                        draft, overdue or missing at a glance, emergency info
+                        one tap away. Shown before the start too, which is
+                        when there is still time to sort it. */}
+                    {!isClosed && (
+                      <div style={{ marginTop: 12 }}>
                         <SessionQuickActions session={s} org={org} orgId={org?.id} authUserId={session?.user?.id} onNavigate={go} />
+                      </div>
+                    )}
+                    {cardStatus !== 'upcoming' && !isClosed && (
+                      <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
                         <button
                           onClick={(e) => { e.stopPropagation(); setKioskRequestSessionId(s.id); setOpenLiveSessionId(s.id) }}
                           title="Self sign-in kiosk (PIN to exit)"

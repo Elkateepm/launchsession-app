@@ -27,7 +27,9 @@ const fmtSessionWhen = s => {
 }
 
 function StatusTag({ assessment, outstanding, unknown }) {
-  const meta = unknown ? { label: 'Checks unavailable', bg: 'var(--surface2)', text: 'var(--text3)' } : STATUS[safetyStateOf(assessment, { outstandingByAssessment: outstanding })]
+  // One assessment: "Draft", "Ready to run". The strip's plural labels are for counts.
+  const state = unknown ? null : safetyStateOf(assessment, { outstandingByAssessment: outstanding })
+  const meta = unknown ? { label: 'Checks unavailable', bg: 'var(--surface2)', text: 'var(--text3)' } : { ...STATUS[state], label: SAFETY_META[state].label }
   return <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 8px', borderRadius: 7, fontSize: 10.5, fontWeight: 750, background: meta.bg, color: meta.text, lineHeight: 1.5 }}><span aria-hidden="true" style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor', flexShrink: 0 }} />{meta.label}</span>
 }
 
@@ -62,12 +64,12 @@ function NeedsAttention({ items, canEdit, canApprove, unknown, checking, onOpen,
       {shown.map((item, index) => {
         const urgentItem = item.severity === 'action'
         const action = !canEdit ? 'View assessment' : !canApprove && item.cta === 'Review & Approve' ? 'Review assessment' : item.cta
-        return <motion.article key={item.id} initial={reduced ? false : { opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduced ? 0 : .2, delay: reduced ? 0 : Math.min(index * .04, .2) }} style={{ border: '1px solid var(--border)', borderLeft: `3px solid ${urgentItem ? 'var(--danger-text)' : 'var(--warn-border)'}`, borderRadius: 12, padding: '14px 14px 12px' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+        return <motion.article key={item.id} initial={reduced ? false : { opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduced ? 0 : .2, delay: reduced ? 0 : Math.min(index * .04, .2) }} style={{ border: '1px solid var(--border)', borderLeft: `3px solid ${urgentItem ? 'var(--danger-text)' : 'var(--warn-border)'}`, borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '9px 12px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flex: '1 1 280px', minWidth: 0 }}>
             <span style={{ width: 30, height: 30, borderRadius: 9, display: 'grid', placeItems: 'center', flexShrink: 0, background: urgentItem ? 'var(--danger-bg)' : 'var(--warn-bg)', color: urgentItem ? 'var(--danger-text)' : 'var(--warn-text)' }}><Icon name={urgentItem ? 'risk' : 'edit'} size={16} /></span>
             <div style={{ minWidth: 0, flex: 1 }}><h3 style={{ fontSize: 13, lineHeight: 1.5, color: 'var(--text)', margin: 0, overflowWrap: 'anywhere' }}>{item.title}</h3><p style={{ fontSize: 11.5, lineHeight: 1.6, color: urgentItem ? 'var(--danger-text)' : 'var(--text3)', margin: '4px 0 0' }}>{item.detail}</p></div>
           </div>
-          <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', justifyContent: 'flex-end', marginTop: 9 }}>
+          <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', justifyContent: 'flex-end', marginLeft: 'auto' }}>
             {!item.assessment && canEdit && <button type="button" onClick={() => onReuseForSession(item.session)} style={{ ...RA_BUTTON, fontSize: 11 }}>Use previous</button>}
             {(item.assessment || canEdit) && <button type="button" onClick={() => item.assessment ? onOpen(item.assessment) : onCreateForSession(item.session)} style={{ ...RA_BUTTON, fontSize: 11, background: 'var(--ra-tint)', borderColor: 'var(--ra-border)', color: 'var(--ra-ink)' }}>{action}<Icon name="→" size={13} /></button>}
             {!item.assessment && !canEdit && <span style={{ color: 'var(--text3)', fontSize: 11 }}>Ask your team to add an assessment.</span>}
@@ -143,11 +145,15 @@ export default function RAOverview({ assessments = [], sessionsTruncated = false
   const checksUnknown = checking || unavailable.includes('assessments') || unavailable.includes('controls')
   const attention = useMemo(() => buildAttentionItems({ assessments: live, sessions: coverageUnknown ? [] : sessions, coverage, outstandingByAssessment }), [live, sessions, coverage, outstandingByAssessment, coverageUnknown])
   const handledSessionIds = new Set(attention.filter(i => i.session).map(i => i.session.id))
+  // When every upcoming session is already a follow-up, the side panel only
+  // said so in a grey box. Leave it out and let Needs attention have the room.
+  const sessionsUnknown = checking || unavailable.includes('upcoming activities')
+  const showUpcoming = sessionsUnknown || sessions.some(s => !handledSessionIds.has(s.id))
   return <div>
     <SafetyStrip counts={counts} unknown={checksUnknown} onFilter={onSafetyFilter} />
-    <div style={{ display: 'grid', gridTemplateColumns: compact ? 'minmax(0,1fr)' : 'minmax(0,1.3fr) minmax(0,1fr)', gap: 20, alignItems: 'start' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: compact || !showUpcoming ? 'minmax(0,1fr)' : 'minmax(0,1.3fr) minmax(0,1fr)', gap: 20, alignItems: 'start' }}>
       <NeedsAttention items={attention} checking={checking} unknown={unavailable.length > 0} canEdit={canEdit} canApprove={canApprove} onOpen={onOpen} onCreateForSession={onCreateForSession} onReuseForSession={onReuseForSession} />
-      <UpcomingActivities sessions={sessions} coverage={coverage} outstanding={outstandingByAssessment} handledSessionIds={handledSessionIds} canEdit={canEdit} coverageUnknown={coverageUnknown} checksUnknown={checksUnknown} sessionsUnknown={checking || unavailable.includes('upcoming activities')} truncated={sessionsTruncated} onOpen={onOpen} onCreate={onCreateForSession} onReuse={onReuseForSession} />
+      {showUpcoming && <UpcomingActivities sessions={sessions} coverage={coverage} outstanding={outstandingByAssessment} handledSessionIds={handledSessionIds} canEdit={canEdit} coverageUnknown={coverageUnknown} checksUnknown={checksUnknown} sessionsUnknown={checking || unavailable.includes('upcoming activities')} truncated={sessionsTruncated} onOpen={onOpen} onCreate={onCreateForSession} onReuse={onReuseForSession} />}
     </div>
     <RecentAssessments assessments={live} staff={staff} outstanding={outstandingByAssessment} unknown={checksUnknown} unavailable={unavailable.includes('assessments')} search={search} onSearch={onSearch} onOpen={onOpen} onBrowse={onBrowse} />
   </div>
