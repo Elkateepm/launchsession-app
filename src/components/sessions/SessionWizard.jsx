@@ -12,6 +12,8 @@ import { useTerms } from '../../context/OrgContext'
 import { londonDate } from '../../lib/sessionPhase'
 import { flowButton } from './SessionSheet'
 import { withAlpha } from '../../lib/withAlpha'
+import { rankAssessments, templateForSession, riskStateLabel } from '../../lib/riskMatch'
+import { riskScore, riskRating } from '../riskassessments/ra_shared'
 
 // ─── CONSTANTS ──────────────────────────────────────────────────
 
@@ -718,63 +720,78 @@ function StepRequirements({ form, setForm, orgForms, org, onFormCreated, expecte
 // null, so ticking "risk assessment required" produced a session with an
 // outstanding task and no way to satisfy it without leaving the wizard.
 
-const RA_ACTIVITY_TYPES = ['Sports / physical activity', 'Day trip / off-site', 'Residential', 'Workshop / indoor', 'Community event', 'Transport', 'Other']
-
-function raRatingStyle(rating) {
-  const r = (rating || '').toLowerCase()
-  if (r === 'high') return { bg: 'var(--danger-bg)', border: 'var(--danger-border)', color: 'var(--danger-text)' }
-  if (r === 'medium') return { bg: 'var(--warn-bg)', border: 'var(--warn-border)', color: 'var(--warn-text)' }
-  if (r === 'low') return { bg: 'var(--ok-bg)', border: 'var(--ok-border)', color: 'var(--ok-text)' }
-  return { bg: 'var(--surface2)', border: 'var(--border)', color: 'var(--text3)' }
+const RA_STATE_TONE = {
+  ready: { bg: 'var(--ok-bg)', color: 'var(--ok-text)', border: 'var(--ok-border)' },
+  review: { bg: 'var(--warn-bg)', color: 'var(--warn-text)', border: 'var(--warn-border)' },
+  action: { bg: 'var(--danger-bg)', color: 'var(--danger-text)', border: 'var(--danger-border)' },
+  draft: { bg: 'var(--surface2)', color: 'var(--text2)', border: 'var(--border)' },
 }
 
-function RiskAssessmentPicker({ form, setForm, org, riskAssessments, onCreated, showBuilder, setShowBuilder, standalone }) {
-  const [draft, setDraft] = useState({ name: '', activity_type: '', location: '', summary: '', control_measures: '', risk_rating: 'low', next_review_date: '' })
+function RaStateChip({ ra }) {
+  const { state, short } = riskStateLabel(ra)
+  const tone = RA_STATE_TONE[state] || RA_STATE_TONE.draft
+  return <span style={{ fontSize: 11, fontWeight: 800, borderRadius: 99, padding: '3px 9px', background: tone.bg, border: `1px solid ${tone.border}`, color: tone.color, flexShrink: 0, whiteSpace: 'nowrap' }}>{short}</span>
+}
+
+// Attach the right assessment, or start a real one.
+//
+// The library is ranked for this session -- same kind of activity, same
+// place, shared words in the name -- so the likely one is at the top with
+// its state on show (ready, draft, needs review). A new assessment starts
+// from the template for this kind of session, so it has real hazards and
+// suggested controls to check instead of two free-text boxes that left most
+// assessments as permanent drafts.
+function RiskAssessmentPicker({ form, setForm, org, riskAssessments, onCreated, showBuilder, setShowBuilder, standalone, authUserId }) {
+  const terms = useTerms()
+  const [name, setName] = useState('')
+  const [location, setLocation] = useState('')
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState('')
   const [search, setSearch] = useState('')
+  const [showAll, setShowAll] = useState(false)
 
   const attached = riskAssessments.find(r => r.id === form.pending_risk_assessment_id) || null
+  const template = templateForSession(form.session_type)
+  const { list, best } = rankAssessments(riskAssessments, { session_type: form.session_type, title: form.title, location: form.location })
+  const q = search.trim().toLowerCase()
+  const filtered = q ? list.filter(r => `${r.name} ${r.activity_type || ''} ${r.location || ''}`.toLowerCase().includes(q)) : list
+  const shown = showAll || q ? filtered : filtered.slice(0, 4)
 
-  // Prefill from the session being built -- the assessment is nearly always
-  // "this activity, at this venue", and retyping it is pure friction.
   const openBuilder = () => {
-    setDraft(d => ({
-      ...d,
-      name: d.name || (form.title ? `${form.title} — Risk Assessment` : ''),
-      location: d.location || form.location || '',
-    }))
+    setName(n => n || form.title || '')
+    setLocation(l => l || form.location || '')
     setErr('')
     setShowBuilder(true)
   }
 
   const handleSave = async () => {
-    if (!draft.name.trim() || !org?.id) return
+    if (!name.trim() || !org?.id) return
     setSaving(true); setErr('')
+    const top = template.hazards.reduce((m, h) => Math.max(m, riskScore(h.likelihood, h.severity)), 0)
     const { data, error } = await supabase.from('risk_assessments').insert({
       org_id: org.id,
-      name: draft.name.trim(),
-      activity_type: draft.activity_type || null,
-      location: draft.location || null,
-      summary: draft.summary || null,
-      control_measures: draft.control_measures || null,
-      risk_rating: draft.risk_rating || null,
-      next_review_date: draft.next_review_date || null,
+      name: name.trim(),
+      activity_type: template.activity_type,
+      location: location.trim() || null,
+      summary: template.summary,
+      risk_score: top,
+      risk_rating: riskRating(top),
       status: 'draft',
       is_template: false,
-    }).select('id, name, activity_type, location, status, risk_rating, next_review_date').single()
+      created_by: authUserId || null,
+      owner_id: authUserId || null,
+    }).select('id, name, activity_type, location, status, risk_rating, next_review_date, review_date, manager_approved_at, approval_required, archived, created_at, updated_at').single()
+    if (error || !data) { setSaving(false); setErr('Could not create the risk assessment. Please try again.'); return }
+    const { error: hazardError } = await supabase.from('risk_assessment_hazards').insert(
+      template.hazards.map((h, i) => ({ ...h, assessment_id: data.id, org_id: org.id, sort_order: i })))
     setSaving(false)
-    if (error || !data) { setErr('Could not create the risk assessment. Please try again.'); return }
     if (onCreated) onCreated(data)
     // Held on the form and attached by the RPC when the session is created --
     // creating the link now would orphan it if the wizard is abandoned.
     setForm(f => ({ ...f, pending_risk_assessment_id: data.id }))
     setShowBuilder(false)
+    if (hazardError) setErr('The assessment was created, but its starter hazards could not be added. Add them in Risk Assessments.')
   }
-
-  const filtered = search.trim()
-    ? riskAssessments.filter(r => `${r.name} ${r.activity_type || ''} ${r.location || ''}`.toLowerCase().includes(search.toLowerCase()))
-    : riskAssessments
 
   const standaloneHeader = standalone ? (
     <div style={{
@@ -783,13 +800,13 @@ function RiskAssessmentPicker({ form, setForm, org, riskAssessments, onCreated, 
       border: '1px solid rgba(220,38,38,0.22)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 42, height: 42, borderRadius: 13, flexShrink: 0, background: 'linear-gradient(135deg,#DC2626,#EF4444)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 4px 14px -4px rgba(220,38,38,0.6)' }}><Icon name="🛡️" /></div>
+        <div style={{ width: 42, height: 42, borderRadius: 13, flexShrink: 0, background: 'linear-gradient(135deg,#DC2626,#EF4444)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: '#fff', boxShadow: '0 4px 14px -4px rgba(220,38,38,0.6)' }}><Icon name="🛡️" /></div>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.3 }}>Risk assessment</div>
           <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 2 }}>
             {attached
-              ? 'Attached — it will be linked to this session when you publish.'
-              : 'This session is marked as needing one. Attach an existing assessment or write one now.'}
+              ? `Attached. It is linked to this ${terms.session} when you publish.`
+              : `This ${terms.session} needs one. Pick the best match, or start one from a template.`}
           </div>
         </div>
       </div>
@@ -801,31 +818,23 @@ function RiskAssessmentPicker({ form, setForm, org, riskAssessments, onCreated, 
       <>
       {standaloneHeader}
       <div style={{ ...card, borderColor: 'var(--danger-border)' }}>
-        <SectionHeader icon="🛡️" title="New risk assessment" subtitle="Created as a draft and attached to this session. You can complete the full detail in Risk Assessments." color="#DC2626" />
-        <label style={{ display: 'block' }}><span style={label}>Name *</span><input value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} placeholder="e.g. Horse Riding — Risk Assessment" style={inp} /></label>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div><label htmlFor="sw-ra-activity" style={label}>Activity type</label><select id="sw-ra-activity" value={draft.activity_type} onChange={e => setDraft({ ...draft, activity_type: e.target.value })} style={inp}>
-              <option value="">Choose...</option>
-              {RA_ACTIVITY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-            </select></div>
-          <label style={{ display: 'block' }}><span style={label}>Location</span><input value={draft.location} onChange={e => setDraft({ ...draft, location: e.target.value })} placeholder="Venue" style={inp} /></label>
+        <SectionHeader icon="🛡️" title="New risk assessment"
+          subtitle={`Starts with ${template.hazards.length} common hazards for ${template.name.toLowerCase()}, each with suggested controls. Check them and add the emergency plan before the day.`} color="#DC2626" />
+        <label style={{ display: 'block', marginBottom: 12 }}><span style={label}>Name</span><input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Day trip to the coast" style={inp} /></label>
+        <label style={{ display: 'block', marginBottom: 14 }}><span style={label}>Where</span><input value={location} onChange={e => setLocation(e.target.value)} placeholder="Venue or destination" style={inp} /></label>
+        <div style={{ borderRadius: 12, background: 'var(--surface2)', padding: '12px 14px', marginBottom: 14 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text2)', marginBottom: 8 }}>Hazards it starts with</div>
+          <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 6 }}>
+            {template.hazards.slice(0, 4).map(h => <li key={h.hazard} style={{ display: 'flex', gap: 8, fontSize: 13, color: 'var(--text)' }}><span aria-hidden="true" style={{ color: 'var(--ok-text)', fontWeight: 900 }}>✓</span>{h.hazard}</li>)}
+            {template.hazards.length > 4 && <li style={{ fontSize: 12.5, color: 'var(--text3)', paddingLeft: 18 }}>+{template.hazards.length - 4} more</li>}
+          </ul>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div><label htmlFor="sw-ra-rating" style={label}>Overall risk rating</label><select id="sw-ra-rating" value={draft.risk_rating} onChange={e => setDraft({ ...draft, risk_rating: e.target.value })} style={inp}>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select></div>
-          <label style={{ display: 'block' }}><span style={label}>Next review date</span><input type="date" value={draft.next_review_date} onChange={e => setDraft({ ...draft, next_review_date: e.target.value })} style={inp} /></label>
-        </div>
-        <label style={{ display: 'block' }}><span style={label}>Key hazards</span><textarea value={draft.summary} onChange={e => setDraft({ ...draft, summary: e.target.value })} placeholder="What could cause harm on this session?" style={{ ...inp, minHeight: 64, resize: 'vertical' }} /></label>
-        <label style={{ display: 'block' }}><span style={label}>Control measures</span><textarea value={draft.control_measures} onChange={e => setDraft({ ...draft, control_measures: e.target.value })} placeholder="What's in place to reduce those risks?" style={{ ...inp, minHeight: 64, resize: 'vertical' }} /></label>
-        {err && <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 10, padding: '9px 12px', fontSize: 12, fontWeight: 600, color: 'var(--danger-text)', marginBottom: 12 }}>{err}</div>}
+        {err && <div role="alert" style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 10, padding: '9px 12px', fontSize: 12.5, fontWeight: 600, color: 'var(--danger-text)', marginBottom: 12 }}>{err}</div>}
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => setShowBuilder(false)} style={{ flex: 1, padding: '11px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-          <button onClick={handleSave} disabled={!draft.name.trim() || saving}
-            style={{ flex: 1, padding: '11px', borderRadius: 10, border: 'none', background: (!draft.name.trim() || saving) ? 'var(--border)' : 'linear-gradient(135deg,#DC2626,#EF4444)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: (!draft.name.trim() || saving) ? 'not-allowed' : 'pointer' }}>
-            {saving ? 'Creating...' : 'Create & attach'}
+          {riskAssessments.length > 0 && <button onClick={() => setShowBuilder(false)} style={{ flex: 1, minHeight: 44, borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, fontSize: 13.5, cursor: 'pointer' }}>Back to the list</button>}
+          <button onClick={handleSave} disabled={!name.trim() || saving}
+            style={{ flex: 1, minHeight: 44, borderRadius: 10, border: 'none', background: (!name.trim() || saving) ? 'var(--border)' : 'linear-gradient(135deg,#B91C1C,#DC2626)', color: '#fff', fontWeight: 800, fontSize: 13.5, cursor: (!name.trim() || saving) ? 'not-allowed' : 'pointer' }}>
+            {saving ? 'Creating…' : 'Create and attach'}
           </button>
         </div>
       </div>
@@ -837,67 +846,67 @@ function RiskAssessmentPicker({ form, setForm, org, riskAssessments, onCreated, 
     <>
       {standaloneHeader}
     <div style={{ ...card, borderColor: attached ? 'var(--ok-border)' : 'var(--danger-border)' }}>
-      <SectionHeader icon="🛡️" title="Risk assessment"
-        subtitle={attached ? 'Attached to this session on creation.' : 'This session needs one. Attach an existing assessment or create one now.'}
+      <SectionHeader icon="🛡️" title={attached ? 'Attached' : 'Choose a risk assessment'}
+        subtitle={attached ? `Linked to this ${terms.session} when you publish.` : `Best match for this ${terms.session} first.`}
         color="#DC2626" />
 
       {attached ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 12, border: '1.5px solid var(--ok-border)', background: 'var(--ok-bg)' }}>
-          <span style={{ fontSize: 18 }}><Icon name="✅" /></span>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>{attached.name}</div>
-            <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2 }}>
-              {[attached.activity_type, attached.location, attached.status].filter(Boolean).join(' · ')}
+        <>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 12, border: '1.5px solid var(--ok-border)', background: 'var(--ok-bg)' }}>
+            <span style={{ fontSize: 18, color: 'var(--ok-text)' }}><Icon name="✅" /></span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)', overflowWrap: 'anywhere' }}>{attached.name}</div>
+              <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{[attached.activity_type, attached.location].filter(Boolean).join(' · ') || 'No detail set'}</div>
             </div>
+            <RaStateChip ra={attached} />
+            <button onClick={() => setForm(f => ({ ...f, pending_risk_assessment_id: null }))}
+              style={{ minHeight: 44, padding: '0 12px', borderRadius: 9, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 12.5, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>
+              Change
+            </button>
           </div>
-          <button onClick={() => setForm(f => ({ ...f, pending_risk_assessment_id: null }))}
-            style={{ padding: '7px 12px', borderRadius: 9, border: '1.5px solid var(--border)', background: 'var(--surface)', fontSize: 11.5, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>
-            Change
-          </button>
-        </div>
+          {riskStateLabel(attached).state === 'draft' && (
+            <p style={{ margin: '10px 0 0', fontSize: 12.5, lineHeight: 1.5, color: 'var(--warn-text)' }}>Still a draft. After publishing, open it from the {terms.session} card or Risk Assessments to check the hazards and add the emergency plan.</p>
+          )}
+          {err && <p role="alert" style={{ margin: '10px 0 0', fontSize: 12.5, color: 'var(--danger-text)' }}>{err}</p>}
+        </>
       ) : (
         <>
-          {riskAssessments.length > 3 && (
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search assessments..." style={{ ...inp, marginBottom: 10 }} />
+          {riskAssessments.length > 4 && (
+            <input aria-label="Search risk assessments" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search assessments…" style={{ ...inp, marginBottom: 10 }} />
           )}
           {riskAssessments.length === 0 ? (
-            <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 12 }}>No risk assessments in your library yet.</div>
+            <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 12 }}>No risk assessments in your library yet.</div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 240, overflowY: 'auto', marginBottom: 12 }}>
-              {filtered.map(ra => {
-                const rs = raRatingStyle(ra.risk_rating)
-                const overdue = ra.next_review_date && new Date(ra.next_review_date) < new Date()
-                return (
-                  <button key={ra.id} onClick={() => setForm(f => ({ ...f, pending_risk_assessment_id: ra.id }))}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 11, border: '1.5px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', textAlign: 'left', width: '100%' }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ra.name}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>
-                        {[ra.activity_type, ra.location].filter(Boolean).join(' · ') || 'No detail set'}
-                        {overdue && <span style={{ color: 'var(--warn-text)', fontWeight: 700 }}> · review overdue</span>}
-                      </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+              {shown.map(ra => (
+                <button key={ra.id} onClick={() => setForm(f => ({ ...f, pending_risk_assessment_id: ra.id }))}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 56, padding: '10px 12px', borderRadius: 12, border: `1.5px solid ${best && best.id === ra.id ? 'var(--org-a35, var(--border))' : 'var(--border)'}`, background: best && best.id === ra.id ? 'var(--org-a05, var(--surface))' : 'var(--surface)', cursor: 'pointer', textAlign: 'left', width: '100%', fontFamily: 'inherit' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)', overflowWrap: 'anywhere' }}>{ra.name}</span>
+                      {best && best.id === ra.id && <span style={{ fontSize: 10.5, fontWeight: 900, letterSpacing: .3, textTransform: 'uppercase', color: 'var(--org-ink, var(--text2))' }}>Best match</span>}
                     </div>
-                    {ra.risk_rating && (
-                      <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', borderRadius: 99, padding: '3px 9px', background: rs.bg, border: `1px solid ${rs.border}`, color: rs.color, flexShrink: 0 }}>{ra.risk_rating}</span>
-                    )}
-                  </button>
-                )
-              })}
-              {filtered.length === 0 && (
-                <div style={{ fontSize: 12, color: 'var(--text3)', padding: '8px 0' }}>No assessments match that search.</div>
+                    <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{[ra.activity_type, ra.location].filter(Boolean).join(' · ') || 'No detail set'}</div>
+                  </div>
+                  <RaStateChip ra={ra} />
+                </button>
+              ))}
+              {filtered.length === 0 && <div style={{ fontSize: 12.5, color: 'var(--text3)', padding: '8px 0' }}>No assessments match that search.</div>}
+              {!q && filtered.length > 4 && !showAll && (
+                <button onClick={() => setShowAll(true)} style={{ minHeight: 44, border: 'none', background: 'none', color: 'var(--org-ink, var(--text2))', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>Show all {filtered.length}</button>
               )}
             </div>
           )}
           <button onClick={openBuilder}
-            style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px dashed #DC262660', background: '#DC26260A', fontSize: 12.5, fontWeight: 700, color: 'var(--danger-text)', cursor: 'pointer' }}>
-            + Create new risk assessment
+            style={{ width: '100%', minHeight: 48, borderRadius: 12, border: '1.5px dashed var(--danger-border)', background: 'var(--danger-bg)', fontSize: 13.5, fontWeight: 800, color: 'var(--danger-text)', cursor: 'pointer' }}>
+            + Start a new one from a template
           </button>
         </>
       )}
     </div>
     {standalone && !attached && (
-      <div style={{ fontSize: 12, color: 'var(--text3)', textAlign: 'center', marginTop: -4 }}>
-        You can continue without one — Review will flag it as outstanding.
+      <div style={{ fontSize: 12.5, color: 'var(--text3)', textAlign: 'center', marginTop: -4 }}>
+        You can continue without one. Review will flag it as outstanding.
       </div>
     )}
     </>
@@ -908,7 +917,7 @@ function RiskAssessmentPicker({ form, setForm, org, riskAssessments, onCreated, 
 // attaching and creating survives moving within the step, and opens straight
 // into the create form when there is nothing to attach -- showing an empty
 // list and making someone press "create" first is a wasted click.
-function StepRisk({ form, setForm, org, riskAssessments, onCreated }) {
+function StepRisk({ form, setForm, org, riskAssessments, onCreated, authUserId }) {
   const reusable = riskAssessments || []
   const [showBuilder, setShowBuilder] = useState(reusable.length === 0 && !form.pending_risk_assessment_id)
 
@@ -925,6 +934,7 @@ function StepRisk({ form, setForm, org, riskAssessments, onCreated }) {
       form={form} setForm={setForm} org={org}
       riskAssessments={reusable}
       onCreated={onCreated}
+      authUserId={authUserId}
       showBuilder={showBuilder} setShowBuilder={setShowBuilder}
       standalone
     />
@@ -1008,6 +1018,12 @@ function StepReview({ form, staff, expectedCount, primary, riskAssessments = [],
         : attachedRa ? `Risk assessment attached — ${attachedRa.name}` : 'Risk assessment required but none attached',
       severity: 'blocker',
     },
+    ...(attachedRa && riskStateLabel(attachedRa).state !== 'ready' ? [{
+      ok: false,
+      label: riskStateLabel(attachedRa).state === 'draft'
+        ? 'Risk assessment is still a draft: finish it before the day'
+        : `Risk assessment ${riskStateLabel(attachedRa).label.toLowerCase()}`,
+    }] : []),
     { ok: !form.consent_required || form.form_ids.length > 0, label: form.consent_required && form.form_ids.length === 0 ? 'Consent required but no form attached' : 'Consent form attached' },
     { ok: !form.min_staff || staffCount >= parseInt(form.min_staff, 10), label: form.min_staff && staffCount < parseInt(form.min_staff, 10) ? `Minimum staffing not met (${staffCount} of ${form.min_staff})` : 'Minimum staffing met' },
   ]
@@ -1255,7 +1271,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
     // the starting point for a new assessment rather than something you attach
     // to a session directly.
     supabase.from('risk_assessments')
-      .select('id, name, activity_type, location, status, risk_rating, next_review_date, is_template')
+      .select('id, name, activity_type, location, status, risk_rating, next_review_date, review_date, manager_approved_at, approval_required, archived, is_template, created_at, updated_at')
       .eq('org_id', org.id).eq('archived', false).eq('is_template', false)
       .order('created_at', { ascending: false })
       .then(({ data }) => setRiskAssessments(data || []))
@@ -1558,7 +1574,12 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
       const registerBtn = !draft && onNavigate && <button key="reg" onClick={() => onNavigate('registers', { sessionId: done.session.id, returnTo: 'planner' })} style={isToday ? { ...flowButton, background: primary, color: '#fff', borderColor: primary } : flowButton}>{isToday ? 'Open register →' : 'View register'}</button>
       const backBtn = <button key="back" onClick={onCancel} style={!isToday || draft ? { ...flowButton, background: primary, color: '#fff', borderColor: primary } : flowButton}>Back to {terms.sessions}</button>
       return isToday ? [registerBtn, backBtn] : [backBtn, registerBtn]
-    })()}{!draft && form.risk_assessment_required && !form.pending_risk_assessment_id && onNavigate && <button onClick={() => onNavigate('risk_assessments')} style={flowButton}>Complete risk assessment</button>}</div></div></div>)
+    })()}{!draft && onNavigate && (() => {
+      const ra = riskAssessments.find(r => r.id === form.pending_risk_assessment_id)
+      if (form.risk_assessment_required && !ra) return <button onClick={() => onNavigate('risk_assessments')} style={flowButton}>Add a risk assessment</button>
+      if (ra && riskStateLabel(ra).state !== 'ready') return <button onClick={() => onNavigate('risk_assessments', { openAssessmentId: ra.id })} style={flowButton}>Finish the risk assessment</button>
+      return null
+    })()}</div></div></div>)
   }
   return screen(<div style={{ ...(compact ? { position: 'fixed', inset: 0, zIndex: 10700, height: '100dvh' } : { height: '100%', minHeight: 600 }), overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--surface2)', color: 'var(--text)' }}>
     <header style={{ padding: compact ? '12px 16px' : '20px 28px', paddingTop: compact ? 'max(12px, env(safe-area-inset-top))' : 20, borderBottom: '1px solid var(--border)', background: 'var(--surface)', flexShrink: 0 }}><div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between', marginBottom: 12 }}><h1 ref={headingRef} tabIndex={-1} style={{ fontSize: compact ? 19 : 23, margin: 0, outline: 'none' }}>{isEditing ? 'Edit' : 'New'} {terms.session}</h1><button onClick={closeWizard} disabled={saving} style={{ ...flowButton, border: 0, color: 'var(--text3)' }}>Close</button></div>
@@ -1569,7 +1590,7 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
       {stepKey === 'details' && <StepDetails form={form} setForm={setForm} staff={staff} org={org} />}
       {stepKey === 'people' && <StepPeople form={form} setForm={setForm} staff={staff} children={children} expectedCount={expectedCount} bubbleDefs={bubbleDefs} org={org} />}
       {stepKey === 'requirements' && <StepRequirements form={form} setForm={setForm} orgForms={orgForms} org={org} onFormCreated={f => setOrgForms(prev => [...prev, f])} expectedChildren={expectedChildren} />}
-      {stepKey === 'risk' && <StepRisk form={form} setForm={setForm} org={org} riskAssessments={riskAssessments} onCreated={ra => setRiskAssessments(prev => [ra, ...prev])} />}
+      {stepKey === 'risk' && <StepRisk form={form} setForm={setForm} org={org} riskAssessments={riskAssessments} authUserId={session?.user?.id} onCreated={ra => setRiskAssessments(prev => [ra, ...prev])} />}
       {stepKey === 'review' && <><div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>{STEP_DEFS.filter(s => !['review', 'type'].includes(s.key)).map(s => <button key={s.key} onClick={() => setStep(STEP_DEFS.findIndex(item => item.key === s.key) + 1)} style={{ ...flowButton, fontSize: 12 }}>Change {s.label.toLowerCase()}</button>)}</div><StepReview form={form} staff={staff} expectedCount={expectedCount} primary={primary} riskAssessments={riskAssessments} typeColor={typeColor} /></>}
     </div>{showSidebar && <LiveSummary form={form} leadName={staff.find(s => s.id === form.lead_staff_id)?.full_name} expectedCount={expectedCount} />}</div></div>
     <footer style={{ padding: compact ? '12px 16px calc(12px + env(safe-area-inset-bottom, 0px))' : '16px 28px', borderTop: '1px solid var(--border)', background: 'var(--surface)', flexShrink: 0 }}>

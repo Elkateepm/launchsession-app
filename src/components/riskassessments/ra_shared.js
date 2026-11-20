@@ -46,7 +46,8 @@ export function riskRating(score) {
 }
 
 export const RATING_STYLE = {
-  low: { bg: 'rgba(34,197,94,0.13)', color: 'var(--ok-text)', solid: '#22C55E', label: 'Low' },
+  // Text one shade darker than --ok-text: on this tint the token sat at 4.47:1.
+  low: { bg: 'rgba(34,197,94,0.13)', color: '#166534', solid: '#22C55E', label: 'Low' },
   medium: { bg: 'rgba(245,158,11,0.15)', color: 'var(--warn-text)', solid: '#F59E0B', label: 'Medium' },
   high: { bg: 'rgba(239,68,68,0.13)', color: 'var(--danger-text)', solid: '#EF4444', label: 'High' },
   critical: { bg: 'rgba(124,58,237,0.16)', color: 'var(--violet-text)', solid: '#7C3AED', label: 'Critical' },

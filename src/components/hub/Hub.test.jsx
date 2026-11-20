@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import Hub, { SessionQuickActions } from './Hub'
 import { supabase } from '../../lib/supabase'
 import { useModuleAccess } from '../../context/ModuleAccessContext'
+import { SESSION_RISK_SELECT } from '../riskassessments/SessionRiskRow'
 
 jest.mock('../../lib/supabase', () => ({ supabase: { from: jest.fn() } }))
 jest.mock('../../lib/useRealtimeTable', () => ({ useRealtimeTable: () => {} }))
@@ -34,7 +35,7 @@ test('risk assessment picker escapes the card and has no session photo upload', 
   const { container } = render(<div onClick={openCard} style={{ overflow: 'hidden', transform: 'translateY(-2px)' }}>
     <SessionQuickActions session={{ id: 'session-1', title: 'Sports' }} org={org} orgId={org.id} />
   </div>)
-  fireEvent.click(await screen.findByRole('button', { name: /Attach Risk Assessment/ }))
+  fireEvent.click(await screen.findByRole('button', { name: /Attach one/ }))
   const search = await screen.findByPlaceholderText('Search risk assessments…')
   expect(container).not.toContainElement(search)
   fireEvent.click(search)
@@ -114,16 +115,17 @@ function mockAttachment({ saved = false, error = null } = {}) {
 test('existing attachment loads using the explicit organisation relationship', async () => {
   const { select } = mockAttachment({ saved: true })
   render(<SessionQuickActions session={{ id: 's1' }} orgId={org.id} />)
-  expect(await screen.findByRole('button', { name: /Risk Assessment Attached/ })).toBeInTheDocument()
-  expect(select).toHaveBeenCalledWith('risk_assessments!ras_assessment_org_fk(id, name, risk_rating, status)')
+  // Named, with its state, rather than a bare "attached".
+  expect(await screen.findByRole('button', { name: /Risk assessment: Day trip assessment/ })).toBeInTheDocument()
+  expect(select).toHaveBeenCalledWith(SESSION_RISK_SELECT)
 })
 
 test('successful attachment updates the badge and closes the picker', async () => {
   const { insert } = mockAttachment()
   render(<SessionQuickActions session={{ id: 's1', title: 'Day trip' }} orgId={org.id} />)
-  fireEvent.click(await screen.findByRole('button', { name: /Attach Risk Assessment/ }))
+  fireEvent.click(await screen.findByRole('button', { name: /Attach one/ }))
   fireEvent.click(await screen.findByRole('button', { name: /Day trip assessment/ }))
-  expect(await screen.findByRole('button', { name: /Risk Assessment Attached/ })).toBeInTheDocument()
+  expect(await screen.findByRole('button', { name: /Risk assessment: Day trip assessment/ })).toBeInTheDocument()
   expect(screen.queryByPlaceholderText('Search risk assessments…')).not.toBeInTheDocument()
   expect(insert).toHaveBeenCalledWith('risk_assessment_sessions', { assessment_id: 'ra1', session_id: 's1', org_id: org.id })
 })
@@ -131,7 +133,7 @@ test('successful attachment updates the badge and closes the picker', async () =
 test('failed attachment keeps the picker open and shows the save error', async () => {
   mockAttachment({ error: { message: 'Permission denied' } })
   render(<SessionQuickActions session={{ id: 's1' }} orgId={org.id} />)
-  fireEvent.click(await screen.findByRole('button', { name: /Attach Risk Assessment/ }))
+  fireEvent.click(await screen.findByRole('button', { name: /Attach one/ }))
   fireEvent.click(await screen.findByRole('button', { name: /Day trip assessment/ }))
   expect(await screen.findByRole('alert')).toHaveTextContent('Permission denied')
   expect(screen.getByPlaceholderText('Search risk assessments…')).toBeInTheDocument()

@@ -18,9 +18,9 @@ export const SAFETY = {
 
 export const SAFETY_META = {
   [SAFETY.READY]:  { label: 'Ready to run', dot: '#12B76A', bg: 'var(--ok-bg)', text: 'var(--ok-text)' },
-  [SAFETY.REVIEW]: { label: 'Need review', dot: '#F79009', bg: 'var(--warn-bg)', text: 'var(--warn-text)' },
-  [SAFETY.ACTION]: { label: 'Requires action', dot: 'var(--danger-text)', bg: 'var(--danger-bg)', text: 'var(--danger-text)' },
-  [SAFETY.DRAFT]:  { label: 'Drafts',      dot: '#98A2B3', bg: 'var(--surface2)', text: 'var(--text2)' },
+  [SAFETY.REVIEW]: { label: 'Needs review', dot: '#F79009', bg: 'var(--warn-bg)', text: 'var(--warn-text)' },
+  [SAFETY.ACTION]: { label: 'Needs action', dot: 'var(--danger-text)', bg: 'var(--danger-bg)', text: 'var(--danger-text)' },
+  [SAFETY.DRAFT]:  { label: 'Draft',       dot: '#98A2B3', bg: 'var(--surface2)', text: 'var(--text2)' },
 }
 
 // Review is treated as lapsed a week before the date, not on it: an assessment
@@ -179,16 +179,35 @@ export function buildAttentionItems({ assessments = [], sessions = [], coverage 
         assessment: cover,
         severity: state === SAFETY.ACTION ? 'action' : 'review',
         title: s.title || 'Session',
-        detail: days <= 1
-          ? `Starts ${days === 0 ? 'today' : 'tomorrow'} — assessment ${SAFETY_META[state].label.toLowerCase()}`
-          : `Starts in ${days} days — assessment ${SAFETY_META[state].label.toLowerCase()}`,
+        detail: `Starts ${days === 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`} — ${COVER_PHRASE[state]}`,
         cta: state === SAFETY.DRAFT ? 'Continue Assessment' : 'Review Assessment',
         weight: -1500 + days,
       })
     }
   })
 
-  return items.sort((a, b) => a.weight - b.weight)
+  // One entry per assessment. "Day trip to the coast" used to appear twice:
+  // once as the session ("assessment needs review") and once as the
+  // assessment ("2 controls still to complete"). The session line is the one
+  // with a deadline, so the assessment's own reason folds into it.
+  const bySessionCover = new Map()
+  items.forEach(i => { if (i.session && i.assessment && !bySessionCover.has(i.assessment.id)) bySessionCover.set(i.assessment.id, i) })
+  const merged = items.filter(i => {
+    if (i.session || !i.assessment) return true
+    const host = bySessionCover.get(i.assessment.id)
+    if (!host) return true
+    host.detail = `${host.detail} · ${i.detail.charAt(0).toLowerCase()}${i.detail.slice(1)}`
+    host.weight = Math.min(host.weight, i.weight)
+    return false
+  })
+
+  return merged.sort((a, b) => a.weight - b.weight)
+}
+
+const COVER_PHRASE = {
+  [SAFETY.DRAFT]: 'assessment still a draft',
+  [SAFETY.REVIEW]: 'assessment needs review',
+  [SAFETY.ACTION]: 'assessment review overdue',
 }
 
 /**

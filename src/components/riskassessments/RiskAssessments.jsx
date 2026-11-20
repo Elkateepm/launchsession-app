@@ -5,21 +5,18 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { CountUp, glass, inputStyle, btnPrimary, btnGhost } from '../volunteers/vh_shared'
 import {
   RA_STATUSES, RA_STATUS_LABELS, ACTIVITY_TYPES, ACTIVITY_ICON,
-  riskScore, riskRating, RatingBadge, RAStatusChip, RiskMatrix, RiskGauge,
+  riskScore, riskRating, RatingBadge, RAStatusChip,
   timeAgo, daysUntil,
 } from './ra_shared'
 import { RA_TEMPLATES } from './ra_templates'
-import RAHazards from './RAHazards'
-import RAEmergencyPlan from './RAEmergencyPlan'
-import RAAttachments from './RAAttachments'
-import RALinkedSessions, { printRiskAssessment } from './RALinkedSessions'
+import { printRiskAssessment } from './RALinkedSessions'
 import RAOverview from './RAOverview'
 import HazardDrawer from './HazardDrawer'
-import { DynamicUpdateDrawer, DynamicUpdateList, EmergencyView } from './RALiveSafety'
-import { assessmentProgress, ProgressStrip, ApprovalPanel } from './RAProgress'
+import { DynamicUpdateDrawer, EmergencyView } from './RALiveSafety'
 import ReuseAssessmentDrawer from './ReuseAssessmentDrawer'
 import { buildCoverage, safetyStateOf, SAFETY_META, isArchived } from './ra_safety'
 import RAWorkspaceHeader, { RA_BUTTON } from './RAWorkspaceHeader'
+import RAWorkspace from './RAWorkspace'
 import { loadRiskOperational, readRiskQuery } from './raOverviewData'
 import { getAuthBranding } from '../auth/authBranding'
 import { brandPalette, rgba, ALPHA_SCALE } from '../../lib/brandColors'
@@ -294,7 +291,6 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
 
   if (loading || loadedOrg !== org.id) return <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-faint)' }}>Loading risk assessments…</div>
 
-  const reviewerName = (id) => staff.find(s => s.id === id)?.full_name || '—'
 
   return (
     <div style={{
@@ -342,7 +338,34 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
         />
       )}
 
-      {(selected || view === 'library') && (
+      {/* One assessment open: its own focused page. */}
+      {selected && (
+        <RAWorkspace
+          assessment={selected} hazards={selectedHazards} outstanding={selectedOutstanding} attachmentCount={selectedAttachments}
+          staff={staff} venues={venues} org={org} authSession={authSession}
+          canEdit={canEdit} isManager={isManager} tab={tab} onTab={setTab} liveRefresh={liveRefresh}
+          onBack={() => setSelected(null)}
+          onLocal={patch => setSelected(s => ({ ...s, ...patch }))}
+          onSave={(patch, action, detail) => update(selected.id, patch, action, detail)}
+          onMarkReviewed={() => markReviewed(selected)}
+          onDuplicate={() => duplicate(selected)}
+          onToggleArchive={() => update(selected.id, { archived: !selected.archived }, 'archived', selected.archived ? 'Unarchived' : 'Archived')}
+          onDownload={() => { printRiskAssessment(selected, selectedHazards, org, staff); logAudit(selected.id, 'downloaded', 'Exported PDF') }}
+          onAddHazard={() => setHazardDrawer({ open: true, hazard: null })}
+          onHazardsChanged={(score, rating) => { setSelected(s => ({ ...s, risk_score: score, risk_rating: rating })); supabase.from('risk_assessment_hazards').select('*').eq('assessment_id', selected.id).order('sort_order').then(({ data }) => setSelectedHazards(data || [])) }}
+          onDynamic={() => setDynamicOpen(true)}
+          onEmergency={() => setEmergencyOpen(true)}
+          onApprovalChanged={async () => {
+            const { data } = await supabase.from('risk_assessments').select('*').eq('id', selected.id).single()
+            if (data) setSelected(data)
+            await loadAll()
+            await loadOperational()
+          }}
+          history={<ReviewHistory assessment={selected} org={org} staff={staff} />}
+        />
+      )}
+
+      {!selected && view === 'library' && (
       <>
       {/* KPI CARDS */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, marginBottom: 18 }}>
@@ -394,7 +417,7 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
       </>
       )}
 
-      {(selected || view === 'library') && (
+      {!selected && view === 'library' && (
       <>
       {/* MAIN LAYOUT */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : selected ? '1fr 1.5fr 0.85fr' : '1.4fr 0.85fr', gap: 16, alignItems: 'start' }}>
@@ -464,180 +487,10 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
           </div>
         )}
 
-        {/* CENTER: workspace */}
-        {(!isMobile || selected) && selected && (
-          <div style={glass({ padding: 20 })}>
-            <button onClick={() => setSelected(null)} style={{ ...btnGhost, marginBottom: 12, fontSize: 12, padding: '6px 12px' }}><Icon name="←" /> Back to library</button>
-
-            <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap' }}>
-              <div style={{ width: 52, height: 52, borderRadius: 14, background: 'var(--org-a10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>{ACTIVITY_ICON[selected.activity_type] || '📋'}</div>
-              <div style={{ flex: 1, minWidth: 180 }}>
-                <input value={selected.name || ''} onChange={e => setSelected(s => ({ ...s, name: e.target.value }))} onBlur={e => update(selected.id, { name: e.target.value }, 'edited', 'Renamed')}
-                  style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', border: 'none', outline: 'none', width: '100%', background: 'transparent' }} />
-                <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{selected.activity_type || '—'}{selected.location ? ` · ${selected.location}` : ''}</div>
-              </div>
-              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                {selected.risk_rating && <RatingBadge rating={selected.risk_rating} />}
-                <select value={selected.status} onChange={e => update(selected.id, { status: e.target.value }, 'edited', `Status → ${RA_STATUS_LABELS[e.target.value]}`)} style={{ ...inputStyle, width: 'auto', fontSize: 12, padding: '5px 8px' }}>
-                  {RA_STATUSES.map(s => <option key={s} value={s}>{RA_STATUS_LABELS[s]}</option>)}
-                </select>
-              </div>
-            </div>
-
-            {/* Tabs */}
-            <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: 'var(--surface-hover)', borderRadius: 12, padding: 4, flexWrap: 'wrap' }}>
-              {[['overview', 'Overview'], ['hazards', `Hazards${selectedHazards.length ? ` (${selectedHazards.length})` : ''}`], ['matrix', 'Matrix'], ['emergency', 'Emergency'], ['attachments', 'Attachments'], ['sessions', 'Linked'], ['live', 'Live updates'], ['reviews', 'History']].map(([key, label]) => (
-                <button key={key} onClick={() => setTab(key)} style={{ flex: '1 1 auto', padding: '8px 10px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: tab === key ? 'var(--surface)' : 'transparent', color: tab === key ? '#0F172A' : 'var(--text3)', whiteSpace: 'nowrap' }}>{label}</button>
-              ))}
-            </div>
-
-            {tab === 'overview' && (
-              <div>
-                <ProgressStrip
-                  steps={assessmentProgress({
-                    assessment: selected,
-                    hazards: selectedHazards,
-                    outstandingControls: selectedOutstanding,
-                    attachmentCount: selectedAttachments,
-                  })}
-                  onJump={key => {
-                    // 'controls' lives inside the hazards tab; everything else
-                    // maps to a tab of the same name.
-                    const target = key === 'controls' ? 'hazards' : key === 'approval' ? 'overview' : key
-                    setTab(target)
-                  }}
-                />
-
-                <ApprovalPanel
-                  assessment={selected}
-                  org={org}
-                  authSession={authSession}
-                  staff={staff}
-                  isManager={isManager}
-                  onChanged={async () => {
-                    const { data } = await supabase.from('risk_assessments').select('*').eq('id', selected.id).single()
-                    if (data) setSelected(data)
-                    await loadAll()
-                    await loadOperational()
-                  }}
-                />
-
-                <div style={{ marginBottom: 14 }}>
-                  <label style={{ fontSize: 12, fontWeight: 800, color: 'var(--text3)', display: 'block', marginBottom: 6 }}>Assessment Summary</label>
-                  <textarea value={selected.summary || ''} onChange={e => setSelected(s => ({ ...s, summary: e.target.value }))} onBlur={e => update(selected.id, { summary: e.target.value })}
-                    style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 11, border: '1.5px solid rgba(15,23,42,0.1)', fontSize: 13.5, outline: 'none', resize: 'vertical', minHeight: 60, fontFamily: 'inherit' }} placeholder="Brief description of this activity and its context…" />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10, marginBottom: 14 }}>
-                  {[
-                    ['activity_type', 'Activity Type', ACTIVITY_TYPES],
-                    ['location', 'Location', null],
-                  ].map(([key, label, opts]) => (
-                    <div key={key}>
-                      <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>{label}</label>
-                      {opts ? (
-                        <select value={selected[key] || ''} onChange={e => update(selected.id, { [key]: e.target.value })} style={inputStyle}>
-                          <option value="">—</option>
-                          {opts.map(o => <option key={o} value={o}>{o}</option>)}
-                        </select>
-                      ) : (
-                        <input value={selected[key] || ''} onChange={e => setSelected(s => ({ ...s, [key]: e.target.value }))} onBlur={e => update(selected.id, { [key]: e.target.value })} style={inputStyle} />
-                      )}
-                    </div>
-                  ))}
-                  <div>
-                    <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Review due date</label>
-                    <input type="date" value={selected.next_review_date || ''} onChange={e => update(selected.id, { next_review_date: e.target.value, review_date: e.target.value })} style={inputStyle} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Assigned reviewer</label>
-                    <select value={selected.assigned_reviewer_id || ''} onChange={e => update(selected.id, { assigned_reviewer_id: e.target.value || null })} style={inputStyle}>
-                      <option value="">Unassigned</option>
-                      {staff.map(s => <option key={s.id} value={s.id}>{s.full_name}</option>)}
-                    </select>
-                  </div>
-                </div>
-                {/* Risk rating summary */}
-                <div style={{ display: 'flex', gap: 16, alignItems: 'center', background: 'var(--surface2)', borderRadius: 14, padding: 16, flexWrap: 'wrap' }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <RiskGauge score={selected.risk_score || 0} />
-                    <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)', marginTop: -6 }}>Risk Score {selected.risk_score || 0} / 25</div>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 140 }}>
-                    <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 700, marginBottom: 4 }}>Overall Rating</div>
-                    {selected.risk_rating ? <RatingBadge rating={selected.risk_rating} /> : <span style={{ fontSize: 13, color: 'var(--text-faint)' }}>Add hazards to calculate</span>}
-                    <div style={{ fontSize: 11.5, color: 'var(--text-faint)', marginTop: 8 }}>
-                      {selectedHazards.filter(h => riskRating(riskScore(h.likelihood, h.severity)) === 'high' || riskRating(riskScore(h.likelihood, h.severity)) === 'critical').length} high-risk hazard(s) · {selectedHazards.length} total
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            {tab === 'hazards' && (
-              <div style={{ marginBottom: 12 }}>
-                <button onClick={() => setHazardDrawer({ open: true, hazard: null })} style={btnPrimary(primary)}>
-                  + Add Hazard (guided)
-                </button>
-              </div>
-            )}
-            {tab === 'hazards' && <RAHazards assessment={selected} org={org} session={authSession} venues={venues} onHazardsChanged={(score, rating) => { setSelected(s => ({ ...s, risk_score: score, risk_rating: rating })); supabase.from('risk_assessment_hazards').select('*').eq('assessment_id', selected.id).order('sort_order').then(({ data }) => setSelectedHazards(data || [])) }} />}
-            {tab === 'matrix' && (
-              <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0' }}>
-                <RiskMatrix hazards={selectedHazards} />
-              </div>
-            )}
-            {tab === 'emergency' && <RAEmergencyPlan assessment={selected} org={org} venues={venues} />}
-            {tab === 'attachments' && <RAAttachments assessment={selected} org={org} session={authSession} />}
-            {tab === 'sessions' && <RALinkedSessions assessment={selected} org={org} session={authSession} />}
-            {tab === 'live' && (
-              <div>
-                <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-                  <button onClick={() => setDynamicOpen(true)} style={btnPrimary(primary)}>
-                    + Dynamic Risk Update
-                  </button>
-                  <button onClick={() => setEmergencyOpen(true)} style={btnGhost}>
-                    🚨 Emergency View
-                  </button>
-                </div>
-                <DynamicUpdateList
-                  assessment={selected} org={org} staff={staff} refreshKey={liveRefresh}
-                />
-              </div>
-            )}
-            {tab === 'reviews' && <ReviewHistory assessment={selected} org={org} staff={staff} />}
-          </div>
-        )}
-
         {/* RIGHT: sticky panel */}
         {!isMobile && (
           <div style={{ position: 'sticky', top: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {selected ? (
-              <>
-                <div style={glass({ padding: 18 })}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Quick Actions</div>
-                  {[
-                    ['📄 Download PDF', () => { printRiskAssessment(selected, selectedHazards, org, staff); logAudit(selected.id, 'downloaded', 'Exported PDF') }],
-                    ['📋 Duplicate', () => duplicate(selected)],
-                    ['✅ Mark Reviewed', () => markReviewed(selected)],
-                    ['📎 Attach to Session', () => setTab('sessions')],
-                  ].map(([label, fn]) => (
-                    <button key={label} onClick={fn} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 4px', border: 'none', borderTop: '1px solid rgba(15,23,42,0.05)', background: 'none', fontSize: 12.5, fontWeight: 700, color: 'var(--text2)', cursor: 'pointer' }}>{label}</button>
-                  ))}
-                </div>
-                <div style={glass({ padding: 18 })}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>Details</div>
-                  {selected.venue_id && (() => {
-                    const v = venues.find(x => x.id === selected.venue_id)
-                    return v ? (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12 }}><span style={{ color: 'var(--text3)' }}>Venue</span><span style={{ fontWeight: 700 }}><Icon name="📍" /> {v.name}</span></div>
-                    ) : null
-                  })()}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12 }}><span style={{ color: 'var(--text3)' }}>Created by</span><span style={{ fontWeight: 700 }}>{reviewerName(selected.created_by)}</span></div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12 }}><span style={{ color: 'var(--text3)' }}>Reviewer</span><span style={{ fontWeight: 700 }}>{reviewerName(selected.assigned_reviewer_id)}</span></div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12 }}><span style={{ color: 'var(--text3)' }}>Last reviewed</span><span style={{ fontWeight: 700 }}>{selected.last_reviewed_at ? new Date(selected.last_reviewed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}</span></div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12 }}><span style={{ color: 'var(--text3)' }}>Next review</span><span style={{ fontWeight: 700 }}>{selected.next_review_date ? new Date(selected.next_review_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}</span></div>
-                </div>
-              </>
-            ) : (
+            {(
               <>
                 <div style={glass({ padding: 18 })}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>Risk by Category</div>

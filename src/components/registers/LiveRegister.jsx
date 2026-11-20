@@ -19,6 +19,7 @@ import RegisterTeam from './RegisterTeam'
 import { allergyLabel } from '../../lib/allergyLabel'
 import { medicalFlag } from '../../lib/medicalFlag'
 import { useScrollFade } from '../../hooks/useScrollFade'
+import SessionRiskRow from '../riskassessments/SessionRiskRow'
 
 const COLLECTION_TYPES = [
   { key: 'approved_adult', label: 'Approved adult' },
@@ -395,6 +396,12 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
         <MiniStat icon="⏳" compact={isMobile} label="Expected" value={grouped.expected.length} color={ON_BAND.muted} />
         <MiniStat icon="✕" compact={isMobile} label="Absent" value={grouped.absent.length} color={ON_BAND.absent} />
         <MiniStat icon="✓" compact={isMobile} label="Signed out" value={grouped.signed_out.length} color={ON_BAND.open} />
+      </div>
+      {/* The risk assessment for this session, with the emergency
+          information one tap away -- where it is needed if something
+          happens mid-session. */}
+      <div style={{ marginTop: isMobile ? 10 : 12, maxWidth: isMobile ? undefined : 460 }}>
+        <SessionRiskRow session={session} orgId={org?.id} org={org} onNavigate={onNavigate} compact={isMobile} />
       </div>
       {ratioBreached && (
         <div style={{ marginTop: 12, background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 12, padding: '10px 13px', fontSize: 12, fontWeight: 700, color: 'var(--danger-text)', display: 'flex', alignItems: 'center', gap: 8 }}>

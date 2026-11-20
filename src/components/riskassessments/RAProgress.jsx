@@ -119,7 +119,7 @@ export function ProgressStrip({ steps, onJump }) {
  * "we looked and nothing had changed" is a decision someone made, and the
  * record should show who and when.
  */
-export function ApprovalPanel({ assessment, org, authSession, staff = [], isManager, onChanged }) {
+export function ApprovalPanel({ assessment, org, authSession, staff = [], isManager, onChanged, ctx }) {
   const isMobile = useIsMobile()
   const [busy, setBusy] = useState(false)
   const [reviewing, setReviewing] = useState(false)
@@ -127,7 +127,7 @@ export function ApprovalPanel({ assessment, org, authSession, staff = [], isMana
 
   const primary = org?.primary_color || '#7C5CFC'
   const approved = !!assessment.manager_approved_at
-  const state = safetyStateOf(assessment)
+  const state = safetyStateOf(assessment, ctx)
   const meta = SAFETY_META[state]
 
   const nameOf = id => staff.find(s => s.id === id)?.full_name || 'A manager'
@@ -260,7 +260,7 @@ export function ApprovalPanel({ assessment, org, authSession, staff = [], isMana
 
           {approved && isManager && (
             <button onClick={() => setReviewing(true)} style={{
-              padding: '10px 18px', borderRadius: 11, border: '1px solid #ECE9F5',
+              minHeight: 44, padding: '10px 18px', borderRadius: 11, border: '1px solid #ECE9F5',
               background: 'var(--surface)', color: 'var(--text)', fontSize: 13.5, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
             }}>Start review</button>
