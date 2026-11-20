@@ -300,7 +300,11 @@ export default function RiskAssessments({ org, session: authSession, initialOpen
       '--org-soft': palette.soft, '--org-border': palette.border,
       ...Object.fromEntries(Object.entries(ALPHA_SCALE).map(([key, value]) => [`--org-${key}`, rgba(brand.primary, value)])),
       '--font': brand.font.body, '--font-display': brand.font.display, fontFamily: brand.font.body,
-      minHeight: '100%', maxWidth: 1500, margin: '0 auto', boxSizing: 'border-box', padding: isMobile ? '16px 12px 80px' : '22px 24px 36px',
+      // Full width. The dashboard renders pages inside a flex column, where an
+      // auto-margined box with only a max-width shrinks to fit its content:
+      // this page sat in a ~900px column in the middle of a wide screen, and on
+      // a phone an open assessment scrolled sideways.
+      minHeight: '100%', width: '100%', minWidth: 0, boxSizing: 'border-box', padding: isMobile ? '16px 12px 80px' : '22px 24px 36px',
     }}>
       <RAWorkspaceHeader brand={brand} mobile={isMobile} compact={!!selected} canCreate={canEdit}
         onCreate={() => setShowCreate(true)} onReuse={() => setReuseFor({})} onTemplates={() => setShowTemplates(true)} />
