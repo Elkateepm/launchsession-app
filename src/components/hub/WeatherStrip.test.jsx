@@ -59,8 +59,20 @@ describe('when there is no week to show', () => {
     expect(() => setup({ days: undefined })).not.toThrow()
   })
 
-  it('says what to do when the org has no city set', () => {
-    render(<WeatherStrip weatherError icon="🌡️" label="" primary="#1B9AAA" />)
-    expect(screen.getByText(/add a city in Settings/i)).toBeInTheDocument()
+  it('offers an admin the setting when the org has no town set', () => {
+    const onSetup = jest.fn()
+    render(<WeatherStrip weatherError icon="🌡️" label="" primary="#1B9AAA" onSetup={onSetup} />)
+    screen.getByRole('button', { name: /Add your town in Settings/i }).click()
+    expect(onSetup).toHaveBeenCalled()
+  })
+
+  it('shows staff nothing at all when there is no weather, rather than a failure card', () => {
+    const { container } = render(<WeatherStrip weatherError icon="🌡️" label="" primary="#1B9AAA" />)
+    expect(container).toBeEmptyDOMElement()
+  })
+
+  it('shows nothing while the forecast loads', () => {
+    const { container } = render(<WeatherStrip icon="" label="" primary="#1B9AAA" />)
+    expect(container).toBeEmptyDOMElement()
   })
 })

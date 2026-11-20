@@ -48,12 +48,38 @@ test('Home renders one week-ahead list and routes its actions without the old fi
   render(<Hub org={org} userProfile={{ role: 'admin' }} onNavigate={onNavigate} />)
   await screen.findByRole('region', { name: 'Daily command centre' })
   expect(screen.getAllByText('Week ahead')).toHaveLength(1)
-  expect(screen.getByText('Impact snapshot · this month')).toBeInTheDocument()
   expect(screen.queryByText(/Keep making an impact/)).not.toBeInTheDocument()
   fireEvent.click(screen.getByText('View current and past registers →'))
   expect(onNavigate).toHaveBeenCalledWith('registers', undefined)
-  fireEvent.click(screen.getAllByText('Explore reports →')[0])
-  expect(onNavigate).toHaveBeenCalledWith('reports', undefined)
+  fireEvent.click(screen.getByText('Calendar →'))
+  expect(onNavigate).toHaveBeenCalledWith('calendar', undefined)
+})
+
+test('on day one Home leaves out the panels that would only show zeros', async () => {
+  render(<Hub org={org} userProfile={{ role: 'admin' }} onNavigate={jest.fn()} />)
+  await screen.findByRole('region', { name: 'Daily command centre' })
+  expect(screen.queryByText('Impact snapshot · this month')).not.toBeInTheDocument()
+  expect(screen.queryByText('What are we learning?')).not.toBeInTheDocument()
+  expect(screen.queryByRole('list', { name: 'Today at a glance' })).not.toBeInTheDocument()
+  // Nothing on today: the hero offers "Plan a session", so Quick actions does not repeat it.
+  expect(screen.queryByRole('button', { name: /^New session$/ })).not.toBeInTheDocument()
+  // And no "weather unavailable" card for a club that has not set a town.
+  expect(screen.queryByText(/Weather unavailable/)).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /Add your town in Settings/ })).toBeInTheDocument()
+})
+
+test('once sessions have run this month, impact and learning appear', async () => {
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date())
+  const earlier = `${today.slice(0, 7)}-01` < today ? `${today.slice(0, 7)}-01` : today
+  const delivered = { id: 'd1', org_id: org.id, title: 'Football', session_date: earlier, start_time: '10:00:00', end_time: '11:00:00', closed_at: `${earlier}T11:00:00Z`, status: 'completed' }
+  supabase.from.mockImplementation(table => {
+    const query = { then: resolve => Promise.resolve({ data: table === 'sessions' ? [delivered] : [], error: null }).then(resolve) }
+    for (const method of ['select', 'eq', 'order', 'is', 'in', 'not', 'limit', 'gte', 'lte', 'single']) query[method] = () => query
+    return query
+  })
+  render(<Hub org={org} userProfile={{ role: 'admin' }} onNavigate={jest.fn()} />)
+  expect(await screen.findByText('Impact snapshot · this month')).toBeInTheDocument()
+  expect(screen.getByText('What are we learning?')).toBeInTheDocument()
 })
 
 test('restricted staff do not see report widgets or creation shortcuts', async () => {
