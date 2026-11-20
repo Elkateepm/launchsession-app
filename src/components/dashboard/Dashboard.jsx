@@ -62,6 +62,8 @@ import SignedImg from '../shared/SignedImg'
 import Icon from '../../lib/icons'
 import { withAlpha } from '../../lib/withAlpha'
 import { todayInLondon } from '../../lib/today'
+import InstallAppPrompt, { StatusBarStrip } from '../shared/InstallAppPrompt'
+import { orgBrand } from '../shared/OrgPageHero'
 
 // Shown wherever the org logo would go, whenever the org hasn't set one (or has removed one)
 const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
@@ -848,6 +850,11 @@ export default function Dashboard({ session, org }) {
 
   return (
     <div style={{ display: 'flex', height: '100dvh', background: 'var(--bg)', overflow: 'hidden' }}>
+      {/* Installed on an iPhone, the white status bar text needs a dark
+          strip behind it; on a phone in the browser, offer installing so it
+          opens full screen next time. */}
+      <StatusBarStrip color={orgBrand(org).base} />
+      {isMobileBottomNav && <InstallAppPrompt org={org} />}
 
       {/* Not rendered over Settings: that is where the plan is chosen, and a
           wall covering the way out of it would be a trap. */}

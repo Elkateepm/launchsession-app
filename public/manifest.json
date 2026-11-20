@@ -24,7 +24,9 @@
       "purpose": "any maskable"
     }
   ],
-  "start_url": ".",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "display_override": ["fullscreen", "standalone", "minimal-ui", "browser"],
   "theme_color": "#06091A",

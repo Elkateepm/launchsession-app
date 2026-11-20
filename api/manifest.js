@@ -42,7 +42,11 @@ export default async function handler(req, res) {
       { src: icon, sizes: '192x192', type: 'image/png' },
       { src: icon, sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
     ],
+    // Each organisation's app is its own install, and the whole site is in
+    // scope, so moving between pages never drops back into the browser.
+    id: slug ? `/?org=${encodeURIComponent(slug)}` : '/',
     start_url: slug ? `/?org=${encodeURIComponent(slug)}` : '/',
+    scope: '/',
     display: 'standalone',
     display_override: ['fullscreen', 'standalone', 'minimal-ui', 'browser'],
     theme_color: themeColor,

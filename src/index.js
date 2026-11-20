@@ -4,6 +4,9 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { registerServiceWorker } from './services/pushNotifications';
+// Listen for Android's one-shot install offer from the first moment, before
+// anyone has signed in; the prompt card asks for it later.
+import './lib/installPrompt';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
