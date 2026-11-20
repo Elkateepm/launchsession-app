@@ -69,7 +69,7 @@ export default function RAWorkspace({
   const tabCount = { hazards: hazards.length || null }
 
   return (
-    <div style={{ maxWidth: 980, margin: '0 auto' }}>
+    <div style={{ width: '100%', minWidth: 0 }}>
       {/* Back, and the occasional actions */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>
         <button type="button" onClick={onBack} style={{ ...RA_BUTTON, background: 'transparent' }}><Icon name="←" />All assessments</button>
