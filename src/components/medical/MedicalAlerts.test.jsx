@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import MedicalAlerts from './MedicalAlerts'
 
 // Modelled on the real Solidarity Sports data: an anaphylaxis-risk allergy that
@@ -44,53 +44,70 @@ const org = { id: 'o1', name: 'Solidarity Sports', primary_color: '#1B9AAA' }
 const setup = () => render(<MedicalAlerts org={org} session={{ user: { id: 'u1' } }} onNavigate={() => {}} />)
 
 // The page opens on Today, where Ethan is signed in. Waiting for him means the
-// data has arrived -- before that the counts are all zero, and a stat with a
-// count of zero is deliberately not a button.
-const ready = () => screen.findByText('Ethan Clarke')
-const statFor = (label) => screen.getByText(label).closest('button')
+// data has arrived -- before that every count is zero, and a level with
+// nobody in it is deliberately not a button.
+const ready = () => screen.findByRole('article', { name: 'Ethan Clarke' })
+const level = (name) => screen.getByRole('button', { name: new RegExp(`^${name}:`) })
+const card = (name) => screen.queryByRole('article', { name })
 
-describe('following the immediate response number', () => {
+describe('the immediate response level', () => {
   it('counts the ones with an emergency protocol behind them', async () => {
     setup()
     await ready()
+    fireEvent.click(screen.getByRole('button', { name: /^All young people/ }))
     // Ethan (nut allergy, read from the text) and Kezia (asthma, diabetes).
-    expect(statFor('Immediate response')).toHaveTextContent('2')
+    await waitFor(() => expect(level('Immediate response')).toHaveAccessibleName(/Immediate response: 2/))
   })
 
-  it('shows exactly those children when the number is clicked', async () => {
+  it('narrows the list to exactly those children when tapped', async () => {
     setup()
     await ready()
-    fireEvent.click(statFor('Immediate response'))
+    fireEvent.click(screen.getByRole('button', { name: /^All young people/ }))
+    await waitFor(() => expect(card('Aaliyah Baptiste')).toBeInTheDocument())
+    fireEvent.click(level('Immediate response'))
+    await waitFor(() => expect(card('Aaliyah Baptiste')).not.toBeInTheDocument())
+    expect(card('Ethan Clarke')).toBeInTheDocument()
+    expect(card('Kezia Asante')).toBeInTheDocument()
+    expect(card('Quiet Child')).not.toBeInTheDocument()
+    // Tapping it again shows everyone.
+    fireEvent.click(level('Immediate response'))
+    await waitFor(() => expect(card('Aaliyah Baptiste')).toBeInTheDocument())
+  })
+})
 
-    await waitFor(() => expect(screen.getByText('Ethan Clarke')).toBeInTheDocument())
-    expect(screen.getByText('Kezia Asante')).toBeInTheDocument()
-    // And nobody else.
-    expect(screen.queryByText('Aaliyah Baptiste')).not.toBeInTheDocument()
-    expect(screen.queryByText('Quiet Child')).not.toBeInTheDocument()
+describe('the page', () => {
+  it('opens on today, grouped by urgency', async () => {
+    setup()
+    await ready()
+    expect(screen.getByRole('region', { name: 'Immediate response' })).toContainElement(card('Ethan Clarke'))
+    expect(screen.getByRole('region', { name: 'Worth knowing' })).toContainElement(card('Quiet Child'))
+    // Not on today's register.
+    expect(card('Kezia Asante')).not.toBeInTheDocument()
   })
 
   it('never lists a child whose only entry was a placeholder', async () => {
     setup()
     await ready()
-    fireEvent.click(screen.getByRole('button', { name: /All young people/i }))
-    await waitFor(() => expect(screen.getByText('Aaliyah Baptiste')).toBeInTheDocument())
-    expect(screen.queryByText('Nothing Recorded')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /^All young people/ }))
+    await waitFor(() => expect(card('Aaliyah Baptiste')).toBeInTheDocument())
+    expect(card('Nothing Recorded')).not.toBeInTheDocument()
   })
 
-  it('offers a way back to everyone', async () => {
+  it('filters by condition', async () => {
     setup()
     await ready()
-    fireEvent.click(statFor('Immediate response'))
-    await waitFor(() => expect(screen.queryByText('Aaliyah Baptiste')).not.toBeInTheDocument())
-    fireEvent.click(screen.getByRole('button', { name: /All young people/i }))
-    await waitFor(() => expect(screen.getByText('Aaliyah Baptiste')).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: /^All young people/ }))
+    await waitFor(() => expect(card('Aaliyah Baptiste')).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: /^Asthma/ }))
+    await waitFor(() => expect(card('Ethan Clarke')).not.toBeInTheDocument())
+    expect(card('Kezia Asante')).toBeInTheDocument()
   })
 
-  it('reaches the same list from the banner on Today', async () => {
+  it('signs off from the card and says so', async () => {
     setup()
     await ready()
-    // Ethan is on today's register and needs an immediate response.
-    fireEvent.click(screen.getByText(/immediate response plan/i).closest('button'))
-    await waitFor(() => expect(screen.getByText('Kezia Asante')).toBeInTheDocument())
+    fireEvent.click(within(card('Ethan Clarke')).getByRole('button', { name: 'Sign off' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Confirm sign-off' }))
+    expect(await screen.findByRole('status')).toHaveTextContent('Signed off: Ethan Clarke')
   })
 })
