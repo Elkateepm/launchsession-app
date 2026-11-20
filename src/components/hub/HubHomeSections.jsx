@@ -1,5 +1,6 @@
 import React from 'react'
 import Icon from '../../lib/icons'
+import { withAlpha } from '../../lib/withAlpha'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Home page building blocks.
@@ -35,13 +36,26 @@ export const hubHomeKeyframes = `
 .ls-pop{animation:lsPop .5s cubic-bezier(.22,1,.36,1) .25s both}
 @keyframes lsFill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .ls-fill{transform-origin:left center;animation:lsFill .9s cubic-bezier(.22,1,.36,1) .2s both}
-.ls-act:focus-visible,.ls-q:focus-visible,.ls-stat:focus-visible,.ls-pill:focus-visible,.ls-row:focus-visible{outline:3px solid var(--org-primary,#1B9AAA)!important;outline-offset:3px}
+.ls-act:focus-visible,.ls-q:focus-visible,.ls-stat:focus-visible,.ls-pill:focus-visible,.ls-row:focus-visible,.ls-day:focus-visible{outline:3px solid var(--org-primary,#1B9AAA)!important;outline-offset:3px}
+.ls-day:hover{transform:translateY(-3px);box-shadow:0 10px 22px -12px rgba(20,26,46,.35)}
+@keyframes lsTodayPulse{0%,100%{box-shadow:0 0 0 0 rgba(79,70,229,.45)}50%{box-shadow:0 0 0 7px rgba(79,70,229,0)}}
+.ls-today-pulse{animation:lsRise .55s cubic-bezier(.22,1,.36,1) forwards,lsTodayPulse 2.6s ease-in-out .8s infinite}
+@keyframes lsBarGrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+.ls-bar{transform-origin:bottom;animation:lsBarGrow .8s cubic-bezier(.22,1,.36,1) both}
+@keyframes lsTick{from{transform:translateY(-45%);opacity:0}to{transform:none;opacity:1}}
+.ls-tick{display:inline-block;animation:lsTick .35s ease both}
+@keyframes lsFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.ls-float{animation:lsFloat 3.2s ease-in-out infinite}
+@keyframes lsWiggle{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-12deg)}90%{transform:rotate(10deg)}95%{transform:rotate(-6deg)}}
+.ls-wiggle{animation:lsWiggle 3s ease-in-out infinite}
 @media (prefers-reduced-motion: reduce){
   .ls-rise{opacity:1;transform:none;animation:none}
   .ls-act:hover,.ls-q:hover,.ls-stat:hover,.ls-row:hover{transform:none}
   .ls-q:active,.ls-act:active,.ls-pill:active,.ls-row:active{transform:none}
   .ls-q:hover .ls-q-ico{transform:none}
-  .ls-pop,.ls-fill{animation:none}
+  .ls-pop,.ls-fill,.ls-bar,.ls-tick,.ls-float,.ls-wiggle{animation:none}
+  .ls-today-pulse{animation:none;opacity:1;transform:none}
+  .ls-day:hover{transform:none}
   [style*="lsWave"]{animation:none!important}
 }
 `
@@ -394,7 +408,7 @@ export function QuickJump({ actions, isMobile, primary, wide = false }) {
           type="button"
           className="ls-q ls-rise"
           onClick={a.onClick}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--org-a35)'; e.currentTarget.style.background = 'var(--org-a05)' }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = a.hue ? withAlpha(a.hue, '66') : 'var(--org-a35)'; e.currentTarget.style.background = a.hue ? withAlpha(a.hue, '0d') : 'var(--org-a05)' }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border, #E6EAF4)'; e.currentTarget.style.background = 'var(--surface, #fff)' }}
           style={{
             animationDelay: `${120 + i * 45}ms`,
@@ -404,7 +418,7 @@ export function QuickJump({ actions, isMobile, primary, wide = false }) {
             transition: 'transform .2s ease, border-color .2s ease, background .2s ease',
           }}
         >
-          <span className="ls-q-ico" aria-hidden="true" style={{ width: 40, height: 40, borderRadius: 12, display: 'grid', placeItems: 'center', fontSize: 19, background: a.tone === 'alert' ? 'var(--danger-bg, #FEE2E2)' : 'var(--org-a10)', color: a.tone === 'alert' ? 'var(--danger-text, #B91C1C)' : 'var(--org-ink)', transition: 'transform .2s ease' }}><Icon name={a.icon} /></span>
+          <span className="ls-q-ico" aria-hidden="true" style={{ width: 40, height: 40, borderRadius: 12, display: 'grid', placeItems: 'center', fontSize: 19, background: a.tone === 'alert' ? 'var(--danger-bg, #FEE2E2)' : a.hue ? `linear-gradient(135deg, ${withAlpha(a.hue, '24')}, ${withAlpha(a.hue, '10')})` : 'var(--org-a10)', color: a.tone === 'alert' ? 'var(--danger-text, #B91C1C)' : a.hue || 'var(--org-ink)', transition: 'transform .2s ease' }}><Icon name={a.icon} /></span>
           <span style={{ fontSize: 12, fontWeight: 750, lineHeight: 1.25, color: 'var(--text, #141A2E)' }}>{a.label}</span>
         </button>
       ))}

@@ -26,6 +26,8 @@ import { todayOverview, monthReflectionCount } from './homeOverview'
 import GettingStarted from './GettingStarted'
 import { DaySpine, ActionRow, AllClear, GlanceStats, QuickJump, LearningBrief, WeatherStrip, HeroStats, hubHomeKeyframes } from './HubHomeSections'
 import { RiskRow, useSessionRisk } from '../riskassessments/SessionRiskRow'
+import { WeekStrip, NextUpCard, BirthdaysCard, ComingUpCard, ArrivalsCard } from './HomeWidgets'
+import { weekStrip, birthdaysSoon, comingUp, weeklyArrivals } from './homeWidgetData'
 import { monthAttendance as calcMonthAttendance, reachedThisMonth as calcReachedThisMonth } from './glanceStats'
 import { useTerms } from '../../context/OrgContext'
 import SignedImg from '../shared/SignedImg'
@@ -3024,17 +3026,17 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
     const heroHasPlan = todaySessions.length === 0 && canEdit('planner')
     const heroHasReports = !todayHasLiveSession
     const list = []
-    if (hasModule('registers') && !heroHasRegister) list.push({ key: 'register', icon: 'registers', label: 'Registers', onClick: () => go('registers') })
-    if (canEdit('planner') && !heroHasPlan) list.push({ key: 'session', icon: 'add', label: `New ${terms.session}`, onClick: () => go('planner', { autoOpenWizard: true }) })
-    if (canEdit('people')) list.push({ key: 'child', icon: 'addChild', label: `Add ${terms.person}`, onClick: () => setAddPersonWay('choose') })
-    if (canEdit('risk_assessments')) list.push({ key: 'risk', icon: '🛡️', label: 'Risk assessments', onClick: () => go('risk_assessments') })
-    if (canEdit('messaging')) list.push({ key: 'message', icon: 'messaging', label: 'Send a message', onClick: () => go('messaging') })
-    if (canEdit('forms')) list.push({ key: 'forms', icon: 'forms', label: 'Send a form', onClick: () => go('forms') })
-    if (hasModule('planner') || hasModule('calendar')) list.push({ key: 'calendar', icon: 'calendar', label: 'Calendar', onClick: () => go('calendar') })
+    if (hasModule('registers') && !heroHasRegister) list.push({ key: 'register', icon: 'registers', hue: '#0F766E', label: 'Registers', onClick: () => go('registers') })
+    if (canEdit('planner') && !heroHasPlan) list.push({ key: 'session', icon: 'add', hue: '#2563EB', label: `New ${terms.session}`, onClick: () => go('planner', { autoOpenWizard: true }) })
+    if (canEdit('people')) list.push({ key: 'child', icon: 'addChild', hue: '#7C3AED', label: `Add ${terms.person}`, onClick: () => setAddPersonWay('choose') })
+    if (canEdit('risk_assessments')) list.push({ key: 'risk', icon: '🛡️', hue: '#BE123C', label: 'Risk assessments', onClick: () => go('risk_assessments') })
+    if (canEdit('messaging')) list.push({ key: 'message', icon: 'messaging', hue: '#0369A1', label: 'Send a message', onClick: () => go('messaging') })
+    if (canEdit('forms')) list.push({ key: 'forms', icon: 'forms', hue: '#B45309', label: 'Send a form', onClick: () => go('forms') })
+    if (hasModule('planner') || hasModule('calendar')) list.push({ key: 'calendar', icon: 'calendar', hue: '#4338CA', label: 'Calendar', onClick: () => go('calendar') })
     if (hasModule('safeguarding') && !heroHasReports) list.push({ key: 'concern', icon: '🚨', label: 'Report a concern', tone: 'alert', onClick: () => raiseConcern(null) })
     // The accident book lives in the Safeguarding Hub, three clicks from Home.
     // Asked for on the spot by an inspector or a parent, it should be one.
-    if (hasModule('safeguarding')) list.push({ key: 'accident_book', icon: '🩹', label: 'Accident book', onClick: openAccidentBook })
+    if (hasModule('safeguarding')) list.push({ key: 'accident_book', icon: '🩹', hue: '#C2410C', label: 'Accident book', onClick: openAccidentBook })
     return list
   })();
 
@@ -3085,6 +3087,12 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
   const [todaySessionsView, setTodaySessionsView] = useState('active')
   const [attendanceBreakdownSession, setAttendanceBreakdownSession] = useState(null)
   const [timeBreakdownSession, setTimeBreakdownSession] = useState(null)
+  // Home's widgets, worked out from what is already loaded above. Hooks, so
+  // they stay above the early return below.
+  const widgetWeek = useMemo(() => weekStrip(sessions, today), [sessions, today]);
+  const widgetBirthdays = useMemo(() => hasModule('people') ? birthdaysSoon(children, today) : [], [children, today]); // eslint-disable-line react-hooks/exhaustive-deps
+  const widgetComingUp = useMemo(() => comingUp(today), [today]);
+  const widgetArrivals = useMemo(() => hasModule('registers') ? weeklyArrivals(attendance, sessions, today) : [], [attendance, sessions, today]); // eslint-disable-line react-hooks/exhaustive-deps
   if (loading) return <div style={styles.page}><div style={styles.loading}>Loading...</div></div>;
 
   const dayOverview = todayOverview(sessions, attendance, sessionStaffList, today);
@@ -3990,6 +3998,30 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
             return <ActionRow items={items} isMobile={isMobile} />
           })()}
         </div>
+        {/* Widgets: the week at a glance, the next session counting down,
+            what is worth planning for, birthdays and arrivals. Each one opens
+            the page that deals with it. */}
+        <div {...rise(1)} style={{ ...rise(1).style, gridColumn: '1 / -1', minWidth: 0 }}>
+          <WeekStrip days={widgetWeek} terms={terms} isMobile={isMobile} onPick={date => go('calendar', { date })} />
+        </div>
+        <div {...rise(2)} style={{ ...rise(2).style, minWidth: 0 }}>
+          <NextUpCard org={org} sessions={sessions} attendance={attendance} terms={terms}
+            after={strictlyTodaySessions.length ? today : undefined}
+            canPlan={canEdit('planner')} hasRegisters={hasModule('registers')}
+            onViewPlan={s => go('planner', { viewSessionId: s.id })}
+            onOpenRegister={s => openRegisterForSession(s.id)}
+            onPlan={() => go('planner', { autoOpenWizard: true })}
+            onAttachRisk={canEdit('planner') ? s => go('planner', { editSessionId: s.id }) : null} />
+        </div>
+        <div {...rise(3)} style={{ ...rise(3).style, minWidth: 0 }}>
+          <ComingUpCard data={widgetComingUp} terms={terms} today={today} canPlan={canEdit('planner')} onPlan={date => go('planner', { autoOpenWizard: true, planDate: date })} />
+        </div>
+        {widgetBirthdays.length > 0 && <div {...rise(4)} style={{ ...rise(4).style, minWidth: 0 }}>
+          <BirthdaysCard items={widgetBirthdays} terms={terms} onOpen={() => go('children')} />
+        </div>}
+        {widgetArrivals.some(w => w.count) && <div {...rise(4)} style={{ ...rise(4).style, minWidth: 0 }}>
+          <ArrivalsCard weeks={widgetArrivals} terms={terms} onOpen={hasModule('reports') ? () => go('reports') : null} />
+        </div>}
         {quickJumpActions.length > 0 && <div {...rise(1)} style={{ ...rise(1).style, minWidth: 0 }}>
           <Panel title="Quick actions"><QuickJump isMobile={isMobile} primary={primary} actions={quickJumpActions} wide /></Panel>
         </div>}
