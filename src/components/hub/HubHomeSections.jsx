@@ -388,7 +388,9 @@ function GlanceStatTile({ value, suffix, label, bg, colour, trend, onClick }) {
       style={{ borderRadius: 15, padding: '14px 15px', position: 'relative', overflow: 'hidden', cursor: 'pointer', transition: 'transform .2s ease', background: bg, color: colour, minWidth: 0, outline: 'none' }}
     >
       <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1, fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-display, sans-serif)', position: 'relative' }}>{n}{suffix || ''}</div>
-      <div style={{ fontSize: 11, fontWeight: 700, marginTop: 6, opacity: 0.78, position: 'relative' }}>{label}</div>
+      {/* The number carries the colour; the label is plain text so it reads
+          (at 78% of the tile colour it fell to about 3:1). */}
+      <div style={{ fontSize: 11, fontWeight: 700, marginTop: 6, color: 'var(--text2)', position: 'relative' }}>{label}</div>
       <Sparkline points={trend} colour={colour} />
     </div>
   )
