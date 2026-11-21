@@ -129,8 +129,8 @@ export default function ChildFileSheet({
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8, marginBottom: 6 }}>
-        <button type="button" onClick={() => onReport && onReport(child)} style={{ ...flowButton, border: 'none', background: SG_RED, color: '#fff', fontWeight: 850, gridColumn: mobile ? '1 / -1' : undefined }}>
+      <div style={mobile ? { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 6 } : { display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 6 }}>
+        <button type="button" onClick={() => onReport && onReport(child)} style={{ ...flowButton, border: 'none', background: SG_RED, color: '#fff', fontWeight: 850, whiteSpace: 'nowrap', gridColumn: mobile ? '1 / -1' : undefined }}>
           <Icon name="🛡️" /> Report a concern
         </button>
         <button type="button" onClick={() => onCheckIn && onCheckIn(child)} style={flowButton}><Icon name="💬" /> Check-in</button>

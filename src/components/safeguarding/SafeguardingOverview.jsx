@@ -45,11 +45,11 @@ function FlowStrip({ flow, onFlow, mobile }) {
         <h2 id="sg-flow-head" style={cardHead}>From concern to case</h2>
         <span style={{ fontSize: 12.5, color: 'var(--text2)' }}>Where every open concern is right now</span>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr 1fr' : '1fr auto 1fr auto 1fr auto 1fr', gap: mobile ? 8 : 6, alignItems: 'center' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr 1fr' : '1fr auto 1fr auto 1fr auto 1fr', gap: mobile ? 8 : 6, alignItems: 'stretch' }}>
         {STEPS.map((s, i) => (
           <React.Fragment key={s.key}>
             <FlowStep step={s} value={flow[s.key]} index={i} mobile={mobile} onClick={() => onFlow(s.key)} />
-            {!mobile && i < STEPS.length - 1 && <span aria-hidden="true" style={{ color: 'var(--text3)', fontSize: 16 }}><Icon name="→" /></span>}
+            {!mobile && i < STEPS.length - 1 && <span aria-hidden="true" style={{ color: 'var(--text3)', fontSize: 16, alignSelf: 'center' }}><Icon name="→" /></span>}
           </React.Fragment>
         ))}
       </div>
@@ -85,7 +85,7 @@ function ChildrenToWatch({ children, signals, onOpenChild, onSeeAll, mobile }) {
           <h2 id="sg-watch-head" style={cardHead}>Children to keep an eye on</h2>
           <div style={{ fontSize: 12.5, color: 'var(--text2)', marginTop: 2 }}>Open concerns or cases, low moods and injuries, most first</div>
         </div>
-        <button type="button" onClick={onSeeAll} style={{ ...quietBtn, border: 'none', color: 'var(--danger-text)', padding: '0 6px' }}>All children</button>
+        <button type="button" onClick={onSeeAll} style={{ ...quietBtn, border: 'none', color: 'var(--danger-text)', padding: '0 6px', whiteSpace: 'nowrap', flexShrink: 0 }}>All children</button>
       </div>
       {watch.length === 0 ? (
         <div style={{ padding: '14px', borderRadius: 14, background: 'var(--ok-bg)', color: 'var(--ok-text)', fontSize: 13.5, fontWeight: 700 }}>
@@ -270,7 +270,13 @@ export default function SafeguardingOverview({
             would be the most misleading thing it could say. */}
         {loading
           ? <section aria-label="Needs attention" aria-busy="true" style={{ ...card, padding: mobile ? 14 : 18, color: 'var(--text2)', fontSize: 13.5 }}>Checking what needs you…</section>
-          : <AttentionList items={items} today={today} storageKey={`ls_sg_attention_${org.id}`} isMobile={mobile} />}
+          : (
+            // Urgent actions stay red; the rest are slate rather than the
+            // organisation's colour, which clashed with the hub's red.
+            <div style={{ '--org-solid': 'var(--text)', '--org-on-solid': 'var(--surface)' }}>
+              <AttentionList items={items} today={today} storageKey={`ls_sg_attention_${org.id}`} isMobile={mobile} />
+            </div>
+          )}
         <FlowStrip flow={flow} onFlow={onFlow} mobile={mobile} />
         <ChildrenToWatch children={data.children} signals={signals} onOpenChild={onOpenChild} onSeeAll={() => onTab('children')} mobile={mobile} />
         <LatestActivity data={data} today={today} onOpen={onOpenActivity} mobile={mobile} />

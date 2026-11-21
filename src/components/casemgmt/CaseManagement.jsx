@@ -229,7 +229,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
         )}
         <div style={{ display: 'flex', gap: 8, position: 'relative' }}>
           <div style={{ position: 'relative' }}>
-            <button onClick={() => setShowQuickMenu(s => !s)} aria-expanded={showQuickMenu} style={{ ...btnGhost, minHeight: 44 }}>⋯ {embedded ? 'More' : 'Quick Actions'}</button>
+            <button onClick={() => setShowQuickMenu(s => !s)} aria-expanded={showQuickMenu} style={{ ...btnGhost, minHeight: 44 }}>⋯ {embedded ? 'Actions' : 'Quick Actions'}</button>
             <AnimatePresence>
               {showQuickMenu && (
                 <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
@@ -292,10 +292,11 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
           <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-faint)', fontSize: 13 }}><Icon name="🔍" /></span>
           <input type="search" aria-label="Search cases" style={{ ...inputStyle, minHeight: 44, paddingLeft: 32 }} placeholder="Search cases by child, case ID, keyword…" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        <select aria-label="Status" style={{ ...inputStyle, minHeight: 44, width: 150 }} value={filters.status} onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}>
+        {/* Inside the hub the status chips above do this. */}
+        {!embedded && <select aria-label="Status" style={{ ...inputStyle, minHeight: 44, width: 150 }} value={filters.status} onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}>
           <option value="all">All Status</option>
           {STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
-        </select>
+        </select>}
         <select aria-label="Risk" style={{ ...inputStyle, minHeight: 44, width: 130 }} value={filters.risk} onChange={e => setFilters(f => ({ ...f, risk: e.target.value }))}>
           <option value="all">All Risk</option>
           {RISK_LEVELS.map(r => <option key={r} value={r}>{r[0].toUpperCase() + r.slice(1)}</option>)}
@@ -315,7 +316,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
           <option value="name">Sort: Child Name</option>
           <option value="risk">Sort: Risk Score</option>
         </select>
-        <button onClick={() => setShowFilters(s => !s)} aria-expanded={showFilters} style={{ ...btnGhost, minHeight: 44 }}>▽ More</button>
+        <button onClick={() => setShowFilters(s => !s)} aria-expanded={showFilters} style={{ ...btnGhost, minHeight: 44 }}>▽ {embedded ? 'More filters' : 'More'}</button>
       </div>
       <AnimatePresence>
         {showFilters && (
