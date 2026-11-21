@@ -38,7 +38,11 @@ function SectionDivider({ label }) {
 // convenience, and a report that attaches itself to the wrong session without
 // the reporter being able to see or change it would be worse than no
 // pre-filling at all.
-export default function CauseForConcernForm({ org, session: authSession, initialSession = null, onClose, onSubmitted }) {
+//
+// `initialChild` does the same for the child: a concern raised from a child's
+// safeguarding file starts with that child named and linked, so it lands in
+// their chronology without the reporter having to find them again.
+export default function CauseForConcernForm({ org, session: authSession, initialSession = null, initialChild = null, onClose, onSubmitted }) {
   const [step, setStep] = useState('warning')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -49,10 +53,10 @@ export default function CauseForConcernForm({ org, session: authSession, initial
   const [children, setChildren] = useState([])
   const [childSearch, setChildSearch] = useState('')
   const [showChildPicker, setShowChildPicker] = useState(false)
-  const [linkedChildId, setLinkedChildId] = useState(null)
+  const [linkedChildId, setLinkedChildId] = useState(initialChild?.id || null)
   const [form, setForm] = useState({
     submitter_name: authSession?.user?.email?.split('@')[0] || '',
-    child_name: '',
+    child_name: initialChild ? `${initialChild.first_name || ''} ${initialChild.last_name || ''}`.trim() : '',
     location: '',
     date_of_incident: todayInLondon(),
     description: '',

@@ -14,7 +14,11 @@ import { withAlpha } from '../../lib/withAlpha'
 
 const RISK_SCORE = { low: 1, medium: 2, high: 3, critical: 4 }
 
-export default function CaseManagement({ org, session: authSession, onNavigate, initialOpenCaseId }) {
+// `embedded` is how the Safeguarding Hub shows it: the hub already carries
+// the title, the counts and the red header, so the page drops its own and the
+// status tiles become filters. `onOpenChildFile` opens the child's
+// safeguarding file from a case; `onChanged` tells the hub its counts moved.
+export default function CaseManagement({ org, session: authSession, onNavigate, initialOpenCaseId, embedded = false, onOpenChildFile, onChanged }) {
   const isMobile = useIsMobile()
   const primary = org?.primary_color || '#7C5CFC'
 
@@ -42,7 +46,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
   const loadAll = useCallback(async () => {
     const [{ data: cs }, { data: st }, { data: audit }] = await Promise.all([
       supabase.from('cases').select('*').eq('org_id', org.id).order('created_at', { ascending: false }),
-      supabase.from('user_profiles').select('id, full_name, role, photo_url').eq('org_id', org.id).in('role', ['admin', 'staff']),
+      supabase.from('user_profiles').select('id, full_name, role, photo_url').eq('org_id', org.id).in('role', ['owner', 'admin', 'manager', 'staff']),
       supabase.from('case_audit_log').select('*').eq('org_id', org.id).order('created_at', { ascending: false }).limit(8),
     ])
     setCases(cs || [])
@@ -83,6 +87,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
     if (data) {
       setCases(cs => cs.map(c => c.id === caseId ? data : c))
       if (auditAction) logAudit(caseId, auditAction, auditDetail)
+      if (onChanged) onChanged()
     }
     return data
   }
@@ -192,7 +197,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
   const criticalActive = activeCases.filter(c => c.risk_level === 'critical' || c.priority === 'critical')
 
   return (
-    <div style={{ background: PAGE_BG, minHeight: '100%', padding: isMobile ? '16px 12px 80px' : '20px 24px' }}>
+    <div style={embedded ? {} : { background: PAGE_BG, minHeight: '100%', padding: isMobile ? '16px 12px 80px' : '20px 24px' }}>
 
       {/* Emergency banner for any critical, un-acknowledged case */}
       <AnimatePresence>
@@ -204,20 +209,27 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
               <div style={{ fontWeight: 900, fontSize: 13.5 }}>Critical risk case{criticalActive.filter(c => !c.risk_ack_at).length > 1 ? 's' : ''} requiring immediate manager acknowledgement</div>
               <div style={{ fontSize: 12, opacity: 0.9 }}>{criticalActive.filter(c => !c.risk_ack_at).map(c => c.child_name).join(', ')}</div>
             </div>
-            <button onClick={() => { const c = criticalActive.find(c => !c.risk_ack_at); setSelectedCase(c); setTab('timeline') }} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontWeight: 800, fontSize: 12.5, padding: '8px 14px', borderRadius: 10, cursor: 'pointer', whiteSpace: 'nowrap' }}>Review Now <Icon name="→" /></button>
+            <button onClick={() => { const c = criticalActive.find(c => !c.risk_ack_at); setSelectedCase(c); setTab('timeline') }} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontWeight: 800, fontSize: 12.5, minHeight: 44, padding: '8px 14px', borderRadius: 10, cursor: 'pointer', whiteSpace: 'nowrap' }}>Review Now <Icon name="→" /></button>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* HEADER */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 18 }}>
-        <div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 10 }}><Icon name="🛡️" /> Case Management</div>
-          <div style={{ fontSize: 13.5, color: 'var(--text3)', marginTop: 4 }}>Track, investigate and resolve safeguarding concerns.</div>
-        </div>
+        {embedded ? (
+          <div>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 850, color: 'var(--text)', fontFamily: 'var(--font-display, inherit)' }}>Cases</h2>
+            <div style={{ fontSize: 13.5, color: 'var(--text2)', marginTop: 2 }}>Concerns that needed more than a note, and cases opened directly.</div>
+          </div>
+        ) : (
+          <div>
+            <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 10 }}><Icon name="🛡️" /> Case Management</div>
+            <div style={{ fontSize: 13.5, color: 'var(--text3)', marginTop: 4 }}>Track, investigate and resolve safeguarding concerns.</div>
+          </div>
+        )}
         <div style={{ display: 'flex', gap: 8, position: 'relative' }}>
           <div style={{ position: 'relative' }}>
-            <button onClick={() => setShowQuickMenu(s => !s)} style={btnGhost}>⋯ Quick Actions</button>
+            <button onClick={() => setShowQuickMenu(s => !s)} aria-expanded={showQuickMenu} style={{ ...btnGhost, minHeight: 44 }}>⋯ {embedded ? 'More' : 'Quick Actions'}</button>
             <AnimatePresence>
               {showQuickMenu && (
                 <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
@@ -228,18 +240,31 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                     ['📄 Generate Report', () => { if (selectedCase) setReportFor(selectedCase); else alert('Select a case first') }],
                     ['⬇ Export Cases (CSV)', () => exportCasesToCSV(filteredCases, org)],
                   ].map(([label, fn]) => (
-                    <button key={label} onClick={() => { fn(); setShowQuickMenu(false) }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: 8, border: 'none', background: 'none', fontSize: 13, fontWeight: 600, color: 'var(--text2)', cursor: 'pointer' }}
+                    <button key={label} onClick={() => { fn(); setShowQuickMenu(false) }} style={{ display: 'block', width: '100%', textAlign: 'left', minHeight: 44, padding: '9px 12px', borderRadius: 8, border: 'none', background: 'none', fontSize: 13, fontWeight: 600, color: 'var(--text2)', cursor: 'pointer' }}
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--border-soft)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>{label}</button>
                   ))}
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
-          <button onClick={() => setShowWizard(true)} style={btnPrimary(primary)}>+ Open New Case</button>
+          <button onClick={() => setShowWizard(true)} style={{ ...btnPrimary(embedded ? '#B91C1C' : primary), minHeight: 44 }}>+ {embedded ? 'Open a case' : 'Open New Case'}</button>
         </div>
       </div>
 
-      {/* KPI CARDS */}
+      {/* KPI CARDS -- inside the hub they filter the list instead */}
+      {embedded ? (
+        <div role="group" aria-label="Show cases" style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, marginBottom: 12, scrollbarWidth: 'none' }}>
+          {[['all', 'All', cases.filter(c => !c.archived).length], ['open', 'Open', kpis.open], ['in_progress', STATUS_LABELS.in_progress, kpis.inProgress], ['monitoring', 'Monitoring', kpis.monitoring], ['closed', 'Closed', kpis.closed]].map(([key, label, n]) => {
+            const on = filters.status === key
+            return (
+              <button key={key} type="button" aria-pressed={on} onClick={() => setFilters(f => ({ ...f, status: key }))}
+                style={{ minHeight: 44, padding: '0 14px', borderRadius: 999, flexShrink: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap', border: `1px solid ${on ? 'var(--danger-border)' : 'var(--border)'}`, background: on ? 'var(--danger-bg)' : 'var(--surface)', color: on ? 'var(--danger-text)' : 'var(--text2)' }}>
+                {label} <span style={{ opacity: .75 }}>{n}</span>
+              </button>
+            )
+          })}
+        </div>
+      ) : (
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, marginBottom: 18 }}>
         {[
           { label: 'Open Cases', value: kpis.open, icon: '📂', color: 'var(--violet-text)', trend: kpis.trend },
@@ -259,37 +284,38 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
           </motion.div>
         ))}
       </div>
+      )}
 
       {/* SEARCH + FILTERS */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flex: '1 1 260px' }}>
           <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-faint)', fontSize: 13 }}><Icon name="🔍" /></span>
-          <input style={{ ...inputStyle, paddingLeft: 32 }} placeholder="Search cases by child, case ID, keyword…" value={search} onChange={e => setSearch(e.target.value)} />
+          <input type="search" aria-label="Search cases" style={{ ...inputStyle, minHeight: 44, paddingLeft: 32 }} placeholder="Search cases by child, case ID, keyword…" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        <select style={{ ...inputStyle, width: 150 }} value={filters.status} onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}>
+        <select aria-label="Status" style={{ ...inputStyle, minHeight: 44, width: 150 }} value={filters.status} onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}>
           <option value="all">All Status</option>
           {STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
         </select>
-        <select style={{ ...inputStyle, width: 130 }} value={filters.risk} onChange={e => setFilters(f => ({ ...f, risk: e.target.value }))}>
+        <select aria-label="Risk" style={{ ...inputStyle, minHeight: 44, width: 130 }} value={filters.risk} onChange={e => setFilters(f => ({ ...f, risk: e.target.value }))}>
           <option value="all">All Risk</option>
           {RISK_LEVELS.map(r => <option key={r} value={r}>{r[0].toUpperCase() + r.slice(1)}</option>)}
         </select>
-        <select style={{ ...inputStyle, width: 150 }} value={filters.category} onChange={e => setFilters(f => ({ ...f, category: e.target.value }))}>
+        <select aria-label="Category" style={{ ...inputStyle, minHeight: 44, width: 150 }} value={filters.category} onChange={e => setFilters(f => ({ ...f, category: e.target.value }))}>
           <option value="all">All Categories</option>
           {categories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
-        <select style={{ ...inputStyle, width: 150 }} value={filters.assignee} onChange={e => setFilters(f => ({ ...f, assignee: e.target.value }))}>
+        <select aria-label="Assigned to" style={{ ...inputStyle, minHeight: 44, width: 150 }} value={filters.assignee} onChange={e => setFilters(f => ({ ...f, assignee: e.target.value }))}>
           <option value="all">All Assigned To</option>
           {staff.map(s => <option key={s.id} value={s.id}>{s.full_name}</option>)}
         </select>
-        <select style={{ ...inputStyle, width: 150 }} value={sortBy} onChange={e => setSortBy(e.target.value)}>
+        <select aria-label="Sort by" style={{ ...inputStyle, minHeight: 44, width: 150 }} value={sortBy} onChange={e => setSortBy(e.target.value)}>
           <option value="newest">Sort: Newest</option>
           <option value="priority">Sort: Priority</option>
           <option value="updated">Sort: Last Updated</option>
           <option value="name">Sort: Child Name</option>
           <option value="risk">Sort: Risk Score</option>
         </select>
-        <button onClick={() => setShowFilters(s => !s)} style={btnGhost}>▽ More</button>
+        <button onClick={() => setShowFilters(s => !s)} aria-expanded={showFilters} style={{ ...btnGhost, minHeight: 44 }}>▽ More</button>
       </div>
       <AnimatePresence>
         {showFilters && (
@@ -334,8 +360,8 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                   const on = attention === a.key
                   return (
                     <button key={a.key} onClick={() => setAttention(on ? null : a.key)} style={{
-                      minHeight: 34, padding: '5px 11px', borderRadius: 99, cursor: 'pointer', fontFamily: 'inherit',
-                      fontSize: 11.5, fontWeight: 800,
+                      minHeight: 44, padding: '5px 12px', borderRadius: 99, cursor: 'pointer', fontFamily: 'inherit',
+                      fontSize: 12, fontWeight: 800,
                       border: `1.5px solid ${on ? a.colour : `${withAlpha(a.colour, '44')}`}`,
                       background: on ? a.colour : `${withAlpha(a.colour, '0F')}`,
                       color: on ? '#fff' : a.colour,
@@ -344,8 +370,8 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                 })}
                 {attention && (
                   <button onClick={() => setAttention(null)} style={{
-                    minHeight: 34, padding: '5px 11px', borderRadius: 99, cursor: 'pointer', fontFamily: 'inherit',
-                    fontSize: 11.5, fontWeight: 800, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)',
+                    minHeight: 44, padding: '5px 12px', borderRadius: 99, cursor: 'pointer', fontFamily: 'inherit',
+                    fontSize: 12, fontWeight: 800, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text3)',
                   }}>Show all</button>
                 )}
               </div>
@@ -373,7 +399,9 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                       style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid rgba(15,23,42,0.05)', cursor: 'pointer', background: isSelected ? 'var(--org-a05)' : 'transparent', borderLeft: `3px solid ${isSelected ? primary : 'transparent'}` }}
                       onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--surface2)' }}
                       onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'transparent' }}>
-                      <input type="checkbox" checked={selectedIds.has(cas.id)} onClick={e => e.stopPropagation()} onChange={() => toggleSelect(cas.id)} style={{ flexShrink: 0 }} />
+                      <label onClick={e => e.stopPropagation()} style={{ width: 44, height: 44, margin: '-6px -8px -6px -10px', display: 'grid', placeItems: 'center', flexShrink: 0, cursor: 'pointer' }}>
+                        <input type="checkbox" aria-label={`Select ${cas.child_name || 'this case'}`} checked={selectedIds.has(cas.id)} onChange={() => toggleSelect(cas.id)} style={{ width: 18, height: 18 }} />
+                      </label>
                       <Avatar name={cas.child_name} size={34} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -393,7 +421,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                         <StatusChip status={cas.status} />
                       </div>
                       <div style={{ position: 'relative', flexShrink: 0 }}>
-                        <button onClick={e => { e.stopPropagation(); setRowMenuFor(rowMenuFor === cas.id ? null : cas.id) }} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', cursor: 'pointer', fontSize: 15, padding: 4 }}>⋯</button>
+                        <button onClick={e => { e.stopPropagation(); setRowMenuFor(rowMenuFor === cas.id ? null : cas.id) }} aria-label={`More for ${cas.child_name || 'this case'}`} aria-expanded={rowMenuFor === cas.id} style={{ width: 44, height: 44, background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 16, padding: 0, borderRadius: 10 }}>⋯</button>
                         <AnimatePresence>
                           {rowMenuFor === cas.id && (
                             <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} onClick={e => e.stopPropagation()}
@@ -404,7 +432,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                                 [cas.archived ? '📥 Unarchive' : '🗄 Archive', () => updateCase(cas.id, { archived: !cas.archived }, 'edited', cas.archived ? 'Unarchived' : 'Archived')],
                                 ['✅ Close', () => changeStatus(cas, 'closed')],
                               ].map(([label, fn]) => (
-                                <button key={label} onClick={() => { fn(); setRowMenuFor(null) }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 10px', borderRadius: 6, border: 'none', background: 'none', fontSize: 12, fontWeight: 600, color: 'var(--text2)', cursor: 'pointer' }}>{label}</button>
+                                <button key={label} onClick={() => { fn(); setRowMenuFor(null) }} style={{ display: 'block', width: '100%', textAlign: 'left', minHeight: 44, padding: '7px 10px', borderRadius: 6, border: 'none', background: 'none', fontSize: 12, fontWeight: 600, color: 'var(--text2)', cursor: 'pointer' }}>{label}</button>
                               ))}
                             </motion.div>
                           )}
@@ -421,13 +449,13 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
         {/* CENTER: case workspace */}
         {(!isMobile || selectedCase) && selectedCase && (
           <div style={glass({ padding: 20 })}>
-            <button onClick={() => setSelectedCase(null)} style={{ ...btnGhost, marginBottom: 12, fontSize: 12, padding: '6px 12px' }}><Icon name="←" /> Back to cases</button>
+            <button onClick={() => setSelectedCase(null)} style={{ ...btnGhost, minHeight: 44, marginBottom: 12, fontSize: 13, padding: '6px 14px' }}><Icon name="←" /> Back to cases</button>
 
             {selectedCase.source_concern_id && (
               <div style={{ background: 'var(--violet-bg)', border: '1px solid var(--violet-border)', borderRadius: 12, padding: '10px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
                 <div style={{ fontSize: 12.5, color: 'var(--violet-text)', fontWeight: 600 }}><Icon name="🛡️" /> Escalated from a safeguarding concern</div>
                 <button onClick={() => onNavigate && onNavigate('safeguarding', { openConcernId: selectedCase.source_concern_id })}
-                  style={{ background: 'none', border: 'none', color: 'var(--violet-text)', fontWeight: 800, fontSize: 12, cursor: 'pointer' }}>
+                  style={{ background: 'none', border: 'none', color: 'var(--violet-text)', fontWeight: 800, fontSize: 12.5, minHeight: 44, cursor: 'pointer' }}>
                   View original concern →
                 </button>
               </div>
@@ -463,6 +491,11 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
                   {linkedChild?.date_of_birth && `Age ${Math.floor((Date.now() - new Date(linkedChild.date_of_birth)) / 3.15576e10)} · `}
                   {linkedChild?.group_name || 'No group linked'}
                 </div>
+                {linkedChild && onOpenChildFile && (
+                  <button type="button" onClick={() => onOpenChildFile(linkedChild.id)} style={{ ...btnGhost, minHeight: 44, marginTop: 8, padding: '6px 14px', color: 'var(--danger-text)' }}>
+                    <Icon name="🛡️" /> {linkedChild.first_name}'s safeguarding file
+                  </button>
+                )}
                 {linkedChild && (linkedChild.has_epipen || linkedChild.has_asthma || linkedChild.has_diabetes || linkedChild.takes_medication) && (
                   <div style={{ marginTop: 6, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     {linkedChild.has_epipen && <span style={{ fontSize: 10.5, fontWeight: 800, background: 'var(--danger-bg)', color: 'var(--danger-text)', borderRadius: 99, padding: '2px 8px' }}><Icon name="⚠" /> EpiPen</span>}
@@ -604,7 +637,7 @@ export default function CaseManagement({ org, session: authSession, onNavigate, 
       <AnimatePresence>
         {showWizard && (
           <CaseCreationWizard org={org} session={authSession} staff={staff} onClose={() => setShowWizard(false)}
-            onCreated={(cas) => { setShowWizard(false); loadAll(); setSelectedCase(cas); setTab('timeline') }} />
+            onCreated={(cas) => { setShowWizard(false); loadAll(); setSelectedCase(cas); setTab('timeline'); if (onChanged) onChanged() }} />
         )}
       </AnimatePresence>
       <AnimatePresence>

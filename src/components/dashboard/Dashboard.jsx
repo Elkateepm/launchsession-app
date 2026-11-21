@@ -541,6 +541,10 @@ export default function Dashboard({ session, org }) {
   // accident book shortcut on Home. Cleared on every other navigation so the
   // next shortcut press counts as a change and moves the hub again.
   const [safeguardingSubTab, setSafeguardingSubTab] = useState(null)
+  // A child's safeguarding file to open in the hub, and a child's profile to
+  // open in the directory: the two link to each other.
+  const [openSgChildId, setOpenSgChildId] = useState(null)
+  const [openProfileChildId, setOpenProfileChildId] = useState(null)
   const [initialThreadId, setInitialThreadId] = useState(null)
   const [autoOpenWizard, setAutoOpenWizard] = useState(false)
   const [editSessionId, setEditSessionId] = useState(null)
@@ -625,6 +629,11 @@ export default function Dashboard({ session, org }) {
     setOpenCaseId(t === 'safeguarding' && payload?.openCaseId ? payload.openCaseId : null)
     setOpenConcernId(t === 'safeguarding' && payload?.openConcernId ? payload.openConcernId : null)
     setSafeguardingSubTab(t === 'safeguarding' && payload?.subTab ? payload.subTab : null)
+    setOpenSgChildId(t === 'safeguarding' && payload?.openChildId ? payload.openChildId : null)
+    setOpenProfileChildId(t === 'children' && payload?.openChildId ? payload.openChildId : null)
+    // Only a link that names a section moves Settings; plain navigation keeps
+    // whatever it last showed.
+    if (t === 'settings' && payload?.section) setSettingsSection(payload.section)
     setInitialThreadId(t === 'messaging' && payload?.initialThreadId ? payload.initialThreadId : null)
     setAutoOpenWizard(t === 'planner' && !!payload?.autoOpenWizard)
     setEditSessionId(t === 'planner' && payload?.editSessionId ? payload.editSessionId : null)
@@ -1142,7 +1151,8 @@ export default function Dashboard({ session, org }) {
                   funding: hasModule('fundraising') && moduleLevel('fundraising') !== 'none' && !hiddenItems.includes('fundraising'),
                 }} />}
           {effectiveTab === 'events_trips' && <EventsTrips org={org} session={session} onNavigate={handleSetTab} />}
-          {effectiveTab === 'children'    && <ChildrenGate org={org} session={session}><ChildrenDirectory org={org} session={session} onNavigate={handleSetTab} initialOpenRequestsTab={openRegRequestsTab} /></ChildrenGate>}
+          {effectiveTab === 'children'    && <ChildrenGate org={org} session={session}><ChildrenDirectory org={org} session={session} onNavigate={handleSetTab} initialOpenRequestsTab={openRegRequestsTab} initialOpenChildId={openProfileChildId}
+                canOpenSafeguarding={hasModule('safeguarding') && moduleLevel('safeguarding') !== 'none' && !hiddenItems.includes('safeguarding')} /></ChildrenGate>}
           {effectiveTab === 'medical_alerts' && <MedicalAlerts org={org} session={session} onNavigate={handleSetTab} />}
           {/* Rendered inside Office below. */}
           {effectiveTab === 'settings'   && (isAdmin ? <Settings key={settingsSection || 'default'} org={org} session={session} userProfile={userProfile} initialSection={settingsSection || undefined} /> : <RestrictedModule label="Settings" icon="⚙️" onNavigate={handleSetTab} onTrial={onTrial} />)}
@@ -1156,7 +1166,13 @@ export default function Dashboard({ session, org }) {
           {/* Newsletter is rendered inside Office below. */}
 
           {/* ── SAFEGUARDING PACK ── */}
-          {effectiveTab === 'safeguarding'    && (hasModule('safeguarding')    ? <SafeguardingHub org={org} session={session} isAdmin={isAdmin} onNavigate={handleSetTab} initialOpenConcernId={openConcernId} initialOpenCaseId={openCaseId} initialSubTab={safeguardingSubTab} />                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding Hub"    icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'safeguarding'    && (hasModule('safeguarding')    ? <SafeguardingHub org={org} session={session} isAdmin={isAdmin} onNavigate={handleSetTab} initialOpenConcernId={openConcernId} initialOpenCaseId={openCaseId} initialOpenChildId={openSgChildId} initialSubTab={safeguardingSubTab}
+                access={{
+                  registers: hasModule('registers') && moduleLevel('registers') !== 'none' && !hiddenItems.includes('registers'),
+                  medical: moduleLevel('medical_alerts') !== 'none' && !hiddenItems.includes('medical_alerts'),
+                  risk: hasModule('risk_assessments') && moduleLevel('risk_assessments') !== 'none' && !hiddenItems.includes('risk_assessments'),
+                  people: moduleLevel('people') !== 'none' && !hiddenItems.includes('children'),
+                }} />                           : <LockedModule moduleKey="safeguarding"    label="Safeguarding Hub"    icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {/* Forms is rendered inside Office below. */}
           {effectiveTab === 'risk_assessments' && (hasModule('risk_assessments') ? <RiskAssessments org={org} session={session} initialOpenAssessmentId={openAssessmentId} userProfile={userProfile} />                    : <LockedModule moduleKey="risk_assessments" label="Risk Assessments" icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
 

@@ -310,7 +310,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
     const childName = child ? `${child.first_name} ${child.last_name}`.trim() : null
     await supabase.from('cause_for_concern').insert({
       org_id: org.id, submitted_by: authUserId, submitter_name: profile?.full_name || 'Team member',
-      child_name: childName, concern_type: 'other', description: summary,
+      child_name: childName, child_id: child?.id || null, concern_type: 'other', description: summary,
       date_of_incident: todayInLondon(),
       location: session?.location || 'Not specified',
       session_id: session?.id || null,
@@ -318,7 +318,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
     })
     if (isVolunteerView) { showToast('Concern sent to your safeguarding lead.'); return }
     showToast('Safeguarding concern raised — complete details in Safeguarding.')
-    if (onNavigate) onNavigate('safeguarding')
+    if (onNavigate) onNavigate('safeguarding', { subTab: 'concerns' })
   }
 
   const startSession = async () => {
