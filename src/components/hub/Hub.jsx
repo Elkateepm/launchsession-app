@@ -843,7 +843,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     const childName = child ? `${child.first_name} ${child.last_name}`.trim() : null
     await supabase.from('cause_for_concern').insert({
       org_id: orgId, submitted_by: authUserId, submitter_name: profile?.full_name || 'Team member',
-      child_name: childName, concern_type: 'other', description: summary,
+      child_name: childName, child_id: child?.id || null, concern_type: 'other', description: summary,
       date_of_incident: todayInLondon(),
       location: activeSession?.location || 'Not specified',
       session_id: activeSession?.id || null,
@@ -851,7 +851,7 @@ function LiveSessionPanel({ sessions, childList, attendance, primary, secondary,
     })
     notifyEvent('SAFEGUARDING_ACTION_REQUIRED')
     showRegToast('Safeguarding concern raised — complete details in Safeguarding.')
-    if (onNavigate) onNavigate('safeguarding')
+    if (onNavigate) onNavigate('safeguarding', { subTab: 'concerns' })
   }
 
   const handleSelectExistingWalkIn = async (child) => {

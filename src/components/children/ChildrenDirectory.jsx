@@ -39,7 +39,7 @@ function hasMedicalAlert(child) {
   return medicalAlerts(child).length > 0
 }
 
-export default function ChildrenDirectory({ org, session, onNavigate, initialOpenRequestsTab }) {
+export default function ChildrenDirectory({ org, session, onNavigate, initialOpenRequestsTab, initialOpenChildId, canOpenSafeguarding = false }) {
   const isMobile = useIsMobile()
   const primary = org?.primary_color || '#7C5CFC'
   const authUserId = session?.user?.id
@@ -56,7 +56,9 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
   const [groupFilter, setGroupFilter] = useState('all')
   const [quickFilter, setQuickFilter] = useState(null)
   const [sort, setSort] = useState('name')
-  const [selectedId, setSelectedId] = useState(null)
+  const [selectedId, setSelectedId] = useState(initialOpenChildId || null)
+  // Opened from elsewhere (a child's safeguarding file links here).
+  useEffect(() => { if (initialOpenChildId) setSelectedId(initialOpenChildId) }, [initialOpenChildId])
   const [showAdd, setShowAdd] = useState(false)
   const [showChooser, setShowChooser] = useState(false)
   const [showHandover, setShowHandover] = useState(false)
@@ -214,7 +216,7 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
           latestAtt={latestAttByChild[selected.id]}
           notes={sessionNotes.filter(n => n.child_id === selected.id).slice(0, 5)}
           attendanceForChild={attendance.filter(a => a.child_id === selected.id)}
-          onNavigate={onNavigate} onConsentChanged={load} isMobile={isMobile}
+          onNavigate={onNavigate} onConsentChanged={load} isMobile={isMobile} canOpenSafeguarding={canOpenSafeguarding}
           onPhotoChanged={(id, path) => setChildren(prev => prev.map(c => (c.id === id ? { ...c, photo_url: path } : c)))}
         />
       </PeopleProfileDrawer>}
@@ -234,7 +236,7 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
   )
 }
 
-function ChildProfile({ child, org, session, primary, authUserId, groupLabel, consentRec, latestAtt, notes, attendanceForChild, onNavigate, onConsentChanged, onPhotoChanged, isMobile }) {
+function ChildProfile({ child, org, session, primary, authUserId, groupLabel, consentRec, latestAtt, notes, attendanceForChild, onNavigate, onConsentChanged, onPhotoChanged, isMobile, canOpenSafeguarding }) {
   const [savingConsent, setSavingConsent] = useState(null)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [photoError, setPhotoError] = useState('')
@@ -341,6 +343,14 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
           <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--warn-text)', marginBottom: 6 }}><Icon name="🛡️" /> Safeguarding / Support</div>
           <div style={{ fontSize: 11.5, color: child.has_behaviour_plan ? 'var(--warn-text)' : 'var(--text-faint)' }}>{child.has_behaviour_plan ? 'Support plan in place' : 'None recorded'}</div>
           {child.behaviour_plan_notes && <div style={{ fontSize: 11, color: 'var(--warn-text)', marginTop: 4 }}>{child.behaviour_plan_notes}</div>}
+          {/* Concerns, cases, injuries and check-ins live in the Safeguarding
+              Hub, which only some roles can open; the link shows for them. */}
+          {canOpenSafeguarding && onNavigate && (
+            <button type="button" onClick={() => onNavigate('safeguarding', { openChildId: child.id })}
+              style={{ marginTop: 8, minHeight: 44, width: '100%', padding: '0 12px', borderRadius: 10, border: '1px solid var(--warn-border)', background: 'var(--surface)', color: 'var(--warn-text)', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
+              Open safeguarding file <Icon name="→" />
+            </button>
+          )}
         </div>
         <div style={{ background: 'var(--ok-bg)', border: '1px solid var(--ok-border)', borderRadius: 12, padding: 12 }}>
           <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--ok-text)', marginBottom: 6 }}><Icon name="🚗" /> Collection / Travel</div>
