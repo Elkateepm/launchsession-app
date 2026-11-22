@@ -57,6 +57,7 @@ import {
 } from './sidebar/SidebarParts'
 import { makeHasModule, isTrialActive, isPlanEnded, trialDaysRemaining } from '../../lib/moduleAccess'
 import { useTrialClock } from '../../hooks/useTrialClock'
+import { useMobileBottomNav } from '../../hooks/useMobileBottomNav'
 import { TrialBanner, ReadOnlyBanner, PlanEndedWall } from '../billing/TrialStatus'
 import SignedImg from '../shared/SignedImg'
 import Icon from '../../lib/icons'
@@ -107,13 +108,6 @@ function TabTransition({ tabKey, enabled, children }) {
       {children}
     </motion.div>
   )
-}
-
-function computeIsMobileBottomNav() {
-  const w = window.innerWidth, h = window.innerHeight
-  const isLandscape = w > h
-  if (isLandscape && h < 500) return false
-  return w < 768
 }
 
 // Base modules always free — regardless of pack
@@ -558,7 +552,7 @@ export default function Dashboard({ session, org }) {
   const [showQRSheet, setShowQRSheet] = React.useState(false);
   const [showReportIncident, setShowReportIncident] = React.useState(false);
   const [navBadges, setNavBadges] = React.useState({ registers: 0, mentoring: 0 })
-  const [isMobileBottomNav, setIsMobileBottomNav] = React.useState(computeIsMobileBottomNav());
+  const isMobileBottomNav = useMobileBottomNav()
   const { isTablet } = useBreakpoint()
   const [tabletNavOpen, setTabletNavOpen] = React.useState(false)
 
@@ -626,7 +620,10 @@ export default function Dashboard({ session, org }) {
     setOpenConcernId(t === 'safeguarding' && payload?.openConcernId ? payload.openConcernId : null)
     setSafeguardingSubTab(t === 'safeguarding' && payload?.subTab ? payload.subTab : null)
     setInitialThreadId(t === 'messaging' && payload?.initialThreadId ? payload.initialThreadId : null)
-    setAutoOpenWizard(t === 'planner' && !!payload?.autoOpenWizard)
+    // A count rather than true/false: pressing New session again while already
+    // on Sessions has to open the wizard again, and setting true to true
+    // changed nothing, so the second press did nothing at all.
+    setAutoOpenWizard(n => t === 'planner' && payload?.autoOpenWizard ? (n || 0) + 1 : 0)
     setEditSessionId(t === 'planner' && payload?.editSessionId ? payload.editSessionId : null)
     setPlanPreset(t === 'planner' && (payload?.planDate || payload?.planType) ? { date: payload.planDate || null, type: payload.planType || null } : null)
     setViewSessionId(t === 'planner' && payload?.viewSessionId ? payload.viewSessionId : null)
@@ -640,16 +637,6 @@ export default function Dashboard({ session, org }) {
     persistTab(t)
     if (isTablet) setTabletNavOpen(false)
   }
-
-  React.useEffect(() => {
-    const handleResize = () => setIsMobileBottomNav(computeIsMobileBottomNav());
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('orientationchange', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('orientationchange', handleResize);
-    };
-  }, []);
 
   // Radial dial: press-and-slide-to-select gesture. Started from the FAB's onPointerDown;
   // tracked here via window listeners so the finger can move anywhere on screen while held.

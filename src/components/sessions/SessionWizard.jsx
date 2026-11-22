@@ -1259,7 +1259,9 @@ export default function SessionWizard({ org, session, bubbleDefs, onCancel, onPu
             compliance: s.compliance,
             on_leave_today: s.on_leave_today,
           }))
-          .sort((a, b) => (b.assignable - a.assignable) || a.full_name.localeCompare(b.full_name)))
+          // A staff record with no name sorted as a crash, which left the
+          // list empty and the session lead impossible to pick.
+          .sort((a, b) => (b.assignable - a.assignable) || (a.full_name || '').localeCompare(b.full_name || '')))
       })
     supabase.from('children').select('id, first_name, last_name, group_name, parent_email').eq('org_id', org.id).eq('active', true)
       .then(({ data }) => setChildren(data || []))
