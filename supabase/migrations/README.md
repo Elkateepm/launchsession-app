@@ -121,3 +121,12 @@ upcoming, last session date, last sign-in by a non-platform member, attendance
 in the last 30 days) and `admin_list_users()` (every profile with its
 organisation and last sign-in). Tested as the super admin and refused for an
 organisation admin in a rolled-back transaction.
+
+Charity verified → discount and email, NOT YET APPLIED (apply after the API is live):
+
+- `20261118_charity_verified_discount.sql`
+
+When charity_status becomes 'verified', a trigger posts `charity_discount_sync`
+to api/send-form-email, which puts the 20% charity coupon on any live Stripe
+subscription and emails the organisation's admins through Resend
+(supabase/functions/send-charity-verified-email, deployed 18 Nov 2026).
