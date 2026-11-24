@@ -121,3 +121,12 @@ upcoming, last session date, last sign-in by a non-platform member, attendance
 in the last 30 days) and `admin_list_users()` (every profile with its
 organisation and last sign-in). Tested as the super admin and refused for an
 organisation admin in a rolled-back transaction.
+
+Account health for the LaunchNexus summary, applied 24 Nov 2026:
+
+- `20261124_org_health_for_nexus_summary.sql`
+
+`admin_org_health()` now also answers the service role, so Command Centre's
+read-only `api/nexus-summary` endpoint (launch-session repo) can build the
+summary the LaunchNexus admin shows. The service role could already read every
+table behind it; everyone else is still refused unless they are a super admin.
