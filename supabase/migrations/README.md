@@ -130,3 +130,12 @@ Account health for the LaunchNexus summary, applied 24 Nov 2026:
 read-only `api/nexus-summary` endpoint (launch-session repo) can build the
 summary the LaunchNexus admin shows. The service role could already read every
 table behind it; everyone else is still refused unless they are a super admin.
+
+Safeguarding documents limited to their own organisation, applied 24 Nov 2026:
+
+- `20261124_safeguarding_docs_own_org.sql`
+
+The admin policies on the `safeguarding-docs` bucket only checked that the
+caller was an admin of some organisation. Admins of three other organisations
+could see Solidarity Sports' files. Each admin now reaches only paths under
+their own organisation (see `safeguarding_doc_org()`).
