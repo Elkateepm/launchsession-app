@@ -28,3 +28,17 @@ node --test supabase/functions/send-password-reset-email/handler.test.mjs
 
 No database migration or extra Vercel function is needed. This change touches
 authentication; after release, merge main into `native/capacitor-shell`.
+
+## Hardening (24 Nov 2026, deployed as v4)
+
+The caller is usually anonymous (Login's "Forgot password" calls this with the
+public anon key), so nothing about the email is taken from the request except
+the address, the organisation slug and the volunteer-portal flag:
+
+- The organisation's name, logo and colour come from its `organisations` row,
+  looked up by slug, and appear only when `branding_enabled` (as on the sign-in
+  page). `org_name`, `org_logo` and `org_color` in the request are ignored; the
+  previously deployed version put them into the email unescaped.
+- `check_rate_limit`: 5 requests per address per 15 minutes and 120 overall per
+  10 minutes, checked before any link is made, the same for every address
+  (HTTP 429). If the limiter is unavailable, resets still work.

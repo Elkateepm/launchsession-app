@@ -1,7 +1,17 @@
 const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]))
 
 const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
-const DEFAULT_COLOR = '#8B5CF6'
+// The sign-in page's colour for an organisation without its own branding.
+const DEFAULT_COLOR = '#3B82F6'
+const LAUNCHSESSION_LOGO = 'https://app.launchsession.co.uk/logo.png'
+const isHex = value => typeof value === 'string' && /^#[0-9A-Fa-f]{6}$/.test(value)
+
+// Per address, and across everyone: generous for a person who mistypes,
+// tight enough that this cannot be used to flood an inbox or the provider.
+const LIMITS = [
+  { bucket: email => `pw-reset:email:${email.toLowerCase()}`, max: 5, windowSecs: 900 },
+  { bucket: () => 'pw-reset:global', max: 120, windowSecs: 600 },
+]
 
 function logoMark(size) {
   const box = size === 'lg' ? 40 : 28
@@ -48,7 +58,10 @@ export function createPasswordResetHandler({ createClient, env, fetch: sendEmail
   try {
     let body
     try { body = await req.json() } catch (e) { return respond({ error: 'Invalid request' }, 400) }
-    const { org_name, org_slug, org_logo, org_color, redirect_to } = body || {}
+    // org_name, org_logo and org_color are no longer read: the caller is often
+    // anonymous, so the organisation's identity comes from its own record.
+    const { org_slug, redirect_to } = body || {}
+    const slug = typeof org_slug === 'string' && /^[a-z0-9][a-z0-9-]{0,99}$/.test(org_slug) ? org_slug : null
     const email = typeof body?.email === 'string' ? body.email.trim() : ''
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) return respond({ error: 'A valid email is required' }, 400)
     const RESEND_API_KEY = env('RESEND_API_KEY')
@@ -56,22 +69,45 @@ export function createPasswordResetHandler({ createClient, env, fetch: sendEmail
     const SERVICE_ROLE_KEY = env('SUPABASE_SERVICE_ROLE_KEY')
     if (!RESEND_API_KEY || !SUPABASE_URL || !SERVICE_ROLE_KEY) return respond({ error: 'Password reset is temporarily unavailable' }, 503)
 
-    const orgName = typeof org_name === 'string' && org_name.trim() ? org_name.trim().slice(0, 150) : 'LaunchSession'
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } })
+
+    // Checked before anything else happens, and the same for every address,
+    // so a refusal says nothing about whether an account exists. If the
+    // limiter itself is unavailable, resets keep working.
+    for (const limit of LIMITS) {
+      const { data: allowed, error: limitError } = await admin.rpc('check_rate_limit', {
+        p_bucket: limit.bucket(email), p_max: limit.max, p_window_secs: limit.windowSecs,
+      })
+      if (!limitError && allowed === false) {
+        return respond({ error: 'Too many reset requests. Please wait a few minutes and try again.' }, 429)
+      }
+    }
+
+    // The organisation as it is on record, never as the request describes it.
+    // Its own name, logo and colour appear only when its plan includes
+    // branding, matching the sign-in page (getAuthBranding).
+    let org = null
+    if (slug) {
+      const { data } = await admin.from('organisations')
+        .select('name, logo_url, primary_color, branding_enabled').eq('slug', slug).maybeSingle()
+      org = data || null
+    }
+    const branded = org?.branding_enabled === true
+    const orgName = typeof org?.name === 'string' && org.name.trim() ? org.name.trim().slice(0, 150) : 'LaunchSession'
     const safeOrgName = escapeHtml(orgName)
-    const isValidHex = typeof org_color === 'string' && /^#[0-9A-Fa-f]{6}$/.test(org_color)
-    const accent = isValidHex ? org_color : DEFAULT_COLOR
+    const accent = branded && isHex(org.primary_color) ? org.primary_color : DEFAULT_COLOR
     const accentLight = shade(accent, 20)
     const accentDark = shade(accent, -55)
+    const orgLogo = branded ? org.logo_url : LAUNCHSESSION_LOGO
 
     // Never trust caller-supplied origins: a recovery token must only reach
     // our app. Build the destination ourselves, preserving only known context.
     const destination = new URL('https://app.launchsession.co.uk/reset-password')
-    if (typeof org_slug === 'string' && /^[a-z0-9][a-z0-9-]{0,99}$/.test(org_slug)) destination.searchParams.set('org', org_slug)
+    if (slug) destination.searchParams.set('org', slug)
     try {
       if (new URL(redirect_to).searchParams.get('portal') === 'volunteer') destination.searchParams.set('portal', 'volunteer')
     } catch (e) {}
     const redirectTo = destination.href
-    const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } })
 
     const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
       type: 'recovery',
@@ -89,9 +125,9 @@ export function createPasswordResetHandler({ createClient, env, fetch: sendEmail
     destination.hash = new URLSearchParams({ token_hash: linkData.properties.hashed_token, type: 'recovery' }).toString()
     const actionUrl = destination.href
     const safeActionUrl = escapeHtml(actionUrl)
-    const subject = `Reset your ${orgName} password`
+    const subject = `Reset your ${orgName.replace(/[\r\n]+/g, ' ')} password`
 
-    const logo = typeof org_logo === 'string' && /^https:\/\//i.test(org_logo) ? escapeHtml(org_logo) : ''
+    const logo = typeof orgLogo === 'string' && /^https:\/\//i.test(orgLogo) ? escapeHtml(orgLogo) : ''
     const orgBadge = logo
       ? `<img src="${logo}" alt="${safeOrgName}" width="64" height="64" style="display:block; width:64px; height:64px; border-radius:50%; object-fit:cover; margin: 0 auto 20px; border: 3px solid rgba(255,255,255,0.25);" />`
       : `<div style="width:64px; height:64px; margin: 0 auto 20px; border-radius: 50%; background: rgba(255,255,255,0.12); display: inline-flex; align-items: center; justify-content: center; font-size: 28px; line-height: 64px;">🔒</div>`
