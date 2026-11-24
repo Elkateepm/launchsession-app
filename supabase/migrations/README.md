@@ -130,3 +130,11 @@ Account health for the LaunchNexus summary, applied 24 Nov 2026:
 read-only `api/nexus-summary` endpoint (launch-session repo) can build the
 summary the LaunchNexus admin shows. The service role could already read every
 table behind it; everyone else is still refused unless they are a super admin.
+
+Read-only views, applied 24 Nov 2026:
+
+- `20261124_read_only_views.sql`
+
+`organisations_public` (definer view, auto-updatable) let anyone with the anon
+key update or delete any active organisation, cascading to 143 tables. Every
+public view now has SELECT only for `public`, `anon` and `authenticated`.
