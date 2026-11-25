@@ -5,7 +5,7 @@ import { areaByKey } from '../impact/impact_shared'
 import {
   getFunderMetrics, buildNarrative, buildCaveats, formatPeriod, AGE_BANDS, DOSE_BANDS,
 } from '../../lib/funderReport'
-import { INK, MUTED, RULE, RULE_SOFT, PAPER, DocMasthead, DocFooter } from './docShared'
+import { INK, MUTED, RULE, RULE_SOFT, PAPER, DocMasthead, DocFooter, toBody } from './docShared'
 import Icon from '../../lib/icons'
 
 // A funder report is a document, not a dashboard. It is printed, attached to an
@@ -135,7 +135,8 @@ export default function FunderReport({ org, range, onClose }) {
     fontSize: 13, fontFamily: 'inherit', minHeight: 40, background: 'var(--surface)', color: 'var(--text)',
   }
 
-  return (
+  // Under <body>, where the print rules expect it; see toBody in docShared.
+  return toBody(
     <div id="ls-funder-print-root" style={{
       position: 'fixed', inset: 0, zIndex: 10500, background: 'var(--surface-hover)', overflowY: 'auto',
     }}>
@@ -320,6 +321,6 @@ export default function FunderReport({ org, range, onClose }) {
           </>
         )}
       </div>
-    </div>
+    </div>,
   )
 }

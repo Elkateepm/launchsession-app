@@ -11,6 +11,10 @@ import { areaByKey } from '../components/impact/impact_shared'
 // A section is dropped when its data is empty rather than printed as a row of
 // zeroes, so a young organisation gets a short honest report instead of a long
 // hollow one.
+//
+// `named: true` marks a section that lists individual people. The documents
+// here are read by the staff who act on those lists and show them; the report
+// studio, whose reports go to funders and boards, leaves them out unless asked.
 
 const RPC = {
   delivery: 'report_delivery_metrics',
@@ -222,6 +226,7 @@ function attendanceSpec(m, terms) {
       },
       {
         title: 'Repeat absence',
+        named: true,
         hint: `${terms.People} absent twice or more in the period. Named because this is the list a report like this exists to prompt action on.`,
         ranked: { rows: (m.repeat_absentees || []).map(x => ({ label: x.label, value: n(x.n) })), unit: ' absences' },
       },
@@ -322,6 +327,7 @@ function youngPeopleSpec(m, terms, { programme = false } = {}) {
       },
       {
         title: 'Most engaged',
+        named: true,
         hint: `${terms.People} who attended most often in the period.`,
         ranked: { rows: (m.most_engaged || []).map(x => ({ label: x.label, value: n(x.n) })), unit: ' sessions' },
       },
@@ -399,6 +405,7 @@ function impactSpec(m, terms) {
       },
       {
         title: 'Biggest gains',
+        named: true,
         hint: 'The individual journeys behind the averages, and where a case study would start.',
         ranked: {
           rows: (m.most_improved || []).map(x => ({
@@ -409,6 +416,7 @@ function impactSpec(m, terms) {
       },
       {
         title: 'Where scores fell',
+        named: true,
         ranked: {
           rows: (m.needs_attention || []).map(x => ({
             label: x.label,
@@ -472,6 +480,7 @@ function workforceSpec(m, terms) {
       },
       {
         title: 'Who delivered',
+        named: true,
         hint: 'By number of sessions worked in the period.',
         table: (m.by_person || []).length ? {
           columns: [

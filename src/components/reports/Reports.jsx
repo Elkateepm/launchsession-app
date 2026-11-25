@@ -1,33 +1,43 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { useTerms } from '../../context/OrgContext'
 import {
-  DATE_RANGES, rangeFor, getOverviewMetrics, getInsightExtras, getSessionLearningMetrics, deriveInsights,
-  listSavedReports, renameReport, deleteReport, duplicateReport, rerunReport,
+  rangeFor, getOverviewMetrics, getInsightExtras, getSessionLearningMetrics, deriveInsights,
+  listSavedReports, renameReport, deleteReport, duplicateReport,
   REPORT_LIBRARY, REPORT_CATEGORIES, canAccessReport,
 } from '../../lib/reportingService'
-import ReportBuilder from './ReportBuilder'
+import { definitionFromRow, definitionFromTemplate, definitionRange, canSaveReports, isAdminRole, templateByKey, templatesFor } from '../../lib/reportStudio'
+import { markReportRun } from '../../lib/insightsService'
+import { formatDay } from '../../lib/insights'
 import FunderReport from './FunderReport'
 import ReportDocument from './ReportDocument'
+import ReportStudio from './ReportStudio'
+import InsightsHome from './InsightsHome'
+import { btn, card } from './insightsUi'
+import OrgPageHero, { orgBrand, heroButtons } from '../shared/OrgPageHero'
 import { hasDocument } from '../../lib/reportDocs'
 import Icon from '../../lib/icons'
 
+// Reports & Insights.
+//
+//   Insights     how the work is going: figures against the period before,
+//                trends, breakdowns and plain-language findings
+//   Your reports start a report from a template, and the saved ones to rerun
+//   Ready-made   the single-purpose documents (funder, attendance, safeguarding…)
+
 const VIEWS = [
-  { key: 'overview', label: 'Overview' },
-  { key: 'library', label: 'Report Library' },
-  { key: 'saved', label: 'Saved Reports' },
+  { key: 'insights', label: 'Insights', icon: 'insights' },
+  { key: 'reports', label: 'Your reports', icon: 'reports' },
+  { key: 'library', label: 'Ready-made', icon: 'templates' },
 ]
 
-const card = (extra = {}) => ({
-  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14,
-  boxShadow: '0 1px 2px rgba(15,23,42,0.04)', ...extra,
-})
 const TONES = {
   indigo: { bg: 'var(--info-bg)', bd: 'var(--info-border)', fg: 'var(--info-text)' },
-  blue:   { bg: 'var(--info-bg)', bd: 'var(--info-border)', fg: 'var(--info-text)' },
-  green:  { bg: 'var(--ok-bg)', bd: 'var(--ok-border)', fg: 'var(--ok-text)' },
-  amber:  { bg: 'var(--warn-bg)', bd: 'var(--warn-border)', fg: 'var(--warn-text)' },
-  red:    { bg: 'var(--danger-bg)', bd: 'var(--danger-border)', fg: 'var(--danger-text)' },
-  slate:  { bg: 'var(--surface2)', bd: 'var(--border)', fg: 'var(--text2)' },
+  blue: { bg: 'var(--info-bg)', bd: 'var(--info-border)', fg: 'var(--info-text)' },
+  green: { bg: 'var(--ok-bg)', bd: 'var(--ok-border)', fg: 'var(--ok-text)' },
+  amber: { bg: 'var(--warn-bg)', bd: 'var(--warn-border)', fg: 'var(--warn-text)' },
+  red: { bg: 'var(--danger-bg)', bd: 'var(--danger-border)', fg: 'var(--danger-text)' },
+  slate: { bg: 'var(--surface2)', bd: 'var(--border)', fg: 'var(--text2)' },
 }
 
 const CATEGORY_TONE = {
@@ -35,50 +45,35 @@ const CATEGORY_TONE = {
   Impact: 'amber', Team: 'blue', Safeguarding: 'red', Funding: 'green',
 }
 
-const ctl = {
-  padding: '8px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)',
-  fontSize: 12.5, fontWeight: 600, color: 'var(--text2)', outline: 'none', cursor: 'pointer',
-}
-
-function fmtDate(iso) {
-  if (!iso) return '—'
-  return new Date(`${iso}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-}
-
 export default function Reports({ org, session, userProfile, onNavigate }) {
   const isMobile = useIsMobile()
+  const terms = useTerms()
   const orgId = org?.id
   const role = userProfile?.role || 'staff'
 
-  const [view, setView] = useState('overview')
-  const [rangeKey, setRangeKey] = useState('30d')
-  const [customRange, setCustomRange] = useState({ from: '', to: '' })
-  const [metrics, setMetrics] = useState(null)
-  const [extras, setExtras] = useState({})
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [view, setView] = useState('insights')
+  const [range, setRange] = useState(() => rangeFor('90d'))
+  const [attention, setAttention] = useState([])
   const [savedReports, setSavedReports] = useState([])
-  const [builderType, setBuilderType] = useState(null)
+  const [studio, setStudio] = useState(null)
   const [showFunder, setShowFunder] = useState(false)
   const [docReport, setDocReport] = useState(null)
 
-  const range = useMemo(() => rangeFor(rangeKey, customRange), [rangeKey, customRange])
-
-  const loadOverview = useCallback(async () => {
-    if (!orgId) return
-    setLoading(true); setError('')
+  // The action prompts -- unmarked registers, repeat absence, open concerns,
+  // reflections due -- each come from their own small query. They are a
+  // sidebar to the figures, so a failure here leaves the page working.
+  const loadAttention = useCallback(async () => {
+    if (!orgId || !range?.from) return
     try {
       const [m, x, learning] = await Promise.all([
         getOverviewMetrics(range),
         getInsightExtras(orgId, range),
-        getSessionLearningMetrics(range),
+        getSessionLearningMetrics(range).catch(() => null),
       ])
-      setMetrics(m); setExtras({ ...x, learning })
-    } catch (e) {
-      setError(e.message || 'Could not load report data.')
-      setMetrics(null)
-    }
-    setLoading(false)
+      // The findings on the page already say whether attendance rose or fell
+      // and what was recorded; only the prompts that ask for an action stay.
+      setAttention(deriveInsights(m, { ...x, learning: learning || {} }).filter(i => i.tone !== 'good' && !i.key.startsWith('attendance')))
+    } catch { setAttention([]) }
   }, [orgId, range])
 
   const loadSaved = useCallback(async () => {
@@ -86,287 +81,183 @@ export default function Reports({ org, session, userProfile, onNavigate }) {
     try { setSavedReports(await listSavedReports(orgId)) } catch { /* RLS hides restricted rows */ }
   }, [orgId])
 
-  useEffect(() => { loadOverview() }, [loadOverview])
+  useEffect(() => { loadAttention() }, [loadAttention])
   useEffect(() => { loadSaved() }, [loadSaved])
 
-  const insights = useMemo(() => deriveInsights(metrics, extras), [metrics, extras])
+  const onRangeChange = useCallback((r) => {
+    setRange(prev => (prev?.from === r.from && prev?.to === r.to ? prev : r))
+  }, [])
 
   const goto = (target) => {
     const map = { attendance: 'registers', safeguarding: 'safeguarding', impact: 'impact_outcomes', sessions: 'planner' }
     if (onNavigate && map[target]) onNavigate(map[target])
   }
 
-  return (
-    <div style={{ padding: isMobile ? 16 : 28, width: '100%', boxSizing: 'border-box' }}>
-      <div style={{
-        position: 'relative', overflow: 'hidden',
-        background: 'linear-gradient(135deg, #312E81 0%, #4338CA 42%, #2563EB 100%)',
-        borderRadius: isMobile ? 16 : 20,
-        padding: isMobile ? '20px 18px' : '24px 28px',
-        marginBottom: 18,
-        boxShadow: '0 1px 0 rgba(255,255,255,0.14) inset, 0 16px 36px -24px rgba(49,46,129,0.8)',
-      }}>
-        <div style={{ position: 'absolute', top: -80, right: -50, width: 260, height: 260, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.14), transparent 70%)', pointerEvents: 'none' }} />
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
-          <div style={{ minWidth: 0 }}>
-            <h1 style={{ margin: 0, fontSize: isMobile ? 23 : 30, fontWeight: 900, color: '#fff', letterSpacing: -0.8 }}>Reports</h1>
-            <p style={{ margin: '6px 0 0', fontSize: isMobile ? 13 : 14, color: 'rgba(224,231,255,0.85)', fontWeight: 500 }}>
-              Understand your delivery and turn your data into useful reports.
-            </p>
-          </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {/* Given its own button rather than left as one tile of nine in the
-                library: for most organisations here this is the report the page
-                exists for, and it was the one the library served worst. */}
-            <button onClick={() => setShowFunder(true)} style={{
-              padding: '12px 20px', borderRadius: 11, border: 'none', color: 'var(--info-text)', background: 'var(--surface)',
-              fontSize: 13, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
-              boxShadow: '0 8px 20px -8px rgba(0,0,0,0.4)',
-            }}>Funder report</button>
-            <button onClick={() => setBuilderType('delivery')} style={{
-              padding: '12px 20px', borderRadius: 11, cursor: 'pointer', whiteSpace: 'nowrap',
-              border: '1.5px solid rgba(255,255,255,0.45)', background: 'transparent', color: '#fff',
-              fontSize: 13, fontWeight: 800,
-            }}>{isMobile ? '+ Create' : '+ Create report'}</button>
-          </div>
-        </div>
-      </div>
+  const openSaved = (row) => {
+    setStudio({ initial: definitionFromRow(row, { isAdmin: isAdminRole(role) }) })
+    markReportRun(row.id).catch(() => {})
+  }
 
-      <div style={{ display: 'inline-flex', gap: 3, padding: 3, borderRadius: 12, background: 'var(--surface-hover)', border: '1px solid var(--border)', marginBottom: 14, maxWidth: '100%', overflowX: 'auto' }}>
+  const brand = orgBrand(org)
+  const onHero = heroButtons(brand, {
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 44, padding: '0 18px',
+    borderRadius: 12, border: '1px solid transparent', fontSize: 13.5, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+  })
+
+  return (
+    <div style={{ padding: isMobile ? 16 : 28, width: '100%', boxSizing: 'border-box', maxWidth: 1280, margin: '0 auto' }}>
+      <OrgPageHero org={org} mobile={isMobile} title="Reports & Insights"
+        subtitle={`How your work is going, in numbers and plain words, and reports you can send to funders and trustees.`}
+        label={savedReports.length ? 'Saved reports' : null}
+        detail={savedReports.length ? `${savedReports.length} ready to rerun` : null}
+        actions={<>
+          <button type="button" onClick={() => setStudio({ initial: null })} style={{ ...onHero.main, flex: isMobile ? 1 : undefined }}><Icon name="add" size={16} />New report</button>
+          {/* On a phone the tabs below already offer this, and two buttons
+              side by side squeeze the label onto two lines. */}
+          {!isMobile && <button type="button" onClick={() => setView('library')} style={onHero.quiet}>Ready-made reports</button>}
+        </>} />
+
+      <div role="tablist" aria-label="Reports sections" style={{ display: 'flex', gap: 3, padding: 3, borderRadius: 13, background: 'var(--surface-hover)', border: '1px solid var(--border)', marginBottom: 14, width: isMobile ? '100%' : 'fit-content', boxSizing: 'border-box' }}>
         {VIEWS.map(v => {
           const on = view === v.key
           return (
-            <button key={v.key} onClick={() => setView(v.key)} style={{
-              padding: '8px 16px', border: 'none', borderRadius: 9, cursor: 'pointer',
-              fontSize: 12.5, fontWeight: 800, whiteSpace: 'nowrap',
+            <button key={v.key} type="button" role="tab" aria-selected={on} onClick={() => setView(v.key)} style={{
+              flex: isMobile ? 1 : undefined, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              minHeight: isMobile ? 42 : 36, padding: isMobile ? '0 6px' : '0 16px', border: 'none', borderRadius: 10, cursor: 'pointer',
+              fontSize: isMobile ? 12.5 : 13, fontWeight: 800, whiteSpace: 'nowrap', fontFamily: 'inherit',
               background: on ? 'var(--surface)' : 'transparent', color: on ? 'var(--org-ink)' : 'var(--text3)',
               boxShadow: on ? '0 1px 3px rgba(15,23,42,0.12)' : 'none',
-            }}>{v.label}</button>
+            }}>{!isMobile && <Icon name={v.icon} size={15} />}{v.label}</button>
           )
         })}
       </div>
 
-      {view === 'overview' && (
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 18 }}>
-          <select value={rangeKey} onChange={e => setRangeKey(e.target.value)} style={ctl}>
-            {DATE_RANGES.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
-          </select>
-          {rangeKey === 'custom' && (
-            <>
-              <input type="date" value={customRange.from} onChange={e => setCustomRange(c => ({ ...c, from: e.target.value }))} style={ctl} />
-              <input type="date" value={customRange.to} onChange={e => setCustomRange(c => ({ ...c, to: e.target.value }))} style={ctl} />
-            </>
-          )}
-          <span style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 600 }}>
-            {fmtDate(range.from)} – {fmtDate(range.to)}
-          </span>
-        </div>
+      {view === 'insights' && (
+        <InsightsHome org={org} role={role} terms={terms} isMobile={isMobile}
+          attention={attention} onAttention={goto} onRangeChange={onRangeChange}
+          onBuildReport={(prefill) => setStudio({ initial: prefill })} />
       )}
 
-      {error && (
-        <div style={{ ...card({ padding: 16, marginBottom: 14 }), borderColor: 'var(--danger-border)', background: 'var(--danger-bg)' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--danger-text)' }}>Couldn't load report data</div>
-          <div style={{ fontSize: 12.5, color: 'var(--danger-text)', marginTop: 3 }}>{error}</div>
-        </div>
-      )}
-
-      {view === 'overview' && (
-        <OverviewView
-          loading={loading} metrics={metrics} insights={insights} isMobile={isMobile}
-          learning={extras.learning}
-          savedReports={savedReports} onGoto={goto}
-          onOpenLearning={() => setDocReport({ key: 'learning', name: 'Session Learning Report' })}
-          onOpenLibrary={() => setView('library')} onOpenSaved={() => setView('saved')}
-        />
+      {view === 'reports' && (
+        <YourReports role={role} terms={terms} isMobile={isMobile} reports={savedReports} orgId={orgId} session={session}
+          onChanged={loadSaved} onOpen={openSaved}
+          onStart={(key) => setStudio({ initial: definitionFromTemplate(key) })} />
       )}
 
       {view === 'library' && (
         <LibraryView role={role} isMobile={isMobile} onRun={(key) => {
-          // Every report in the library now has its own aggregate and its own
-          // document. The builder wizard remains only for anything that does
-          // not yet, rather than being the default path.
           if (key === 'funding') setShowFunder(true)
-          else if (hasDocument(key)) {
-            setDocReport({ key, name: REPORT_LIBRARY.find(r => r.key === key)?.name || 'Report' })
-          } else setBuilderType(key)
+          else if (hasDocument(key)) setDocReport({ key, name: REPORT_LIBRARY.find(r => r.key === key)?.name || 'Report' })
         }} />
       )}
 
-      {view === 'saved' && (
-        <SavedView
-          reports={savedReports} orgId={orgId} session={session}
-          onChanged={loadSaved} onCreate={() => setBuilderType('delivery')} range={range}
-        />
-      )}
-
-      {showFunder && (
-        <FunderReport org={org} range={range} onClose={() => setShowFunder(false)} />
-      )}
+      {showFunder && <FunderReport org={org} range={range} onClose={() => setShowFunder(false)} />}
 
       {docReport && (
-        <ReportDocument
-          reportKey={docReport.key} title={docReport.name}
-          org={org} range={range} onClose={() => setDocReport(null)}
-        />
+        <ReportDocument reportKey={docReport.key} title={docReport.name} org={org} range={range} onClose={() => setDocReport(null)} />
       )}
 
-      {builderType && (
-        <ReportBuilder
-          org={org} session={session} role={role} initialType={builderType}
-          defaultRange={range}
-          onClose={() => setBuilderType(null)}
-          onSaved={() => { setBuilderType(null); loadSaved(); setView('saved') }}
-        />
+      {studio && (
+        <ReportStudio org={org} session={session} role={role} terms={terms} isMobile={isMobile}
+          initial={studio.initial} onClose={() => setStudio(null)} onSaved={loadSaved} />
       )}
     </div>
   )
 }
 
-function OverviewView({ loading, metrics, learning, insights, isMobile, savedReports, onGoto, onOpenLearning, onOpenLibrary, onOpenSaved }) {
-  if (loading) {
-    return (
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(auto-fit,minmax(150px,1fr))', gap: 12 }}>
-        {[...Array(6)].map((_, i) => (
-          <div key={i} style={card({ padding: 16, height: 78, background: 'var(--surface2)' })} />
-        ))}
-      </div>
-    )
-  }
+function SectionLabel({ children }) {
+  return (
+    <h2 style={{ margin: '22px 0 10px', fontSize: 12, fontWeight: 800, color: 'var(--text3)', letterSpacing: 0.6, textTransform: 'uppercase' }}>{children}</h2>
+  )
+}
 
-  if (!metrics) {
-    return (
-      <div style={{ ...card({ padding: 40 }), textAlign: 'center' }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>Report data unavailable</div>
-        <div style={{ fontSize: 13, color: 'var(--text3)' }}>We couldn't load figures for this period. Try a different date range.</div>
-      </div>
-    )
-  }
+function YourReports({ role, terms, isMobile, reports, orgId, session, onChanged, onOpen, onStart }) {
+  const [menuId, setMenuId] = useState(null)
+  const [busy, setBusy] = useState(false)
+  const canSave = canSaveReports(role)
 
-  const hasData = metrics.sessions > 0 || metrics.young_people > 0
-  // Colour carries meaning rather than decorating: reach/delivery are neutral
-  // indigo, attendance is graded on performance, concerns go red only when
-  // there actually are any.
-  const rate = metrics.attendance_rate
-  const attTone = rate === null ? 'slate' : rate >= 75 ? 'green' : rate >= 50 ? 'amber' : 'red'
-  const stats = [
-    { v: metrics.young_people, l: 'Young people', tone: 'indigo', icon: '🧒' },
-    { v: metrics.sessions, l: 'Sessions', tone: 'indigo', icon: '📅' },
-    { v: rate !== null ? `${rate}%` : '—', l: 'Attendance', tone: attTone, icon: '✅' },
-    { v: `${metrics.delivery_hours}h`, l: 'Delivery', tone: 'blue', icon: '⏱' },
-    { v: metrics.outcomes, l: 'Outcomes', tone: metrics.outcomes > 0 ? 'green' : 'slate', icon: '⭐' },
-    { v: metrics.open_concerns, l: 'Open concerns', tone: metrics.open_concerns > 0 ? 'red' : 'green', icon: '🛡' },
-  ]
+  const act = async (fn) => {
+    setBusy(true)
+    try { await fn() } catch (e) { window.alert(e.message || 'That did not work.') }
+    setBusy(false); setMenuId(null); onChanged()
+  }
 
   return (
     <>
-      <SectionLabel>At a glance</SectionLabel>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(auto-fit,minmax(150px,1fr))', gap: 12, marginBottom: 22 }}>
-        {stats.map(s => {
-          const t = TONES[s.tone] || TONES.slate
-          return (
-            <div key={s.l} style={{
-              background: t.bg, border: `1px solid ${t.bd}`, borderRadius: 14, padding: 16,
-              boxShadow: '0 1px 0 rgba(255,255,255,0.7) inset',
-            }}>
-              <div style={{ fontSize: 14, marginBottom: 7, opacity: 0.9 }}><Icon name={s.icon} /></div>
-              <div style={{ fontSize: 24, fontWeight: 900, letterSpacing: -0.6, color: t.fg, lineHeight: 1 }}>{s.v}</div>
-              <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text3)', marginTop: 5 }}>{s.l}</div>
-            </div>
-          )
-        })}
-      </div>
-
-      {!hasData && (
-        <div style={{ ...card({ padding: 32, marginBottom: 22 }), textAlign: 'center' }}>
-          <div style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>Not enough data for this period yet</div>
-          <div style={{ fontSize: 13, color: 'var(--text3)' }}>Figures will appear as your team delivers sessions and completes registers.</div>
-        </div>
-      )}
-
-      {learning && Number(learning.delivered || 0) > 0 && (
-        <>
-          <SectionLabel>Learning loop</SectionLabel>
-          <div style={{ ...card({ padding: isMobile ? 16 : 20, marginBottom: 22 }), background: 'linear-gradient(135deg,var(--violet-bg),var(--info-bg))', borderColor: 'var(--info-border)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-              <div style={{ maxWidth: 520 }}>
-                <div style={{ fontSize: 15, fontWeight: 900, color: '#312E81' }}>From delivery to evidence</div>
-                <div style={{ fontSize: 12.5, color: 'var(--text2)', lineHeight: 1.5, marginTop: 4 }}>See whether planned outcomes were observed, where evidence is strong and which improvements still need action.</div>
-              </div>
-              <button onClick={onOpenLearning} style={{ minHeight: 44, padding: '10px 15px', border: 'none', borderRadius: 10, background: '#4338CA', color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer' }}>Open learning report</button>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,minmax(0,1fr))' : 'repeat(5,minmax(0,1fr))', gap: 9, marginTop: 16 }}>
-              {[
-                { v: `${learning.reflections_completed}/${learning.reflection_required}`, l: 'reflections' },
-                { v: learning.avg_engagement ? `${learning.avg_engagement}/5` : '—', l: 'engagement' },
-                { v: learning.avg_inclusion ? `${learning.avg_inclusion}/5` : '—', l: 'inclusion' },
-                { v: learning.evidence_count || 0, l: 'with evidence' },
-                { v: learning.actions_open || 0, l: 'open actions' },
-              ].map(x => <div key={x.l} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 11, padding: 11 }}><div style={{ fontSize: 19, fontWeight: 900, color: 'var(--info-text)' }}>{x.v}</div><div style={{ fontSize: 10.5, color: 'var(--text3)', fontWeight: 700 }}>{x.l}</div></div>)}
-            </div>
-          </div>
-        </>
-      )}
-
-      {insights.length > 0 && (
-        <>
-          <SectionLabel>Needs your attention</SectionLabel>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit,minmax(280px,1fr))', gap: 12, marginBottom: 22 }}>
-            {insights.map(i => {
-              const tone = i.tone === 'urgent' ? { bd: 'var(--danger-border)', bg: 'var(--danger-bg)', fg: 'var(--danger-text)' }
-                : i.tone === 'warn' ? { bd: 'var(--warn-border)', bg: 'var(--warn-bg)', fg: 'var(--warn-text)' }
-                : { bd: 'var(--ok-border)', bg: 'var(--ok-bg)', fg: 'var(--ok-text)' }
-              return (
-                <div key={i.key} style={card({ padding: 16, borderColor: tone.bd, background: tone.bg })}>
-                  <div style={{ fontSize: 13.5, fontWeight: 800, color: tone.fg }}>{i.title}</div>
-                  <div style={{ fontSize: 12.5, color: 'var(--text2)', marginTop: 4, lineHeight: 1.5 }}>{i.body}</div>
-                  <button onClick={() => onGoto(i.target)} style={{
-                    marginTop: 10, padding: 0, border: 'none', background: 'none',
-                    fontSize: 12.5, fontWeight: 800, color: tone.fg, cursor: 'pointer',
-                  }}>{i.action} <Icon name="→" /></button>
-                </div>
-              )
-            })}
-          </div>
-        </>
-      )}
-
-      <SectionLabel>Popular reports</SectionLabel>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit,minmax(240px,1fr))', gap: 12, marginBottom: 22 }}>
-        {REPORT_LIBRARY.filter(r => ['delivery', 'attendance', 'learning', 'funding'].includes(r.key)).map(r => (
-          <div key={r.key} style={card({ padding: 16 })}>
-            <div style={{
-              width: 34, height: 34, borderRadius: 10, display: 'inline-flex', alignItems: 'center',
-              justifyContent: 'center', fontSize: 16, marginBottom: 10,
-              background: (TONES[CATEGORY_TONE[r.category]] || TONES.slate).bg,
-              border: `1px solid ${(TONES[CATEGORY_TONE[r.category]] || TONES.slate).bd}`,
-            }}><Icon name={r.icon} /></div>
-            <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>{r.name}</div>
-            <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 4, lineHeight: 1.5 }}>{r.desc}</div>
-            <button onClick={onOpenLibrary} style={{
-              marginTop: 12, padding: '8px 14px', borderRadius: 9, border: '1px solid var(--border)',
-              background: 'var(--surface)', fontSize: 12, fontWeight: 800, color: 'var(--org-ink)', cursor: 'pointer',
-            }}>Run report</button>
-          </div>
+      <SectionLabel>Start a report</SectionLabel>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill,minmax(220px,1fr))', gap: 10 }}>
+        {templatesFor(role).map(t => (
+          <button key={t.key} type="button" onClick={() => onStart(t.key)} style={{
+            ...card({ padding: 14, textAlign: 'left', cursor: 'pointer', display: 'flex', gap: 12, alignItems: 'flex-start', fontFamily: 'inherit' }),
+            borderStyle: t.key === 'blank' ? 'dashed' : 'solid',
+          }}>
+            <span style={{ width: 36, height: 36, borderRadius: 11, display: 'grid', placeItems: 'center', background: 'var(--org-a10, var(--surface2))', color: 'var(--org-ink)', flexShrink: 0 }}><Icon name={t.icon} size={18} /></span>
+            <span style={{ minWidth: 0 }}>
+              <span style={{ display: 'block', fontSize: 14, fontWeight: 850, color: 'var(--text)' }}>{t.name}</span>
+              <span style={{ display: 'block', fontSize: 12, color: 'var(--text3)', marginTop: 3, lineHeight: 1.45 }}>{t.blurb}</span>
+            </span>
+          </button>
         ))}
       </div>
 
-      {savedReports.length > 0 && (
-        <>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <SectionLabel>Recent reports</SectionLabel>
-            <button onClick={onOpenSaved} style={{ border: 'none', background: 'none', fontSize: 12, fontWeight: 800, color: 'var(--org-ink)', cursor: 'pointer' }}>View all <Icon name="→" /></button>
+      <SectionLabel>Saved reports</SectionLabel>
+      {!canSave && (
+        <div style={{ fontSize: 12.5, color: 'var(--text3)', marginBottom: 10, lineHeight: 1.5 }}>
+          You can build, print and download reports. Saving them for the team needs an owner, admin or staff login.
+        </div>
+      )}
+      {reports.length === 0 ? (
+        <div style={card({ padding: isMobile ? 24 : 32, textAlign: 'center' })}>
+          <div style={{ width: 44, height: 44, borderRadius: 13, margin: '0 auto 10px', display: 'grid', placeItems: 'center', background: 'var(--surface2)', color: 'var(--text3)' }}><Icon name="reports" size={22} /></div>
+          <div style={{ fontSize: 15, fontWeight: 850, color: 'var(--text)' }}>No saved reports yet</div>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 5, lineHeight: 1.5, maxWidth: 420, marginInline: 'auto' }}>
+            Save a report once and run it again whenever you need it. It always uses the latest records, so next term’s board summary is two clicks away.
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-            {savedReports.slice(0, 4).map(r => (
-              <div key={r.id} style={card({ padding: '12px 14px' })}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{r.name}</div>
-                <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2 }}>
-                  {REPORT_LIBRARY.find(x => x.key === r.report_type)?.name || r.report_type} · {fmtDate(r.created_at?.slice(0, 10))}
-                </div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {reports.map(r => {
+            const def = definitionFromRow(r, { isAdmin: isAdminRole(role) })
+            const t = templateByKey(def.template)
+            const range = definitionRange(def)
+            return (
+              <div key={r.id} style={card({ padding: isMobile ? 12 : 14, display: 'flex', alignItems: 'center', gap: 12 })}>
+                <span style={{ width: 38, height: 38, borderRadius: 11, display: 'grid', placeItems: 'center', background: 'var(--org-a10, var(--surface2))', color: 'var(--org-ink)', flexShrink: 0 }}><Icon name={t.icon} size={18} /></span>
+                <button type="button" onClick={() => onOpen(r)} style={{ flex: 1, minWidth: 0, textAlign: 'left', border: 'none', background: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  <span style={{ display: 'block', fontSize: 14, fontWeight: 850, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</span>
+                  <span style={{ display: 'block', fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>
+                    {t.name} · {def.period.key === 'custom' ? range.label : `${range.label} when run`}
+                    {def.projects.length + def.groups.length > 0 ? ` · ${def.projects.length + def.groups.length} filter${def.projects.length + def.groups.length === 1 ? '' : 's'}` : ''}
+                  </span>
+                  <span style={{ display: 'block', fontSize: 11, color: 'var(--text-faint)', marginTop: 2 }}>
+                    {r.last_run_at ? `Last opened ${formatDay(r.last_run_at.slice(0, 10), { year: true })}` : `Saved ${formatDay((r.created_at || '').slice(0, 10), { year: true })}`}
+                  </span>
+                </button>
+                {!isMobile && <button type="button" onClick={() => onOpen(r)} style={btn('ghost', isMobile)}>Open</button>}
+                {canSave && (
+                  <div style={{ position: 'relative' }}>
+                    <button type="button" aria-label={`More for ${r.name}`} aria-expanded={menuId === r.id} onClick={() => setMenuId(menuId === r.id ? null : r.id)} style={{ ...btn('ghost', isMobile), width: isMobile ? 44 : 38, padding: 0 }}>⋯</button>
+                    {menuId === r.id && (
+                      <>
+                        <div onClick={() => setMenuId(null)} style={{ position: 'fixed', inset: 0, zIndex: 10380 }} />
+                        <div role="menu" style={{ position: 'absolute', right: 0, top: '110%', zIndex: 10390, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, minWidth: 180, overflow: 'hidden', boxShadow: '0 12px 32px rgba(15,23,42,0.16)' }}>
+                          <MenuItem disabled={busy} onClick={() => act(() => duplicateReport(orgId, session?.user?.id, r))}>Duplicate</MenuItem>
+                          <MenuItem disabled={busy} onClick={() => {
+                            const name = window.prompt('Rename report', r.name)
+                            if (name && name.trim()) act(() => renameReport(r.id, name.trim().slice(0, 120)))
+                          }}>Rename</MenuItem>
+                          <MenuItem danger disabled={busy} onClick={() => {
+                            if (window.confirm(`Delete "${r.name}"? The report definition is removed for everyone. Your records are not affected.`)) act(() => deleteReport(r.id))
+                          }}>Delete</MenuItem>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
-        </>
+            )
+          })}
+        </div>
       )}
     </>
   )
@@ -387,56 +278,45 @@ function LibraryView({ role, isMobile, onRun }) {
 
   return (
     <>
-      <div style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>Report Library</div>
-        <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 3 }}>Choose a report to explore your organisation's data.</div>
+      <div style={{ margin: '6px 0 14px' }}>
+        <div style={{ fontSize: 15, fontWeight: 850, color: 'var(--text)' }}>Ready-made reports</div>
+        <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 3 }}>Single-purpose documents, each answering one question in depth. Pick one, set the dates, print.</div>
       </div>
 
-      <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search reports..."
-        style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px', borderRadius: 11, border: '1px solid var(--border)', fontSize: 13, outline: 'none', marginBottom: 10 }} />
+      <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search reports" aria-label="Search ready-made reports"
+        style={{ width: '100%', boxSizing: 'border-box', minHeight: 44, padding: '0 14px', borderRadius: 11, border: '1px solid var(--border)', fontSize: 14, outline: 'none', marginBottom: 10, background: 'var(--surface)', color: 'var(--text)', fontFamily: 'inherit' }} />
 
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 16, paddingBottom: 2 }}>
         {REPORT_CATEGORIES.map(c => (
-          <button key={c} onClick={() => setCat(c)} style={{
-            padding: '7px 13px', borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+          <button key={c} type="button" onClick={() => setCat(c)} style={{
+            minHeight: isMobile ? 40 : 34, padding: '0 13px', borderRadius: 99, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, fontFamily: 'inherit',
             border: cat === c ? '1.5px solid var(--org-ink)' : '1px solid var(--border)',
-            background: cat === c ? 'var(--info-bg)' : 'var(--surface)', color: cat === c ? 'var(--org-ink)' : 'var(--text2)',
+            background: cat === c ? 'var(--org-a10, var(--info-bg))' : 'var(--surface)', color: cat === c ? 'var(--org-ink)' : 'var(--text2)',
           }}>{c}</button>
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit,minmax(280px,1fr))', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill,minmax(280px,1fr))', gap: 12 }}>
         {list.map(r => {
           const allowed = canAccessReport(r, role)
+          const tone = TONES[CATEGORY_TONE[r.category]] || TONES.slate
           return (
-            <div key={r.key} style={card({ padding: 18, opacity: allowed ? 1 : 0.6 })}>
+            <div key={r.key} style={card({ padding: 18, opacity: allowed ? 1 : 0.6, display: 'flex', flexDirection: 'column' })}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 10, flexWrap: 'wrap' }}>
-                <span style={{
-                  width: 34, height: 34, borderRadius: 10, display: 'inline-flex', alignItems: 'center',
-                  justifyContent: 'center', fontSize: 16,
-                  background: (TONES[CATEGORY_TONE[r.category]] || TONES.slate).bg,
-                  border: `1px solid ${(TONES[CATEGORY_TONE[r.category]] || TONES.slate).bd}`,
-                }}><Icon name={r.icon} /></span>
-                <span style={{
-                  fontSize: 10.5, fontWeight: 800, borderRadius: 99, padding: '3px 9px',
-                  color: (TONES[CATEGORY_TONE[r.category]] || TONES.slate).fg,
-                  background: (TONES[CATEGORY_TONE[r.category]] || TONES.slate).bg,
-                }}>{r.category}</span>
+                <span style={{ width: 34, height: 34, borderRadius: 10, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, background: tone.bg, border: `1px solid ${tone.bd}` }}><Icon name={r.icon} /></span>
+                <span style={{ fontSize: 10.5, fontWeight: 800, borderRadius: 99, padding: '3px 9px', color: tone.fg, background: tone.bg }}>{r.category}</span>
                 {r.restricted && <span style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--warn-text)', background: 'var(--warn-bg)', borderRadius: 99, padding: '3px 9px' }}>Restricted</span>}
               </div>
-              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{r.name}</div>
-              <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 5, lineHeight: 1.5 }}>{r.desc}</div>
-              <button onClick={() => allowed && onRun(r.key)} disabled={!allowed} style={{
-                marginTop: 14, padding: '9px 16px', borderRadius: 10, border: 'none',
-                background: allowed ? 'linear-gradient(135deg,#4F46E5,#3B82F6)' : 'var(--border)',
-                color: allowed ? '#fff' : 'var(--text-faint)', fontSize: 12.5, fontWeight: 800,
-                cursor: allowed ? 'pointer' : 'not-allowed',
-              }}>{allowed ? 'Run report' : 'No permission'}</button>
+              <div style={{ fontSize: 14, fontWeight: 850, color: 'var(--text)' }}>{r.name}</div>
+              <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 5, lineHeight: 1.5, flex: 1 }}>{r.desc}</div>
+              <button type="button" onClick={() => allowed && onRun(r.key)} disabled={!allowed} style={{ ...btn(allowed ? 'primary' : 'ghost', isMobile), marginTop: 14, alignSelf: 'flex-start', cursor: allowed ? 'pointer' : 'not-allowed' }}>
+                {allowed ? 'Open report' : 'Owners and admins only'}
+              </button>
             </div>
           )
         })}
         {list.length === 0 && (
-          <div style={{ ...card({ padding: 30 }), textAlign: 'center', gridColumn: '1 / -1' }}>
+          <div style={card({ padding: 30, textAlign: 'center', gridColumn: '1 / -1' })}>
             <div style={{ fontSize: 13, color: 'var(--text3)' }}>No reports match that search.</div>
           </div>
         )}
@@ -445,99 +325,12 @@ function LibraryView({ role, isMobile, onRun }) {
   )
 }
 
-function SavedView({ reports, orgId, session, onChanged, onCreate, range }) {
-  const [menuId, setMenuId] = useState(null)
-  const [busy, setBusy] = useState(false)
-
-  const act = async (fn) => {
-    setBusy(true)
-    try { await fn() } catch (e) { window.alert(e.message || 'That action failed.') }
-    setBusy(false); setMenuId(null); onChanged()
-  }
-
-  if (reports.length === 0) {
-    return (
-      <div style={{ ...card({ padding: 44 }), textAlign: 'center' }}>
-        <div style={{ fontSize: 26, marginBottom: 10 }}><Icon name="📄" /></div>
-        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>No saved reports yet</div>
-        <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 18, lineHeight: 1.5 }}>
-          Create a report once and save it here so you can run it again later.
-        </div>
-        <button onClick={onCreate} style={{
-          padding: '11px 20px', borderRadius: 11, border: 'none', color: '#fff',
-          background: 'linear-gradient(135deg,#4F46E5,#3B82F6)', fontSize: 13, fontWeight: 800, cursor: 'pointer',
-        }}>Create Report</button>
-      </div>
-    )
-  }
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {reports.map(r => {
-        const meta = REPORT_LIBRARY.find(x => x.key === r.report_type)
-        return (
-          <div key={r.id} style={card({ padding: 16, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' })}>
-            <span style={{ fontSize: 18 }}>{meta?.icon || '📄'}</span>
-            <div style={{ flex: 1, minWidth: 160 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>{r.name}</div>
-              <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 3 }}>
-                {meta?.name || r.report_type}
-                {r.date_from ? ` · ${fmtDate(r.date_from)} – ${fmtDate(r.date_to)}` : ''}
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 2 }}>
-                Created {fmtDate(r.created_at?.slice(0, 10))}
-                {r.last_run_at ? ` · Last run ${fmtDate(r.last_run_at.slice(0, 10))}` : ''}
-              </div>
-            </div>
-            <div style={{ position: 'relative' }}>
-              <button onClick={() => setMenuId(menuId === r.id ? null : r.id)} style={{
-                padding: '7px 12px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)',
-                fontSize: 14, color: 'var(--text3)', cursor: 'pointer', lineHeight: 1,
-              }}>⋯</button>
-              {menuId === r.id && (
-                <>
-                  <div onClick={() => setMenuId(null)} style={{ position: 'fixed', inset: 0, zIndex: 10380 }} />
-                  <div style={{
-                    position: 'absolute', right: 0, top: '110%', zIndex: 10390, background: 'var(--surface)',
-                    border: '1px solid var(--border)', borderRadius: 11, minWidth: 190, overflow: 'hidden',
-                    boxShadow: '0 12px 32px rgba(15,23,42,0.16)',
-                  }}>
-                    <MenuItem disabled={busy} onClick={() => act(async () => { await rerunReport(r, range) })}>
-                      Rerun with current range
-                    </MenuItem>
-                    <MenuItem disabled={busy} onClick={() => act(() => duplicateReport(orgId, session?.user?.id, r))}>Duplicate</MenuItem>
-                    <MenuItem disabled={busy} onClick={() => {
-                      const name = window.prompt('Rename report', r.name)
-                      if (name && name.trim()) act(() => renameReport(r.id, name.trim()))
-                    }}>Rename</MenuItem>
-                    <MenuItem danger disabled={busy} onClick={() => {
-                      if (window.confirm(`Delete "${r.name}"? This can't be undone.`)) act(() => deleteReport(r.id))
-                    }}>Delete</MenuItem>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
 function MenuItem({ children, onClick, danger, disabled }) {
   return (
-    <button onClick={onClick} disabled={disabled} style={{
-      display: 'block', width: '100%', textAlign: 'left', padding: '10px 13px', border: 'none',
-      background: 'transparent', fontSize: 12.5, fontWeight: 700, cursor: disabled ? 'default' : 'pointer',
+    <button type="button" role="menuitem" onClick={onClick} disabled={disabled} style={{
+      display: 'block', width: '100%', textAlign: 'left', minHeight: 42, padding: '0 14px', border: 'none',
+      background: 'transparent', fontSize: 13, fontWeight: 700, cursor: disabled ? 'default' : 'pointer', fontFamily: 'inherit',
       color: danger ? 'var(--danger-text)' : 'var(--text2)', opacity: disabled ? 0.5 : 1,
     }}>{children}</button>
-  )
-}
-
-function SectionLabel({ children }) {
-  return (
-    <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 10 }}>
-      {children}
-    </div>
   )
 }
