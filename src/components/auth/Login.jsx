@@ -32,10 +32,14 @@ export default function Login({ org }) {
   const [error, setError] = useState(() => hasSuspensionNotice() ? SUSPENDED_MESSAGE : '')
   const [forgotSent, setForgotSent] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  // A phone or tablet can also be shared. Persistence is an explicit choice
-  // on every viewport, using the existing Supabase storage adapter.
-  const [rememberMe, setRememberMe] = useState(false)
+  // On a phone or tablet "Keep me signed in" starts ticked: the person signing
+  // in is almost always on their own device, and unticked the session lives in
+  // sessionStorage, which a phone throws away whenever it closes the app, so
+  // staff were signed out several times a week. It can still be unticked on a
+  // shared device. On a desktop, which may be a shared office machine, it
+  // starts unticked as before.
   const { isDesktop } = useBreakpoint()
+  const [rememberMe, setRememberMe] = useState(() => !isDesktop)
   const id = useId()
   const terms = useTerms()
   const brand = getAuthBranding(org)

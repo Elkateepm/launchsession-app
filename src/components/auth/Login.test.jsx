@@ -16,8 +16,8 @@ const passwordStep = () => {
   fireEvent.change(screen.getByLabelText('Password', { exact: true }), { target: { value: 'test-password' } })
 }
 
-test.each([false, true])('persistent sign-in is off by default on desktop=%s', async desktop => {
-  mockDesktop = desktop
+test('on a desktop, persistent sign-in is off by default', async () => {
+  mockDesktop = true
   supabase.auth.signInWithPassword.mockResolvedValue({ error: null })
   start()
   expect(screen.queryByRole('button', { name: /passkey/i })).not.toBeInTheDocument()
@@ -29,7 +29,23 @@ test.each([false, true])('persistent sign-in is off by default on desktop=%s', a
   await waitFor(() => expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({ email: 'staff@example.com', password: 'test-password' }))
   expect(localStorage.getItem('ls_remember_me')).toBe('false')
 })
+test('on a phone, staying signed in is on by default and remembers the organisation', async () => {
+  supabase.auth.signInWithPassword.mockResolvedValue({ error: null }); start(); passwordStep()
+  expect(screen.getByRole('checkbox')).toBeChecked()
+  fireEvent.click(screen.getByRole('button', { name: 'Sign in', exact: true }))
+  await waitFor(() => expect(localStorage.getItem('ls_remember_me')).toBe('true'))
+  expect(localStorage.getItem('launchsession_remembered_org_slug')).toBe('community-youth')
+})
+test('on a shared phone it can still be turned off', async () => {
+  localStorage.setItem('launchsession_remembered_org_slug', 'community-youth')
+  supabase.auth.signInWithPassword.mockResolvedValue({ error: null }); start(); passwordStep()
+  fireEvent.click(screen.getByRole('checkbox'))
+  fireEvent.click(screen.getByRole('button', { name: 'Sign in', exact: true }))
+  await waitFor(() => expect(localStorage.getItem('ls_remember_me')).toBe('false'))
+  expect(localStorage.getItem('launchsession_remembered_org_slug')).toBeNull()
+})
 test('keeping signed in on a device they control also remembers the organisation', async () => {
+  mockDesktop = true
   supabase.auth.signInWithPassword.mockResolvedValue({ error: null }); start(); passwordStep()
   fireEvent.click(screen.getByRole('checkbox'))
   fireEvent.click(screen.getByRole('button', { name: 'Sign in', exact: true }))
@@ -37,6 +53,7 @@ test('keeping signed in on a device they control also remembers the organisation
   expect(localStorage.getItem('launchsession_remembered_org_slug')).toBe('community-youth')
 })
 test('leaving it off forgets a previously remembered organisation', async () => {
+  mockDesktop = true
   localStorage.setItem('launchsession_remembered_org_slug', 'community-youth')
   supabase.auth.signInWithPassword.mockResolvedValue({ error: null }); start(); passwordStep()
   fireEvent.click(screen.getByRole('button', { name: 'Sign in', exact: true }))

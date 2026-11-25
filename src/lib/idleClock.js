@@ -21,9 +21,11 @@ export const LAST_ACTIVITY_KEY = 'ls_last_activity'
  *  machine left overnight in a shared office does not stay signed in. */
 export const IDLE_TIMEOUT_MS = 8 * 60 * 60 * 1000
 
-/** Mobile/iPad: 7 days of the app never being opened — abandoned installs,
- *  lost devices, staff who have left. */
-export const MOBILE_INACTIVITY_MS = 7 * 24 * 60 * 60 * 1000
+/** Mobile/iPad: 30 days of the app never being opened — abandoned installs,
+ *  lost devices, staff who have left. Was 7 days until 25 Nov 2026; a
+ *  fortnight's break (half term, holidays) signed people out of their own
+ *  phones. */
+export const MOBILE_INACTIVITY_MS = 30 * 24 * 60 * 60 * 1000
 
 /** The stored timestamp, or null when absent, unparseable or unreadable. */
 export function readLastActivity() {
