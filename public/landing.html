@@ -748,6 +748,7 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
     <div class="nav-links">
       <a href="#how">How it works</a>
       <a href="#features">Features</a>
+      <a href="#reports">Reports</a>
       <a href="#trust-security">Safeguarding</a>
       <a href="#pricing">Pricing</a>
     </div>
@@ -792,6 +793,14 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
         <div class="mn-txt">
           <div class="mn-t">Features</div>
           <div class="mn-d">Powerful tools designed for youth organisations.</div>
+        </div>
+        <div class="mn-chev">›</div>
+      </a>
+      <a class="mn-card" href="#reports" onclick="toggleMenu()" style="--mn-accent:#22C55E">
+        <div class="mn-ico"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+        <div class="mn-txt">
+          <div class="mn-t">Reports</div>
+          <div class="mn-d">Funder, termly and board reports from your registers.</div>
         </div>
         <div class="mn-chev">›</div>
       </a>
@@ -1318,6 +1327,237 @@ a, button, .faq-q, .step-card, .feature-card, .pricing-card {
 @media (pointer:coarse){.ft-tab{min-height:44px}}
 @media (max-width:600px){.ft-tabs{margin:0 -5% 22px;padding:2px 5%}}
 </style>
+
+<!-- REPORTS & INSIGHTS -->
+<section id="reports">
+  <div class="container">
+    <div class="rp-grid">
+      <div class="rp-intro">
+        <div class="section-tag">Reports &amp; Insights</div>
+        <h2 class="section-heading">The numbers your funders ask for, already counted.</h2>
+        <p class="section-sub">Every register you take feeds a live picture of your work. When a funder, your trustees or your team need it written up, the report studio turns it into a finished report in minutes.</p>
+        <div class="rp-facts">
+          <div class="rp-fact"><span class="rp-fact-ico"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span><span>Headline figures against the period before, with trends week by week or month by month</span></div>
+          <div class="rp-fact"><span class="rp-fact-ico"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span>Findings in plain English, like &ldquo;Attendance up 7 points on the 90 days before&rdquo;</span></div>
+          <div class="rp-fact"><span class="rp-fact-ico"><svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></span><span>Funder, termly impact and board templates. Print it as a PDF, download the CSV, or save it to run again next term</span></div>
+          <div class="rp-fact"><span class="rp-fact-ico"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span>Counts, not names: <span data-term="people">young people</span> stay out of a report unless you choose to include them</span></div>
+        </div>
+        <button class="rp-cta" onclick="window.location.href='/signup'">Try it free for 14 days →</button>
+      </div>
+
+      <div class="rp-panel">
+        <div class="rp-tabs" role="tablist" aria-label="See the reports suite">
+          <button type="button" role="tab" class="rp-tab" id="rpTab-insights" aria-selected="true" aria-controls="rpPanel-insights">Insights</button>
+          <button type="button" role="tab" class="rp-tab" id="rpTab-studio" aria-selected="false" aria-controls="rpPanel-studio" tabindex="-1">Report studio</button>
+          <button type="button" role="tab" class="rp-tab" id="rpTab-doc" aria-selected="false" aria-controls="rpPanel-doc" tabindex="-1">The report</button>
+        </div>
+
+        <!-- Insights -->
+        <div class="rp-view" id="rpPanel-insights" role="tabpanel" aria-labelledby="rpTab-insights">
+          <div class="rp-chips" aria-hidden="true"><span>Last 30 days</span><span class="on">✓ Last 90 days</span><span>This term</span><span>Last 12 months</span></div>
+          <div class="rp-kpis">
+            <div class="rp-kpi"><div class="rp-kpi-l"><span data-term="People">Young people</span> reached</div><div class="rp-kpi-row"><b>118</b><svg class="rp-spark" viewBox="0 0 64 22" preserveAspectRatio="none" aria-hidden="true"><path d="M2.0,19.0 L7.0,13.7 L12.0,15.7 L17.0,17.0 L22.0,11.7 L27.0,14.3 L32.0,13.0 L37.0,9.7 L42.0,11.0 L47.0,7.0 L52.0,8.3 L57.0,4.3 L62.0,3.0"/><circle cx="62.0" cy="3.0" r="2.6"/></svg></div><span class="rp-up">▲ +18%</span></div>
+            <div class="rp-kpi"><div class="rp-kpi-l">Attendance rate</div><div class="rp-kpi-row"><b>77%</b><svg class="rp-spark" viewBox="0 0 64 22" preserveAspectRatio="none" aria-hidden="true"><path d="M2.0,15.8 L7.0,19.0 L12.0,12.6 L17.0,14.2 L22.0,17.4 L27.0,9.4 L32.0,11.0 L37.0,7.8 L42.0,12.6 L47.0,6.2 L52.0,7.8 L57.0,3.0 L62.0,4.6"/><circle cx="62.0" cy="4.6" r="2.6"/></svg></div><span class="rp-up">▲ +7 pts</span></div>
+            <div class="rp-kpi"><div class="rp-kpi-l">Sessions delivered</div><div class="rp-kpi-row"><b>112</b><svg class="rp-spark" viewBox="0 0 64 22" preserveAspectRatio="none" aria-hidden="true"><path d="M2.0,12.6 L7.0,9.4 L12.0,11.0 L17.0,11.0 L22.0,11.0 L27.0,9.4 L32.0,6.2 L37.0,19.0 L42.0,19.0 L47.0,3.0 L52.0,4.6 L57.0,7.8 L62.0,4.6"/><circle cx="62.0" cy="4.6" r="2.6"/></svg></div><span class="rp-up">▲ +22%</span></div>
+            <div class="rp-kpi"><div class="rp-kpi-l">Volunteer hours</div><div class="rp-kpi-row"><b>162h</b><svg class="rp-spark" viewBox="0 0 64 22" preserveAspectRatio="none" aria-hidden="true"><path d="M2.0,17.5 L7.0,10.3 L12.0,19.0 L17.0,11.7 L22.0,4.5 L27.0,13.2 L32.0,3.0 L37.0,14.6 L42.0,14.6 L47.0,11.7 L52.0,8.8 L57.0,19.0 L62.0,13.2"/><circle cx="62.0" cy="13.2" r="2.6"/></svg></div><span class="rp-up">▲ +43%</span></div>
+          </div>
+          <div class="rp-chart">
+            <div class="rp-chart-h"><span><b>Sessions each week</b><small>Cancelled ones not counted</small></span><span class="rp-chart-n">112<small>in total</small></span></div>
+            <svg class="rp-cols" viewBox="0 0 300 104" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="103.5" x2="300" y2="103.5"/><path d="M5.5,104 L5.5,59.0 Q5.5,56.0 8.5,56.0 L14.5,56.0 Q17.5,56.0 17.5,59.0 L17.5,104 Z"/><path d="M28.6,104 L28.6,43.0 Q28.6,40.0 31.6,40.0 L37.6,40.0 Q40.6,40.0 40.6,43.0 L40.6,104 Z"/><path d="M51.7,104 L51.7,51.0 Q51.7,48.0 54.7,48.0 L60.7,48.0 Q63.7,48.0 63.7,51.0 L63.7,104 Z"/><path d="M74.8,104 L74.8,51.0 Q74.8,48.0 77.8,48.0 L83.8,48.0 Q86.8,48.0 86.8,51.0 L86.8,104 Z"/><path d="M97.8,104 L97.8,51.0 Q97.8,48.0 100.8,48.0 L106.8,48.0 Q109.8,48.0 109.8,51.0 L109.8,104 Z"/><path d="M120.9,104 L120.9,43.0 Q120.9,40.0 123.9,40.0 L129.9,40.0 Q132.9,40.0 132.9,43.0 L132.9,104 Z"/><path d="M144.0,104 L144.0,27.0 Q144.0,24.0 147.0,24.0 L153.0,24.0 Q156.0,24.0 156.0,27.0 L156.0,104 Z"/><path d="M167.1,104 L167.1,91.0 Q167.1,88.0 170.1,88.0 L176.1,88.0 Q179.1,88.0 179.1,91.0 L179.1,104 Z"/><path d="M190.2,104 L190.2,91.0 Q190.2,88.0 193.2,88.0 L199.2,88.0 Q202.2,88.0 202.2,91.0 L202.2,104 Z"/><path d="M213.2,104 L213.2,11.0 Q213.2,8.0 216.2,8.0 L222.2,8.0 Q225.2,8.0 225.2,11.0 L225.2,104 Z"/><path d="M236.3,104 L236.3,19.0 Q236.3,16.0 239.3,16.0 L245.3,16.0 Q248.3,16.0 248.3,19.0 L248.3,104 Z"/><path d="M259.4,104 L259.4,35.0 Q259.4,32.0 262.4,32.0 L268.4,32.0 Q271.4,32.0 271.4,35.0 L271.4,104 Z"/><path d="M282.5,104 L282.5,19.0 Q282.5,16.0 285.5,16.0 L291.5,16.0 Q294.5,16.0 294.5,19.0 L294.5,104 Z"/></svg>
+          </div>
+          <div class="rp-finding"><span class="rp-finding-ico" aria-hidden="true">▲</span>Attendance up 7 points on the 90 days before (70% → 77%).</div>
+        </div>
+
+        <!-- Report studio -->
+        <div class="rp-view" id="rpPanel-studio" role="tabpanel" aria-labelledby="rpTab-studio" hidden>
+          <div class="rp-tmpls">
+            <span class="rp-tmpl on">Funder report</span><span class="rp-tmpl">Termly impact</span><span class="rp-tmpl">Board summary</span><span class="rp-tmpl">Safeguarding summary</span>
+          </div>
+          <div class="rp-studio">
+            <ol class="rp-secs">
+              <li><i>1</i>Introduction<small>In your own words</small></li>
+              <li><i>2</i>Headline figures<small>Against the period before</small></li>
+              <li><i>3</i>Key findings</li>
+              <li><i>4</i><span><span data-term="People">Young people</span> reached over time</span></li>
+              <li><i>5</i>By age band</li>
+              <li><i>6</i>Outcomes and goals</li>
+              <li class="rp-add">+ Add a section</li>
+            </ol>
+            <div class="rp-mini" aria-hidden="true">
+              <div class="rp-mini-mast"><span class="rp-mini-logo rp-org-initials">RY</span><span class="rp-org-name">Riverside Youth Club</span></div>
+              <div class="rp-mini-rule"></div>
+              <div class="rp-mini-title">Funder report</div>
+              <div class="rp-mini-figs"><span><b>118</b>reached</span><span><b>27</b>new</span><span><b>77%</b>attendance</span></div>
+              <div class="rp-mini-lines"><i></i><i></i><i style="width:70%"></i></div>
+              <svg viewBox="0 0 120 40" preserveAspectRatio="none"><rect x="4" y="22" width="10" height="18" rx="2"/><rect x="20" y="12" width="10" height="28" rx="2"/><rect x="36" y="16" width="10" height="24" rx="2"/><rect x="52" y="8" width="10" height="32" rx="2"/><rect x="68" y="14" width="10" height="26" rx="2"/><rect x="84" y="4" width="10" height="36" rx="2"/><rect x="100" y="10" width="10" height="30" rx="2"/></svg>
+              <div class="rp-mini-live">Live preview</div>
+            </div>
+          </div>
+          <div class="rp-actions" aria-hidden="true"><span>CSV</span><span>Print or PDF</span><span class="on">Save</span></div>
+        </div>
+
+        <!-- The finished report -->
+        <div class="rp-view" id="rpPanel-doc" role="tabpanel" aria-labelledby="rpTab-doc" hidden>
+          <div class="rp-paper">
+            <div class="rp-paper-mast"><span class="rp-mini-logo rp-org-initials">RY</span><div><b class="rp-org-name">Riverside Youth Club</b><small>Where every <span data-term="person">young person</span> belongs</small></div></div>
+            <div class="rp-paper-rule"></div>
+            <div class="rp-paper-title">Funder report</div>
+            <div class="rp-paper-sub">1 September 2025 to 31 August 2026</div>
+            <div class="rp-paper-h">Headline figures</div>
+            <div class="rp-paper-figs">
+              <div><b>118</b><span><span data-term="people">young people</span> reached</span><small>▲ +18% (was 100)</small></div>
+              <div><b>27</b><span>came for the first time</span><small>▼ −23% (was 35)</small></div>
+              <div><b>77%</b><span>attendance rate</span><small>▲ +7 pts (was 70%)</small></div>
+            </div>
+            <div class="rp-paper-h">Key findings</div>
+            <ul class="rp-paper-list">
+              <li>Attendance up 7 points on the year before (70% → 77%).</li>
+              <li>27 <span data-term="people">young people</span> came for the first time, 23% of everyone reached.</li>
+              <li>14 volunteers gave 617 hours of their time.</li>
+            </ul>
+            <div class="rp-paper-h">By age band</div>
+            <div class="rp-dists"><div class="rp-dist"><span class="rp-dist-l">Under 8</span><span class="rp-dist-t"><i style="width:20%"></i></span><span class="rp-dist-n">9</span></div><div class="rp-dist"><span class="rp-dist-l">8–11</span><span class="rp-dist-t"><i style="width:100%"></i></span><span class="rp-dist-n">46</span></div><div class="rp-dist"><span class="rp-dist-l">12–15</span><span class="rp-dist-t"><i style="width:89%"></i></span><span class="rp-dist-n">41</span></div><div class="rp-dist"><span class="rp-dist-l">16–18</span><span class="rp-dist-t"><i style="width:33%"></i></span><span class="rp-dist-n">15</span></div></div>
+          </div>
+        </div>
+        <p class="rp-note">Example figures. Yours come from your own registers.</p>
+      </div>
+    </div>
+  </div>
+</section>
+<style>
+/* ── REPORTS & INSIGHTS ─────────────────────────────────────── */
+#reports{padding:100px 5%;background:linear-gradient(180deg,var(--navy) 0%,#0A1024 100%)}
+.rp-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:56px;align-items:center}
+.rp-facts{display:flex;flex-direction:column;gap:13px;margin-top:28px}
+.rp-fact{display:flex;align-items:flex-start;gap:12px;font-size:14px;font-weight:600;color:rgba(255,255,255,.78);line-height:1.5}
+.rp-fact-ico{width:32px;height:32px;flex-shrink:0;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.26)}
+.rp-fact-ico svg{width:16px;height:16px;stroke:#5EEAD4;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.rp-cta{margin-top:30px;min-height:48px;padding:0 24px;border:none;border-radius:12px;cursor:pointer;font-family:var(--font);
+  font-size:14.5px;font-weight:800;color:#fff;background:linear-gradient(135deg,#3B82F6,#6366F1);box-shadow:0 10px 26px -8px rgba(59,130,246,.6);transition:transform .2s}
+.rp-cta:hover{transform:translateY(-1px)}
+.rp-panel{padding:20px;border-radius:24px;background:#0B1020;border:1px solid rgba(255,255,255,.09);box-shadow:0 30px 70px -30px rgba(0,0,0,.8);min-width:0}
+.rp-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:14px;background:rgba(255,255,255,.04);margin-bottom:16px}
+.rp-tab{min-height:44px;border:none;border-radius:10px;background:none;cursor:pointer;font-family:var(--font);
+  font-size:13.5px;font-weight:800;color:rgba(255,255,255,.55);transition:background .2s,color .2s}
+.rp-tab[aria-selected="true"]{background:rgba(45,212,191,.16);color:#fff;box-shadow:inset 0 0 0 1px rgba(94,234,212,.4)}
+.rp-tab:focus-visible{outline:2px solid #5EEAD4;outline-offset:2px}
+.rp-view{animation:rp-in .35s ease}
+.rp-view[hidden]{display:none}
+@keyframes rp-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.rp-chips{display:flex;gap:6px;overflow:hidden;margin-bottom:12px}
+.rp-chips span{flex-shrink:0;padding:6px 11px;border-radius:99px;font-size:11.5px;font-weight:700;color:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.1)}
+.rp-chips span.on{color:#fff;border-color:rgba(94,234,212,.5);background:rgba(45,212,191,.12)}
+.rp-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.rp-kpi{padding:12px 13px;border-radius:13px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);min-width:0}
+.rp-kpi-l{font-size:11.5px;font-weight:700;color:rgba(255,255,255,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rp-kpi-row{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin:4px 0 6px}
+.rp-kpi-row b{font-size:26px;font-weight:900;letter-spacing:-.8px;color:#fff;line-height:1}
+.rp-spark{width:64px;height:22px;overflow:visible;flex-shrink:0}
+.rp-spark path{fill:none;stroke:rgba(255,255,255,.32);stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.rp-spark circle{fill:#5EEAD4}
+.rp-up{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:800;color:#4ADE80;background:rgba(74,222,128,.12)}
+.rp-chart{margin-top:8px;padding:13px 14px 12px;border-radius:13px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06)}
+.rp-chart-h{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}
+.rp-chart-h b{display:block;font-size:13px;color:#fff}
+.rp-chart-h small{display:block;font-size:11px;color:rgba(255,255,255,.45);font-weight:600}
+.rp-chart-n{text-align:right;font-size:17px;font-weight:900;color:#fff;line-height:1.1}
+.rp-cols{display:block;width:100%;height:88px}
+.rp-cols path{fill:#5EEAD4}
+.rp-cols line{stroke:rgba(255,255,255,.14);stroke-width:1}
+.rp-finding{display:flex;gap:10px;align-items:flex-start;margin-top:8px;padding:11px 13px;border-radius:13px;font-size:13px;font-weight:650;color:#fff;line-height:1.45;
+  background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.2)}
+.rp-finding-ico{width:22px;height:22px;flex-shrink:0;border-radius:7px;display:grid;place-items:center;font-size:9px;color:#4ADE80;background:rgba(74,222,128,.14)}
+.rp-tmpls{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.rp-tmpl{padding:7px 12px;border-radius:99px;font-size:12px;font-weight:750;color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.1)}
+.rp-tmpl.on{color:#fff;border-color:rgba(94,234,212,.5);background:rgba(45,212,191,.12)}
+.rp-studio{display:grid;grid-template-columns:minmax(0,1fr) 172px;gap:12px;align-items:start}
+.rp-secs{list-style:none;display:flex;flex-direction:column;gap:6px;min-width:0}
+.rp-secs li{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 11px;border-radius:11px;font-size:12.5px;font-weight:700;color:#fff;
+  background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}
+.rp-secs li i{font-style:normal;width:20px;height:20px;flex-shrink:0;border-radius:6px;display:grid;place-items:center;font-size:10.5px;font-weight:800;color:#5EEAD4;background:rgba(45,212,191,.12)}
+.rp-secs li small{flex-basis:100%;margin-left:30px;margin-top:-4px;font-size:10.5px;color:rgba(255,255,255,.42);font-weight:600}
+.rp-secs li.rp-add{justify-content:center;color:rgba(255,255,255,.5);background:none;border-style:dashed}
+.rp-mini{position:relative;padding:13px 12px 26px;border-radius:8px;background:#fff;color:#111827;box-shadow:0 18px 40px -18px rgba(0,0,0,.8)}
+.rp-mini-mast{display:flex;align-items:center;gap:6px;font-size:8.5px;font-weight:800;color:#0E7C86}
+.rp-mini-logo{width:18px;height:18px;flex-shrink:0;border-radius:5px;display:grid;place-items:center;font-size:7.5px;font-weight:900;color:#fff;background:#0E7C86}
+.rp-mini-rule{height:2px;background:#0E7C86;border-radius:2px;margin:7px 0}
+.rp-mini-title{font-size:13px;font-weight:900;letter-spacing:-.3px;margin-bottom:6px}
+.rp-mini-figs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:7px}
+.rp-mini-figs span{font-size:6.5px;color:#5D6472;line-height:1.2}
+.rp-mini-figs b{display:block;font-size:12px;color:#111827;font-weight:900}
+.rp-mini-lines i{display:block;height:3px;border-radius:2px;background:#E5E7EB;margin-bottom:3px}
+.rp-mini svg{display:block;width:100%;height:34px;margin-top:6px}
+.rp-mini svg rect{fill:#0E7C86}
+.rp-mini-live{position:absolute;left:12px;bottom:8px;font-size:8px;font-weight:800;color:#5D6472;letter-spacing:.3px;text-transform:uppercase}
+.rp-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:12px}
+.rp-actions span{padding:8px 13px;border-radius:10px;font-size:12px;font-weight:800;color:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,.12)}
+.rp-actions span.on{color:#fff;border-color:transparent;background:linear-gradient(135deg,#0E9AA7,#3B82F6)}
+.rp-paper{padding:22px 22px 18px;border-radius:10px;background:#fff;color:#111827;box-shadow:0 18px 40px -18px rgba(0,0,0,.8)}
+.rp-paper-mast{display:flex;align-items:center;gap:10px}
+.rp-paper-mast .rp-mini-logo{width:30px;height:30px;border-radius:8px;font-size:11px}
+.rp-paper-mast b{display:block;font-size:14px;font-weight:900;color:#0B6B74;letter-spacing:-.2px}
+.rp-paper-mast small{display:block;font-size:10.5px;color:#5D6472}
+.rp-paper-rule{height:3px;background:#0E7C86;border-radius:2px;margin:11px 0 13px}
+.rp-paper-title{font-size:21px;font-weight:900;letter-spacing:-.6px;line-height:1.1}
+.rp-paper-sub{font-size:11px;color:#5D6472;margin-top:3px}
+.rp-paper-h{font-size:9.5px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid #E5E7EB}
+.rp-paper-figs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.rp-paper-figs div{border-top:2px solid #E5E7EB;padding-top:6px;min-width:0}
+.rp-paper-figs b{display:block;font-size:20px;font-weight:900;letter-spacing:-.5px;line-height:1.05}
+.rp-paper-figs span{display:block;font-size:10.5px;font-weight:700;margin-top:2px;line-height:1.3}
+.rp-paper-figs small{display:block;font-size:9.5px;color:#5D6472;margin-top:2px}
+.rp-paper-list{padding-left:15px;font-size:11.5px;line-height:1.55;color:#1F2937}
+.rp-paper-list li{margin-bottom:3px}
+.rp-dists{display:flex;flex-direction:column;gap:6px}
+.rp-dist{display:grid;grid-template-columns:52px 1fr 24px;gap:8px;align-items:center;font-size:10.5px}
+.rp-dist-l{font-weight:700;color:#111827}
+.rp-dist-t{height:7px;border-radius:4px;background:#F1F2F4;overflow:hidden}
+.rp-dist-t i{display:block;height:100%;border-radius:0 4px 4px 0;background:#0E7C86}
+.rp-dist-n{text-align:right;font-weight:800;color:#5D6472}
+.rp-note{margin-top:12px;font-size:11.5px;color:rgba(255,255,255,.45);text-align:center}
+@media (max-width:1024px){.rp-grid{grid-template-columns:1fr;gap:36px}}
+@media (max-width:600px){
+  #reports{padding:64px 5%}
+  .rp-panel{padding:14px;border-radius:20px}
+  .rp-tab{font-size:12.5px}
+  .rp-kpi{padding:11px}
+  .rp-kpi-row b{font-size:22px}
+  .rp-spark{width:42px}
+  .rp-studio{grid-template-columns:1fr}
+  .rp-mini{width:100%;max-width:240px;margin:0 auto}
+  .rp-actions{justify-content:stretch}
+  .rp-actions span{flex:1;text-align:center}
+  .rp-paper{padding:16px 14px}
+  .rp-paper-figs{gap:7px}
+  .rp-paper-figs b{font-size:17px}
+}
+</style>
+<script>
+// Tabs for the reports showcase: click, or the arrow keys once a tab has focus.
+(function () {
+  const tabs = [...document.querySelectorAll('.rp-tab')]
+  if (!tabs.length) return
+  function show(tab, focus) {
+    tabs.forEach(t => {
+      const on = t === tab
+      t.setAttribute('aria-selected', on ? 'true' : 'false')
+      t.tabIndex = on ? 0 : -1
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on
+    })
+    if (focus) tab.focus()
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => show(t))
+    t.addEventListener('keydown', e => {
+      const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0
+      if (!step) return
+      e.preventDefault()
+      show(tabs[(i + step + tabs.length) % tabs.length], true)
+    })
+  })
+})()
+</script>
 
 <!-- HOW IT WORKS -->
 <section id="how">
@@ -2147,6 +2387,7 @@ const FEATURES = {
       "<b>Attendance, engagement and participation figures</b> generated automatically from your registers.",
       "<b>Visual reporting</b> — charts and summaries you can drop straight into a funding application or trustee report.",
       "<b>A funder report written from your figures</b>, with the caveats a funder will ask about already stated.",
+      "<b>A report studio</b>: start from a funder, termly impact or board template, add your own words, then print it as a PDF, download the CSV, or save it to run again next term.",
       "<b>Drill into one outcome area</b>, or one young person's distance travelled, to answer a specific funder's specific question.",
       "<b>Export the data</b> when a deadline is tomorrow."
     ],
@@ -2405,6 +2646,9 @@ function setOrgType(type) {
   })
   document.querySelectorAll('[data-org-type]').forEach(b => b.setAttribute('aria-pressed', b.dataset.orgType === type ? 'true' : 'false'))
   const org = DEMO_ORGS[type]
+  // The reports showcase names the same made-up organisation as the hero demo.
+  document.querySelectorAll('.rp-org-name').forEach(el => { el.textContent = org.name })
+  document.querySelectorAll('.rp-org-initials').forEach(el => { el.textContent = org.initials })
   document.getElementById('demoOrg').textContent = org.name
   document.getElementById('demoSession').textContent = org.session
   const av = document.getElementById('demoAvatar')
@@ -2614,7 +2858,7 @@ document.getElementById('demoAvatar').style.background = DEMO_ORGS.youth_club.hu
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return
   const els = document.querySelectorAll([
     'section:not(#hero) .section-tag', 'section:not(#hero) .section-heading', '.jn-step', '.feature-card',
-    '.ba-row', '.ba-point', '.ws-panel', '.pb-base', '.pb-build', '.mission-value', '.faq-item', '.cta-box', '.cm-card',
+    '.ba-row', '.ba-point', '.ws-panel', '.rp-panel', '.pb-base', '.pb-build', '.mission-value', '.faq-item', '.cta-box', '.cm-card',
   ].join(','))
   const io = new IntersectionObserver(entries => {
     entries.forEach(e => {
