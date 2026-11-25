@@ -131,7 +131,7 @@ read-only `api/nexus-summary` endpoint (launch-session repo) can build the
 summary the LaunchNexus admin shows. The service role could already read every
 table behind it; everyone else is still refused unless they are a super admin.
 
-Reports & Insights, **not yet applied** (written 25 Nov 2026):
+Reports & Insights, applied 25 Nov 2026 (recorded as version 20261125013449):
 
 - `20261125_report_insights_metrics.sql`
 
@@ -145,6 +145,10 @@ Tested offline against a local Postgres with two organisations (56
 assertions: figures, filters, another org's project ids and group names
 matching nothing, staff seeing no safeguarding, anon refused, suspended login
 refused), then compiled and run against the live schema inside a transaction
-that always aborts. Until it is applied, the app falls back to the per-report
+that always aborts. After applying: security definer, stable, anon refused
+(42501), authenticated allowed; an admin of the largest organisation gets
+figures in about 100 ms, and another organisation's project id returns
+nothing. Live has no non-admin login, so the staff path rests on the local
+tests. If the function is ever missing, the app falls back to the per-report
 functions above: monthly figures, no filters, no volunteer hours.
 
