@@ -47,7 +47,7 @@ describe('idleClock', () => {
 
   it('keeps the two windows distinct and in the documented order', () => {
     expect(IDLE_TIMEOUT_MS).toBe(8 * 60 * 60 * 1000)
-    expect(MOBILE_INACTIVITY_MS).toBe(7 * 24 * 60 * 60 * 1000)
+    expect(MOBILE_INACTIVITY_MS).toBe(30 * 24 * 60 * 60 * 1000)
     expect(MOBILE_INACTIVITY_MS).toBeGreaterThan(IDLE_TIMEOUT_MS)
   })
 })

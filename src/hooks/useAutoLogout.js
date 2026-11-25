@@ -119,7 +119,7 @@ export function useIdleLogout(enabled) {
 
 // Mobile/iPad counterpart to useIdleLogout: these users stay signed in
 // indefinitely across app opens, backgrounding, and device sleep - EXCEPT
-// they're auto-signed-out if the app hasn't been opened/used at all in 7
+// they're auto-signed-out if the app hasn't been opened/used at all in 30
 // days (abandoned installs, lost/stolen devices, staff who've left). In-memory
 // timers don't survive a killed app process on mobile, so "last used" is
 // persisted to localStorage and checked whenever the app loads or resumes.
@@ -158,7 +158,7 @@ export function useMobileInactivityLogout(enabled) {
     }
 
     // Check immediately on mount (covers reopening the app after days away)
-    // then stamp fresh activity so the 7-day clock restarts from now. The
+    // then stamp fresh activity so the 30-day clock restarts from now. The
     // stamp is skipped when the session is already stale, otherwise the write
     // would renew the very clock that just failed the check.
     if (!checkStale()) markActivity()

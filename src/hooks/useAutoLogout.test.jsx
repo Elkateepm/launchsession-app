@@ -90,7 +90,7 @@ describe('useIdleLogout — desktop, 8 hours', () => {
   })
 })
 
-describe('useMobileInactivityLogout — mobile, 7 days', () => {
+describe('useMobileInactivityLogout — mobile, 30 days', () => {
   beforeEach(onMobile)
 
   it('does not log out a sign-in that happened after a stale clock', async () => {
@@ -102,7 +102,15 @@ describe('useMobileInactivityLogout — mobile, 7 days', () => {
     expect(signedOut()).toBe(false)
   })
 
-  it('logs out an install nobody has opened for a week', async () => {
+  it('keeps a phone signed in after a fortnight away (it used to sign out at 7 days)', async () => {
+    storedAgo(14 * 24 * HOURS)
+
+    await act(async () => { renderHook(() => useMobileInactivityLogout(true)) })
+
+    expect(signedOut()).toBe(false)
+  })
+
+  it('logs out an install nobody has opened for 30 days', async () => {
     storedAgo(MOBILE_INACTIVITY_MS + 2 * HOURS)
 
     await act(async () => { renderHook(() => useMobileInactivityLogout(true)) })

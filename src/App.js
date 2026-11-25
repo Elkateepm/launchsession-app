@@ -442,7 +442,7 @@ function AppContent() {
 
   // Auto-logout to landing after 2 hours of inactivity while signed in - desktop only.
   useIdleLogout(!!session)
-  // Mobile/iPad: stay signed in until manual logout, or 7 days of no use.
+  // Mobile/iPad: stay signed in until manual logout, or 30 days of no use.
   useMobileInactivityLogout(!!session)
 
   // Redirect to landing immediately if this looks like a bare/fresh visit.
