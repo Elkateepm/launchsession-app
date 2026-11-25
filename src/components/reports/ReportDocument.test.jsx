@@ -80,13 +80,24 @@ describe('every library report has a document', () => {
 
   it.each(KEYS)('%s renders against the live payload shape', async (key) => {
     getReportMetrics.mockResolvedValue(LIVE[key])
-    const { container } = render(
+    render(
       <ReportDocument reportKey={key} title="Report" org={org} range={range} onClose={() => {}} />)
-    await waitFor(() => expect(container.querySelector('h1')).toBeTruthy())
+    await waitFor(() => expect(document.body.querySelector('h1')).toBeTruthy())
     // A document, not an empty shell: a title, the org, the period, and content.
-    expect(container.textContent).toContain('Solidarity Sports')
-    expect(container.textContent).toContain('1 January 2026 to 30 August 2026')
-    expect(container.querySelectorAll('.ls-doc-section').length).toBeGreaterThanOrEqual(3)
+    expect(document.body.textContent).toContain('Solidarity Sports')
+    expect(document.body.textContent).toContain('1 January 2026 to 30 August 2026')
+    expect(document.body.querySelectorAll('.ls-doc-section').length).toBeGreaterThanOrEqual(3)
+  })
+
+  // The print rules hide every child of <body> except the document root.
+  // Rendered inside the app's #root it printed as a blank page.
+  it('mounts its printable root directly under <body>', async () => {
+    getReportMetrics.mockResolvedValue(LIVE.delivery)
+    render(<div id="app-root"><ReportDocument reportKey="delivery" title="Report" org={org} range={range} onClose={() => {}} /></div>)
+    await waitFor(() => expect(document.body.querySelector('h1')).toBeTruthy())
+    const root = document.getElementById('ls-doc-print-root')
+    expect(root.parentElement).toBe(document.body)
+    expect(document.getElementById('app-root').contains(root)).toBe(false)
   })
 
   it.each(KEYS)('%s states what it does not cover', (key) => {
@@ -158,8 +169,8 @@ describe('reports say the awkward thing', () => {
 describe('permission', () => {
   it('reads a database refusal as a refusal, not a crash', async () => {
     getReportMetrics.mockRejectedValue(new Error('Not authorised'))
-    const { container } = render(
+    render(
       <ReportDocument reportKey="safeguarding" title="Safeguarding" org={org} range={range} onClose={() => {}} />)
-    await waitFor(() => expect(container.textContent).toContain('do not have permission'))
+    await waitFor(() => expect(document.body.textContent).toContain('do not have permission'))
   })
 })

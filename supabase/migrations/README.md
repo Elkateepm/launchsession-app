@@ -130,3 +130,25 @@ Account health for the LaunchNexus summary, applied 24 Nov 2026:
 read-only `api/nexus-summary` endpoint (launch-session repo) can build the
 summary the LaunchNexus admin shows. The service role could already read every
 table behind it; everyone else is still refused unless they are a super admin.
+
+Reports & Insights, applied 25 Nov 2026 (recorded as version 20261125013449):
+
+- `20261125_report_insights_metrics.sql`
+
+`report_insights_metrics(p_from, p_to, p_project_ids, p_groups)`: totals for a
+period and the one of the same length before it, a weekly or monthly series,
+breakdowns by project, group, location and age band, and the names of
+projects and groups for the filter pickers. Org from `get_my_org_id()`,
+Europe/London dates, aggregates only; safeguarding counts for owners and
+admins alone. Execute revoked from public and anon, granted to authenticated.
+Tested offline against a local Postgres with two organisations (56
+assertions: figures, filters, another org's project ids and group names
+matching nothing, staff seeing no safeguarding, anon refused, suspended login
+refused), then compiled and run against the live schema inside a transaction
+that always aborts. After applying: security definer, stable, anon refused
+(42501), authenticated allowed; an admin of the largest organisation gets
+figures in about 100 ms, and another organisation's project id returns
+nothing. Live has no non-admin login, so the staff path rests on the local
+tests. If the function is ever missing, the app falls back to the per-report
+functions above: monthly figures, no filters, no volunteer hours.
+

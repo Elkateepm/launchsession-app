@@ -2,9 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useTerms } from '../../context/OrgContext'
 import { getReportMetrics, buildSpec } from '../../lib/reportDocs'
-import {
-  DocShell, Section, Figures, Distribution, RankedList, Table, Prose, Caveats,
-} from './docShared'
+import { DocShell, SpecSections } from './docShared'
 
 // One renderer for every report in the library.
 //
@@ -50,25 +48,7 @@ export default function ReportDocument({ reportKey, title, org, range, onClose }
       loading={loading} error={error} generatedAt={m?.generated_at}
       isMobile={isMobile}
     >
-      {spec?.sections?.map((s, i) => (
-        <Section key={`${s.title}-${i}`} title={s.title} hint={s.hint}>
-          <Prose lines={s.prose} />
-          {(s.prose || []).filter(Boolean).length > 0 && (s.figures || []).filter(Boolean).length > 0 && (
-            <div style={{ height: 18 }} />
-          )}
-          <Figures items={s.figures} isMobile={isMobile} />
-          {(s.figures || []).filter(Boolean).length > 0 && s.distribution && <div style={{ height: 20 }} />}
-          {s.distribution && <Distribution rows={s.distribution.rows} total={s.distribution.total} suffix={s.distribution.suffix} />}
-          {s.ranked && <RankedList rows={s.ranked.rows} unit={s.ranked.unit} />}
-          {s.table && (
-            <>
-              {((s.distribution?.rows) || []).length > 0 && <div style={{ height: 20 }} />}
-              <Table columns={s.table.columns} rows={s.table.rows} />
-            </>
-          )}
-          <Caveats items={s.caveats} />
-        </Section>
-      ))}
+      <SpecSections sections={spec?.sections} isMobile={isMobile} />
     </DocShell>
   )
 }

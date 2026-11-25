@@ -1,4 +1,5 @@
 import React from 'react'
+import { createPortal } from 'react-dom'
 import { brandPalette } from '../../lib/brandColors'
 
 // The shared look of every report document.
@@ -92,6 +93,16 @@ export function DocFooter({ org, generatedAt, note }) {
     </footer>
   )
 }
+
+/**
+ * Mounts a printable document directly under <body>.
+ *
+ * PRINT_CSS hides every child of <body> except #ls-doc-print-root. Rendered in
+ * place, that root sat inside the app's own #root -- which the rule hides --
+ * so "Print or save as PDF" produced a blank page. A portal makes it the
+ * direct child the rule expects.
+ */
+export const toBody = (node) => (typeof document !== 'undefined' && document.body ? createPortal(node, document.body) : node)
 
 export const PRINT_CSS = `
 @media print {
@@ -259,6 +270,34 @@ export function Caveats({ items }) {
 }
 
 /**
+ * The sections of a report spec (reportDocs.js), drawn as a document.
+ *
+ * Shared by the ready-made reports and the report studio's in-depth sections,
+ * so a section reads the same wherever it appears.
+ */
+export function SpecSections({ sections, isMobile }) {
+  return (sections || []).map((s, i) => (
+    <Section key={`${s.title}-${i}`} title={s.title} hint={s.hint}>
+      <Prose lines={s.prose} />
+      {(s.prose || []).filter(Boolean).length > 0 && (s.figures || []).filter(Boolean).length > 0 && (
+        <div style={{ height: 18 }} />
+      )}
+      <Figures items={s.figures} isMobile={isMobile} />
+      {(s.figures || []).filter(Boolean).length > 0 && s.distribution && <div style={{ height: 20 }} />}
+      {s.distribution && <Distribution rows={s.distribution.rows} total={s.distribution.total} suffix={s.distribution.suffix} />}
+      {s.ranked && <RankedList rows={s.ranked.rows} unit={s.ranked.unit} />}
+      {s.table && (
+        <>
+          {((s.distribution?.rows) || []).length > 0 && <div style={{ height: 20 }} />}
+          <Table columns={s.table.columns} rows={s.table.rows} />
+        </>
+      )}
+      <Caveats items={s.caveats} />
+    </Section>
+  ))
+}
+
+/**
  * The page a document sits on: sticky toolbar, date pickers, print, and the
  * sheet itself. Shared so a report cannot end up with its own idea of what a
  * printed page looks like.
@@ -271,7 +310,7 @@ export function DocShell({
     padding: '9px 11px', borderRadius: 9, border: '1.5px solid var(--border)',
     fontSize: 13, fontFamily: 'inherit', minHeight: 40, background: 'var(--surface)', color: 'var(--text)',
   }
-  return (
+  return toBody(
     <div id="ls-doc-print-root" style={{ position: 'fixed', inset: 0, zIndex: 10500, background: 'var(--surface-hover)', overflowY: 'auto' }}>
       <style>{PRINT_CSS}</style>
 
@@ -309,6 +348,6 @@ export function DocShell({
           </>
         )}
       </div>
-    </div>
+    </div>,
   )
 }

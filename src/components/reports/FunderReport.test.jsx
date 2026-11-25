@@ -30,10 +30,10 @@ describe('FunderReport document', () => {
   beforeEach(() => getFunderMetrics.mockResolvedValue(METRICS))
 
   it('renders every section a grant report is expected to carry', async () => {
-    const { container } = render(
+    render(
       <FunderReport org={org} range={{ from: '2026-01-01', to: '2026-08-30' }} onClose={() => {}} />)
-    await waitFor(() => expect(container.textContent).toContain('Impact and delivery report'))
-    const t = container.textContent
+    await waitFor(() => expect(document.body.textContent).toContain('Impact and delivery report'))
+    const t = document.body.textContent
     for (const heading of ['Summary', 'Who we reached', 'How much they got',
       'What we delivered', 'What changed', 'Safeguarding', 'What this report does not cover']) {
       expect(t).toContain(heading)
@@ -41,10 +41,10 @@ describe('FunderReport document', () => {
   })
 
   it('carries the org, the period and the real figures', async () => {
-    const { container } = render(
+    render(
       <FunderReport org={org} range={{ from: '2026-01-01', to: '2026-08-30' }} onClose={() => {}} />)
-    await waitFor(() => expect(container.textContent).toContain('Solidarity Sports'))
-    const t = container.textContent
+    await waitFor(() => expect(document.body.textContent).toContain('Solidarity Sports'))
+    const t = document.body.textContent
     expect(t).toContain('1 January 2026 to 30 August 2026')
     expect(t).toContain('47')   // reached
     expect(t).toContain('307')  // attendances
@@ -53,24 +53,24 @@ describe('FunderReport document', () => {
   })
 
   it('never claims an improvement that did not happen', async () => {
-    const { container } = render(
+    render(
       <FunderReport org={org} range={{ from: '2026-01-01', to: '2026-08-30' }} onClose={() => {}} />)
-    await waitFor(() => expect(container.textContent).toContain('Summary'))
-    expect(container.textContent).toContain('Scores fell by an average of 9.0 points')
+    await waitFor(() => expect(document.body.textContent).toContain('Summary'))
+    expect(document.body.textContent).toContain('Scores fell by an average of 9.0 points')
   })
 
   it('states its own gaps on the document', async () => {
-    const { container } = render(
+    render(
       <FunderReport org={org} range={{ from: '2026-01-01', to: '2026-08-30' }} onClose={() => {}} />)
-    await waitFor(() => expect(container.textContent).toContain('does not cover'))
-    expect(container.textContent).toContain('Ethnicity, gender, postcode')
-    expect(container.textContent).toContain('not validated instruments')
+    await waitFor(() => expect(document.body.textContent).toContain('does not cover'))
+    expect(document.body.textContent).toContain('Ethnicity, gender, postcode')
+    expect(document.body.textContent).toContain('not validated instruments')
   })
 
   it('surfaces the failure rather than an empty document', async () => {
     getFunderMetrics.mockRejectedValue(new Error('Not authorised'))
-    const { container } = render(
+    render(
       <FunderReport org={org} range={{ from: '2026-01-01', to: '2026-08-30' }} onClose={() => {}} />)
-    await waitFor(() => expect(container.textContent).toContain('Could not build the report'))
+    await waitFor(() => expect(document.body.textContent).toContain('Could not build the report'))
   })
 })
