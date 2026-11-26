@@ -69,6 +69,22 @@
 <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon-167.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/manifest.json" />
+<script>
+  // Opened from a home-screen icon, this page is the wrong place to land. The
+  // icon belongs to whichever site it was added from, and the Sign in buttons
+  // below go to app.launchsession.co.uk -- another site as far as iOS is
+  // concerned -- so the app opened in an in-app browser with a close button,
+  // never full screen. Going into the app on this same site keeps it full
+  // screen, and fixes icons people have already added without re-adding them.
+  (function () {
+    try {
+      var installed = window.navigator.standalone === true
+        || window.matchMedia('(display-mode: standalone)').matches
+        || window.matchMedia('(display-mode: fullscreen)').matches
+      if (installed) window.location.replace('/dashboard')
+    } catch (e) { /* no matchMedia: an ordinary browser tab */ }
+  })()
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />

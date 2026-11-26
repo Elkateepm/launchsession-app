@@ -3,7 +3,7 @@ import { useBreakpoint } from '../../hooks/useIsMobile'
 import { rgba } from '../../lib/brandColors'
 import { loadBrandFont } from '../../lib/brandTheme'
 import { getAuthBranding } from './authBranding'
-import { isNativeApp } from '../../lib/nativeEnv'
+import { runsAsApp } from '../../lib/nativeEnv'
 import { useTerms } from '../../context/OrgContext'
 import Icon from '../../lib/icons'
 
@@ -127,7 +127,10 @@ export default function AuthLayout({ org, stage = 'account', children, onHome })
 
       {branded && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, paddingTop: 20, fontFamily: AUTH.font, fontSize: 11, color: AUTH.muted }}><img src="/logo.png" alt="" style={{ width: 20, height: 20 }} />Powered by LaunchSession</div>}
       <footer style={{ display: 'flex', flexWrap: 'wrap', justifyContent: isDesktop ? 'space-between' : 'center', alignItems: 'center', gap: '0 16px', paddingTop: 12, fontSize: 12 }}>
-        {!isNativeApp() && <button type="button" onClick={() => onHome ? onHome() : window.location.assign('https://www.launchsession.co.uk/landing.html')} style={{ ...footerLink, textDecoration: 'none' }}><Icon name="←" /> Back to LaunchSession</button>}
+        {/* Not in the native shell or a home-screen app: the marketing site is
+            another site to iOS, so going there drops the app into an in-app
+            browser that every later page then stays inside. */}
+        {!runsAsApp() && <button type="button" onClick={() => onHome ? onHome() : window.location.assign('https://www.launchsession.co.uk/landing.html')} style={{ ...footerLink, textDecoration: 'none' }}><Icon name="←" /> Back to LaunchSession</button>}
         <nav aria-label="Privacy and support" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', columnGap: 4 }}>
           <a href="https://www.launchsession.co.uk/privacy.html" target="_blank" rel="noopener noreferrer" aria-label="Privacy policy (opens in a new tab)" style={footerLink}>Privacy policy</a>
           <a href="https://www.launchsession.co.uk/terms.html" target="_blank" rel="noopener noreferrer" aria-label="Terms of use (opens in a new tab)" style={footerLink}>Terms of use</a>

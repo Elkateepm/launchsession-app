@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { AUTH_DIRECTORY_COLUMNS } from './authBranding'
 jest.mock('../../lib/supabase', () => ({ supabase: { from: jest.fn() } }))
 jest.mock('../../hooks/useIsMobile', () => ({ useBreakpoint: () => ({ isDesktop: false }) }))
-jest.mock('../../lib/nativeEnv', () => ({ isNativeApp: () => false }))
+jest.mock('../../lib/nativeEnv', () => ({ isNativeApp: () => false, isInstalledWebApp: () => false, runsAsApp: () => false }))
 jest.mock('../../lib/icons', () => () => null)
 const orgs = [{ id: 'one', name: 'Community Youth Project', slug: 'community-youth' }, { id: 'two', name: 'Community Sports Club', slug: 'community-sport' }]
 const location = window.location
