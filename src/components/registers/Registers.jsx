@@ -1430,7 +1430,7 @@ function ChildDrawer({ child, status, attendanceRecord, bubble, bubbles = [], on
 
 
 // ─── MAIN REGISTER ────────────────────────────────────────────
-export default function Registers({ org, onNavigate, autoOpenAdd }) {
+export default function Registers({ org, onNavigate, autoOpenAdd, canOpenRegister = false }) {
   const terms = useTerms()
   const orgId  = org?.id
   const primary = org?.primary_color || '#1B9AAA'
@@ -1475,6 +1475,10 @@ export default function Registers({ org, onNavigate, autoOpenAdd }) {
   }, [showPastRegisters, orgId])
 
   const openPastSession = async (s) => {
+    // The same register page every other "open register" goes to; it shows a
+    // closed register as one. View-only access keeps the read-only summary,
+    // because the register page has no view-only mode.
+    if (canOpenRegister && onNavigate) { setShowPastRegisters(false); onNavigate('registers', { sessionId: s.id }); return }
     setViewingPastLoading(true)
     setViewingPastSession(s)
     const { data } = await supabase.from('attendance').select('*').eq('org_id', orgId).eq('session_id', s.id)

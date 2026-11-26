@@ -9,12 +9,12 @@ import { useOrgSettings } from "../../hooks/useOrgSettings";
 import CauseForConcernForm from "../safeguarding/CauseForConcernForm";
 import ReportChips from "../incidents/ReportChips";
 import LiveRegister from "../registers/LiveRegister";
+import HistoricalAttendanceModal from "../shared/HistoricalAttendanceModal";
 import EndSessionFlow from "../registers/EndSessionFlow";
 import { InviteParentModal, AddChildQuickModal } from "../children/ChildrenDirectory";
 import AddPersonChooser from "../children/AddPersonChooser";
 import HandoverRegistration from "../children/HandoverRegistration";
 import AddVolunteersToSessionModal from "../volunteers/AddVolunteersToSessionModal";
-import HistoricalAttendanceModal from "../shared/HistoricalAttendanceModal";
 import { isPushSupported, getNotificationPermission, subscribeToPush } from "../../services/pushNotifications";
 import { notifyEvent } from "../../services/notifyEvent";
 import { makeModuleLevel, trialDaysRemaining, planLabel } from '../../lib/moduleAccess'
@@ -3079,9 +3079,22 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
   const [addVolunteersSessionId, setAddVolunteersSessionId] = useState(null);
 
+  // Every register opened from Home goes to the one register page (the same
+  // screen Sessions, Calendar, Projects, Today and Safeguarding open), with
+  // a way back here. It used to open as an overlay, a dark pop-up with a
+  // register of its own, or a read-only summary, depending on where you
+  // pressed. The register page needs edit access, so view-only accounts (and
+  // a Home without navigation) keep the overlay.
   const [liveRegisterSessionId, setLiveRegisterSessionId] = useState(null)
   const openRegisterForSession = (sessionId) => {
-    setLiveRegisterSessionId(sessionId)
+    if (typeof onNavigate === 'function' && canEdit('registers')) onNavigate('registers', { sessionId, returnTo: 'home' })
+    else setLiveRegisterSessionId(sessionId)
+  };
+  // Today's session cards: the register page when you can edit registers;
+  // otherwise the card's own panel, which shows a closed one read-only.
+  const openSessionCard = (sessionId) => {
+    if (typeof onNavigate === 'function' && canEdit('registers')) onNavigate('registers', { sessionId, returnTo: 'home' })
+    else setOpenLiveSessionId(sessionId)
   };
 
   const [closingSession, setClosingSession] = useState(null)
@@ -3598,7 +3611,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                     announced as one control by a screen reader. The title is
                     the keyboard's way in. */}
                 <motion.div
-                  onClick={() => setOpenLiveSessionId(s.id)}
+                  onClick={() => openSessionCard(s.id)}
                   className="ls-livecard"
                   initial={{ opacity: 0, y: 18, scale: 0.97 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -3640,7 +3653,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                             ▲ Collapse
                           </button>
                         )}
-                        <button className="ls-livecard-title" onClick={(e) => { e.stopPropagation(); setOpenLiveSessionId(s.id) }} style={{ display: 'block', maxWidth: '100%', minHeight: 44, padding: '11px 0', margin: '-11px 0 -8px', border: 'none', background: 'none', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer', fontSize: 17, fontWeight: 900, color: '#fff', lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</button>
+                        <button className="ls-livecard-title" onClick={(e) => { e.stopPropagation(); openSessionCard(s.id) }} style={{ display: 'block', maxWidth: '100%', minHeight: 44, padding: '11px 0', margin: '-11px 0 -8px', border: 'none', background: 'none', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer', fontSize: 17, fontWeight: 900, color: '#fff', lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</button>
                         {(s.start_time || s.location) && (
                           <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 10px' }}>
                             {s.start_time && (
@@ -4138,6 +4151,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       )}
 
 
+
       {/* Historical register modal — reuses the same dark launcher-card modal style as today's
           live sessions, for any past session opened from outside today's list (e.g. Recent Registers).
           Deliberately lightweight — just the timestamped in/out list, not the full live-register UI
@@ -4207,7 +4221,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         <EndSessionFlow session={closingSession} org={org} authUserId={session?.user?.id}
           canCloseRegister={['admin', 'owner', 'staff'].includes(userProfile?.role)}
           onClose={() => setClosingSession(null)}
-          onReview={() => { setLiveRegisterSessionId(closingSession.id); setClosingSession(null) }}
+          onReview={() => { const id = closingSession.id; setClosingSession(null); openRegisterForSession(id) }}
           onClosed={saved => { setSessions(prev => prev.map(item => item.id === saved.id ? saved : item)); setClosingSession(null) }}
           onReflect={onNavigate ? id => onNavigate('planner', { reflectSessionId: id }) : undefined} />
       )}

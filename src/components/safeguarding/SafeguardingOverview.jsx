@@ -191,7 +191,7 @@ function TodayCard({ sessions, access, onNavigate, onReport }) {
               <div style={{ fontSize: 14, fontWeight: 850, color: 'var(--text)' }}>{s.title || 'Session'}</div>
               <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 8 }}>{[s.start_time && `${hhmm(s.start_time)}${s.end_time ? `–${hhmm(s.end_time)}` : ''}`, s.location].filter(Boolean).join(' · ')}</div>
               <div style={{ display: 'grid', gridTemplateColumns: access.registers ? '1fr 1fr' : '1fr', gap: 6 }}>
-                {access.registers && <button type="button" onClick={() => onNavigate && onNavigate('registers', { sessionId: s.id })} style={{ ...quietBtn, fontSize: 13 }}><Icon name="📋" /> Register</button>}
+                {access.registers && <button type="button" onClick={() => onNavigate && onNavigate('registers', { sessionId: s.id, returnTo: 'safeguarding' })} style={{ ...quietBtn, fontSize: 13 }}><Icon name="📋" /> Register</button>}
                 <button type="button" onClick={() => onReport({ session: s })} style={{ ...quietBtn, fontSize: 13, color: 'var(--danger-text)' }}><Icon name="🛡️" /> Concern</button>
               </div>
             </div>
