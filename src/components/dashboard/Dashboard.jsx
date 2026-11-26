@@ -615,6 +615,10 @@ export default function Dashboard({ session, org }) {
   const handleSetTab = (t, payload) => {
     t = TAB_ALIASES[t] || t
     setShowMobileMore(false)
+    // Your profile sits over the page you opened it from. On a phone the dock
+    // stays on top of it, so going somewhere used to change the page
+    // underneath and leave the profile covering it.
+    setShowProfile(false)
     if (ADMIN_ONLY_TABS.includes(t) && !isAdmin) { setTab('home'); persistTab('home'); return }
     if (t === 'registers') setRegistersKey(k => k + 1)
     setRegisterSessionId(t === 'registers' ? payload?.sessionId || null : null)
@@ -1370,9 +1374,9 @@ export default function Dashboard({ session, org }) {
             onNewSession={() => handleSetTab('planner', { autoOpenWizard: true })}
             onPayments={() => handleSetTab('payments')}
             onCreateForm={() => handleSetTab('forms')}
-            onReportIncident={() => setShowReportIncident(true)}
+            onReportIncident={() => { setShowProfile(false); setShowReportIncident(true) }}
             onAddVolunteer={() => handleSetTab('volunteers')}
-            onScanQR={() => setShowQRSheet(true)}
+            onScanQR={() => { setShowProfile(false); setShowQRSheet(true) }}
           />
         )}
         {showQRSheet && <QRShareSheet org={org} onClose={() => setShowQRSheet(false)} />}
@@ -1390,16 +1394,20 @@ export default function Dashboard({ session, org }) {
           </>
         )}
       </div>
+      <AnimatePresence>
       {showProfile && (
         <ProfilePage
+          key="profile"
           session={session}
           org={org}
           onClose={() => setShowProfile(false)}
           onSignOut={() => { setShowProfile(false); handleSignOut() }}
           onProfileUpdate={refreshUserProfile}
           onStartTour={isAdmin ? () => { setShowProfile(false); setTourRole('owner') } : undefined}
+          dockClearance={isMobileBottomNav ? 'calc(76px + env(safe-area-inset-bottom, 0px))' : null}
         />
       )}
+      </AnimatePresence>
       {/* The owner tour is for whoever runs the organisation. Waits for the
           profile so it can greet them by name. */}
       {tourRole && userProfile && (tourRole !== 'owner' || isAdmin) && (

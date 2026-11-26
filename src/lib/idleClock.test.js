@@ -1,6 +1,7 @@
 import {
   LAST_ACTIVITY_KEY, IDLE_TIMEOUT_MS, MOBILE_INACTIVITY_MS,
   readLastActivity, markActivity, markSignedIn, clearActivity,
+  REMEMBER_ME_KEY, readRememberMe, staySignedInSummary,
 } from './idleClock'
 
 beforeEach(() => localStorage.clear())
@@ -52,5 +53,31 @@ describe('idleClock', () => {
     expect(IDLE_TIMEOUT_MS).toBeLessThan(2 ** 31 - 1)
     expect(MOBILE_INACTIVITY_MS).toBe(30 * 24 * 60 * 60 * 1000)
     expect(MOBILE_INACTIVITY_MS).toBeGreaterThan(IDLE_TIMEOUT_MS)
+  })
+})
+
+describe('staying signed in', () => {
+  // The same key and default as supabase.js, which decides where the sign-in
+  // is kept: only an explicit 'false' means "not kept".
+  it('reads "Keep me signed in" the way supabase.js does', () => {
+    expect(REMEMBER_ME_KEY).toBe('ls_remember_me')
+    expect(readRememberMe()).toBe(true)
+    localStorage.setItem(REMEMBER_ME_KEY, 'false')
+    expect(readRememberMe()).toBe(false)
+    localStorage.setItem(REMEMBER_ME_KEY, 'true')
+    expect(readRememberMe()).toBe(true)
+  })
+
+  it('describes the rule each device actually runs', () => {
+    expect(staySignedInSummary({ isDesktop: false, remembered: true }))
+      .toEqual({ value: 'Until you sign out', hint: 'Or after 30 days without opening the app here.' })
+    expect(staySignedInSummary({ isDesktop: true, remembered: true }))
+      .toEqual({ value: 'Until you sign out', hint: 'Or after 7 days without using it here.' })
+  })
+
+  it('says the browser closing ends it when "Keep me signed in" was off', () => {
+    for (const isDesktop of [true, false]) {
+      expect(staySignedInSummary({ isDesktop, remembered: false }).value).toBe('Until you close the browser')
+    }
   })
 })
