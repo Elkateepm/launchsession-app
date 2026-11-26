@@ -428,7 +428,16 @@ export function reportCsvBlocks(def, { model: rawModel, docs = {}, terms, org, r
       ;(spec?.sections || []).forEach(sec => {
         const title = `${label(s.label, terms)}: ${sec.title}`
         const figures = (sec.figures || []).filter(Boolean)
-        if (figures.length) blocks.push({ title, columns: [{ key: 'label', label: 'Measure' }, { key: 'value', label: 'Value' }], rows: figures.map(f => ({ label: f.label, value: f.value })) })
+        const withNotes = figures.some(f => f.note)
+        if (figures.length) {
+          blocks.push({
+            title,
+            columns: [{ key: 'label', label: 'Measure' }, { key: 'value', label: 'Value' }, ...(withNotes ? [{ key: 'note', label: 'Change' }] : [])],
+            rows: figures.map(f => ({ label: f.label, value: f.value, note: f.note || '' })),
+          })
+        }
+        const bullets = (sec.bullets || []).filter(Boolean)
+        if (bullets.length) blocks.push({ title, rows: bullets.map(b => [b]) })
         const dist = (sec.distribution?.rows || []).filter(r => r && r.n > 0)
         if (dist.length) {
           const total = sec.distribution.total || dist.reduce((t, r) => t + r.n, 0)
