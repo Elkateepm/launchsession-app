@@ -199,7 +199,7 @@ export default function SafeguardingHub({
         <ConcernSheet key={concern.id} c={concern} orgId={org.id} userId={userId} children={data.children} today={today}
           onClose={() => setOpenConcernId(null)} onSaved={data.reload} onOpenCase={openCase}
           onOpenChild={(id) => { setOpenConcernId(null); setOpenChildId(id) }}
-          onOpenRegister={access.registers ? (sessionId) => go('registers', { sessionId, returnTo: 'safeguarding' }) : null} />
+          onOpenRegister={access.registers ? (sessionId) => go('registers', { sessionId }) : null} />
       )}
 
       {child && !concern && (
@@ -212,7 +212,7 @@ export default function SafeguardingHub({
           onOpenInjuries={openInjuries}
           onOpenProfile={(id) => go('children', { openChildId: id })}
           onOpenMedical={() => go('medical_alerts')}
-          onOpenRegister={(sessionId) => go('registers', { sessionId, returnTo: 'safeguarding' })} />
+          onOpenRegister={(sessionId) => go('registers', { sessionId })} />
       )}
 
       {checkInChild && (
