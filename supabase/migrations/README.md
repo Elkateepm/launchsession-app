@@ -169,7 +169,7 @@ to 25 Nov for the largest organisation, November -14h -> 10h. Verified after
 applying: same figures, no negative month, anon refused (42501), service role
 and signed-in users still allowed.
 
-Report functions refuse a suspended login, **not yet applied** (written 26 Nov 2026):
+Report functions refuse a suspended login, applied 26 Nov 2026 (recorded as version 20261126001518):
 
 - `20261126_report_functions_refuse_suspended.sql`
 
@@ -181,4 +181,6 @@ re-created from its own live definition with that one statement replaced by
 block that always aborts: every body changed in that statement only (9/9),
 and all 54 outputs (6 logins x 9 functions, last 12 months) were identical
 before and after; anon off, signed-in users and the service role still on.
+Verified after applying: 9/9 use the helper with no old lookup left, all 54
+calls by real logins succeed, and anon calls are refused (42501).
 
