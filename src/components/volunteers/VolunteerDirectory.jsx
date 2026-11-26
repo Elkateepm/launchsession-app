@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
-import { Card, SectionTitle, Badge, Avatar, statusStyle, daysUntil, inputStyle, btnPrimary, btnGhost, PURPLE } from './vh_shared'
+import { Card, SectionTitle, Badge, Avatar, statusStyle, daysUntil, inputStyle, btnBrand, btnGhost, PURPLE } from './vh_shared'
 import { teamMinutes } from '../../lib/volunteerHours'
 import Icon from '../../lib/icons'
 import { todayInLondon } from '../../lib/today'
@@ -60,7 +60,7 @@ export default function VolunteerDirectory({ org, volunteers, sessionStaff, sess
         {FILTERS.map(f => (
           <button key={f.key} onClick={() => setFilter(f.key)} style={{
             padding: '7px 14px', borderRadius: 99, border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 700,
-            background: filter === f.key ? primary : 'var(--surface)', color: filter === f.key ? '#fff' : 'var(--text2)',
+            background: filter === f.key ? 'var(--org-solid)' : 'var(--surface)', color: filter === f.key ? 'var(--org-on-solid)' : 'var(--text2)',
             boxShadow: filter === f.key ? 'none' : '0 1px 3px rgba(15,23,42,0.08)',
           }}>{f.label}</button>
         ))}
@@ -108,7 +108,7 @@ export default function VolunteerDirectory({ org, volunteers, sessionStaff, sess
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button onClick={e => { e.stopPropagation(); onMessageVolunteer?.(v) }} style={{ ...btnGhost, flex: 1, padding: '7px 0', fontSize: 12 }}>Message</button>
-                  <button onClick={e => { e.stopPropagation(); setSelected(v) }} style={{ ...btnPrimary(primary), flex: 1, padding: '7px 0', fontSize: 12 }}>Profile</button>
+                  <button onClick={e => { e.stopPropagation(); setSelected(v) }} style={{ ...btnBrand, flex: 1, padding: '7px 0', fontSize: 12 }}>Profile</button>
                 </div>
               </motion.div>
             )
@@ -208,7 +208,7 @@ export function ProfileDrawer({ volunteer, org, stats, training, recognition, se
                 <option value="">Choose an upcoming session...</option>
                 {upcomingOptions.map(s => <option key={s.id} value={s.id}>{s.title} · {new Date(s.session_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</option>)}
               </select>
-              <button onClick={assignToSession} disabled={!assignSessionId || assigning} style={{ ...btnPrimary(primary), opacity: assignSessionId ? 1 : 0.5 }}>{assigning ? '...' : 'Assign'}</button>
+              <button onClick={assignToSession} disabled={!assignSessionId || assigning} style={{ ...btnBrand, opacity: assignSessionId ? 1 : 0.5 }}>{assigning ? '...' : 'Assign'}</button>
             </div>
           </DrawerSection>
 
@@ -231,7 +231,7 @@ export function ProfileDrawer({ volunteer, org, stats, training, recognition, se
             <button onClick={saveNotes} disabled={saving} style={{ ...btnGhost, marginTop: 8, fontSize: 12 }}>{saving ? 'Saving...' : 'Save notes'}</button>
           </DrawerSection>
 
-          <button onClick={onMessage} style={{ ...btnPrimary(primary), width: '100%', marginTop: 12 }}>Message {volunteer.full_name?.split(' ')[0]}</button>
+          <button onClick={onMessage} style={{ ...btnBrand, width: '100%', marginTop: 12 }}>Message {volunteer.full_name?.split(' ')[0]}</button>
         </div>
       </motion.div>
     </>

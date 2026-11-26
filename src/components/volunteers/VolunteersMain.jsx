@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { teamMinutes, isVolunteerRow, signedInMonth } from '../../lib/volunteerHours'
-import { Card, SectionTitle, Badge, Avatar, CountUp, daysUntil, statusStyle, inputStyle, btnPrimary, btnGhost, glass, PURPLE, PAGE_BG } from './vh_shared'
+import { Card, SectionTitle, Badge, Avatar, CountUp, daysUntil, statusStyle, inputStyle, btnBrand, btnGhost, glass, PURPLE, PAGE_BG } from './vh_shared'
 import VolunteerDirectory from './VolunteerDirectory'
 import VolunteersApplications from './VolunteersApplications'
 import VolunteersCoverage from './VolunteersCoverage'
@@ -14,9 +14,9 @@ import QRShareSheet from '../shared/QRShareSheet'
 import Icon from '../../lib/icons'
 import { withAlpha } from '../../lib/withAlpha'
 import { todayInLondon } from '../../lib/today'
-
-// Shown wherever the org logo would go, whenever the org hasn't set one yet
-const FALLBACK_LOGO_URL = 'https://ssahcqeqrxawmwtjpwvh.supabase.co/storage/v1/object/public/org-logos/email-assets/launchsession-fallback-badge.png'
+import { useIsMobile } from '../../hooks/useIsMobile'
+import OrgPageHero, { orgBrand, heroButtons } from '../shared/OrgPageHero'
+import { feedText } from './volunteerFeed'
 
 const TABS = [
   { key: 'dashboard', label: 'Overview', icon: '❤️' },
@@ -48,6 +48,8 @@ const CHANNELS = [
 ]
 
 export default function VolunteersMain({ org, autoOpenInvite }) {
+  const isMobile = useIsMobile()
+  const [shareOpen, setShareOpen] = useState(false)
   const [volunteers, setVolunteers] = useState([])
   const [applicants, setApplicants] = useState([])
   const [publicApplications, setPublicApplications] = useState([])
@@ -146,12 +148,12 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
     .sort((a, b) => a.daysLeft - b.daysLeft)
 
   const kpis = [
-    { label: 'Total Volunteers', value: volunteers.length + applicants.length, icon: '👥', color: 'var(--ok-text)', bg: 'rgba(34,197,94,0.12)' },
-    { label: 'Active Volunteers', value: volunteers.length, icon: '🟢', color: '#0891B2', bg: 'rgba(8,145,178,0.12)' },
-    { label: 'Sessions Today', value: todaySessions.length, icon: '📅', color: 'var(--warn-text)', bg: 'rgba(245,158,11,0.14)' },
-    { label: 'Need Cover', value: needCoverToday, icon: '⚠️', color: 'var(--danger-text)', bg: 'rgba(220,38,38,0.12)' },
-    { label: 'Training Due', value: trainingDueSoon.length, icon: '🎓', color: 'var(--violet-text)', bg: 'rgba(124,58,237,0.12)' },
-    { label: 'Volunteer Hours', value: hoursThisMonth, icon: '⭐', color: 'var(--org-ink)', bg: 'rgba(79,70,229,0.12)' },
+    { label: 'All volunteers', value: volunteers.length + applicants.length, icon: '👥', color: 'var(--ok-text)', bg: 'rgba(34,197,94,0.12)' },
+    { label: 'Active', value: volunteers.length, icon: '🟢', color: '#0891B2', bg: 'rgba(8,145,178,0.12)' },
+    { label: 'Sessions today', value: todaySessions.length, icon: '📅', color: 'var(--warn-text)', bg: 'rgba(245,158,11,0.14)' },
+    { label: 'Need cover today', value: needCoverToday, icon: '⚠️', color: 'var(--danger-text)', bg: 'rgba(220,38,38,0.12)' },
+    { label: 'Training due', value: trainingDueSoon.length, icon: '🎓', color: 'var(--violet-text)', bg: 'rgba(124,58,237,0.12)' },
+    { label: 'Hours this month', value: hoursThisMonth, icon: '⭐', color: 'var(--org-ink)', bg: 'rgba(79,70,229,0.12)' },
   ]
 
   // Activity feed — merged from real signals, not fake data
@@ -162,7 +164,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
     })),
     ...broadcasts.slice(0, 5).map(b => ({
       id: `bc-${b.id}`, ts: b.created_at, icon: '💬', color: '#0891B2',
-      title: `Broadcast sent to ${b.recipient_count} volunteer${b.recipient_count === 1 ? '' : 's'}`, sub: b.subject || b.body?.slice(0, 50) || 'Update',
+      title: `Broadcast sent to ${b.recipient_count} volunteer${b.recipient_count === 1 ? '' : 's'}`, sub: feedText(b.subject) || feedText(b.body_html || b.body).slice(0, 70) || 'Update',
     })),
     ...recognition.slice(0, 5).map(r => ({
       id: `rec-${r.id}`, ts: r.awarded_at || r.created_at, icon: '🏆', color: 'var(--warn-text)',
@@ -253,62 +255,50 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
   }
 
   const cardStyle = glass({ padding: 20 })
+  const onHero = heroButtons(orgBrand(org), { minHeight: 46, padding: '0 18px', borderRadius: 13, border: '1.5px solid transparent', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, whiteSpace: 'nowrap' })
 
   if (loading) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-faint)' }}>Loading volunteers...</div>
 
   return (
-    <div style={{ background: PAGE_BG, minHeight: '100%', padding: '20px 24px' }}>
-      {/* HERO */}
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{
-        ...glass({ padding: '28px 32px', marginBottom: 20 }),
-        position: 'relative', overflow: 'hidden',
-        background: `linear-gradient(135deg, rgba(255,255,255,0.85), var(--org-a05))`,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', position: 'relative', zIndex: 1 }}>
-          <div>
-            <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 10 }}><Icon name="❤️" /> Volunteers</div>
-            <div style={{ fontSize: 14, color: 'var(--text2)', marginTop: 6 }}>Manage your volunteer workforce, communication and availability.</div>
-            <div style={{ fontSize: 12.5, color: 'var(--text-faint)', marginTop: 2 }}>Keep every volunteer informed, engaged and ready for every session.</div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
-              <button onClick={() => { setInviteMsg(''); setShowInviteModal(true) }} style={btnPrimary(primary)}>+ Invite Volunteer</button>
-              <button onClick={() => setShowBroadcastModal(true)} style={btnGhost}><Icon name="📢" /> Send Broadcast</button>
-              <button onClick={() => setTab('coverage')} style={btnGhost}><Icon name="📅" /> View Coverage</button>
-              <button onClick={() => setShowQR(true)} style={btnGhost}>📲 QR Portal</button>
-              <button onClick={() => setShowSignUpQR(true)} style={btnGhost}>🆕 Sign-Up QR</button>
-              <button onClick={copyLink} style={btnGhost}>{copied ? '✓ Copied' : '🔗 Copy Portal Link'}</button>
-              <a href={portalUrl} target="_blank" rel="noreferrer" style={{ ...btnGhost, textDecoration: 'none', display: 'inline-block' }}>Open Portal <Icon name="↗" /></a>
-            </div>
+    <div style={{ background: PAGE_BG, minHeight: '100%', padding: isMobile ? '12px 12px 20px' : '20px 24px' }}>
+      {/* HERO: the organisation's own banner, as on Calendar and Registers.
+          The old glass card hardcoded white, so in dark mode its white-on-white
+          title and the brand-yellow subtitle could not be read. */}
+      <OrgPageHero org={org} mobile={isMobile} title="Volunteers"
+        subtitle="Invite your volunteers, keep them in the loop and make sure every session is covered."
+        label="Today" detail={todaySessions.length === 0 ? 'No sessions running' : needCoverToday > 0 ? `${needCoverToday} of ${todaySessions.length} need cover` : `${todaySessions.length} session${todaySessions.length === 1 ? '' : 's'}, all covered`}
+        actions={<>
+          <button onClick={() => { setInviteMsg(''); setShowInviteModal(true) }} style={{ ...onHero.main, flex: isMobile ? '1 1 100%' : undefined }}>+ Invite a volunteer</button>
+          <button onClick={() => setShowBroadcastModal(true)} style={{ ...onHero.quiet, flex: isMobile ? 1 : undefined }}><Icon name="📢" /> Message volunteers</button>
+          <div style={{ position: 'relative', display: 'flex', flex: isMobile ? 1 : undefined }}>
+            <button aria-expanded={shareOpen} onClick={() => setShareOpen(v => !v)} style={{ ...onHero.quiet, width: '100%' }}><Icon name="🔗" /> Share the portal</button>
+            {shareOpen && <>
+              <div onClick={() => setShareOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
+              <div role="menu" style={{ position: 'absolute', right: isMobile ? 0 : undefined, left: isMobile ? undefined : 0, top: 50, width: 270, zIndex: 41, padding: 6, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, boxShadow: '0 14px 34px #0F172A2E' }}>
+                {[
+                  { label: 'Show the portal QR code', hint: 'For volunteers who already have an account', action: () => setShowQR(true) },
+                  { label: 'Show the sign-up QR code', hint: 'For new volunteers to apply', action: () => setShowSignUpQR(true) },
+                  { label: copied ? 'Link copied' : 'Copy the portal link', hint: portalUrl.replace(/^https?:\/\//, ''), action: copyLink, keepOpen: true },
+                  { label: 'Open the portal', hint: 'In a new tab', action: () => window.open(portalUrl, '_blank', 'noopener') },
+                ].map(item => (
+                  <button key={item.label} role="menuitem" onClick={() => { item.action(); if (!item.keepOpen) setShareOpen(false) }} style={{ display: 'block', width: '100%', textAlign: 'left', minHeight: 48, padding: '9px 12px', borderRadius: 10, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    <span style={{ display: 'block', fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>{item.label}</span>
+                    <span style={{ display: 'block', fontSize: 11.5, color: 'var(--text3)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.hint}</span>
+                  </button>
+                ))}
+              </div>
+            </>}
           </div>
-          <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-            style={{ position: 'relative', width: 120, height: 120, flexShrink: 0 }}
-          >
-            {/* ambient glow, tinted with the org's own brand colour */}
-            <div style={{ position: 'absolute', inset: -24, borderRadius: '50%', background: `radial-gradient(circle, var(--org-a20), transparent 70%)`, filter: 'blur(14px)', pointerEvents: 'none' }} />
-            {/* the org's own logo — falls back to the LaunchSession badge only if they haven't set one */}
-            <div style={{
-              position: 'relative', width: 130, height: 130, borderRadius: '50%', background: 'var(--surface)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-              border: `2px solid var(--org-a20)`, boxShadow: `0 8px 20px var(--org-a20)`,
-            }}>
-              <img src={org?.logo_url || FALLBACK_LOGO_URL} alt={org?.name || 'Organisation'} style={{ width: '82%', height: '82%', objectFit: 'contain' }} />
-            </div>
-            {/* sparkle accents */}
-            <motion.span animate={{ opacity: [0.25, 1, 0.25] }} transition={{ duration: 2, repeat: Infinity }} style={{ position: 'absolute', top: 4, right: 0, fontSize: 13, color: 'var(--org-ink)' }}>✦</motion.span>
-            <motion.span animate={{ opacity: [1, 0.25, 1] }} transition={{ duration: 2.6, repeat: Infinity }} style={{ position: 'absolute', bottom: 14, left: -4, fontSize: 10, color: '#6366F1' }}>✦</motion.span>
-          </motion.div>
-        </div>
-      </motion.div>
+        </>} />
 
       {/* TAB NAV */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: 'rgba(241,245,249,0.8)', borderRadius: 14, padding: 4, overflowX: 'auto' }}>
+      <div role="tablist" aria-label="Volunteers" style={{ display: 'flex', gap: 4, marginBottom: 20, background: 'var(--surface)', border: '1px solid var(--border-soft, var(--border))', borderRadius: 14, padding: 4, overflowX: 'auto' }}>
         {TABS.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{
-            flex: '1 0 auto', padding: '9px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700,
-            background: tab === t.key ? primary : 'transparent', color: tab === t.key ? '#fff' : 'var(--text3)',
-            boxShadow: tab === t.key ? `0 4px 14px -4px var(--org-a60)` : 'none', whiteSpace: 'nowrap',
-          }}>{t.icon} {t.label}</button>
+          <button key={t.key} role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)} style={{
+            flex: '1 0 auto', minHeight: 44, padding: '9px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 800, fontFamily: 'inherit',
+            background: tab === t.key ? 'var(--org-solid)' : 'transparent', color: tab === t.key ? 'var(--org-on-solid)' : 'var(--text2)',
+            boxShadow: tab === t.key ? `0 4px 14px -6px var(--org-a60)` : 'none', whiteSpace: 'nowrap',
+          }}>{t.label}</button>
         ))}
       </div>
 
@@ -317,20 +307,20 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
           {tab === 'dashboard' && (
             <>
               {/* KPI CARDS — colour-coded, each answers a different question at a glance */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 20 }}>
                 {kpis.map((k, i) => (
                   <motion.div key={k.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                    whileHover={{ y: -3 }} style={{ ...cardStyle, padding: 16, background: `linear-gradient(160deg, ${k.bg}, rgba(255,255,255,0.7))` }}>
+                    whileHover={{ y: -3 }} style={{ ...cardStyle, padding: 16, background: `linear-gradient(160deg, ${k.bg}, var(--surface) 70%)` }}>
                     <div style={{ width: 34, height: 34, borderRadius: 10, background: k.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 8 }}><Icon name={k.icon} /></div>
                     <div style={{ fontSize: 24, fontWeight: 900, color: k.color }}>
                       {typeof k.value === 'number' ? <CountUp value={k.value} /> : k.value}
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 700 }}>{k.label}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text2)', fontWeight: 700 }}>{k.label}</div>
                   </motion.div>
                 ))}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.6fr) minmax(0, 1fr)', gap: 20, alignItems: 'start' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'minmax(0, 1fr)' : 'minmax(0, 1.6fr) minmax(0, 1fr)', gap: isMobile ? 0 : 20, alignItems: 'start' }}>
                 {/* LEFT: Activity Feed + Upcoming Sessions */}
                 <div>
                   <Card style={{ marginBottom: 20 }}>
@@ -419,7 +409,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                       </div>
                     )}
                     {needCoverToday > 0 && (
-                      <button onClick={() => setTab('coverage')} style={{ ...btnPrimary(primary), width: '100%' }}>Find volunteers for gaps</button>
+                      <button onClick={() => setTab('coverage')} style={{ ...btnBrand, width: '100%' }}>Find volunteers for gaps</button>
                     )}
                   </Card>
 
@@ -438,7 +428,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                               </div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                                 <span style={{ fontSize: 11, fontWeight: 800, color: urgent ? '#DC2626' : '#D97706' }}>{t.daysLeft}d left</span>
-                                <button onClick={() => setTab('training')} style={{ padding: '5px 10px', borderRadius: 8, border: 'none', background: primary, fontSize: 10.5, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>Renew</button>
+                                <button onClick={() => setTab('training')} style={{ padding: '5px 10px', borderRadius: 8, border: 'none', background: 'var(--org-solid)', fontSize: 10.5, fontWeight: 700, color: 'var(--org-on-solid)', cursor: 'pointer' }}>Renew</button>
                               </div>
                             </div>
                           )
@@ -463,7 +453,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                             <Avatar name={a.full_name} photoUrl={a.photo_url} size={32} color={primary} />
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)' }}>{a.full_name}</div>
-                              <div style={{ fontSize: 10.5, color: 'var(--text-faint)' }}>Applied {new Date(a.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                              <div style={{ fontSize: 11, color: 'var(--text3)' }}>{a.created_at && !isNaN(new Date(a.created_at)) ? `Applied ${new Date(a.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : 'Waiting to join'}</div>
                             </div>
                             <button onClick={() => setTab('applications')} style={{ padding: '5px 10px', borderRadius: 8, border: `1.5px solid ${primary}`, background: 'var(--surface)', fontSize: 11, fontWeight: 700, color: 'var(--org-ink)', cursor: 'pointer', whiteSpace: 'nowrap' }}>Review <Icon name="→" /></button>
                           </div>
@@ -561,7 +551,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                     <span>{inviteMsg}</span>
                   </div>
                 )}
-                <button type="submit" disabled={inviting} style={{ ...btnPrimary(primary), width: '100%', padding: 12, opacity: inviting ? 0.7 : 1 }}>
+                <button type="submit" disabled={inviting} style={{ ...btnBrand, width: '100%', padding: 12, opacity: inviting ? 0.7 : 1 }}>
                   {inviting ? 'Sending...' : 'Send invite →'}
                 </button>
               </form>
@@ -652,7 +642,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
               {sendResult && <div style={{ fontSize: 12.5, fontWeight: 700, color: sendResult.startsWith('Error') ? '#DC2626' : 'var(--ok-text)', marginBottom: 10 }}>{sendResult}</div>}
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: broadcasts.length > 0 ? 20 : 0 }}>
-                <button onClick={sendBroadcast} disabled={sendingMsg || !body.trim()} style={{ ...btnPrimary(primary), opacity: sendingMsg || !body.trim() ? 0.6 : 1 }}>
+                <button onClick={sendBroadcast} disabled={sendingMsg || !body.trim()} style={{ ...btnBrand, opacity: sendingMsg || !body.trim() ? 0.6 : 1 }}>
                   {sendingMsg ? 'Sending...' : `+ Send ${channel === 'email' ? 'Broadcast' : channel === 'portal' ? 'Notification' : 'Note'}`}
                 </button>
               </div>

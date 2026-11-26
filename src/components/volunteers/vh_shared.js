@@ -124,6 +124,12 @@ export const btnPrimary = (color) => ({
   fontSize: 13, fontWeight: 800, cursor: 'pointer',
 })
 
+// The organisation's own button colour. `btnPrimary(primary)` put white text
+// on the raw brand colour, which a pale brand (Solidarity Sports' yellow)
+// cannot carry. --org-solid is the brand darkened until its text passes, and
+// --org-on-solid is that text: white, or near-black on a pale brand.
+export const btnBrand = { ...btnPrimary('var(--org-solid)'), color: 'var(--org-on-solid)' }
+
 export const btnGhost = {
   padding: '9px 18px', borderRadius: 10, border: '1.5px solid rgba(15,23,42,0.1)', background: 'var(--surface)',
   color: 'var(--text)', fontSize: 13, fontWeight: 700, cursor: 'pointer',
