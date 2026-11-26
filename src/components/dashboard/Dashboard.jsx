@@ -326,7 +326,9 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
     return () => el.removeEventListener('scroll', onScroll, true)
   }, [])
 
-  const moduleLabel = tab === 'children' ? terms.People : tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : tab === 'branding' ? 'Branding' : tab === 'office' ? 'Office' : tab === 'today' ? 'Today' : ALL_MODULES.find(m => m.key === tab)?.label || tab
+  const moduleLabel = tab === 'children' ? terms.People : tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : tab === 'branding' ? 'Branding' : tab === 'office' ? 'Office' : tab === 'today' ? 'Today' : (tab === 'projects' || tab === 'projects_list') ? 'Projects' : ALL_MODULES.find(m => m.key === tab)?.label
+    // Never the raw key: "projects_list" showed in the header as it was.
+    || (tab ? tab.charAt(0).toUpperCase() + tab.slice(1).replace(/_/g, ' ') : '')
 
   // Was gated on plan === 'starter', a paid plan, so a trial never saw it.
   const daysLeft = trialDaysRemaining(org, trialNow)
