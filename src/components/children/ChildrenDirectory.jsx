@@ -12,6 +12,8 @@ import { useTerms } from '../../context/OrgContext'
 import Icon from '../../lib/icons'
 import { readableDbError } from '../../lib/dbErrors'
 import { uploadChildPhoto } from '../../lib/childPhoto'
+import AddYoungPeopleModal from './AddYoungPeopleModal'
+import { aboutLines } from '../../lib/youngPersonFields'
 
 const CONSENT_TYPES = [
   { key: 'photo', label: 'Photo consent' },
@@ -211,7 +213,9 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
       </div>
       {selected && <PeopleProfileDrawer name={`${selected.first_name} ${selected.last_name}`} onClose={() => setSelectedId(null)}>
         <ChildProfile
-          key={selected.id} child={selected} org={org} session={session} primary={primary} authUserId={authUserId}
+          key={selected.id} child={selected} org={org}
+          siblings={selected.family_id ? children.filter(c => c.family_id === selected.family_id && c.id !== selected.id) : []}
+          onOpenChild={setSelectedId} session={session} primary={primary} authUserId={authUserId}
           groupLabel={groupLabel(selected.group_name)} consentRec={consentsByChild[selected.id] || {}}
           latestAtt={latestAttByChild[selected.id]}
           notes={sessionNotes.filter(n => n.child_id === selected.id).slice(0, 5)}
@@ -229,14 +233,14 @@ export default function ChildrenDirectory({ org, session, onNavigate, initialOpe
       {/* Reload on the way out so anything the parent submitted shows up in
           Registration Requests without a refresh. */}
       {showHandover && <HandoverRegistration org={org} onExit={() => { setShowHandover(false); load() }} />}
-      {showAdd && <AddChildQuickModal org={org} onClose={() => setShowAdd(false)} onAdded={() => { setShowAdd(false); load() }} />}
+      {showAdd && <AddChildQuickModal org={org} groups={groupOptions} onClose={() => setShowAdd(false)} onAdded={() => { setShowAdd(false); load() }} />}
       {showInvite && <InviteParentModal org={org} onClose={() => setShowInvite(false)} />}
       {showQR && <QRShareSheet org={org} onClose={() => setShowQR(false)} />}
     </div>
   )
 }
 
-function ChildProfile({ child, org, session, primary, authUserId, groupLabel, consentRec, latestAtt, notes, attendanceForChild, onNavigate, onConsentChanged, onPhotoChanged, isMobile, canOpenSafeguarding }) {
+function ChildProfile({ child, siblings = [], onOpenChild, org, session, primary, authUserId, groupLabel, consentRec, latestAtt, notes, attendanceForChild, onNavigate, onConsentChanged, onPhotoChanged, isMobile, canOpenSafeguarding }) {
   const [savingConsent, setSavingConsent] = useState(null)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [photoError, setPhotoError] = useState('')
@@ -365,9 +369,25 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
           <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}><Icon name="👤" /> About</div>
           <Row label="School / Setting" value={child.school} />
           <Row label="SEN" value={child.sen} />
+          {aboutLines(child).map(([l, v]) => <Row key={l} label={l} value={v} />)}
           <Row label="Membership" value={child.is_walk_in ? 'Walk-in' : 'Standard'} />
           {child.notes && <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(15,23,42,0.06)' }}>{child.notes}</div>}
         </div>
+
+        {siblings.length > 0 && (
+          <div style={{ background: 'var(--surface2)', borderRadius: 14, padding: 16, gridColumn: '1 / -1' }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)', marginBottom: 8 }}><Icon name="👥" /> Brothers and sisters here</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {siblings.map(s => (
+                <button key={s.id} type="button" onClick={() => onOpenChild?.(s.id)}
+                  style={{ minHeight: 44, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '0 14px 0 6px', borderRadius: 99, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  <Avatar name={`${s.first_name} ${s.last_name}`} photoUrl={s.photo_url} size={30} />
+                  {s.first_name}{age(s.date_of_birth) != null ? <span style={{ color: 'var(--text3)', fontWeight: 600 }}>{age(s.date_of_birth)}</span> : null}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Contacts */}
         <div style={{ background: 'var(--surface2)', borderRadius: 14, padding: 16 }}>
@@ -464,46 +484,9 @@ function ChildProfile({ child, org, session, primary, authUserId, groupLabel, co
   )
 }
 
-export function AddChildQuickModal({ org, onClose, onAdded }) {
-  const [form, setForm] = useState({ first_name: '', last_name: '', date_of_birth: '', group_name: '', parent_name: '', parent_phone: '', parent_email: '', school: '' })
-  const [saving, setSaving] = useState(false)
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
-
-  const save = async () => {
-    if (!form.first_name.trim()) return
-    setSaving(true)
-    const { error } = await supabase.from('children').insert({
-      org_id: org.id, first_name: form.first_name.trim(), last_name: form.last_name.trim(),
-      date_of_birth: form.date_of_birth || null, group_name: form.group_name || null,
-      parent_name: form.parent_name || null, parent_phone: form.parent_phone || null,
-      parent_email: form.parent_email.trim() || null, school: form.school || null,
-      active: true, profile_incomplete: !form.date_of_birth || !form.parent_phone,
-    })
-    setSaving(false)
-    if (!error) onAdded()
-  }
-
-  return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 20, padding: 24, width: '100%', maxWidth: 420, maxHeight: '85vh', overflowY: 'auto' }}>
-        <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)', marginBottom: 14 }}>Add young person</div>
-        {[
-          ['first_name', 'First name *'], ['last_name', 'Last name'], ['date_of_birth', 'Date of birth', 'date'],
-          ['group_name', 'Group'], ['school', 'School'], ['parent_name', 'Parent / carer name'], ['parent_phone', 'Parent / carer phone'],
-          ['parent_email', 'Parent / carer email', 'email'],
-        ].map(([key, label, type]) => (
-          <div key={key} style={{ marginBottom: 10 }}>
-            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 4 }}>{label}</label>
-            <input type={type || 'text'} value={form[key]} onChange={e => set(key, e.target.value)} style={inputStyle} />
-          </div>
-        ))}
-        <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-          <button onClick={onClose} style={{ flex: 1, ...btnGhost }}>Cancel</button>
-          <button onClick={save} disabled={saving || !form.first_name.trim()} style={{ flex: 1, ...btnPrimary('#7C5CFC'), border: 'none', cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Add'}</button>
-        </div>
-      </div>
-    </div>
-  )
+// Kept under this name: the Hub opens the same form.
+export function AddChildQuickModal(props) {
+  return <AddYoungPeopleModal {...props} />
 }
 
 function OnSiteTab({ children, latestAttByChild, groupLabel, primary, org, authUserId, onReload }) {
