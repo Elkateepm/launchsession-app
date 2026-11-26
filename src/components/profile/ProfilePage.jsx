@@ -1,12 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
+import { motion, useReducedMotion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
-import { useIsMobile } from '../../hooks/useIsMobile'
+import { useIsMobile, useBreakpoint } from '../../hooks/useIsMobile'
 import SignedImg from '../shared/SignedImg'
 import { uploadStaffPhoto } from '../../lib/staffPhoto'
 import Icon from '../../lib/icons'
 import { planLabel } from '../../lib/moduleAccess'
 import { orgBrand, OrgLogo } from '../shared/OrgPageHero'
 import { withAlpha } from '../../lib/withAlpha'
+import { getThemeChoice, setThemeChoice, resolveTheme } from '../../lib/theme'
+import { readRememberMe, staySignedInSummary } from '../../lib/idleClock'
 
 // Your own profile: one scrolling sheet in the organisation's colours, full
 // screen on a phone and a centred card on a desktop. It replaced a desktop
@@ -45,8 +49,14 @@ const formatDate = iso => {
   return d && !isNaN(d) ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
 }
 
-export default function ProfilePage({ session, org, onClose, onSignOut, onProfileUpdate, onStartTour }) {
+// dockClearance: on a phone the app's dock stays on top of the profile, so you
+// can go straight to another page (which closes the profile). It is the dock's
+// height as CSS, and the bottom of the profile stays clear of it.
+export default function ProfilePage({ session, org, onClose, onSignOut, onProfileUpdate, onStartTour, dockClearance }) {
   const isMobile = useIsMobile()
+  const { isDesktop } = useBreakpoint()
+  const reduceMotion = useReducedMotion()
+  const dialogRef = useRef(null)
   const userId = session?.user?.id
   const userEmail = session?.user?.email || ''
   const brand = orgBrand(org)
@@ -69,6 +79,10 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [editing, showPassword, onClose])
+
+  // Keyboard and screen reader users start inside the profile, not on the
+  // page behind it.
+  useEffect(() => { dialogRef.current?.focus({ preventScroll: true }) }, [])
 
   const flash = message => { setToast(message); setTimeout(() => setToast(''), 2200) }
 
@@ -123,23 +137,37 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
     : daysLeft < 60 ? { tone: 'warn', text: `Renew in ${daysLeft} day${daysLeft === 1 ? '' : 's'}` }
     : { tone: 'ok', text: 'In date' }
 
+  const signIn = staySignedInSummary({ isDesktop, remembered: readRememberMe() })
+
   const row = (field, extra) => (
     <Row key={field} icon={FIELDS[field].icon} label={FIELDS[field].label}
       value={field === 'dbs_expiry' ? formatDate(profile?.dbs_expiry) : profile?.[field]}
       onClick={() => setEditing(field)} {...extra} />
   )
 
+  // A phone slides it up like a page and back down as you leave; a desktop
+  // fades the card in. Closing because you went to another page plays the
+  // same way out, so the profile is seen to get out of the way.
+  const sheetMotion = reduceMotion
+    ? { initial: false, animate: { opacity: 1 }, exit: { opacity: 0, transition: { duration: 0 } } }
+    : isMobile
+      ? { initial: { y: '100%' }, animate: { y: 0, transition: { type: 'spring', stiffness: 360, damping: 38 } }, exit: { y: '100%', transition: { duration: 0.22, ease: [0.4, 0, 1, 1] } } }
+      : { initial: { opacity: 0, y: 14, scale: 0.98 }, animate: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 420, damping: 34 } }, exit: { opacity: 0, y: 8, scale: 0.98, transition: { duration: 0.15 } } }
+
   return (
-    <div onClick={onClose} style={{
-      position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(8,12,24,0.55)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)',
-      display: 'flex', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'center', padding: isMobile ? 0 : 24,
-    }}>
-      <div role="dialog" aria-modal="true" aria-label="Your profile" onClick={e => e.stopPropagation()} style={{
+    <motion.div onClick={onClose}
+      initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      transition={{ duration: reduceMotion ? 0 : 0.2 }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(8,12,24,0.55)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)',
+        display: 'flex', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'center', padding: isMobile ? 0 : 24,
+      }}>
+      <motion.div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Your profile" onClick={e => e.stopPropagation()} {...sheetMotion} style={{
         position: 'relative', width: '100%', maxWidth: isMobile ? 'none' : 560, height: isMobile ? '100%' : 'auto', maxHeight: isMobile ? 'none' : '92vh',
         background: 'var(--surface2)', borderRadius: isMobile ? 0 : 26, overflow: 'hidden', display: 'flex', flexDirection: 'column',
-        boxShadow: '0 40px 90px -30px rgba(0,0,0,0.55)',
+        boxShadow: '0 40px 90px -30px rgba(0,0,0,0.55)', outline: 'none',
       }}>
-        <div className="ls-scroll" style={{ flex: 1, overflowY: 'auto', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+        <div className="ls-scroll" style={{ flex: 1, overflowY: 'auto', paddingBottom: dockClearance || 'env(safe-area-inset-bottom, 0px)' }}>
 
           {/* HERO: the organisation's colours, your photo and name */}
           <div style={{ position: 'relative', background: brand.hero, color: '#fff', padding: `calc(env(safe-area-inset-top, 0px) + ${isMobile ? 14 : 18}px) 18px ${isMobile ? 46 : 50}px`, textAlign: 'center', overflow: 'hidden' }}>
@@ -218,6 +246,11 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
               {row('dbs_expiry', { badge: dbsStatus })}
             </Section>
 
+            <Section title="On this device" note="Both stay on this device, so your phone and computer can differ.">
+              <AppearanceRow brand={brand} />
+              <Row icon="🔒" label="Staying signed in" value={signIn.value} hint={signIn.hint} />
+            </Section>
+
             <Section title="Account">
               <Row icon="🔑" label="Password" value="Change your password" onClick={() => setShowPassword(true)} plain />
               {onStartTour && <Row icon="🧭" label="Take the tour" value="A one-minute look around the app" onClick={onStartTour} plain />}
@@ -227,17 +260,54 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
         </div>
 
         {toast && (
-          <div role="status" style={{ position: 'absolute', left: '50%', bottom: 'calc(18px + env(safe-area-inset-bottom, 0px))', transform: 'translateX(-50%)', background: 'var(--text)', color: 'var(--surface)', borderRadius: 99, padding: '10px 18px', fontSize: 14, fontWeight: 700, boxShadow: '0 12px 30px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
+          <div role="status" style={{ position: 'absolute', left: '50%', bottom: dockClearance ? `calc(${dockClearance} + 12px)` : 'calc(18px + env(safe-area-inset-bottom, 0px))', transform: 'translateX(-50%)', background: 'var(--text)', color: 'var(--surface)', borderRadius: 99, padding: '10px 18px', fontSize: 14, fontWeight: 700, boxShadow: '0 12px 30px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
             <Icon name="✓" /> {toast}
           </div>
         )}
-      </div>
+      </motion.div>
 
       {editing && (
         <EditSheet field={editing} value={profile?.[editing]} isMobile={isMobile} brand={brand}
           onClose={() => setEditing(null)} onSave={value => saveField(editing, value)} />
       )}
       {showPassword && <PasswordSheet isMobile={isMobile} brand={brand} onClose={() => setShowPassword(false)} onDone={() => flash('Password changed')} />}
+    </motion.div>
+  )
+}
+
+const THEME_OPTIONS = [
+  { key: 'light', label: 'Light' },
+  { key: 'dark', label: 'Dark' },
+  { key: 'system', label: 'Match device' },
+]
+
+// Light, dark or whatever the device is set to. Settings has the same choice,
+// but Settings is admin-only, so for everyone else this is the only way to it.
+function AppearanceRow({ brand }) {
+  const [choice, setChoice] = useState(getThemeChoice)
+  return (
+    <div style={{ padding: '12px 14px 14px', borderBottom: '1px solid var(--border-soft)', display: 'grid', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span aria-hidden="true" style={iconChip}><Icon name="🎨" /></span>
+        <span style={{ minWidth: 0 }}>
+          <span id="profile-appearance" style={{ display: 'block', fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>Appearance</span>
+          <span style={{ display: 'block', fontSize: 12.5, color: 'var(--text3)', marginTop: 1 }}>
+            {choice === 'system' ? `Following your device, which is ${resolveTheme('system')} right now` : 'Changes how the app looks for you only'}
+          </span>
+        </span>
+      </div>
+      <div role="radiogroup" aria-labelledby="profile-appearance" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 4, padding: 4, borderRadius: 15, background: 'var(--surface2)', border: '1px solid var(--border)' }}>
+        {THEME_OPTIONS.map(option => {
+          const on = choice === option.key
+          return (
+            <button key={option.key} role="radio" aria-checked={on} onClick={() => setChoice(setThemeChoice(option.key))} style={{
+              minHeight: 44, padding: '0 6px', borderRadius: 11, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 14,
+              fontWeight: on ? 800 : 650, color: on ? '#fff' : 'var(--text2)', background: on ? brand.ink : 'transparent',
+              boxShadow: on ? `0 8px 18px -12px ${withAlpha(brand.primary, 'CC')}` : 'none', transition: 'background 0.15s, color 0.15s',
+            }}>{option.label}</button>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -286,10 +356,14 @@ function ProgressRing({ value, color }) {
   )
 }
 
-// A bottom sheet on a phone, a small dialog on a desktop.
+// A bottom sheet on a phone, a small dialog on a desktop. Rendered on <body>
+// so it can sit above the phone's dock (z-index 9999), which covered its
+// buttons from inside the profile's own layer. A tap outside it closes the
+// sheet alone: React still bubbles a portal's clicks to the profile behind,
+// which used to close the whole profile as well.
 function Sheet({ title, isMobile, onClose, children }) {
-  return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 600, background: 'rgba(8,12,24,0.45)', display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', padding: isMobile ? 0 : 24 }}>
+  return createPortal(
+    <div onClick={e => { e.stopPropagation(); onClose() }} style={{ position: 'fixed', inset: 0, zIndex: 10600, background: 'rgba(8,12,24,0.45)', display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', padding: isMobile ? 0 : 24 }}>
       <div role="dialog" aria-modal="true" aria-label={title} onClick={e => e.stopPropagation()} style={{
         width: '100%', maxWidth: isMobile ? 'none' : 420, background: 'var(--surface)', borderRadius: isMobile ? '24px 24px 0 0' : 20,
         padding: `${isMobile ? 10 : 22}px 20px calc(20px + env(safe-area-inset-bottom, 0px))`, boxShadow: '0 -10px 40px rgba(0,0,0,0.2)', boxSizing: 'border-box',
@@ -298,7 +372,8 @@ function Sheet({ title, isMobile, onClose, children }) {
         <h3 style={{ margin: '0 0 14px', fontSize: 18, fontWeight: 800, color: 'var(--text)' }}>{title}</h3>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
@@ -365,6 +440,7 @@ function PasswordSheet({ isMobile, brand, onClose, onDone }) {
 }
 
 const card = { background: 'var(--surface)', borderRadius: 20, border: '1px solid var(--border-soft, var(--border))', boxShadow: '0 10px 30px -22px rgba(15,23,42,0.45)' }
+const iconChip = { width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: 'grid', placeItems: 'center', fontSize: 17, background: 'var(--org-a10)', color: 'var(--org-ink)' }
 const heroPill = { display: 'inline-flex', alignItems: 'center', gap: 7, padding: '6px 12px', borderRadius: 99, background: '#ffffff24', border: '1px solid #ffffff38', fontSize: 12.5, fontWeight: 700, color: '#fff' }
 const inputStyle = { width: '100%', boxSizing: 'border-box', minHeight: 50, padding: '12px 14px', borderRadius: 14, border: '1.5px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', fontSize: 16, fontFamily: 'inherit', outline: 'none' }
 const secondaryButton = { flex: 1, minHeight: 50, borderRadius: 14, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }
