@@ -856,7 +856,7 @@ export function InviteStaffModal({ org, primary, onClose, onSent, inviterRole = 
               }}>Invite someone else</button>
               <button onClick={() => onSent(fullName || email)} style={{
                 flex: 1, padding: '13px', borderRadius: 12, border: 'none',
-                background: primary, color: '#fff', fontSize: 14.5, fontWeight: 800,
+                background: 'var(--org-solid)', color: 'var(--org-on-solid)', fontSize: 14.5, fontWeight: 800,
                 cursor: 'pointer', fontFamily: 'inherit',
               }}>Done</button>
             </div>
@@ -926,7 +926,7 @@ export function InviteStaffModal({ org, primary, onClose, onSent, inviterRole = 
                     still reads as the button that will send it. */}
                 <button type="submit" disabled={busy || !email.trim()} style={{
                   flex: 1, minHeight: 46, padding: '0 18px', borderRadius: 12, border: 'none',
-                  background: primary || 'var(--org-primary, #1B9AAA)', color: '#fff',
+                  background: 'var(--org-solid)', color: 'var(--org-on-solid)',
                   opacity: busy || !email.trim() ? 0.5 : 1,
                   fontSize: 14, fontWeight: 800,
                   cursor: busy || !email.trim() ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
