@@ -14,7 +14,6 @@ import { InviteParentModal, AddChildQuickModal } from "../children/ChildrenDirec
 import AddPersonChooser from "../children/AddPersonChooser";
 import HandoverRegistration from "../children/HandoverRegistration";
 import AddVolunteersToSessionModal from "../volunteers/AddVolunteersToSessionModal";
-import HistoricalAttendanceModal from "../shared/HistoricalAttendanceModal";
 import { isPushSupported, getNotificationPermission, subscribeToPush } from "../../services/pushNotifications";
 import { notifyEvent } from "../../services/notifyEvent";
 import { makeModuleLevel, trialDaysRemaining, planLabel } from '../../lib/moduleAccess'
@@ -562,7 +561,7 @@ function hubRequiredRatio(session, org) {
   return org?.default_staff_ratio || 8
 }
 
-function ModalEdgeFade({ colour = '#0B1023' }) {
+export function ModalEdgeFade({ colour = '#0B1023' }) {
   return (
     <>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 44, background: `linear-gradient(to bottom, ${colour}, transparent)`, pointerEvents: 'none', zIndex: 2 }} />
@@ -573,7 +572,9 @@ function ModalEdgeFade({ colour = '#0B1023' }) {
   )
 }
 
-function LiveSessionPanel({ sessions, childList, attendance, primary, secondary, orgId, org, authUserId, userRole, reflections, onNavigate, getLiveSessionStats, onViewDetails, onClosed, autoStartKiosk, onAutoKioskHandled }) {
+// Exported for RegisterSheet: every "Open register" in the app opens this
+// same register, not only the session cards on Home.
+export function LiveSessionPanel({ sessions, childList, attendance, primary, secondary, orgId, org, authUserId, userRole, reflections, onNavigate, getLiveSessionStats, onViewDetails, onClosed, autoStartKiosk, onAutoKioskHandled }) {
   const isMobile = useIsMobile()
   const [activeSession, setActiveSession] = useState(sessions[0])
   // Only staff/admin/owner can close a register — volunteers can sign
@@ -3079,9 +3080,14 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
 
   const [addVolunteersSessionId, setAddVolunteersSessionId] = useState(null);
 
+  // Search, the week list, closed cards and "Review register" open the same
+  // register as today's session cards, through the dashboard (RegisterSheet).
+  // They used to open a different full register as an overlay, or a
+  // read-only summary. The overlay stays only for a Home without navigation.
   const [liveRegisterSessionId, setLiveRegisterSessionId] = useState(null)
   const openRegisterForSession = (sessionId) => {
-    setLiveRegisterSessionId(sessionId)
+    if (typeof onNavigate === 'function') onNavigate('registers', { sessionId })
+    else setLiveRegisterSessionId(sessionId)
   };
 
   const [closingSession, setClosingSession] = useState(null)
@@ -3598,7 +3604,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                     announced as one control by a screen reader. The title is
                     the keyboard's way in. */}
                 <motion.div
-                  onClick={() => setOpenLiveSessionId(s.id)}
+                  onClick={() => (isClosed ? openRegisterForSession(s.id) : setOpenLiveSessionId(s.id))}
                   className="ls-livecard"
                   initial={{ opacity: 0, y: 18, scale: 0.97 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -3640,7 +3646,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
                             ▲ Collapse
                           </button>
                         )}
-                        <button className="ls-livecard-title" onClick={(e) => { e.stopPropagation(); setOpenLiveSessionId(s.id) }} style={{ display: 'block', maxWidth: '100%', minHeight: 44, padding: '11px 0', margin: '-11px 0 -8px', border: 'none', background: 'none', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer', fontSize: 17, fontWeight: 900, color: '#fff', lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</button>
+                        <button className="ls-livecard-title" onClick={(e) => { e.stopPropagation(); if (isClosed) openRegisterForSession(s.id); else setOpenLiveSessionId(s.id) }} style={{ display: 'block', maxWidth: '100%', minHeight: 44, padding: '11px 0', margin: '-11px 0 -8px', border: 'none', background: 'none', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer', fontSize: 17, fontWeight: 900, color: '#fff', lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</button>
                         {(s.start_time || s.location) && (
                           <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 10px' }}>
                             {s.start_time && (
@@ -4138,32 +4144,6 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
       )}
 
 
-      {/* Historical register modal — reuses the same dark launcher-card modal style as today's
-          live sessions, for any past session opened from outside today's list (e.g. Recent Registers).
-          Deliberately lightweight — just the timestamped in/out list, not the full live-register UI
-          (no search-and-act controls, staff panel, notes, or close-register actions, since the
-          session is already over). */}
-      {openLiveSessionId && (() => {
-        const pastSession = sessions.find(s => s.id === openLiveSessionId)
-        if (!pastSession) return null
-        // The live hero section has its own inline modal for today's still-open sessions —
-        // defer to that one whenever the session is part of today's list and hasn't been
-        // manually closed yet (closed_at unset), so an overrun-but-open register stays fully
-        // editable via the live panel instead of falling through to this read-only summary.
-        // Only genuinely closed sessions, or past sessions outside today's list, land here.
-        const handledByHeroInlineModal = !pastSession.closed_at && todaySessions.some(s => s.id === openLiveSessionId)
-        if (handledByHeroInlineModal) return null
-        return (
-          <HistoricalAttendanceModal
-            session={pastSession}
-            attendance={attendance}
-            allChildren={children}
-            primary={primary}
-            secondary={secondary}
-            onClose={() => setOpenLiveSessionId(null)}
-          />
-        )
-      })()}
 
       {showReflectionsModal && createPortal(
         <div onClick={() => setShowReflectionsModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
@@ -4207,7 +4187,7 @@ export default function Hub({ org, session, setTab, onNavigate, userProfile, onA
         <EndSessionFlow session={closingSession} org={org} authUserId={session?.user?.id}
           canCloseRegister={['admin', 'owner', 'staff'].includes(userProfile?.role)}
           onClose={() => setClosingSession(null)}
-          onReview={() => { setLiveRegisterSessionId(closingSession.id); setClosingSession(null) }}
+          onReview={() => { const id = closingSession.id; setClosingSession(null); openRegisterForSession(id) }}
           onClosed={saved => { setSessions(prev => prev.map(item => item.id === saved.id ? saved : item)); setClosingSession(null) }}
           onReflect={onNavigate ? id => onNavigate('planner', { reflectSessionId: id }) : undefined} />
       )}
