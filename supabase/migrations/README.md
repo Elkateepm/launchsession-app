@@ -184,3 +184,16 @@ before and after; anon off, signed-in users and the service role still on.
 Verified after applying: 9/9 use the helper with no old lookup left, all 54
 calls by real logins succeed, and anon calls are refused (42501).
 
+
+Only staff edit other people's profiles, and only staff change a status. **Not yet applied** (written 26 Nov 2026):
+
+- `20261126_profile_updates_staff_only.sql`
+
+"update profiles" now passes for your own row, or for a row in your
+organisation when you are an owner, admin or manager. The new
+`guard_profile_status` trigger refuses a status change unless it comes from the
+service role, `claim_invite_profile`, a super admin or platform user, or an
+owner/admin/manager of that organisation; the one self-service change left is
+`pending_invite` -> `pending` (accepting a volunteer invite). Tested offline
+with `supabase/tests/profile_updates/run.sh`: 34 cases before (the holes
+reproduce) and after, with grants unchanged.
