@@ -46,7 +46,10 @@ describe('idleClock', () => {
   })
 
   it('keeps the two windows distinct and in the documented order', () => {
-    expect(IDLE_TIMEOUT_MS).toBe(8 * 60 * 60 * 1000)
+    expect(IDLE_TIMEOUT_MS).toBe(7 * 24 * 60 * 60 * 1000)
+    // One setTimeout covers the desktop window, so it must stay under the
+    // 32-bit limit or the timer fires immediately.
+    expect(IDLE_TIMEOUT_MS).toBeLessThan(2 ** 31 - 1)
     expect(MOBILE_INACTIVITY_MS).toBe(30 * 24 * 60 * 60 * 1000)
     expect(MOBILE_INACTIVITY_MS).toBeGreaterThan(IDLE_TIMEOUT_MS)
   })

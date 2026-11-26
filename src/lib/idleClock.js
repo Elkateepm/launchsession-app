@@ -17,9 +17,15 @@
 
 export const LAST_ACTIVITY_KEY = 'ls_last_activity'
 
-/** Desktop: 8 hours — long enough for a working day, short enough that a
- *  machine left overnight in a shared office does not stay signed in. */
-export const IDLE_TIMEOUT_MS = 8 * 60 * 60 * 1000
+/** Desktop: 7 days without use. Was 8 hours until 26 Nov 2026, which signed
+ *  people out every morning and after every weekend. A shared office machine
+ *  is covered by "Keep me signed in" being off by default on a desktop: left
+ *  off, the sign-in ends when the browser closes.
+ *
+ *  Kept well under setTimeout's ceiling of about 24.8 days (2^31 - 1 ms): the
+ *  desktop hook schedules a single timer for the whole window, so a longer
+ *  window here would need that timer chunked first. */
+export const IDLE_TIMEOUT_MS = 7 * 24 * 60 * 60 * 1000
 
 /** Mobile/iPad: 30 days of the app never being opened — abandoned installs,
  *  lost devices, staff who have left. Was 7 days until 25 Nov 2026; a
