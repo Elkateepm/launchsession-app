@@ -152,3 +152,18 @@ nothing. Live has no non-admin login, so the staff path rests on the local
 tests. If the function is ever missing, the app falls back to the per-report
 functions above: monthly figures, no filters, no volunteer hours.
 
+Session delivery report as a period snapshot, **not yet applied** (written 26 Nov 2026):
+
+- `20261126_report_delivery_snapshot.sql`
+
+Replaces `report_delivery_metrics`. Hours for a session that ends after
+midnight were negative (23:00 to 01:30 counted as -21.5h, printing "-14h" for a
+month); they now count end + 24h - start. Adds the days and times sessions
+ran, the best attended sessions (titles only), register completion, team
+size, sessions in projects, multi-day sessions and cancellation reasons.
+Every existing key keeps its meaning. Org from `get_my_org_id()` (refuses a
+suspended login); execute revoked from anon. Tested offline (25 assertions,
+anon and suspended refused) and compared old against new on live inside a
+block that always aborts: same sessions and months, hours 71 -> 95 for 28 Aug
+to 25 Nov for the largest organisation, November -14h -> 10h.
+

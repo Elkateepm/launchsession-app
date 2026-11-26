@@ -1,5 +1,8 @@
 import { supabase } from './supabase'
 import { areaByKey } from '../components/impact/impact_shared'
+import {
+  AGE_BANDS, buildFacts, compare, comparisonPhrase, fmtCount, fmtHours, fmtRate, fmtValue, formatDay, formatRange, previousPeriod,
+} from './insights'
 
 // What each report says, declared rather than drawn.
 //
@@ -41,40 +44,136 @@ export async function getReportMetrics(key, { from, to }) {
 const n = (v) => (v == null ? 0 : Number(v))
 const plural = (c, one, many) => `${c} ${c === 1 ? one : many}`
 const pct = (part, whole) => (whole > 0 ? Math.round((part / whole) * 100) : null)
-const hrs = (v) => (v == null ? '—' : `${n(v)}h`)
+// A negative total can only come from the old arithmetic for sessions that
+// run past midnight; printing "-14h" helps nobody, so it reads as unknown.
+const hrs = (v) => (v == null || n(v) < 0 ? '—' : `${n(v)}h`)
 const labelled = (rows) => (rows || []).map(r => ({ label: r.label, n: n(r.n) }))
 
 // ─────────────────────────────────────────────────────────── delivery
 
+// The session delivery report is the snapshot of a period: what ran, when and
+// where, who came and how often, how it compared with the period before, and
+// what the records leave out. Its figures come from report_delivery_metrics;
+// when the Insights aggregate is passed in as `m.snapshot` (the normalised
+// model from lib/insights.js) it adds the comparison, the week-by-week shape,
+// reach and the breakdowns by project, group and age. Without it the report
+// is still whole, only shorter.
 function deliverySpec(m, terms) {
   const r = m.reflections || {}
-  const reflectionPct = pct(n(r.completed), n(m.delivered))
+  const snap = m.snapshot || null
+  const delivered = n(m.delivered)
+  const reflectionPct = pct(n(r.completed), delivered)
+  const reg = m.registers || null
+  const regPct = reg ? pct(n(reg.completed), delivered) : null
+  const prev = snap ? previousPeriod({ from: snap.from, to: snap.to }) : null
+  const before = snap ? comparisonPhrase({ from: snap.from, to: snap.to }) : null
+  const c = snap?.current || {}
+  const p = snap?.previous || {}
+  const change = (cur, was, kind) => {
+    const ch = compare(cur, was, kind)
+    if (!ch || was == null) return null
+    const arrow = ch.direction === 'up' ? '▲ ' : ch.direction === 'down' ? '▼ ' : ''
+    return `${arrow}${ch.text} (was ${fmtValue(was, kind)})`
+  }
+  const series = snap?.series || []
+  const unit = snap?.bucket === 'week' ? 'week' : 'month'
+  const bestRows = m.best_attended || []
+  const projectRows = (snap?.byProject || []).filter(x => x.sessions > 0)
+  const AGES = AGE_BANDS.map(b => ({ label: b.label, n: n(snap?.byAge?.find(x => x.key === b.key)?.reached) }))
+  const tod = labelled(m.by_time_of_day)
+  const multiDay = n(m.multi_day)
+  const team = m.team || {}
+
   return {
     docTitle: 'Session delivery report',
     sections: [
       {
-        title: 'Summary',
+        title: 'The period at a glance',
         prose: [
-          `${plural(n(m.delivered), 'session was', 'sessions were')} delivered in this period` +
+          `${plural(delivered, 'session was', 'sessions were')} delivered in this period` +
           (n(m.hours) ? `, totalling ${plural(n(m.hours), 'hour', 'hours')} of provision` : '') +
           (n(m.locations) ? ` across ${plural(n(m.locations), 'location', 'locations')}` : '') + '.',
+          snap && c.reached > 0
+            ? `${fmtCount(c.reached)} ${c.reached === 1 ? terms.person : terms.people} came at least once, ${fmtCount(c.attendances || 0)} ${c.attendances === 1 ? 'attendance' : 'attendances'} in all` +
+              (c.new_people > 0 ? `, and ${c.new_people} of them had never come before` : '') + '.'
+            : null,
+          snap && prev ? `Changes are measured against ${before}, ${formatRange(prev.from, prev.to)}.` : null,
           n(m.cancelled) > 0
             ? `${plural(n(m.cancelled), 'session was', 'sessions were')} cancelled and ${n(m.cancelled) === 1 ? 'is' : 'are'} excluded from every figure below.`
             : null,
-          n(m.unstaffed) > 0
-            ? `${plural(n(m.unstaffed), 'delivered session has', 'delivered sessions have')} nobody recorded on the staff rota. That may be a gap in the record rather than in the staffing, but it is the only signal this system holds.`
-            : null,
         ],
-        figures: [
-          { value: n(m.delivered), label: 'sessions delivered' },
+        figures: snap ? [
+          { value: fmtCount(delivered), label: 'sessions delivered', note: change(delivered, p.sessions_delivered, 'count') },
+          { value: hrs(m.hours), label: 'hours of provision', note: n(m.hours) >= 0 ? change(n(m.hours), p.hours, 'hours') : null },
+          { value: fmtCount(c.reached), label: `${terms.people} reached`, note: change(c.reached, p.reached, 'count') },
+          { value: fmtRate(c.attendance_rate), label: 'attendance rate', note: change(c.attendance_rate, p.attendance_rate, 'rate') },
+          { value: fmtCount(c.attendances), label: 'attendances', note: change(c.attendances, p.attendances, 'count') },
+          { value: fmtCount(c.new_people), label: `new ${terms.people}`, note: change(c.new_people, p.new_people, 'count') },
+          c.volunteer_hours > 0 || p.volunteer_hours > 0
+            ? { value: fmtHours(c.volunteer_hours), label: 'volunteer hours', note: change(c.volunteer_hours, p.volunteer_hours, 'hours') } : null,
+          { value: m.avg_duration != null ? `${Number(m.avg_duration).toFixed(1)}h` : '—', label: 'average session length' },
+        ] : [
+          { value: delivered, label: 'sessions delivered' },
           { value: hrs(m.hours), label: 'hours of provision' },
           { value: m.avg_duration != null ? `${Number(m.avg_duration).toFixed(1)}h` : '—', label: 'average session length' },
           { value: n(m.locations), label: 'locations used' },
         ],
       },
       {
+        title: 'What stands out',
+        bullets: snap ? buildFacts(snap, terms, { max: 6, skip: ['concerns', 'sessions'] }).map(f => f.text) : [],
+      },
+      {
+        title: unit === 'week' ? 'Week by week' : 'Month by month',
+        hint: `${terms.Sessions} delivered each ${unit}; cancelled ones are not counted.`,
+        chart: series.length > 1 ? {
+          type: 'column', integer: true, format: fmtCount, title: `${terms.Sessions} delivered each ${unit}`,
+          points: series.map(x => ({ label: x.label, longLabel: x.longLabel, value: x.sessions })),
+        } : null,
+        table: series.length > 1 ? {
+          columns: [
+            { key: 'label', label: unit === 'week' ? 'Week of' : 'Month' },
+            { key: 'sessions', label: 'Sessions' },
+            { key: 'hours', label: 'Hours' },
+            { key: 'reached', label: terms.People },
+            { key: 'rate', label: 'Attendance', strong: true },
+          ],
+          rows: series.map(x => ({
+            label: unit === 'week' ? formatDay(x.start) : x.longLabel.replace(' (part month)', ''),
+            sessions: n(x.sessions), hours: hrs(x.hours), reached: x.reached == null ? '—' : n(x.reached),
+            rate: x.rate != null ? `${x.rate}%` : '—',
+          })),
+        } : null,
+      },
+      {
+        title: 'Month by month',
+        table: unit === 'week' && (m.by_month || []).length ? {
+          columns: [
+            { key: 'label', label: 'Month' },
+            { key: 'n', label: 'Sessions' },
+            { key: 'hours', label: 'Hours', strong: true },
+          ],
+          rows: (m.by_month || []).map(x => ({ label: x.label, n: n(x.n), hours: hrs(x.hours) })),
+        } : (!snap && (m.by_month || []).length ? {
+          columns: [
+            { key: 'label', label: 'Month' },
+            { key: 'n', label: 'Sessions' },
+            { key: 'hours', label: 'Hours', strong: true },
+          ],
+          rows: (m.by_month || []).map(x => ({ label: x.label, n: n(x.n), hours: hrs(x.hours) })),
+        } : null),
+      },
+      {
+        title: 'Attendance through the period',
+        hint: 'Present out of places marked on the register.',
+        chart: series.filter(x => x.rate != null).length > 1 ? {
+          type: 'line', format: fmtRate, maxValue: 100, title: 'Attendance rate',
+          points: series.map(x => ({ label: x.label, longLabel: x.longLabel, value: x.rate })),
+        } : null,
+      },
+      {
         title: 'By session type',
-        distribution: { rows: labelled(m.by_type), total: n(m.delivered) },
+        distribution: { rows: labelled(m.by_type), total: delivered },
         table: (m.by_type || []).length ? {
           columns: [
             { key: 'label', label: 'Type' },
@@ -85,20 +184,87 @@ function deliverySpec(m, terms) {
         } : null,
       },
       {
-        title: 'Month by month',
-        table: (m.by_month || []).length ? {
+        title: 'When sessions ran',
+        hint: 'By the day and the time each one started.',
+        distribution: { rows: labelled(m.by_weekday), total: delivered },
+        figures: tod.length ? tod.map(t => ({ value: t.n, label: t.label.toLowerCase() })) : null,
+      },
+      {
+        title: 'Best attended sessions',
+        hint: 'By the number marked present.',
+        table: bestRows.length ? {
           columns: [
-            { key: 'label', label: 'Month' },
-            { key: 'n', label: 'Sessions' },
-            { key: 'hours', label: 'Hours', strong: true },
+            { key: 'label', label: 'Session' },
+            { key: 'date', label: 'Date' },
+            { key: 'present', label: 'Present' },
+            { key: 'rate', label: 'Attendance', strong: true },
           ],
-          rows: (m.by_month || []).map(x => ({ label: x.label, n: n(x.n), hours: hrs(x.hours) })),
+          rows: bestRows.map(x => ({
+            label: x.label || 'Untitled session', date: formatDay(x.date, { year: true }), present: n(x.present),
+            rate: x.rate != null ? `${x.rate}%` : '—',
+          })),
         } : null,
+      },
+      {
+        title: 'Registers',
+        hint: 'Every figure about who came rests on these.',
+        prose: [
+          reg && regPct != null && regPct < 80
+            ? `Registers were marked for ${n(reg.completed)} of the ${plural(delivered, 'delivered session', 'delivered sessions')} (${regPct}%). Attendance figures describe those ${n(reg.completed)} only, and marking the rest would make them more complete.`
+            : null,
+        ],
+        figures: reg ? [
+          { value: `${n(reg.completed)} of ${delivered}`, label: 'registers marked' },
+          { value: fmtCount(n(reg.present)), label: 'attendances recorded' },
+          { value: fmtCount(n(reg.marked)), label: 'places marked' },
+        ] : null,
       },
       {
         title: 'Where it happened',
         hint: 'The ten most used locations.',
-        distribution: { rows: labelled(m.by_location), total: n(m.delivered) },
+        distribution: { rows: labelled(m.by_location), total: delivered },
+      },
+      {
+        title: 'By project',
+        hint: n(m.in_projects) ? `${plural(n(m.in_projects), 'delivered session', 'delivered sessions')} belonged to a project.` : null,
+        table: projectRows.length > 1 || (projectRows.length === 1 && projectRows[0].id) ? {
+          columns: [
+            { key: 'label', label: 'Project' },
+            { key: 'sessions', label: 'Sessions' },
+            { key: 'reached', label: terms.People },
+            { key: 'rate', label: 'Attendance', strong: true },
+          ],
+          rows: projectRows.map(x => ({ label: x.label, sessions: n(x.sessions), reached: x.reached == null ? '—' : n(x.reached), rate: x.rate != null ? `${x.rate}%` : '—' })),
+        } : null,
+      },
+      {
+        title: 'Who came',
+        hint: `${terms.People} reached, by age at the end of the period.`,
+        distribution: { rows: AGES, total: AGES.reduce((t, x) => t + x.n, 0) },
+      },
+      {
+        title: `By ${terms.group || 'group'}`,
+        hint: `${terms.People} reached, by the ${terms.group || 'group'} they belong to.`,
+        distribution: { rows: (snap?.byGroup || []).map(x => ({ label: x.label, n: n(x.reached) })) },
+      },
+      {
+        title: 'The team',
+        figures: (team.avg_size != null || n(m.unstaffed) > 0 || c.volunteers > 0) ? [
+          { value: team.avg_size != null ? Number(team.avg_size).toFixed(1) : '—', label: 'people on an average rota' },
+          { value: n(team.with_volunteers), label: 'sessions with a volunteer' },
+          c.volunteers > 0 ? { value: n(c.volunteers), label: 'volunteers signed in' } : null,
+          { value: n(m.unstaffed), label: 'sessions with nobody on the rota' },
+        ] : null,
+        prose: [
+          n(m.unstaffed) > 0
+            ? `${plural(n(m.unstaffed), 'delivered session has', 'delivered sessions have')} nobody recorded on the staff rota. That may be a gap in the record rather than in the staffing, but it is the only signal this system holds.`
+            : null,
+        ],
+      },
+      {
+        title: 'Cancelled',
+        prose: [n(m.cancelled) > 0 ? `${plural(n(m.cancelled), 'session was', 'sessions were')} cancelled in this period.` : null],
+        distribution: n(m.cancelled) > 0 ? { rows: labelled(m.cancellation_reasons), total: n(m.cancelled) } : null,
       },
       {
         title: 'Session reflections',
@@ -113,10 +279,14 @@ function deliverySpec(m, terms) {
       {
         title: 'What this report does not cover',
         caveats: [
-          `Hours are calculated from each session's scheduled start and end time. Sessions with no time recorded contribute none.`,
+          `Hours are calculated from each session's scheduled start and end time. A session that ends after midnight counts the hours to its end; sessions with no time recorded contribute none.`,
+          multiDay > 0
+            ? `${plural(multiDay, 'session ran', 'sessions ran')} over more than one day. Their hours count the scheduled times of a single day, so residentials and trips are undercounted.`
+            : null,
           reflectionPct != null && reflectionPct < 60
             ? `Reflections were completed for ${reflectionPct}% of delivered sessions, so the ratings describe that subset rather than the whole programme.`
             : null,
+          snap ? `"New" means marked present for the first time anywhere in the organisation; attendance counts marked places only, so an unmarked place is neither present nor absent.` : null,
           `A session counts as delivered once it has been closed or its date has passed.`,
         ],
       },
@@ -666,7 +836,9 @@ export function buildSpec(key, m, terms) {
     const hasRanked = ((s.ranked?.rows) || []).length > 0
     const hasTable = ((s.table?.rows) || []).length > 0
     const hasCaveats = (s.caveats || []).filter(Boolean).length > 0
-    return hasProse || hasFigures || hasDist || hasRanked || hasTable || hasCaveats
+    const hasBullets = (s.bullets || []).filter(Boolean).length > 0
+    const hasChart = (s.chart?.points || []).some(p => p.value != null)
+    return hasProse || hasFigures || hasDist || hasRanked || hasTable || hasCaveats || hasBullets || hasChart
   })
   return spec
 }

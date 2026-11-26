@@ -6,7 +6,7 @@ import {
 import { breakdownRows, includesSafeguarding, sectionByKey, sectionLabel, withoutNamedSections } from '../../lib/reportStudio'
 import { BarList, ColumnChart, DataTable, LineChart } from './charts'
 import {
-  DocFooter, DocMasthead, INK, MUTED, RULE, RULE_SOFT, Section, SpecSections, docBrand, formatPeriod,
+  DocFooter, DocMasthead, INK, MUTED, RULE, Section, SpecSections, docPalette, formatPeriod,
 } from './docShared'
 
 // A studio report as a document: the live preview while it is being built,
@@ -15,10 +15,6 @@ import {
 
 const FORMAT = { rate: fmtRate, hours: fmtHours, count: fmtCount }
 
-export function docPalette(org) {
-  const b = docBrand(org)
-  return { mark: b.ink, grid: RULE_SOFT, axis: RULE, text: INK, muted: MUTED, surface: '#FFFFFF', track: '#F1F2F4' }
-}
 
 function Placeholder({ children }) {
   // Visible while building, gone from the printed page.
@@ -154,7 +150,7 @@ export default function StudioDocument({ def, model: rawModel, docs = {}, org, t
               This part covers all of the organisation’s work in the period; the project and {terms.group} choices above do not narrow it.
             </div>
           )}
-          <SpecSections sections={spec.sections} isMobile={isMobile} />
+          <SpecSections sections={spec.sections} isMobile={isMobile} org={org} />
         </div>
       )
     }

@@ -1,6 +1,7 @@
 import React from 'react'
 import { createPortal } from 'react-dom'
 import { brandPalette } from '../../lib/brandColors'
+import { ColumnChart, LineChart } from './charts'
 
 // The shared look of every report document.
 //
@@ -38,6 +39,12 @@ export function docBrand(org) {
     slogan: org?.slogan || '',
     initials: (org?.name || 'Your organisation').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase(),
   }
+}
+
+/** Chart colours for a white page: the brand ink, which clears 4.5:1 on white. */
+export function docPalette(org) {
+  const b = docBrand(org)
+  return { mark: b.ink, grid: RULE_SOFT, axis: RULE, text: INK, muted: MUTED, surface: '#FFFFFF', track: '#F1F2F4' }
 }
 
 /**
@@ -162,6 +169,9 @@ export function Figures({ items, isMobile }) {
         <div key={f.label}>
           <div style={{ fontSize: 26, fontWeight: 900, color: INK, letterSpacing: -0.6, lineHeight: 1.1 }}>{f.value}</div>
           <div style={{ fontSize: 11.5, color: MUTED, marginTop: 3, lineHeight: 1.35 }}>{f.label}</div>
+          {/* The change on the period before, in words as well as an arrow so
+              it survives a black-and-white printer. */}
+          {f.note && <div style={{ fontSize: 10.5, color: MUTED, marginTop: 3, lineHeight: 1.35, fontWeight: 600 }}>{f.note}</div>}
         </div>
       ))}
     </div>
@@ -257,6 +267,29 @@ export function Prose({ lines }) {
   ))
 }
 
+/** Findings: a list in the document's own ink, unlike the muted caveats. */
+export function Bullets({ items }) {
+  const list = (items || []).filter(Boolean)
+  if (!list.length) return null
+  return (
+    <ul style={{ margin: 0, paddingLeft: 18 }}>
+      {list.map((c, i) => (
+        <li key={i} style={{ fontSize: 13.5, color: '#1F2937', lineHeight: 1.6, marginBottom: 6 }}>{c}</li>
+      ))}
+    </ul>
+  )
+}
+
+/** A chart inside a section: one series over the period, with its table beneath if asked. */
+export function SpecChart({ chart, org }) {
+  if (!chart?.points?.some(p => p.value != null)) return null
+  const palette = docPalette(org)
+  const props = { points: chart.points, format: chart.format || String, height: 180, palette, title: chart.title || 'Chart' }
+  return chart.type === 'line'
+    ? <LineChart {...props} maxValue={chart.maxValue} />
+    : <ColumnChart {...props} integer={chart.integer} />
+}
+
 export function Caveats({ items }) {
   const list = (items || []).filter(Boolean)
   if (!list.length) return null
@@ -275,13 +308,16 @@ export function Caveats({ items }) {
  * Shared by the ready-made reports and the report studio's in-depth sections,
  * so a section reads the same wherever it appears.
  */
-export function SpecSections({ sections, isMobile }) {
+export function SpecSections({ sections, isMobile, org }) {
   return (sections || []).map((s, i) => (
     <Section key={`${s.title}-${i}`} title={s.title} hint={s.hint}>
       <Prose lines={s.prose} />
-      {(s.prose || []).filter(Boolean).length > 0 && (s.figures || []).filter(Boolean).length > 0 && (
-        <div style={{ height: 18 }} />
-      )}
+      {/* One gap after the words, whatever follows them: figures, a chart,
+          a distribution or a table each sat flush against a sentence. */}
+      {(s.prose || []).filter(Boolean).length > 0 && ((s.bullets || []).filter(Boolean).length > 0 || (s.figures || []).filter(Boolean).length > 0
+        || s.chart || ((s.distribution?.rows) || []).some(r => r && r.n > 0) || (s.table?.rows || []).length > 0) && <div style={{ height: 16 }} />}
+      <Bullets items={s.bullets} />
+      {s.chart && <><SpecChart chart={s.chart} org={org} />{(s.figures || s.table || s.distribution) && <div style={{ height: 16 }} />}</>}
       <Figures items={s.figures} isMobile={isMobile} />
       {(s.figures || []).filter(Boolean).length > 0 && s.distribution && <div style={{ height: 20 }} />}
       {s.distribution && <Distribution rows={s.distribution.rows} total={s.distribution.total} suffix={s.distribution.suffix} />}

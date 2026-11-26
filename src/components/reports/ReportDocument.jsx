@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useTerms } from '../../context/OrgContext'
 import { getReportMetrics, buildSpec } from '../../lib/reportDocs'
+import { loadInsights } from '../../lib/insightsService'
 import { DocShell, SpecSections } from './docShared'
 
 // One renderer for every report in the library.
@@ -23,7 +24,15 @@ export default function ReportDocument({ reportKey, title, org, range, onClose }
     if (!from || !to) return
     setLoading(true); setError('')
     try {
-      setM(await getReportMetrics(reportKey, { from, to }))
+      // The delivery report is the snapshot of the period, so it also reads the
+      // Insights aggregate for the comparison, the week-by-week shape and who
+      // came. That part is optional: if it fails, the report is shorter, not
+      // missing.
+      const [metrics, snapshot] = await Promise.all([
+        getReportMetrics(reportKey, { from, to }),
+        reportKey === 'delivery' ? Promise.resolve().then(() => loadInsights({ from, to })).catch(() => null) : null,
+      ])
+      setM(snapshot ? { ...metrics, snapshot } : metrics)
     } catch (e) {
       // The safeguarding aggregate refuses a non-admin in the database as well
       // as in the UI, and that refusal should read as a refusal.
@@ -48,7 +57,7 @@ export default function ReportDocument({ reportKey, title, org, range, onClose }
       loading={loading} error={error} generatedAt={m?.generated_at}
       isMobile={isMobile}
     >
-      <SpecSections sections={spec?.sections} isMobile={isMobile} />
+      <SpecSections sections={spec?.sections} isMobile={isMobile} org={org} />
     </DocShell>
   )
 }
