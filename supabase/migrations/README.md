@@ -185,7 +185,7 @@ Verified after applying: 9/9 use the helper with no old lookup left, all 54
 calls by real logins succeed, and anon calls are refused (42501).
 
 
-Only staff edit other people's profiles, and only staff change a status. **Not yet applied** (written 26 Nov 2026):
+Only staff edit other people's profiles, and only staff change a status, applied 26 Nov 2026 (recorded as version 20261126234541):
 
 - `20261126_profile_updates_staff_only.sql`
 
@@ -197,3 +197,6 @@ owner/admin/manager of that organisation; the one self-service change left is
 `pending_invite` -> `pending` (accepting a volunteer invite). Tested offline
 with `supabase/tests/profile_updates/run.sh`: 34 cases before (the holes
 reproduce) and after, with grants unchanged.
+Verified live after applying: the new policy and trigger are in place, table
+grants are unchanged, and in a block that always aborts the invited volunteer
+was refused `active`, allowed `pending`, and could not touch an admin's row.
