@@ -17,6 +17,7 @@ import { todayInLondon } from '../../lib/today'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import OrgPageHero, { orgBrand, heroButtons } from '../shared/OrgPageHero'
 import { feedText } from './volunteerFeed'
+import VolunteerInvites from './VolunteerInvites'
 
 const TABS = [
   { key: 'dashboard', label: 'Overview', icon: '❤️' },
@@ -52,6 +53,7 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
   const [shareOpen, setShareOpen] = useState(false)
   const [volunteers, setVolunteers] = useState([])
   const [applicants, setApplicants] = useState([])
+  const [invited, setInvited] = useState([])
   const [publicApplications, setPublicApplications] = useState([])
   const [sessions, setSessions] = useState([])
   const [sessionStaff, setSessionStaff] = useState([])
@@ -102,7 +104,9 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
     ])
     const all = profiles || []
     setVolunteers(all.filter(v => v.status === 'active'))
-    setApplicants(all.filter(v => v.status !== 'active'))
+    // Invited but not joined yet are not applicants: staff already chose them.
+    setInvited(all.filter(v => v.status === 'pending_invite'))
+    setApplicants(all.filter(v => v.status !== 'active' && v.status !== 'pending_invite'))
     setSessions(allSessions || [])
     setSessionStaff(staff || [])
     setTraining(trainingRows || [])
@@ -188,8 +192,8 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
         body: JSON.stringify({ email: inviteEmail.trim().toLowerCase(), name: inviteName.trim() || inviteEmail.split('@')[0], org_id: org.id, org_slug: org.slug, redirect_to: portalUrl }),
       })
       const json = await res.json()
-      if (json.error) throw new Error(json.error)
-      setInviteMsg('✓ Invite sent to ' + inviteEmail.trim())
+      if (!res.ok || json.error) throw new Error(json.error || 'The invite could not be sent.')
+      setInviteMsg((json.resent ? '✓ Sent again to ' : '✓ Invite sent to ') + inviteEmail.trim())
       setInviteEmail(''); setInviteName('')
       loadAll()
       setInviting(false)
@@ -437,6 +441,8 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
                     </Card>
                   )}
 
+                  <VolunteerInvites org={org} invited={invited} onChanged={loadAll} />
+
                   <Card>
                     <SectionTitle icon="📮" title="New Applications" right={(applicants.length + publicApplications.length) > 0 && <Badge bg="rgba(220,38,38,0.1)" color="#DC2626">New</Badge>} />
                     {applicants.length === 0 && publicApplications.length === 0 ? (
@@ -497,10 +503,11 @@ export default function VolunteersMain({ org, autoOpenInvite }) {
             <VolunteerDirectory org={org} volunteers={volunteers} sessionStaff={sessionStaff} sessions={sessions}
               training={training} recognition={recognition} onMessageVolunteer={openComposerFor} onDataChange={loadAll} />
           )}
-          {tab === 'applications' && (
+          {tab === 'applications' && (<>
+            {invited.length > 0 && <div style={{ marginBottom: 20 }}><VolunteerInvites org={org} invited={invited} onChanged={loadAll} /></div>}
             <VolunteersApplications org={org} applicants={applicants} onDataChange={loadAll}
               publicApplications={publicApplications} onApprovePublic={approvePublicApplication} onRejectPublic={rejectPublicApplication} />
-          )}
+          </>)}
           {tab === 'coverage' && (
             <VolunteersCoverage org={org} sessions={sessions} sessionStaff={sessionStaff} volunteers={volunteers}
               onRequestCover={openComposerForSession} onMessageAll={openComposerForSession} />

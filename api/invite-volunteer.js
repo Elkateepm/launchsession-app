@@ -1,5 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 
+// Where an invited volunteer lands to choose a password. Only this app's own
+// page: the live site, or the preview the invite was sent from.
+export function volunteerAcceptUrl(origin, requested) {
+  const ok = o => /^https:\/\/(app\.launchsession\.co\.uk|launchsession-[a-z0-9-]+\.vercel\.app)$/.test(o || '')
+  try {
+    const r = requested ? new URL(requested) : null
+    if (r && ok(r.origin) && r.pathname === '/volunteer/accept-invite') return `${r.origin}/volunteer/accept-invite`
+  } catch (_e) { /* fall through */ }
+  return `${ok(origin) ? origin : 'https://app.launchsession.co.uk'}/volunteer/accept-invite`
+}
+
 export default async function handler(req, res) {
   try {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -24,8 +35,28 @@ export default async function handler(req, res) {
     const { data: { user }, error: userErr } = await anonClient.auth.getUser(token)
     if (userErr || !user) return res.status(401).json({ error: 'Invalid session' })
 
-    const { email, name, org_id, org_slug, redirect_to, role, resend_invite_id } = req.body || {}
-    if (!org_id || (!email && !resend_invite_id)) return res.status(400).json({ error: 'Missing email or org_id' })
+    const { email, name, org_id, org_slug, redirect_to, role, resend_invite_id, action, user_id: targetUserId } = req.body || {}
+
+    // Use service role for all admin operations
+    const adminClient = createClient(REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY)
+
+    // ── An invited volunteer has set their password: let them in. ──
+    // Staff chose to invite them, so there is no second approval. Done here,
+    // not from the browser, so the only accounts this can open are ones that
+    // really were invited (status pending_invite), and only the person's own.
+    if (action === 'accept_volunteer_invite') {
+      const { data: me } = await adminClient.from('user_profiles')
+        .select('id, role, status, org_id, full_name').eq('id', user.id).maybeSingle()
+      if (!me || me.role !== 'volunteer' || !me.org_id) return res.status(404).json({ error: 'This invitation has no volunteer account behind it. Ask the organisation to send it again.' })
+      if (me.status === 'pending_invite') {
+        const { error: upErr } = await adminClient.from('user_profiles').update({ status: 'active' }).eq('id', user.id).eq('status', 'pending_invite')
+        if (upErr) return res.status(500).json({ error: 'Could not finish setting up your account: ' + upErr.message })
+      }
+      const { data: o } = await adminClient.from('organisations').select('slug').eq('id', me.org_id).maybeSingle()
+      return res.status(200).json({ success: true, org_slug: o?.slug || null })
+    }
+
+    if (!org_id || (!email && !resend_invite_id && !targetUserId)) return res.status(400).json({ error: 'Missing email or org_id' })
     // 'manager' has to be in this list. The Invite Staff dropdown offers it,
     // and without it every manager invite was silently downgraded to volunteer
     // -- which routes the person into the volunteer portal instead of the
@@ -33,9 +64,6 @@ export default async function handler(req, res) {
     const inviteRole = ['admin', 'manager', 'staff', 'volunteer'].includes(role) ? role : 'volunteer'
     const cleanEmail = (email || '').trim().toLowerCase()
     const fullName = name || (email || '').split('@')[0]
-
-    // Use service role for all admin operations
-    const adminClient = createClient(REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY)
 
     // Only an approved member of org_id may invite into it, and only into a
     // role below their own (owners and admins may invite admins). This route
@@ -58,6 +86,24 @@ export default async function handler(req, res) {
       manager: ['staff', 'volunteer'],
       staff: ['volunteer'],
     }[caller.role] || []
+
+    // ── Cancel a volunteer invite nobody has used yet. Only someone allowed
+    // to invite volunteers, only in their own organisation, and only an
+    // account that has never been signed in to: anything else is a real
+    // person's account and is removed from Team, not from here. ──
+    if (action === 'cancel_volunteer_invite') {
+      if (!canInvite.includes('volunteer')) return res.status(403).json({ error: "Your role can't manage volunteer invites" })
+      if (!targetUserId || targetUserId === user.id) return res.status(400).json({ error: 'Missing user_id' })
+      const { data: target } = await adminClient.from('user_profiles').select('org_id, role, status').eq('id', targetUserId).maybeSingle()
+      if (!target || target.org_id !== org_id || target.role !== 'volunteer' || target.status !== 'pending_invite') {
+        return res.status(404).json({ error: 'That invite is no longer waiting. Refresh the page.' })
+      }
+      const { data: authUser } = await adminClient.auth.admin.getUserById(targetUserId)
+      if (authUser?.user?.last_sign_in_at) return res.status(409).json({ error: 'They have already signed in, so this is a real account now.' })
+      const { error: delErr } = await adminClient.rpc('delete_user', { user_id: targetUserId })
+      if (delErr) return res.status(500).json({ error: 'Could not cancel the invite: ' + delErr.message })
+      return res.status(200).json({ success: true, cancelled: true })
+    }
 
     // ── Resend a pending invite from Team: same token, same email, same
     // role rules as sending it in the first place. ──
@@ -207,63 +253,57 @@ export default async function handler(req, res) {
       })
     }
 
-    // ── New volunteer: use Supabase's native invite flow (unchanged) ──
-    // This redirects to /volunteer/accept-invite, which is built to handle
-    // Supabase Auth's own invite link format.
-    if (inviteRole === 'volunteer' && !existingUserId) {
-      const redirectUrl = redirect_to || `https://app.launchsession.co.uk/volunteer/accept-invite`
-
-      const { data, error } = await adminClient.auth.admin.inviteUserByEmail(email, {
-        redirectTo: redirectUrl,
-        data: { org_id, role: inviteRole, full_name: fullName }
+    // ── New volunteer (or a resend to one who never got in) ──
+    // generateLink makes the same secure sign-in link Supabase would email,
+    // without sending Supabase's own plain email. The link goes in our one
+    // branded email, and lands on /volunteer/accept-invite to choose a
+    // password. It used to send both emails, and point both at the portal's
+    // sign-in page, where a person with no password could not get in.
+    if (inviteRole === 'volunteer' && (!existingUserId || existingUserNeverSignedIn)) {
+      const redirectUrl = volunteerAcceptUrl(req.headers.origin, redirect_to)
+      const { data: link, error } = await adminClient.auth.admin.generateLink({
+        type: existingUserId ? 'magiclink' : 'invite',
+        email: cleanEmail,
+        options: { redirectTo: redirectUrl, data: { org_id, role: inviteRole, full_name: fullName } },
       })
-
-      if (error) {
-        console.error('invite-volunteer: inviteUserByEmail failed', error)
-        return res.status(400).json({ error: error.message })
+      const actionLink = link?.properties?.action_link
+      if (error || !actionLink || !link?.user?.id) {
+        console.error('invite-volunteer: generateLink failed', error)
+        return res.status(400).json({ error: error?.message || 'Could not create the invite link' })
       }
 
       const { error: profileErr } = await adminClient.from('user_profiles').upsert({
-        id: data.user.id,
+        id: link.user.id,
         email: cleanEmail,
         full_name: fullName,
         org_id,
         role: inviteRole,
         status: 'pending_invite',
       }, { onConflict: 'id' })
-
       if (profileErr) {
         console.error('invite-volunteer: user_profiles upsert failed', profileErr)
-        return res.status(207).json({
-          success: true,
-          user_id: data.user.id,
-          warning: 'Invite sent but profile record failed to save: ' + profileErr.message,
-        })
+        return res.status(500).json({ error: 'Could not save the invite: ' + profileErr.message })
       }
 
       const orgData = await fetchOrgData()
-
-      let emailSent = true
-      try {
-        const { error: fnError } = await adminClient.functions.invoke('send-invite-email', {
-          body: {
-            email: cleanEmail,
-            full_name: fullName,
-            org_name: orgData?.name || 'your organisation',
-            org_slug: orgData?.slug || org_slug,
-            org_color: orgData?.primary_color || '#3B82F6',
-            org_logo: orgData?.email_logo_url || orgData?.logo_url || null,
-            role: inviteRole,
-            redirect_to: redirectUrl,
-          }
-        })
-        if (fnError) throw fnError
-      } catch (emailErr) {
-        emailSent = false
-        console.error('invite-volunteer: send-invite-email failed (non-fatal)', emailErr)
+      const { error: fnError } = await adminClient.functions.invoke('send-invite-email', {
+        body: {
+          email: cleanEmail,
+          full_name: fullName,
+          org_name: orgData?.name || 'your organisation',
+          org_slug: orgData?.slug || org_slug,
+          org_color: orgData?.primary_color || '#3B82F6',
+          org_logo: orgData?.email_logo_url || orgData?.logo_url || null,
+          role: inviteRole,
+          redirect_to: actionLink,
+        },
+      })
+      // This is now the only email, so a failure is the caller's to know about.
+      if (fnError) {
+        console.error('invite-volunteer: send-invite-email failed', fnError)
+        return res.status(502).json({ error: 'The invite is saved but the email did not send. Use Resend in a minute.', user_id: link.user.id })
       }
-
-      return res.status(200).json({ success: true, user_id: data.user.id, email_sent: emailSent })
+      return res.status(200).json({ success: true, user_id: link.user.id, email_sent: true, resent: !!existingUserId })
     }
 
     // ── New staff/admin: create an admin_invites row and send its real token ──
