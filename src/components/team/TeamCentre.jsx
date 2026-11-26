@@ -7,8 +7,10 @@ import StaffHRProfile from '../hr/StaffHRProfile'
 import { InviteStaffModal } from '../hr/HRCentre'
 import JoinRequests from './JoinRequests'
 import { resendTeamInvite, cancelTeamInvite } from './teamJoin'
+import { resendVolunteerInvite, cancelVolunteerInvite } from '../volunteers/VolunteerInvites'
 import Icon from '../../lib/icons'
-import { withAlpha } from '../../lib/withAlpha'
+import SignedImg from '../shared/SignedImg'
+import OrgPageHero, { orgBrand, heroButtons } from '../shared/OrgPageHero'
 
 // The Team tab: who is in the organisation, what they are allowed to reach,
 // and who is still waiting to be let in.
@@ -49,20 +51,25 @@ function initials(name, email) {
   return source.slice(0, 2).toUpperCase()
 }
 
-function Avatar({ person, size = 42, primary }) {
-  if (person.photo_url) {
-    return <img src={person.photo_url} alt="" style={{
-      width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0,
-    }} />
-  }
+// Photos live in a private bucket, so they are signed first (SignedImg); a
+// raw path showed as a broken image. Initials sit underneath, so a photo that
+// is still loading or cannot be signed still shows who it is.
+function Avatar({ person, size = 42 }) {
   return (
     <div style={{
-      width: size, height: size, borderRadius: '50%', flexShrink: 0,
-      background: primary, color: '#fff', display: 'flex', alignItems: 'center',
+      position: 'relative', width: size, height: size, borderRadius: '50%', flexShrink: 0, overflow: 'hidden',
+      background: 'var(--org-solid)', color: 'var(--org-on-solid)', display: 'flex', alignItems: 'center',
       justifyContent: 'center', fontWeight: 800, fontSize: size * 0.36,
-    }}>{initials(person.full_name, person.email)}</div>
+    }}>
+      {initials(person.full_name, person.email)}
+      {person.photo_url && <SignedImg src={person.photo_url} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+    </div>
   )
 }
+
+// Invited through the volunteer invite (api/invite-volunteer): has a profile
+// but has not chosen a password yet.
+const isInvited = p => p.status === 'pending_invite'
 
 function Pill({ children, tone = 'var(--text3)', bg = 'var(--border-soft)' }) {
   return (
@@ -82,6 +89,7 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
   const myRole = userProfile?.role
   const isAdmin = ['owner', 'admin'].includes(myRole)
   const canDecide = ['owner', 'admin', 'manager'].includes(myRole)
+  const onHero = heroButtons(orgBrand(org), { minHeight: 46, padding: '0 18px', borderRadius: 13, border: '1.5px solid transparent', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, whiteSpace: 'nowrap' })
 
   const [tab, setTab] = useState('people')
   const [people, setPeople] = useState([])
@@ -102,6 +110,7 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
   // Cancel asks once more inline, instead of a browser pop-up.
   const [confirmCancel, setConfirmCancel] = useState('')
   const [inviting, setInviting] = useState(false)
+  const invitesRef = React.useRef(null)
 
   const load = useCallback(async () => {
     if (!org?.id) { setLoading(false); return }
@@ -110,7 +119,7 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
     try {
       const [p, inv, jr] = await Promise.all([
         supabase.from('user_profiles')
-          .select('id, full_name, preferred_name, email, role, job_title, photo_url, approval_status, approved_at, approval_note, created_at')
+          .select('id, full_name, preferred_name, email, role, job_title, photo_url, approval_status, approved_at, approval_note, created_at, status')
           .eq('org_id', org.id)
           .order('full_name', { ascending: true }),
         supabase.from('admin_invites')
@@ -153,9 +162,10 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
     [people],
   )
   const currentAccounts = useMemo(
-    () => people.filter(p => !['pending', 'declined'].includes(p.approval_status)),
+    () => people.filter(p => !['pending', 'declined'].includes(p.approval_status) && !isInvited(p)),
     [people],
   )
+  const invitedPeople = useMemo(() => people.filter(isInvited), [people])
   const listablePeople = useMemo(
     () => people.filter(p => p.approval_status !== 'pending'),
     [people],
@@ -167,10 +177,13 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
     { key: 'staff', label: 'Staff' },
     { key: 'volunteer', label: 'Volunteers' },
     { key: 'parent', label: 'Parents' },
+    { key: 'invited', label: 'Invited' },
   ].map(option => ({
     ...option,
     count: option.key === 'all'
       ? listablePeople.length
+      : option.key === 'invited'
+        ? listablePeople.filter(isInvited).length
       : option.key === 'admins'
         ? listablePeople.filter(p => ['owner', 'admin'].includes(p.role)).length
         : listablePeople.filter(p => p.role === option.key).length,
@@ -180,6 +193,7 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
     const q = search.trim().toLowerCase()
     return listablePeople.filter(p => {
       const matchesRole = roleFilter === 'all'
+        || (roleFilter === 'invited' && isInvited(p))
         || (roleFilter === 'admins' ? ['owner', 'admin'].includes(p.role) : p.role === roleFilter)
       const matchesSearch = !q || [
         p.preferred_name, p.full_name, p.email, p.job_title, ROLE_LABELS[p.role],
@@ -225,32 +239,19 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
         '@media (prefers-reduced-motion: reduce) { .team-page .team-enter, .team-page .team-stat-card, .team-page .team-filter, .team-page .team-row { animation: none !important; transition: none !important; transform: none !important; } }',
       ].join(' ')}</style>
 
-      <div className="team-enter" style={{ marginBottom: 20, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-        <div style={{ minWidth: 0, flex: '1 1 280px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 9, color: 'var(--text3)', fontSize: 11, fontWeight: 800, letterSpacing: 1.1, textTransform: 'uppercase', marginBottom: 5 }}>
-            <span style={{ width: 8, height: 8, borderRadius: 99, background: primary, boxShadow: `0 0 0 4px ${withAlpha(primary, '1c')}` }} />
-            People &amp; access
-          </div>
-          <div style={{ fontSize: isMobile ? 25 : 30, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.8, lineHeight: 1.12 }}>Your team</div>
-          <div style={{ fontSize: 13.5, color: 'var(--text3)', marginTop: 6, maxWidth: 620, lineHeight: 1.5 }}>
-            Manage access, welcome new people and keep everyone in sync.
-          </div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
-          <button onClick={() => load()} disabled={loading} aria-label="Refresh team" style={{
-            minHeight: 44, padding: '0 13px', borderRadius: 12, border: '1px solid var(--border)',
-            cursor: loading ? 'default' : 'pointer', background: 'var(--surface)', color: 'var(--text3)',
-            fontSize: 13, fontWeight: 750, fontFamily: 'inherit', display: 'inline-flex',
-            alignItems: 'center', justifyContent: 'center', gap: 7, opacity: loading ? .65 : 1,
-          }}><Icon name="↻" /> Refresh</button>
-          {canDecide && (
-            <button onClick={() => setInviting(true)} style={{
-              minHeight: 44, padding: '0 16px', borderRadius: 12, border: 'none', cursor: 'pointer',
-              background: primary, color: '#fff', fontSize: 14, fontWeight: 800, fontFamily: 'inherit',
-              display: 'inline-flex', alignItems: 'center', gap: 8, boxShadow: `0 7px 16px ${withAlpha(primary, '35')}`,
-            }}><Icon name="✉️" /> Invite someone</button>
-          )}
-        </div>
+      {/* The organisation's own banner, as on Volunteers, Projects and
+          Registers. The old header put white text on the raw brand colour,
+          which a pale brand (Solidarity Sports' yellow) made unreadable. */}
+      <div className="team-enter" style={{ marginBottom: 18 }}>
+        <OrgPageHero org={org} mobile={isMobile} title="Team"
+          subtitle="Who is in your organisation, what they can reach, and who is still waiting to join."
+          label={pending.length + joinRequests.length > 0 ? 'Needs you' : 'Team'}
+          detail={pending.length + joinRequests.length > 0
+            ? `${pending.length + joinRequests.length} waiting for a decision`
+            : `${currentAccounts.length} active ${currentAccounts.length === 1 ? 'account' : 'accounts'}`}
+          actions={canDecide && (
+            <button onClick={() => setInviting(true)} style={{ ...onHero.main, flex: isMobile ? '1 1 100%' : undefined }}>+ Invite someone</button>
+          )} />
       </div>
 
       <div className="team-enter" style={{
@@ -258,27 +259,33 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
         gap: 10, marginBottom: 18, animationDelay: '45ms',
       }}>
         {[
-          { label: 'Active accounts', value: currentAccounts.length, hint: 'Ready to use LaunchSession', icon: '✓', color: '#168A63', bg: 'rgba(22,138,99,.09)' },
-          { label: 'Awaiting approval', value: pending.length, hint: 'People who need a decision', icon: '⌛', color: '#A75C00', bg: 'rgba(229,151,42,.13)' },
-          { label: 'Volunteers', value: roleCountsForStats, hint: 'Part of your delivery team', icon: '♡', color: '#7147C8', bg: 'rgba(113,71,200,.10)' },
-          { label: 'Invites out', value: invites.length, hint: 'Waiting for someone to join', icon: '✉', color: '#315CA8', bg: 'rgba(49,92,168,.10)' },
+          { label: 'Active accounts', value: currentAccounts.length, hint: 'Ready to use LaunchSession', icon: 'check', color: 'var(--ok-text)', bg: 'var(--ok-bg)',
+            go: () => { setTab('people'); setRoleFilter('all'); setSearch('') } },
+          { label: 'Awaiting approval', value: pending.length + joinRequests.length, hint: 'People who need a decision', icon: 'history', color: 'var(--warn-text)', bg: 'var(--warn-bg)',
+            go: () => { if (pending.length) { if (hasHR) onNavigate?.('hr'); else setSelected(pending[0]) } else document.getElementById('team-join-requests')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) } },
+          { label: 'Volunteers', value: roleCountsForStats, hint: 'Part of your delivery team', icon: 'team', color: 'var(--violet-text)', bg: 'var(--violet-bg)',
+            go: () => { setTab('people'); setRoleFilter('volunteer'); setSearch('') } },
+          { label: 'Invites out', value: invites.length + invitedPeople.length, hint: 'Waiting for someone to join', icon: 'messaging', color: 'var(--info-text)', bg: 'var(--info-bg)',
+            // Volunteer invites are people in the list; staff invites are the
+            // "Invitations in progress" card below it.
+            go: () => { setTab('people'); setSearch(''); if (invitedPeople.length) setRoleFilter('invited'); else { setRoleFilter('all'); setTimeout(() => invitesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50) } } },
         ].map((item, index) => (
-          <div key={item.label} className="team-stat-card" style={{
+          <button type="button" key={item.label} className="team-stat-card" onClick={item.go} disabled={!item.value} style={{
             background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 15,
-            padding: isMobile ? 13 : 16, display: 'flex', alignItems: 'center', gap: 12,
-            minWidth: 0, animationDelay: (index * 35 + 70) + 'ms',
+            padding: isMobile ? 13 : 16, display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left',
+            minWidth: 0, animationDelay: (index * 35 + 70) + 'ms', fontFamily: 'inherit', cursor: item.value ? 'pointer' : 'default',
           }}>
             <div style={{
               width: isMobile ? 38 : 42, height: isMobile ? 38 : 42, borderRadius: 12, flexShrink: 0,
               display: 'grid', placeItems: 'center', background: item.bg, color: item.color,
               fontSize: 19, fontWeight: 900,
-            }}>{item.icon}</div>
+            }}><Icon name={item.icon} size={20} /></div>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: isMobile ? 19 : 22, fontWeight: 900, color: 'var(--text)', lineHeight: 1.1 }}>{item.value}</div>
-              <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--text)', marginTop: 5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</div>
+              <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--text)', marginTop: 5, lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: isMobile ? 'normal' : 'nowrap' }}>{item.label}</div>
               {!isMobile && <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.hint}</div>}
             </div>
-          </div>
+          </button>
         ))}
       </div>
 
@@ -301,7 +308,7 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
       )}
 
       {canDecide && (
-        <div className="team-enter" style={{ animationDelay: '150ms' }}>
+        <div id="team-join-requests" className="team-enter" style={{ animationDelay: '150ms', scrollMarginTop: 12 }}>
           <JoinRequests org={org} requests={joinRequests} myRole={myRole} myId={session?.user?.id || userProfile?.id} primary={primary}
             memberEmails={new Set(people.map(p => (p.email || '').toLowerCase()))}
             onChanged={load} onFlash={flash} />
@@ -336,9 +343,9 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
         {TABS.map(([key, label]) => (
           <button key={key} role="tab" aria-selected={tab === key} onClick={() => setTab(key)} style={{
             padding: '11px 15px', borderRadius: '10px 10px 0 0', cursor: 'pointer', minHeight: 46,
-            border: '1px solid transparent', borderBottom: tab === key ? `3px solid ${primary}` : '3px solid transparent',
+            border: '1px solid transparent', borderBottom: tab === key ? '3px solid var(--org-solid)' : '3px solid transparent',
             background: tab === key ? 'var(--surface)' : 'transparent',
-            color: tab === key ? primary : 'var(--text3)',
+            color: tab === key ? 'var(--org-ink)' : 'var(--text3)',
             fontSize: 13.5, fontWeight: tab === key ? 850 : 700, fontFamily: 'inherit', whiteSpace: 'nowrap',
           }}>{label}</button>
         ))}
@@ -378,8 +385,8 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
                 <button key={option.key} className="team-filter" aria-pressed={roleFilter === option.key}
                   onClick={() => setRoleFilter(option.key)} style={{
                     minHeight: 44, padding: '0 14px', borderRadius: 99, cursor: 'pointer',
-                    border: `1px solid ${roleFilter === option.key ? primary : 'var(--border)'}`,
-                    background: roleFilter === option.key ? withAlpha(primary, '14') : 'var(--surface)',
+                    border: `1px solid ${roleFilter === option.key ? 'var(--org-solid)' : 'var(--border)'}`,
+                    background: roleFilter === option.key ? 'var(--org-a10)' : 'var(--surface)',
                     color: roleFilter === option.key ? 'var(--org-ink)' : 'var(--text3)',
                     fontSize: 12.5, fontWeight: roleFilter === option.key ? 800 : 650, fontFamily: 'inherit',
                     display: 'inline-flex', alignItems: 'center', gap: 7,
@@ -388,8 +395,8 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
                   <span style={{
                     minWidth: 20, height: 20, padding: '0 5px', boxSizing: 'border-box',
                     display: 'inline-grid', placeItems: 'center', borderRadius: 99, fontSize: 11,
-                    background: roleFilter === option.key ? 'rgba(255,255,255,.72)' : 'var(--surface2)',
-                    color: roleFilter === option.key ? primary : 'var(--text-faint)',
+                    background: roleFilter === option.key ? 'var(--surface)' : 'var(--surface2)',
+                    color: roleFilter === option.key ? 'var(--org-ink)' : 'var(--text-faint)',
                   }}>{option.count}</span>
                 </button>
               ))}
@@ -417,7 +424,7 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
               ) : canDecide && (
                 <button onClick={() => setInviting(true)} style={{
                   minHeight: 44, marginTop: 15, padding: '0 16px', borderRadius: 11,
-                  border: 'none', background: primary, color: '#fff', fontSize: 13.5,
+                  border: 'none', background: 'var(--org-solid)', color: 'var(--org-on-solid)', fontSize: 13.5,
                   fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
                 }}>Invite someone</button>
               )}
@@ -430,7 +437,7 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
               display: 'flex', alignItems: 'center', gap: 12, fontFamily: 'inherit', minHeight: 72,
               animationDelay: (Math.min(index, 8) * 25 + 250) + 'ms',
             }}>
-              <Avatar person={p} primary={primary} />
+              <Avatar person={p} />
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ fontSize: 14.5, fontWeight: 850, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {p.preferred_name || p.full_name || p.email}
@@ -440,17 +447,19 @@ export default function TeamCentre({ org, session, userProfile, onNavigate, hasH
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 6, alignItems: 'flex-end', flexShrink: 0 }}>
-                <Pill tone="#3730A3" bg="var(--info-bg)">{ROLE_LABELS[p.role] || p.role}</Pill>
+                <Pill tone="var(--text2)" bg="var(--surface2)">{ROLE_LABELS[p.role] || p.role}</Pill>
                 {p.approval_status === 'declined'
                   ? <Pill tone="var(--danger-text)" bg="var(--danger-bg)">Declined</Pill>
-                  : p.approval_status === 'approved' && <Pill tone="var(--ok-text)" bg="var(--ok-bg)">Active</Pill>}
+                  : isInvited(p)
+                    ? <Pill tone="var(--info-text)" bg="var(--info-bg)">Invited</Pill>
+                    : p.approval_status === 'approved' && <Pill tone="var(--ok-text)" bg="var(--ok-bg)">Active</Pill>}
               </div>
               <span aria-hidden="true" style={{ color: 'var(--text-faint)', fontSize: 21, marginLeft: 1 }}>›</span>
             </button>
           ))}
 
           {invites.length > 0 && (
-            <div className="team-enter" style={{ ...card, marginTop: 8, animationDelay: '300ms' }}>
+            <div ref={invitesRef} className="team-enter" style={{ ...card, marginTop: 8, animationDelay: '300ms' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 850, color: 'var(--text)' }}>Invitations in progress</div>
@@ -597,7 +606,7 @@ function PersonDrawer({ person, org, primary, isMobile, isAdmin, canDecide, myRo
         borderRadius: isMobile ? '20px 20px 0 0' : 18, padding: 20, animation: 'teamDrawer .22s ease both',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
-          <Avatar person={person} size={52} primary={primary} />
+          <Avatar person={person} size={52} />
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--text)' }}>{person.preferred_name || person.full_name || person.email}</div>
             <div style={{ fontSize: 13, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{person.email}</div>
@@ -615,6 +624,10 @@ function PersonDrawer({ person, org, primary, isMobile, isAdmin, canDecide, myRo
           }}>{error}</div>
         )}
 
+        {isInvited(person) && canDecide && !isSelf && (
+          <InvitedPanel person={person} org={org} onFlash={onFlash} onChanged={() => { onChanged(); onClose() }} />
+        )}
+
         {person.approval_status === 'pending' && canDecide && !isSelf && (
           <div style={{
             padding: 14, borderRadius: 12, background: 'var(--warn-bg)',
@@ -625,8 +638,8 @@ function PersonDrawer({ person, org, primary, isMobile, isAdmin, canDecide, myRo
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={() => onDecide(person, 'approved')} style={{
-                flex: 1, minHeight: 44, borderRadius: 11, border: 'none', background: primary,
-                color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+                flex: 1, minHeight: 44, borderRadius: 11, border: 'none', background: 'var(--org-solid)',
+                color: 'var(--org-on-solid)', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
               }}>Approve</button>
               <button onClick={() => onDecide(person, 'declined')} style={{
                 flex: 1, minHeight: 44, borderRadius: 11, border: '1px solid var(--danger-border)',
@@ -664,7 +677,7 @@ function PersonDrawer({ person, org, primary, isMobile, isAdmin, canDecide, myRo
             {isAdmin && (
               <button onClick={saveJobTitle} disabled={savingField === 'job'} style={{
                 minHeight: 44, padding: '0 16px', borderRadius: 11, border: 'none',
-                background: primary, color: '#fff', fontSize: 14, fontWeight: 800,
+                background: 'var(--org-solid)', color: 'var(--org-on-solid)', fontSize: 14, fontWeight: 800,
                 cursor: savingField === 'job' ? 'default' : 'pointer', fontFamily: 'inherit',
                 opacity: savingField === 'job' ? 0.6 : 1,
               }}>{savingField === 'job' ? 'Saving…' : 'Save'}</button>
@@ -823,7 +836,7 @@ function InternalMail({ org, people, primary, isMobile, onFlash }) {
 
         <button onClick={send} disabled={!canSend || sending} style={{
           width: '100%', minHeight: 46, borderRadius: 11, border: 'none',
-          background: primary, color: '#fff', fontSize: 15, fontWeight: 800,
+          background: 'var(--org-solid)', color: 'var(--org-on-solid)', fontSize: 15, fontWeight: 800,
           cursor: !canSend || sending ? 'default' : 'pointer', fontFamily: 'inherit',
           opacity: !canSend || sending ? 0.55 : 1,
         }}>{sending ? 'Sending…' : 'Send internal mail'}</button>
@@ -852,3 +865,30 @@ function InternalMail({ org, people, primary, isMobile, onFlash }) {
 }
 
 const inviteAction = { minHeight: 44, padding: '0 14px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 12, fontWeight: 750, cursor: 'pointer', whiteSpace: 'nowrap' }
+
+// A volunteer who was invited but has not set a password yet: send the email
+// again, or take the invite back. The same server actions as the Volunteers
+// page's "Invited, not joined yet" list.
+function InvitedPanel({ person, org, onFlash, onChanged }) {
+  const [busy, setBusy] = useState('')
+  const [confirm, setConfirm] = useState(false)
+  const run = async kind => {
+    if (kind === 'cancel' && !confirm) { setConfirm(true); setTimeout(() => setConfirm(false), 4000); return }
+    setBusy(kind)
+    try {
+      if (kind === 'resend') { await resendVolunteerInvite(org, person); onFlash(`Invite sent again to ${person.email}`) }
+      else { await cancelVolunteerInvite(org, person); onFlash(`Invite to ${person.email} cancelled`); onChanged() }
+    } catch (e) { onFlash(e.message) }
+    setBusy('')
+  }
+  return (
+    <div style={{ padding: 14, borderRadius: 12, background: 'var(--info-bg)', border: '1px solid var(--border)', marginBottom: 16 }}>
+      <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--info-text)' }}>Invited, not joined yet</div>
+      <div style={{ fontSize: 12.5, color: 'var(--text3)', marginTop: 3, marginBottom: 10 }}>They join once they open the email and choose a password.</div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button type="button" onClick={() => run('resend')} disabled={!!busy} style={{ flex: 1, minHeight: 44, borderRadius: 11, border: 'none', background: 'var(--org-solid)', color: 'var(--org-on-solid)', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', opacity: busy ? 0.6 : 1 }}>{busy === 'resend' ? 'Sending…' : 'Resend invite'}</button>
+        <button type="button" onClick={() => run('cancel')} disabled={!!busy} style={{ flex: 1, minHeight: 44, borderRadius: 11, border: `1px solid ${confirm ? 'var(--danger-text)' : 'var(--danger-border)'}`, background: 'var(--surface)', color: 'var(--danger-text)', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', opacity: busy ? 0.6 : 1 }}>{busy === 'cancel' ? 'Cancelling…' : confirm ? 'Tap again to cancel' : 'Cancel invite'}</button>
+      </div>
+    </div>
+  )
+}

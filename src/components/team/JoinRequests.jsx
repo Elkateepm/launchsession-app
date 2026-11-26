@@ -78,7 +78,7 @@ function JoinRequestRow({ org, request, onTeam, myRole, myId, primary, onChanged
                 {roles.map(r => <option key={r} value={r}>{ROLE_NAMES[r]}</option>)}
               </select>
               <button onClick={decline} disabled={busy} style={{ ...btn, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)' }}>Decline</button>
-              <button onClick={approve} disabled={busy} style={{ ...btn, border: 'none', background: primary, color: '#fff', opacity: busy ? 0.6 : 1 }}>{busy ? 'Sending…' : 'Approve'}</button>
+              <button onClick={approve} disabled={busy} style={{ ...btn, border: 'none', background: 'var(--org-solid)', color: 'var(--org-on-solid)', opacity: busy ? 0.6 : 1 }}>{busy ? 'Sending…' : 'Approve'}</button>
             </>
           )}
         </div>

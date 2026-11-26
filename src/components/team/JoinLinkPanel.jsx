@@ -68,7 +68,7 @@ export default function JoinLinkPanel({ org, primary }) {
         </>
       ) : (
         <button onClick={create} disabled={busy} style={{
-          width: '100%', minHeight: 46, borderRadius: 12, border: 'none', background: primary, color: '#fff',
+          width: '100%', minHeight: 46, borderRadius: 12, border: 'none', background: 'var(--org-solid)', color: 'var(--org-on-solid)',
           fontSize: 14, fontWeight: 800, cursor: busy ? 'default' : 'pointer', fontFamily: 'inherit', opacity: busy ? 0.6 : 1,
         }}>{busy ? 'Creating…' : 'Create a join link'}</button>
       )}
