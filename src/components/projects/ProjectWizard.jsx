@@ -66,7 +66,7 @@ export function computeProjectDates(input) {
   return out.sort()
 }
 
-export default function ProjectWizard({ org, session, onClose, onCreated }) {
+export default function ProjectWizard({ org, session, onClose, onCreated, initialHoliday }) {
   const isMobile = useIsMobile()
   const [step, setStep] = useState(0)
   const [saving, setSaving] = useState(false)
@@ -91,6 +91,11 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
   const suggestions = useMemo(() => holidaySuggestions(todayInLondon(), 6), [])
   const [picked, setPicked] = useState(null)
   const [showMore, setShowMore] = useState(false)
+  // Opened from "Plan it" on a school holiday: start with that one picked.
+  useEffect(() => {
+    const h = initialHoliday && suggestions.find(x => x.key === initialHoliday)
+    if (h) pickHoliday(h)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
   const pickHoliday = (h) => {
     setPicked(h.key)
     setForm(f => ({
