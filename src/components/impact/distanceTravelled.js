@@ -172,3 +172,81 @@ export function buildGoals(goals, since = null) {
       .slice(0, 5),
   }
 }
+
+// A baseline is a starting point, so it only becomes evidence once someone
+// records the same area again. Six weeks is long enough for a follow-up to
+// mean something and short enough that it is still remembered.
+export const FOLLOW_UP_DAYS = 42
+
+const DAY = 24 * 60 * 60 * 1000
+
+/**
+ * What needs doing, for the recording page. Each person appears in at most
+ * one list, the most pressing that applies: a score that fell, then a
+ * baseline waiting for its follow-up, then nobody having rated them lately.
+ * `status` gives every person on the roll one word the list can show.
+ */
+export function buildWorklist(scores, children = [], goals = [], now = Date.now()) {
+  const usable = (scores || []).filter(s => s && s.score != null && s.recorded_at && s.child_id && s.area)
+  const impact = buildImpact(usable, children, null)
+
+  const readings = new Map() // childId -> Map(area -> [timestamps])
+  for (const s of usable) {
+    if (!readings.has(s.child_id)) readings.set(s.child_id, new Map())
+    const areas = readings.get(s.child_id)
+    if (!areas.has(s.area)) areas.set(s.area, [])
+    areas.get(s.area).push(at(s))
+  }
+
+  const fell = impact.people.filter(p => p.direction === 'declined')
+    .map(p => ({ childId: p.childId, delta: p.delta, areas: p.areas }))
+  const taken = new Set(fell.map(f => f.childId))
+
+  const followUp = []
+  for (const [childId, areas] of readings) {
+    if (taken.has(childId)) continue
+    const waiting = [...areas.entries()]
+      .filter(([, list]) => list.length === 1 && now - list[0] >= FOLLOW_UP_DAYS * DAY)
+      .map(([area, list]) => ({ area, since: new Date(list[0]).toISOString() }))
+    if (waiting.length) {
+      followUp.push({ childId, areas: waiting.map(w => w.area), since: waiting.map(w => w.since).sort()[0] })
+      taken.add(childId)
+    }
+  }
+  followUp.sort((a, b) => a.since.localeCompare(b.since))
+
+  const quiet = []
+  for (const [childId, areas] of readings) {
+    if (taken.has(childId)) continue
+    const last = Math.max(...[...areas.values()].flat())
+    if (now - last >= STALE_DAYS * DAY) quiet.push({ childId, lastReadingAt: new Date(last).toISOString() })
+  }
+  quiet.sort((a, b) => a.lastReadingAt.localeCompare(b.lastReadingAt))
+  quiet.forEach(q => taken.add(q.childId))
+
+  const today = todayInLondon()
+  const active = (goals || []).filter(g => !(g.status === 'completed' || g.completed_at))
+  const overdueGoals = active.filter(g => g.target_date && g.target_date < today)
+    .sort((a, b) => a.target_date.localeCompare(b.target_date))
+
+  const byPerson = new Map(impact.people.map(p => [p.childId, p]))
+  const status = new Map()
+  for (const c of children) {
+    const id = c.id
+    const last = readings.has(id) ? Math.max(...[...readings.get(id).values()].flat()) : null
+    const kind = fell.some(f => f.childId === id) ? 'fell'
+      : followUp.some(f => f.childId === id) ? 'follow_up'
+        : quiet.some(q => q.childId === id) ? 'quiet'
+          : byPerson.has(id) ? 'measured'
+            : readings.has(id) ? 'baseline'
+              : 'none'
+    status.set(id, { kind, lastReadingAt: last ? new Date(last).toISOString() : null, person: byPerson.get(id) || null })
+  }
+
+  return {
+    fell, followUp, quiet, overdueGoals,
+    unmeasured: children.filter(c => !readings.has(c.id)).map(c => c.id),
+    status,
+    totals: { ...impact.totals, activeGoals: active.length, overdueGoals: overdueGoals.length },
+  }
+}

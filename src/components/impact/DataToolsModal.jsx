@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import * as XLSX from 'xlsx'
 import { format } from 'date-fns'
 import { supabase } from '../../lib/supabase'
-import { OUTCOME_AREAS, areaByKey, scoreColor } from './impact_shared'
+import { OUTCOME_AREAS, areaByKey } from './impact_shared'
 import Icon from '../../lib/icons'
 
 // ---------------------------------------------------------------------------
@@ -122,50 +122,11 @@ function ImportPane({ org, children, primary, onClose, onImported }) {
 }
 
 // ---------------------------------------------------------------------------
-// Report — printable funding/trustee-ready summary
-// ---------------------------------------------------------------------------
-function ReportPane({ org, children, scores }) {
-  const trackedCount = [...new Set(scores.map(s => s.child_id))].length
-  const avgOverall = scores.length ? (scores.reduce((s, x) => s + x.score, 0) / scores.length).toFixed(1) : '—'
-
-  return (
-    <div>
-      <div id="impact-report-printable" style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 20 }}>
-        <div style={{ fontSize: 16, fontWeight: 900 }}>{org.name || 'Organisation'} — Impact Report</div>
-        <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 16 }}>Generated {format(new Date(), 'd MMMM yyyy')}</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
-          {[{ l: 'Young People', v: children.length }, { l: 'Being Tracked', v: trackedCount }, { l: 'Average Score', v: `${avgOverall}/10` }].map(s => (
-            <div key={s.l} style={{ border: '1px solid var(--border-soft)', borderRadius: 10, padding: 10, textAlign: 'center' }}>
-              <div style={{ fontSize: 18, fontWeight: 900 }}>{s.v}</div>
-              <div style={{ fontSize: 10, color: 'var(--text-faint)' }}>{s.l}</div>
-            </div>
-          ))}
-        </div>
-        <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 8 }}>Average score by area</div>
-        {OUTCOME_AREAS.map(area => {
-          const areaScores = scores.filter(s => s.area === area.key)
-          const avg = areaScores.length ? (areaScores.reduce((s, x) => s + x.score, 0) / areaScores.length) : null
-          return (
-            <div key={area.key} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, padding: '4px 0', borderBottom: '1px solid #F9FAFB' }}>
-              <span>{area.icon} {area.label}</span>
-              <span style={{ fontWeight: 800, color: avg ? scoreColor(avg) : 'var(--text-faint)' }}>{avg ? `${avg.toFixed(1)}/10` : 'No data'}</span>
-            </div>
-          )
-        })}
-      </div>
-      <button onClick={() => window.print()} style={{ marginTop: 16, padding: '9px 20px', borderRadius: 10, border: 'none', background: org.primary_color || '#1B9AAA', color: '#fff', fontWeight: 800, cursor: 'pointer', fontSize: 13 }}>
-        🖨️ Print / Save as PDF
-      </button>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
 // Main modal wrapper
 // ---------------------------------------------------------------------------
 export default function DataToolsModal({ mode, org, children, scores, goals, onClose, onImported }) {
   const primary = org?.primary_color || '#1B9AAA'
-  const TITLES = { export: '⬇️ Export Data', import: '⬆️ Import Assessments', report: '📄 Generate Report' }
+  const TITLES = { export: '⬇️ Export Data', import: '⬆️ Import Assessments' }
 
   useEffect(() => {
     if (mode === 'export') exportData(org, children, scores, goals)
@@ -185,7 +146,6 @@ export default function DataToolsModal({ mode, org, children, scores, goals, onC
           <div style={{ fontSize: 13, color: 'var(--text3)' }}>Your download has started — an .xlsx workbook with Young People, Outcome Scores and Goals sheets.</div>
         )}
         {mode === 'import' && <ImportPane org={org} children={children} primary={primary} onClose={onClose} onImported={onImported} />}
-        {mode === 'report' && <ReportPane org={org} children={children} scores={scores} />}
       </motion.div>
     </div>
   )

@@ -553,6 +553,8 @@ export default function Dashboard({ session, org }) {
   const [planPreset, setPlanPreset] = useState(null)
   const [viewSessionId, setViewSessionId] = useState(null)
   const [openDuplicate, setOpenDuplicate] = useState(false)
+  // A ready-made report to open on arrival, e.g. Impact & Outcomes' link to the impact report.
+  const [openReportKey, setOpenReportKey] = useState(null)
   const [calendarDate, setCalendarDate] = useState(null)
   const [openProjectId, setOpenProjectId] = useState(null)
   const [autoOpenAddChild, setAutoOpenAddChild] = useState(false)
@@ -644,6 +646,7 @@ export default function Dashboard({ session, org }) {
     setPlanPreset(t === 'planner' && (payload?.planDate || payload?.planType) ? { date: payload.planDate || null, type: payload.planType || null } : null)
     setViewSessionId(t === 'planner' && payload?.viewSessionId ? payload.viewSessionId : null)
     setOpenDuplicate(t === 'planner' && !!payload?.openDuplicate)
+    setOpenReportKey(t === 'reports' && payload?.openReport ? payload.openReport : null)
     setCalendarDate(t === 'calendar' && payload?.date ? payload.date : null)
     setOpenProjectId(t === 'projects' && payload?.projectId ? payload.projectId : null)
     setAutoOpenAddChild(t === 'registers' && !!payload?.autoOpenAdd)
@@ -1181,8 +1184,8 @@ export default function Dashboard({ session, org }) {
           {effectiveTab === 'risk_assessments' && (hasModule('risk_assessments') ? <RiskAssessments org={org} session={session} initialOpenAssessmentId={openAssessmentId} userProfile={userProfile} />                    : <LockedModule moduleKey="risk_assessments" label="Risk Assessments" icon="🛡️" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── GROWTH PACK ── */}
-          {effectiveTab === 'reports'         && (hasModule('reports')         ? <Reports org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} />                                : <LockedModule moduleKey="reports"         label="Reports"           icon="📊" onNavigate={handleSetTab} onTrial={onTrial} />)}
-          {effectiveTab === 'impact_outcomes' && (hasModule('impact_outcomes') ? <ImpactOutcomes org={org} session={session} isAdmin={isAdmin} />                        : <LockedModule moduleKey="impact_outcomes" label="Impact & Outcomes" icon="🌱" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'reports'         && (hasModule('reports')         ? <Reports org={org} session={session} userProfile={userProfile} onNavigate={handleSetTab} initialReport={openReportKey} />                                : <LockedModule moduleKey="reports"         label="Reports"           icon="📊" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'impact_outcomes' && (hasModule('impact_outcomes') ? <ImpactOutcomes org={org} session={session} isAdmin={isAdmin} onNavigate={handleSetTab} canSeeReports={hasModule('reports')} />                        : <LockedModule moduleKey="impact_outcomes" label="Impact & Outcomes" icon="🌱" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {effectiveTab === 'fundraising'     && (hasModule('fundraising')     ? <FundraisingGate org={org} session={session}><Fundraising org={org} session={session} isAdmin={isAdmin} /></FundraisingGate>                           : <LockedModule moduleKey="fundraising"     label="Fundraising"       icon="💷" onNavigate={handleSetTab} onTrial={onTrial} />)}
 
           {/* ── OPERATIONS PACK ── */}

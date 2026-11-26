@@ -1,47 +1,37 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { subMonths } from 'date-fns'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useTerms } from '../../context/OrgContext'
 import { EmptyState } from './impact_shared'
-import { buildImpact, buildGoals } from './distanceTravelled'
-import {
-  Headline, AreaMovement, GoalsPanel, NeedsAttention, GroupComparison, PeopleList,
-} from './impactSections'
+import { buildWorklist } from './distanceTravelled'
+import { ToDo, ReportsLink, PeopleToRecord } from './impactSections'
 import OutcomeWizard from './OutcomeWizard'
 import PersonPanel from './PersonPanel'
 import DataToolsModal from './DataToolsModal'
 import Icon from '../../lib/icons'
 
-// Impact is always reported for a period -- "this year", "since we started" --
-// because that is the shape of the question a funder asks. The window decides
-// which readings count as the baseline and which as the latest, so changing it
-// genuinely changes the answer rather than filtering a fixed one.
-const PERIODS = [
-  { key: '12m', label: '12 months', phrase: 'in the last 12 months', since: () => subMonths(new Date(), 12) },
-  { key: '6m', label: '6 months', phrase: 'in the last 6 months', since: () => subMonths(new Date(), 6) },
-  { key: '3m', label: '3 months', phrase: 'in the last 3 months', since: () => subMonths(new Date(), 3) },
-  { key: 'all', label: 'All time', phrase: 'since you started recording', since: () => null },
-]
+// Where outcome scores and goals are recorded. It used to carry its own
+// headline, area and group charts, period picker and a printable report; all of
+// that is what Reports now does for any period, from the same scores, so this
+// page keeps the work: who needs a reading next, everyone on the roll with a
+// quick way to record, and each person's record. The figures are one tap away.
 
-export default function ImpactOutcomes({ org, isAdmin }) {
+export default function ImpactOutcomes({ org, isAdmin, onNavigate, canSeeReports }) {
   const isMobile = useIsMobile()
   const terms = useTerms()
   const [children, setChildren] = useState([])
   const [scores, setScores] = useState([])
   const [goals, setGoals] = useState([])
   const [loading, setLoading] = useState(true)
-  const [period, setPeriod] = useState('12m')
-  const [areaFilter, setAreaFilter] = useState(null)
-  const [activeChild, setActiveChild] = useState(null)
+  const [activeChild, setActiveChild] = useState(null) // { child, tab }
   const [showWizard, setShowWizard] = useState(false)
   const [wizardPresetChild, setWizardPresetChild] = useState(null)
   const [dataToolsMode, setDataToolsMode] = useState(null)
   const [showMoreMenu, setShowMoreMenu] = useState(false)
   const primary = org?.primary_color || '#1B9AAA'
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  const load = useCallback(async (quiet) => {
+    if (!quiet) setLoading(true)
     const [{ data: kids }, { data: sc }, { data: gl }] = await Promise.all([
       supabase.from('children').select('id,first_name,last_name,school,group_name').eq('org_id', org.id).order('first_name'),
       supabase.from('outcome_scores').select('*').eq('org_id', org.id).order('recorded_at', { ascending: false }),
@@ -55,31 +45,29 @@ export default function ImpactOutcomes({ org, isAdmin }) {
 
   useEffect(() => { load() }, [load])
 
-  const periodDef = PERIODS.find(p => p.key === period) || PERIODS[0]
-  const since = useMemo(() => periodDef.since(), [periodDef])
-
-  const impact = useMemo(() => buildImpact(scores, children, since), [scores, children, since])
-  const goalStats = useMemo(() => buildGoals(goals, since), [goals, since])
+  const work = useMemo(() => buildWorklist(scores, children, goals), [scores, children, goals])
 
   const nameFor = useCallback((childId) => {
     const c = children.find(x => x.id === childId)
     return c ? `${c.first_name} ${c.last_name}` : 'Unknown'
   }, [children])
 
-  const openChild = useCallback((childId) => {
+  const openChild = useCallback((childId, tab) => {
     const c = children.find(x => x.id === childId)
-    if (c) setActiveChild(c)
+    if (c) setActiveChild({ child: c, tab })
   }, [children])
 
   const openWizard = (presetChild = null) => { setWizardPresetChild(presetChild); setShowWizard(true) }
+  const recordFor = isAdmin ? (childId) => openWizard(children.find(c => c.id === childId) || null) : null
   const onScoreAdded = (score) => { setScores(s => [score, ...s]); setShowWizard(false) }
 
   if (activeChild) {
     return (
       <>
         <PersonPanel
-          child={activeChild} org={org} scores={scores} isAdmin={isAdmin}
-          onClose={() => setActiveChild(null)}
+          child={activeChild.child} initialTab={activeChild.tab} org={org} scores={scores} isAdmin={isAdmin}
+          // Goals change inside the panel, so the to-do list is reread on the way out.
+          onClose={() => { setActiveChild(null); load(true) }}
           onRecordOutcome={(c) => openWizard(c)}
           onScoreAdded={onScoreAdded}
         />
@@ -100,18 +88,18 @@ export default function ImpactOutcomes({ org, isAdmin }) {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 18 }}>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.4 }}>Impact &amp; Outcomes</div>
-          <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 3 }}>
-            How far the {terms.people} you work with have travelled, and what you can show for it
+          <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.4 }}>Impact &amp; Outcomes</h2>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 3, lineHeight: 1.45 }}>
+            Record where each {terms.person} starts and how far they move, and keep their goals up to date.
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8, position: 'relative', flexShrink: 0 }}>
           {isAdmin && (
-            <button onClick={() => openWizard()} style={{ ...btn, border: 'none', background: primary, color: '#fff' }}>
-              Record outcome
+            <button onClick={() => openWizard()} style={{ ...btn, border: 'none', background: 'var(--org-ink)', color: '#fff', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <Icon name="add" size={16} />Record outcome
             </button>
           )}
-          <button onClick={() => setShowMoreMenu(v => !v)} style={{ ...btn, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', padding: '11px 14px' }}>
+          <button onClick={() => setShowMoreMenu(v => !v)} aria-label="More options" aria-expanded={showMoreMenu} style={{ ...btn, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text2)', padding: '11px 14px' }}>
             <Icon name="⋯" />
           </button>
           {showMoreMenu && (
@@ -123,7 +111,6 @@ export default function ImpactOutcomes({ org, isAdmin }) {
                 boxShadow: '0 18px 40px rgba(15,23,42,0.14)', padding: 6, minWidth: 200,
               }}>
                 {[
-                  { key: 'report', label: 'Build a funder report' },
                   { key: 'export', label: 'Export the data' },
                   ...(isAdmin ? [{ key: 'import', label: 'Import existing scores' }] : []),
                 ].map(o => (
@@ -138,19 +125,6 @@ export default function ImpactOutcomes({ org, isAdmin }) {
             </>
           )}
         </div>
-      </div>
-
-      <div style={{ display: 'flex', gap: 3, background: 'var(--surface2)', borderRadius: 12, padding: 4, marginBottom: 18, flexWrap: 'wrap' }}>
-        {PERIODS.map(p => (
-          <button key={p.key} onClick={() => setPeriod(p.key)} style={{
-            flex: isMobile ? '1 1 40%' : 'none', minHeight: 40,
-            padding: '8px 16px', borderRadius: 9, border: 'none',
-            background: period === p.key ? 'var(--surface)' : 'transparent',
-            boxShadow: period === p.key ? '0 1px 3px rgba(0,0,0,0.09)' : 'none',
-            color: period === p.key ? 'var(--org-ink)' : 'var(--text-faint)',
-            fontWeight: 800, fontSize: 12.5, cursor: 'pointer', fontFamily: 'inherit',
-          }}>{p.label}</button>
-        ))}
       </div>
 
       {loading ? (
@@ -168,22 +142,12 @@ export default function ImpactOutcomes({ org, isAdmin }) {
         />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <Headline impact={impact} terms={terms} periodLabel={periodDef.phrase} isMobile={isMobile} />
-
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0,1.4fr) minmax(0,1fr)', gap: 16, alignItems: 'start' }}>
-            <AreaMovement impact={impact} isMobile={isMobile} activeArea={areaFilter} onSelectArea={setAreaFilter} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
-              <GoalsPanel goals={goalStats} childName={terms.person} periodLabel={periodDef.phrase} />
-              <NeedsAttention impact={impact} terms={terms} childName={terms.person} nameFor={nameFor} onOpenChild={openChild} />
-            </div>
-          </div>
-
-          <GroupComparison impact={impact} children={children} isMobile={isMobile} />
-
-          <PeopleList
-            impact={impact} children={children} terms={terms} primary={primary}
-            onOpenChild={openChild} areaFilter={areaFilter} isMobile={isMobile}
-          />
+          <ToDo work={work} nameFor={nameFor} onOpenChild={openChild} onRecord={recordFor} terms={terms} primary={primary} isMobile={isMobile} />
+          <ReportsLink totals={work.totals} terms={terms}
+            onOpenReport={canSeeReports && onNavigate ? () => onNavigate('reports', { openReport: 'impact' }) : null}
+            onOpenReports={canSeeReports && onNavigate ? () => onNavigate('reports') : null} />
+          <PeopleToRecord children={children} work={work} terms={terms} primary={primary}
+            onOpenChild={openChild} onRecord={recordFor} isMobile={isMobile} />
         </div>
       )}
 
