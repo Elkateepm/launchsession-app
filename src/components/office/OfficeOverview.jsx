@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useIsDarkTheme } from '../../hooks/useIsDarkTheme'
-import { useTerms } from '../../context/OrgContext'
 import { getOfficeBranding } from './officeBranding'
-import OfficeIllustration from './OfficeIllustration'
 import Icon from '../../lib/icons'
+import OrgPageHero, { orgBrand, heroButtons } from '../shared/OrgPageHero'
+import { useHrAttention } from '../../lib/hrAccess'
+import { buildNeeds, monthTiles, recentActivity, relative } from './officeHub'
 
 const COPY = {
   forms:            'Create forms and keep track of the replies.',
@@ -25,17 +26,6 @@ const actionStyle = {
   fontFamily: 'inherit', cursor: 'pointer', textAlign: 'left', color: 'var(--text)',
   border: '1px solid var(--border)', background: 'var(--surface)',
   borderRadius: 16, minHeight: 44, outlineOffset: 4,
-}
-
-function OfficeMark({ brand }) {
-  const [failedLogo, setFailedLogo] = useState(null)
-  return (
-    <span style={{ width: 50, height: 50, borderRadius: 15, background: '#fff', border: '1px solid var(--office-border)', display: 'grid', placeItems: 'center', flexShrink: 0, overflow: 'hidden', color: 'var(--office-deep)', fontSize: 21, fontWeight: 800 }}>
-      {brand.logo && failedLogo !== brand.logo
-        ? <img src={brand.logo} alt="" onError={() => setFailedLogo(brand.logo)} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 6, boxSizing: 'border-box' }} />
-        : <span aria-hidden="true">{brand.name.trim().charAt(0).toUpperCase()}</span>}
-    </span>
-  )
 }
 
 const startOfMonthISO = () => {
@@ -82,6 +72,55 @@ async function loadCounts(orgId, tabs) {
   return out
 }
 
+/**
+ * The rows behind "Needs you", "This month" and "Recent". Same rules as the
+ * counts: only tools this person can open are queried, and each query may
+ * fail on its own, leaving its part of the page out rather than showing 0.
+ */
+async function loadHub(orgId, tabs) {
+  const want = new Set(tabs)
+  const monthStart = startOfMonthISO()
+  const now = new Date()
+  const d = {}
+  const get = async (key, tab, build, pick = r => r.data) => {
+    if (!want.has(tab)) return
+    try {
+      const r = await build()
+      if (!r.error) d[key] = pick(r)
+    } catch (e) { /* that part of the hub stays out */ }
+  }
+  await Promise.all([
+    get('forms', 'forms', () => supabase.from('org_forms').select('id, name, closing_date').eq('org_id', orgId).eq('is_active', true)),
+    get('repliesThisMonth', 'forms', () => supabase.from('form_submissions').select('id', { count: 'exact', head: true }).eq('org_id', orgId).gte('created_at', monthStart), r => r.count),
+    get('recentReplies', 'forms', () => supabase.from('form_submissions').select('id, created_at, submitted_name, org_forms(name)').eq('org_id', orgId).order('created_at', { ascending: false }).limit(5)),
+    get('newsletters', 'newsletter', () => supabase.from('newsletters').select('id, subject, status, sent_at, sent_count, created_at').eq('org_id', orgId).order('created_at', { ascending: false }).limit(30)),
+    get('charges', 'payments', () => supabase.from('payment_charge_balances').select('id, due_date, remaining, computed_status').eq('org_id', orgId).in('computed_status', ['unpaid', 'part_paid'])),
+    get('transactions', 'payments', () => supabase.from('payment_transactions').select('id, amount, payment_date, created_at').eq('org_id', orgId).gte('created_at', monthStart).order('created_at', { ascending: false }).limit(200)),
+    get('bookings', 'resource_booking', () => supabase.from('resource_bookings').select('id, resource_id, start_time, status').eq('org_id', orgId).gte('start_time', new Date(now.getTime() - 86400000).toISOString()).order('start_time').limit(200)),
+    get('recentBookings', 'resource_booking', () => supabase.from('resource_bookings').select('id, resource_id, created_at').eq('org_id', orgId).order('created_at', { ascending: false }).limit(5)),
+    get('checkouts', 'resource_booking', () => supabase.from('resource_checkouts').select('id, expected_return_at, returned_at').eq('org_id', orgId).is('returned_at', null)),
+    get('resources', 'resource_booking', () => supabase.from('resources').select('id, name').eq('org_id', orgId)),
+  ])
+  return d
+}
+
+const TONE = {
+  urgent: { ink: 'var(--danger-text)', bg: 'var(--danger-bg)', border: 'var(--danger-border)', label: 'Now' },
+  soon: { ink: 'var(--warn-text)', bg: 'var(--warn-bg)', border: 'var(--warn-border)', label: 'This week' },
+  later: { ink: 'var(--office-ink)', bg: 'var(--office-tint)', border: 'var(--office-border)', label: 'When you can' },
+}
+
+const ICONS = { forms: 'forms', newsletter: 'newsletter', payments: 'payments', resources: 'resources', hr: 'hr' }
+
+function SectionTitle({ id, title, hint }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+      <h2 id={id} style={{ margin: 0, color: 'var(--text)', fontSize: 17, fontWeight: 800 }}>{title}</h2>
+      {hint && <span style={{ fontSize: 12.5, color: 'var(--text3)' }}>{hint}</span>}
+    </div>
+  )
+}
+
 // The sentence under each number. Singular/plural handled here rather than in
 // the card, so the card stays a layout and nothing else.
 export function statFor(key, counts, newResponses) {
@@ -110,11 +149,10 @@ export function statFor(key, counts, newResponses) {
   }
 }
 
-export default function OfficeOverview({ org, tabs, onSelect, newResponses = 0 }) {
+export default function OfficeOverview({ org, tabs, onSelect, newResponses = 0, unread = [], userRole }) {
   const isMobile = useIsMobile()
   const isCompact = useIsMobile(1100)
   const dark = useIsDarkTheme()
-  const terms = useTerms()
   const brand = getOfficeBranding(org, dark)
   const [snapshot, setSnapshot] = useState(null)
   const orgId = org?.id
@@ -123,6 +161,10 @@ export default function OfficeOverview({ org, tabs, onSelect, newResponses = 0 }
   // before the new request starts. Permission changes also invalidate them.
   const loaded = !!orgId && snapshot?.orgId === orgId && snapshot?.tabKeys === tabKeys
   const counts = loaded ? snapshot.counts : {}
+  const [hubSnap, setHubSnap] = useState(null)
+  const hubLoaded = !!orgId && hubSnap?.orgId === orgId && hubSnap?.tabKeys === tabKeys
+  const hub = hubLoaded ? hubSnap.data : {}
+  const hr = useHrAttention(orgId, userRole)
 
   useEffect(() => {
     let cancelled = false
@@ -130,89 +172,121 @@ export default function OfficeOverview({ org, tabs, onSelect, newResponses = 0 }
     loadCounts(orgId, JSON.parse(tabKeys).map(tab => ({ tab }))).then(result => {
       if (!cancelled) setSnapshot({ orgId, tabKeys, counts: result })
     })
+    loadHub(orgId, JSON.parse(tabKeys)).then(data => {
+      if (!cancelled) setHubSnap({ orgId, tabKeys, data })
+    })
     return () => { cancelled = true }
   }, [orgId, tabKeys])
 
   const canOpen = key => tabs.some(t => t.tab === key)
-  const desk = [
-    canOpen('forms') && newResponses > 0 && {
-      tab: 'forms', icon: 'forms', number: newResponses,
-      title: `New response${newResponses === 1 ? '' : 's'}`, action: 'Review replies', urgent: true,
-    },
-    canOpen('newsletter') && counts.newsletter > 0 && {
-      tab: 'newsletter', icon: 'newsletter', number: counts.newsletter,
-      title: `Newsletter draft${counts.newsletter === 1 ? '' : 's'}`, action: 'Continue writing',
-    },
-    canOpen('resource_booking') && counts.resource_booking > 0 && {
-      tab: 'resource_booking', icon: 'resources', number: counts.resource_booking,
-      title: `Upcoming booking${counts.resource_booking === 1 ? '' : 's'}`, action: 'View bookings',
-    },
-  ].filter(Boolean)
   const groups = GROUPS.map(group => ({ ...group, items: tabs.filter(t => group.keys.includes(t.tab)) })).filter(group => group.items.length)
   const otherTabs = tabs.filter(t => t.tab !== 'parent_portal' && !GROUPS.some(group => group.keys.includes(t.tab)))
   if (otherTabs.length) groups.push({ title: 'More tools', description: 'Everything else for your working day.', items: otherTabs })
-  const date = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())
+
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date())
+  // Unread replies come from the dashboard (the bell uses the same list), so
+  // they show before the rest of the hub has loaded.
+  const needs = buildNeeds({ ...hub, unread: unread.length ? unread : Array.from({ length: newResponses }, () => ({ created_at: new Date().toISOString() })), hr: hr.canView ? hr : null }, { tabs, today })
+  const tiles = hubLoaded ? monthTiles(hub, { tabs, monthStart: startOfMonthISO(), today }) : []
+  const resourceNames = Object.fromEntries((hub.resources || []).map(r => [r.id, r.name]))
+  const recent = hubLoaded ? recentActivity(hub, { tabs, resourceNames }) : []
+  const month = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', month: 'long' }).format(new Date())
+  const heroBase = { minHeight: 46, padding: '0 16px', borderRadius: 13, border: '1.5px solid transparent', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, whiteSpace: 'nowrap' }
+  const onHero = heroButtons(orgBrand(org), heroBase)
+  const shortcuts = [
+    canOpen('newsletter') && { tab: 'newsletter', label: 'Write a newsletter', icon: 'newsletter' },
+    canOpen('forms') && { tab: 'forms', label: 'Forms', icon: 'forms' },
+    canOpen('payments') && { tab: 'payments', label: 'Payments', icon: 'payments' },
+    canOpen('resource_booking') && { tab: 'resource_booking', label: 'Book something', icon: 'resources' },
+  ].filter(Boolean).slice(0, 3)
+  const urgentCount = needs.filter(n => n.tone !== 'later').length
 
   return (
-    <div style={{ ...brand.style, width: '100%', maxWidth: 1440, margin: '0 auto', boxSizing: 'border-box', padding: isMobile ? '16px 12px 28px' : '22px 24px 36px' }}>
-      <section aria-labelledby="office-welcome" style={{
-        position: 'relative', overflow: 'hidden', borderRadius: isMobile ? 22 : 26,
-        padding: isMobile ? 22 : '30px 34px', border: '1px solid var(--office-border)',
-        background: 'radial-gradient(ellipse at 100% 0%, var(--office-glow), transparent 65%), linear-gradient(120deg, var(--surface), var(--office-tint))',
-        display: 'flex', alignItems: 'center', gap: 24,
-      }}>
-        <div style={{ flex: 1, minWidth: 0, position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-            <OfficeMark brand={brand} />
-            <div style={{ minWidth: 0 }}>
-              <div style={{ color: 'var(--office-ink)', fontSize: 10, fontWeight: 800, letterSpacing: 1.8, textTransform: 'uppercase', marginBottom: 5 }}>Your shared workspace</div>
-              <div style={{ color: 'var(--text)', fontSize: 16, fontWeight: 800, overflowWrap: 'anywhere' }}>{brand.name}</div>
-            </div>
-          </div>
-          <h1 id="office-welcome" style={{ margin: '0 0 10px', fontFamily: brand.font.display, fontSize: isMobile ? 30 : 38, lineHeight: 1.16, fontWeight: 800, letterSpacing: -1.3, color: 'var(--text)' }}>
-            A little space to<br />make a big difference.
-          </h1>
-          <p style={{ margin: 0, maxWidth: 480, fontSize: 14, lineHeight: 1.7, color: 'var(--text2)' }}>
-            Welcome to your Office. Bring the everyday jobs together,<br style={{ display: isMobile ? 'none' : 'initial' }} /> and make more time for your {terms.people}.
-          </p>
-          <div style={{ marginTop: 22, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px 14px', fontSize: 12, color: 'var(--text3)' }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><Icon name="calendar" size={14} />{date}</span>
-            {brand.slogan && <span style={{ color: 'var(--office-ink)', overflowWrap: 'anywhere' }}>{brand.slogan}</span>}
-          </div>
-        </div>
-        {!isCompact && <div style={{ width: '31%', maxWidth: 340, flexShrink: 0, paddingRight: 8 }}><OfficeIllustration /></div>}
-      </section>
+    <div style={{ ...brand.style, width: '100%', boxSizing: 'border-box', padding: isMobile ? '14px 12px 28px' : '20px 24px 36px' }}>
+      {/* The organisation's banner, as on every other page. */}
+      <OrgPageHero org={org} mobile={isMobile} title="Office"
+        subtitle={`Forms, newsletters, ${canOpen('hr') ? 'HR, ' : ''}payments and bookings. What needs doing, and every tool one tap away.`}
+        label={needs.length ? 'Needs you' : 'All clear'}
+        detail={needs.length ? (urgentCount ? `${urgentCount} to do this week` : `${needs.length} when you can`) : 'Nothing waiting'}
+        actions={shortcuts.length > 0 && <>
+          {shortcuts.map((sc, i) => (
+            <button key={sc.tab} type="button" onClick={() => onSelect(sc.tab)} style={{ ...(i === 0 ? onHero.main : onHero.quiet), flex: isMobile ? (i === 0 ? '1 1 100%' : 1) : undefined }}>
+              <Icon name={sc.icon} size={16} /> {sc.label}
+            </button>
+          ))}
+        </>} />
 
-      <section aria-labelledby="office-desk" style={{ marginTop: 26, marginBottom: 30 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 12 }}>
-          <Icon name="today" size={17} style={{ color: 'var(--office-ink)' }} />
-          <h2 id="office-desk" style={{ margin: 0, color: 'var(--text)', fontSize: 16, fontWeight: 800 }}>On your desk</h2>
-          <span style={{ fontSize: 12, color: 'var(--text3)', marginLeft: 'auto' }}>A place to pick things up</span>
-        </div>
-        {desk.length > 0 ? (
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(210px, 1fr))', gap: 12 }}>
-            {desk.map(item => (
-              <button key={item.tab} type="button" onClick={() => onSelect(item.tab)} style={{ ...actionStyle, padding: '17px 18px', display: 'flex', alignItems: 'center', gap: 13, borderColor: item.urgent ? 'var(--danger-border)' : 'var(--office-border)' }}>
-                <span style={{ width: 44, height: 44, borderRadius: 13, display: 'grid', placeItems: 'center', flexShrink: 0, fontSize: 22, fontWeight: 800, color: item.urgent ? 'var(--danger-text)' : 'var(--office-ink)', background: item.urgent ? 'var(--danger-bg)' : 'var(--office-tint)' }}>{item.number}</span>
-                <span style={{ flex: 1 }}>
-                  <span style={{ display: 'block', fontSize: 13, fontWeight: 750, marginBottom: 5 }}>{item.title}</span>
-                  <span style={{ display: 'block', fontSize: 12, color: 'var(--text3)' }}>{item.action}</span>
-                </span>
-                <Icon name="→" size={16} style={{ color: 'var(--office-ink)' }} />
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 13, borderRadius: 16, border: '1px solid var(--border)', background: 'var(--surface)' }}>
-            <span style={{ display: 'grid', placeItems: 'center', width: 38, height: 38, borderRadius: 12, background: 'var(--office-tint)', color: 'var(--office-ink)', flexShrink: 0 }}><Icon name="☀️" size={20} /></span>
-            <div style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--text3)' }}>
-              <span style={{ display: 'block', color: 'var(--text)', fontWeight: 750 }}>{loaded ? 'Make yourself at home.' : 'Getting your desk ready…'}</span>
-              Choose a tool below to get started. Replies, drafts and upcoming bookings appear here when available.
+      <div style={{ display: 'grid', gridTemplateColumns: isCompact ? 'minmax(0, 1fr)' : 'minmax(0, 1.55fr) minmax(0, 1fr)', gap: isMobile ? 22 : 20, marginTop: 22, alignItems: 'start' }}>
+        <section aria-labelledby="office-needs" style={{ minWidth: 0 }}>
+          <SectionTitle id="office-needs" title="Needs you" hint={needs.length ? 'Most urgent first' : null} />
+          {needs.length === 0 ? (
+            <div style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 13, borderRadius: 16, border: '1px solid var(--border)', background: 'var(--surface)' }}>
+              <span style={{ display: 'grid', placeItems: 'center', width: 40, height: 40, borderRadius: 12, background: 'var(--ok-bg)', color: 'var(--ok-text)', flexShrink: 0 }}><Icon name="check" size={20} /></span>
+              <div style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--text3)' }}>
+                <span style={{ display: 'block', color: 'var(--text)', fontWeight: 800 }}>{hubLoaded ? 'Nothing waiting on you.' : 'Checking your tools…'}</span>
+                New replies, money owed, late returns, approvals and HR tasks show up here.
+              </div>
             </div>
-          </div>
-        )}
-      </section>
+          ) : (
+            <div style={{ display: 'grid', gap: 10 }}>
+              {needs.map(n => {
+                const tone = TONE[n.tone]
+                return (
+                  <button key={n.key} type="button" onClick={() => onSelect(n.tab)} aria-label={`${n.title}. ${n.action}`}
+                    style={{ ...actionStyle, width: '100%', padding: isMobile ? 14 : '15px 18px', display: 'flex', alignItems: 'center', gap: 14, borderColor: n.tone === 'later' ? 'var(--border)' : tone.border, borderLeft: `4px solid ${tone.ink}` }}>
+                    <span style={{ width: 42, height: 42, borderRadius: 12, display: 'grid', placeItems: 'center', flexShrink: 0, background: tone.bg, color: tone.ink }}><Icon name={ICONS[n.icon] || n.icon} size={20} /></span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 14.5, fontWeight: 800 }}>{n.title}</span>
+                        <span style={{ fontSize: 10.5, fontWeight: 800, color: tone.ink, background: tone.bg, borderRadius: 99, padding: '2px 8px', textTransform: 'uppercase', letterSpacing: 0.4 }}>{tone.label}</span>
+                      </span>
+                      <span style={{ display: 'block', fontSize: 12.5, color: 'var(--text3)', marginTop: 4, lineHeight: 1.45 }}>{n.detail}</span>
+                    </span>
+                    {!isMobile && <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--org-ink)', whiteSpace: 'nowrap' }}>{n.action}</span>}
+                    <Icon name="chevron" size={16} style={{ color: 'var(--text3)', flexShrink: 0 }} />
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </section>
 
+        <section aria-labelledby="office-month" style={{ minWidth: 0 }}>
+          <SectionTitle id="office-month" title={`This month`} hint={month} />
+          {tiles.length > 0 ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
+              {tiles.map(t => (
+                <button key={t.key} type="button" onClick={() => onSelect(t.tab)} style={{ ...actionStyle, padding: '14px 15px', display: 'block', minWidth: 0 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--office-ink)', fontSize: 12, fontWeight: 800 }}><Icon name={ICONS[t.icon] || t.icon} size={15} />{t.label}</span>
+                  <span style={{ display: 'block', fontSize: 24, fontWeight: 900, color: 'var(--text)', marginTop: 8, letterSpacing: -0.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.value}</span>
+                  {t.hint && <span style={{ display: 'block', fontSize: 11.5, color: 'var(--text3)', marginTop: 3 }}>{t.hint}</span>}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 13, color: 'var(--text3)' }}>{hubLoaded ? 'Numbers appear here once your tools are in use.' : 'Adding up this month…'}</div>
+          )}
+
+          {recent.length > 0 && (
+            <div style={{ marginTop: 18 }}>
+              <SectionTitle title="Recent" />
+              <div style={{ borderRadius: 16, border: '1px solid var(--border)', background: 'var(--surface)', overflow: 'hidden' }}>
+                {recent.map((r, i) => (
+                  <button key={`${r.tab}-${r.at}-${i}`} type="button" onClick={() => onSelect(r.tab)} style={{ width: '100%', minHeight: 48, display: 'flex', alignItems: 'center', gap: 11, padding: '10px 14px', border: 'none', borderTop: i ? '1px solid var(--border-soft)' : 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+                    <span style={{ color: 'var(--office-ink)', display: 'flex', flexShrink: 0 }}><Icon name={ICONS[r.icon] || r.icon} size={16} /></span>
+                    <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: 'var(--text)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.text}</span>
+                    <span style={{ fontSize: 11.5, color: 'var(--text3)', whiteSpace: 'nowrap' }}>{relative(r.at)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+      </div>
+
+      <div style={{ marginTop: 28, marginBottom: 12 }}>
+        <SectionTitle title="Your tools" hint="Every Office tool, with what is in it" />
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: isCompact || groups.length === 1 ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: isMobile ? 24 : 22 }}>
         {groups.map((group, groupIndex) => (
           <section key={group.title} aria-label={group.title} style={{ minWidth: 0 }}>
