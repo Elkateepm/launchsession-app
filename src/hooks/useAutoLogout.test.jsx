@@ -24,13 +24,13 @@ beforeEach(() => {
   onDesktop()
 })
 
-describe('useIdleLogout — desktop, 8 hours', () => {
+describe('useIdleLogout — desktop, 7 days', () => {
   // The bug: ls_last_activity outlives the session that wrote it, so a stale
   // value from yesterday was read the moment today's session appeared and the
   // login was undone on the spot. You signed in, got bounced, signed in again.
   it('does not log out a sign-in that happened after a stale clock', async () => {
-    storedAgo(20 * HOURS)          // last used yesterday; tab was closed, not signed out
-    markSignedIn()                 // the fix: signing in is activity
+    storedAgo(IDLE_TIMEOUT_MS + 12 * HOURS) // last used over a week ago; tab was closed, not signed out
+    markSignedIn()                          // the fix: signing in is activity
 
     await act(async () => { renderHook(() => useIdleLogout(true)) })
 
@@ -45,6 +45,29 @@ describe('useIdleLogout — desktop, 8 hours', () => {
 
     expect(signedOut()).toBe(true)
     expect(redirectToSignIn).toHaveBeenCalled()
+  })
+
+  it('keeps a desktop signed in overnight and over a weekend (it used to sign out after 8 hours)', async () => {
+    storedAgo(3 * 24 * HOURS)
+
+    await act(async () => { renderHook(() => useIdleLogout(true)) })
+
+    expect(signedOut()).toBe(false)
+  })
+
+  it('signs out when the week runs out with the tab left open', async () => {
+    jest.useFakeTimers()
+    try {
+      storedAgo(HOURS)
+      await act(async () => { renderHook(() => useIdleLogout(true)) })
+      // The tab stays open and untouched: one timer covers the whole window.
+      await act(async () => { jest.advanceTimersByTime(IDLE_TIMEOUT_MS - 2 * HOURS) })
+      expect(signedOut()).toBe(false)
+      await act(async () => { jest.advanceTimersByTime(2 * HOURS) })
+      expect(signedOut()).toBe(true)
+    } finally {
+      jest.useRealTimers()
+    }
   })
 
   it('leaves a session inside the window alone, and keeps its clock', async () => {

@@ -22,9 +22,11 @@ import {
 // mostly just cause unwanted logouts (app backgrounded, phone locked, etc.)
 // rather than the shared-desktop security case this was built for.
 //
-// The window is 8 hours of inactivity: long enough to cover a working day
-// without re-authenticating, short enough that a machine left unattended
-// overnight in a shared office does not stay signed in.
+// The window is 7 days of inactivity (IDLE_TIMEOUT_MS): a desktop used on
+// weekdays stays signed in over nights and weekends. It was 8 hours, which
+// meant signing in again every morning. A shared office machine is protected
+// by "Keep me signed in" starting unticked on a desktop, so the sign-in ends
+// when the browser closes unless someone chose otherwise.
 //
 // Last activity is persisted rather than held only in memory. A reload used to
 // reset the in-memory clock, so closing the laptop and reopening the tab the
@@ -102,7 +104,7 @@ export function useIdleLogout(enabled) {
     window.addEventListener('storage', onStorage)
 
     // On mount, honour a clock that was already running before this reload
-    // instead of starting a fresh 8 hours.
+    // instead of starting a fresh window.
     const existing = readLast()
     if (existing && Date.now() - existing >= IDLE_TIMEOUT_MS) { logout(); return }
     if (!existing) writeLast()
