@@ -363,7 +363,7 @@ export default function ProjectsList({ org, session, onNavigate }) {
   const open = id => onNavigate && onNavigate('projects', { projectId: id })
 
   return (
-    <div style={{ padding: isMobile ? '14px 14px 28px' : '24px 28px 36px', boxSizing: 'border-box', maxWidth: 1240, margin: '0 auto' }}>
+    <div style={{ padding: isMobile ? '14px 14px 28px' : '24px 28px 36px', boxSizing: 'border-box', width: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap', marginBottom: 18 }}>
         <div>
           <h1 style={{ margin: 0, fontFamily: 'var(--font-display, inherit)', fontSize: isMobile ? 26 : 32, fontWeight: 900, color: 'var(--text)', letterSpacing: -0.8 }}>Projects</h1>
