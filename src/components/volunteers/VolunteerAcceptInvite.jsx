@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import Icon from '../../lib/icons'
 
-// Reached only via the invite email link. Supabase's invite flow establishes
-// a session automatically from the access token in the URL hash before this
-// component mounts, so we read org/role/email straight off that session's
-// user_metadata rather than any custom token/table lookup.
+// Reached only via the invite email link. The link signs the person in
+// (Supabase puts the session in the URL hash), then they choose a password
+// here and go straight into the portal: staff invited them, so there is no
+// second approval. Who they are and which organisation comes from the
+// profile the invitation created, not from user_metadata, which any signed-in
+// user can rewrite for themselves.
 export default function VolunteerAcceptInvite() {
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState(null)
@@ -26,14 +28,15 @@ export default function VolunteerAcceptInvite() {
         return
       }
 
-      const meta = session.user.user_metadata || {}
-      if (meta.role !== 'volunteer' || !meta.org_id) {
+      const { data: profile } = await supabase.from('user_profiles')
+        .select('role, org_id, full_name').eq('id', session.user.id).maybeSingle()
+      if (!profile || profile.role !== 'volunteer' || !profile.org_id) {
         setError('This invite link is not valid for volunteer sign-up.')
         setLoading(false)
         return
       }
 
-      setUser(session.user)
+      setUser({ ...session.user, profile })
 
       // Public-safe view -- this runs right after a brand-new volunteer's
       // magic-link sign-in, before they have a user_profiles row, so the
@@ -41,7 +44,7 @@ export default function VolunteerAcceptInvite() {
       const { data: orgData, error: orgErr } = await supabase
         .from('organisations_public')
         .select('name, slug, primary_color, logo_url')
-        .eq('id', meta.org_id)
+        .eq('id', profile.org_id)
         .single()
 
       if (orgErr || !orgData) {
@@ -82,20 +85,20 @@ export default function VolunteerAcceptInvite() {
     const { error: pwErr } = await supabase.auth.updateUser({ password })
     if (pwErr) { setError(pwErr.message); setSaving(false); return }
 
-    // The profile was created with the invitation (api/invite-volunteer), so
-    // this only fills it in. It used to upsert one, taking org_id from
-    // user_metadata -- which any signed-in user can rewrite for themselves --
-    // and the database now refuses browser-created profiles outright.
-    const meta = user.user_metadata || {}
-    const { data: updated, error: profileErr } = await supabase.from('user_profiles').update({
-      full_name: meta.full_name || user.email.split('@')[0],
-      status: 'pending', // still goes through normal approval, matches existing volunteer flow
-    }).eq('id', user.id).select('id')
-
-    if (profileErr || !updated?.length) {
-      setError(profileErr
-        ? 'Password set, but we could not finish setting up your profile: ' + profileErr.message
-        : 'Password set, but this invitation has no profile behind it. Ask the organisation to send the invite again.')
+    // The invitation created the profile; the server now opens it. A plain
+    // update from here could not: the browser must not be able to approve
+    // itself.
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/invite-volunteer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ action: 'accept_volunteer_invite' }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok || json.error) throw new Error(json.error || 'Something went wrong')
+    } catch (err) {
+      setError('Password set, but we could not finish setting up your account: ' + err.message + ' You can sign in with your new password on the volunteer page.')
       setSaving(false)
       return
     }
