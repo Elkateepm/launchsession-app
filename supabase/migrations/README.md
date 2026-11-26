@@ -152,7 +152,7 @@ nothing. Live has no non-admin login, so the staff path rests on the local
 tests. If the function is ever missing, the app falls back to the per-report
 functions above: monthly figures, no filters, no volunteer hours.
 
-Session delivery report as a period snapshot, **not yet applied** (written 26 Nov 2026):
+Session delivery report as a period snapshot, applied 26 Nov 2026 (recorded as version 20261126000246):
 
 - `20261126_report_delivery_snapshot.sql`
 
@@ -165,5 +165,7 @@ Every existing key keeps its meaning. Org from `get_my_org_id()` (refuses a
 suspended login); execute revoked from anon. Tested offline (25 assertions,
 anon and suspended refused) and compared old against new on live inside a
 block that always aborts: same sessions and months, hours 71 -> 95 for 28 Aug
-to 25 Nov for the largest organisation, November -14h -> 10h.
+to 25 Nov for the largest organisation, November -14h -> 10h. Verified after
+applying: same figures, no negative month, anon refused (42501), service role
+and signed-in users still allowed.
 
