@@ -3,6 +3,8 @@ import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import Icon from '../../lib/icons'
 import SessionSheet from '../sessions/SessionSheet'
+import { holidaySuggestions } from '../../lib/projectSuggestions'
+import { todayInLondon } from '../../lib/today'
 
 export const PROJECT_TYPES = [
   { key: 'holiday_project', label: 'Holiday Project' },
@@ -66,7 +68,6 @@ export function computeProjectDates(input) {
 
 export default function ProjectWizard({ org, session, onClose, onCreated }) {
   const isMobile = useIsMobile()
-  const primary = org?.primary_color || '#1B9AAA'
   const [step, setStep] = useState(0)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -85,6 +86,22 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
     default_risk_assessment_required: false,
   })
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+  // Most projects are holiday clubs, so the next school holidays are offered
+  // ready-made: name, dates, Mon-Fri and bank holidays already left out.
+  const suggestions = useMemo(() => holidaySuggestions(todayInLondon(), 6), [])
+  const [picked, setPicked] = useState(null)
+  const [showMore, setShowMore] = useState(false)
+  const pickHoliday = (h) => {
+    setPicked(h.key)
+    setForm(f => ({
+      ...f,
+      // Keep a name someone typed; replace one we filled in ourselves.
+      name: !f.name.trim() || suggestions.some(x => x.name === f.name) ? h.name : f.name,
+      project_type: 'holiday_project',
+      start_date: h.start_date, end_date: h.end_date,
+      weekdays: h.weekdays, excluded: h.excluded, custom: [],
+    }))
+  }
 
   useEffect(() => {
     if (!org?.id) return
@@ -174,53 +191,98 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
         <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
           {step === 0 && (
             <>
+              {suggestions.length > 0 && (
+                <section aria-label="Start from a school holiday" style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--text)' }}>Start from a school holiday</div>
+                  <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2, marginBottom: 10, lineHeight: 1.45 }}>
+                    Pick one and the name and dates are filled in, Monday to Friday, with bank holidays left out. Dates are approximate for England; check your council's term dates.
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
+                    {suggestions.map(h => {
+                      const on = picked === h.key
+                      return (
+                        <button key={h.key} type="button" aria-pressed={on} onClick={() => pickHoliday(h)} style={{
+                          textAlign: 'left', minHeight: 64, padding: '11px 13px', borderRadius: 13, cursor: 'pointer', fontFamily: 'inherit',
+                          border: on ? '2px solid var(--org-primary)' : '1.5px solid var(--border)',
+                          background: on ? 'var(--org-a10)' : 'var(--surface)', display: 'flex', alignItems: 'center', gap: 11,
+                        }}>
+                          <span aria-hidden="true" style={{ width: 36, height: 36, borderRadius: 11, flexShrink: 0, display: 'grid', placeItems: 'center', fontSize: 16, background: 'var(--org-a10)', color: 'var(--org-ink)' }}><Icon name={on ? '✓' : '📅'} /></span>
+                          <span style={{ minWidth: 0 }}>
+                            <span style={{ display: 'block', fontSize: 13.5, fontWeight: 800, color: 'var(--text)' }}>{h.title}</span>
+                            <span style={{ display: 'block', fontSize: 12, color: 'var(--text3)', marginTop: 1 }}>
+                              {h.when} · {h.dayCount} {h.dayCount === 1 ? 'day' : 'days'}{h.started ? ' · already started' : ''}
+                            </span>
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </section>
+              )}
+
               <div style={{ marginBottom: 14 }}>
-                <label style={lbl}>Project name</label>
-                <input value={form.name} onChange={e => set('name', e.target.value)} style={fi} placeholder="e.g. Summer Project 2026" autoFocus />
+                <label htmlFor="pw-name" style={lbl}>{suggestions.length > 0 ? 'Project name (or start from scratch)' : 'Project name'}</label>
+                <input id="pw-name" value={form.name} onChange={e => set('name', e.target.value)} style={fi} placeholder="e.g. Summer holiday club 2026" autoFocus={!isMobile} />
               </div>
-              <div style={{ marginBottom: 14 }}>
-                <label style={lbl}>Description (optional)</label>
-                <textarea value={form.description} onChange={e => set('description', e.target.value)} style={{ ...fi, minHeight: 56, resize: 'vertical', fontFamily: 'inherit' }} />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12, marginBottom: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12, marginBottom: 6 }}>
                 <div>
-                  <label style={lbl}>Start date</label>
-                  <input type="date" value={form.start_date} onChange={e => set('start_date', e.target.value)} style={fi} />
+                  <label htmlFor="pw-start" style={lbl}>Start date</label>
+                  <input id="pw-start" type="date" value={form.start_date} onChange={e => { setPicked(null); set('start_date', e.target.value) }} style={fi} />
                 </div>
                 <div>
-                  <label style={lbl}>End date</label>
-                  <input type="date" value={form.end_date} onChange={e => set('end_date', e.target.value)} style={fi} />
+                  <label htmlFor="pw-end" style={lbl}>End date</label>
+                  <input id="pw-end" type="date" value={form.end_date} min={form.start_date || undefined} onChange={e => { setPicked(null); set('end_date', e.target.value) }} style={fi} />
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12, marginBottom: 18 }}>
-                <div>
-                  <label style={lbl}>Project type</label>
-                  <select value={form.project_type} onChange={e => set('project_type', e.target.value)} style={fi}>
-                    {PROJECT_TYPES.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={lbl}>Capacity (optional)</label>
-                  <input type="number" min="0" value={form.capacity} onChange={e => set('capacity', e.target.value)} style={fi} placeholder="e.g. 40" />
-                </div>
+              <div role="status" style={{ fontSize: 12, fontWeight: 700, marginBottom: 14, minHeight: 18, color: form.start_date && form.end_date && form.end_date < form.start_date ? 'var(--danger-text)' : 'var(--text3)' }}>
+                {form.start_date && form.end_date
+                  ? form.end_date < form.start_date ? 'The end date is before the start date.'
+                    : `${dates.length} ${dates.length === 1 ? 'day' : 'days'} so far${form.excluded.length ? `, ${form.excluded.length} bank ${form.excluded.length === 1 ? 'holiday' : 'holidays'} left out` : ''}. You can change which days next.`
+                  : ''}
               </div>
 
               <label style={lbl}>How will this project run?</label>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
                 {[
                   { key: 'same_setup', t: 'Same setup most days', d: 'One main venue, similar times and staffing.' },
                   { key: 'varied', t: 'Different schedule each day', d: 'Different trips, venues, times or activities.' },
                 ].map(o => (
-                  <button key={o.key} onClick={() => set('schedule_mode', o.key)} style={{
-                    textAlign: 'left', padding: '12px 14px', borderRadius: 12, cursor: 'pointer',
-                    border: form.schedule_mode === o.key ? '2px solid #6D5DF6' : '1.5px solid #E2E8F0',
-                    background: form.schedule_mode === o.key ? 'var(--violet-bg)' : 'var(--surface)',
+                  <button key={o.key} type="button" aria-pressed={form.schedule_mode === o.key} onClick={() => set('schedule_mode', o.key)} style={{
+                    textAlign: 'left', padding: '12px 14px', borderRadius: 12, cursor: 'pointer', minHeight: 44, fontFamily: 'inherit',
+                    border: form.schedule_mode === o.key ? '2px solid var(--org-primary)' : '1.5px solid var(--border)',
+                    background: form.schedule_mode === o.key ? 'var(--org-a10)' : 'var(--surface)',
                   }}>
                     <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{o.t}</div>
                     <div style={{ fontSize: 11.5, color: 'var(--text3)', marginTop: 2 }}>{o.d}</div>
                   </button>
                 ))}
               </div>
+
+              {/* The rest is optional, so it waits behind one tap. */}
+              {showMore || form.description || form.capacity || form.project_type !== 'holiday_project' ? (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12, marginBottom: 14 }}>
+                    <div>
+                      <label htmlFor="pw-type" style={lbl}>Project type</label>
+                      <select id="pw-type" value={form.project_type} onChange={e => set('project_type', e.target.value)} style={fi}>
+                        {PROJECT_TYPES.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="pw-cap" style={lbl}>Capacity (optional)</label>
+                      <input id="pw-cap" type="number" min="0" value={form.capacity} onChange={e => set('capacity', e.target.value)} style={fi} placeholder="e.g. 40" />
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="pw-desc" style={lbl}>Description (optional)</label>
+                    <textarea id="pw-desc" value={form.description} onChange={e => set('description', e.target.value)} style={{ ...fi, minHeight: 56, resize: 'vertical', fontFamily: 'inherit' }} />
+                  </div>
+                </>
+              ) : (
+                <button type="button" onClick={() => setShowMore(true)} style={{ minHeight: 44, padding: '0 2px', background: 'none', border: 'none', color: 'var(--org-ink)', fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  + Type, capacity or description (optional)
+                </button>
+              )}
             </>
           )}
 
@@ -231,7 +293,7 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
                 {WEEKDAYS.map(d => (
                   <button key={d.idx} onClick={() => toggleWeekday(d.idx)} style={{
                     padding: '7px 12px', borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                    border: form.weekdays.includes(d.idx) ? '2px solid #6D5DF6' : '1.5px solid #E2E8F0',
+                    border: form.weekdays.includes(d.idx) ? '2px solid #6D5DF6' : '1.5px solid var(--border)',
                     background: form.weekdays.includes(d.idx) ? 'var(--violet-bg)' : 'var(--surface)', color: 'var(--text2)',
                   }}>{isMobile ? d.short : d.label}</button>
                 ))}
@@ -255,7 +317,7 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
                       return (
                         <button key={iso} onClick={() => toggleExcluded(iso)} style={{
                           padding: '6px 10px', borderRadius: 9, fontSize: 11.5, fontWeight: 700, cursor: 'pointer',
-                          border: off ? '1.5px dashed #CBD5E1' : '1.5px solid #E2E8F0',
+                          border: off ? '1.5px dashed #CBD5E1' : '1.5px solid var(--border)',
                           background: off ? 'var(--surface2)' : 'var(--surface)',
                           color: off ? 'var(--text-faint)' : 'var(--text)',
                           textDecoration: off ? 'line-through' : 'none',
@@ -371,14 +433,14 @@ export default function ProjectWizard({ org, session, onClose, onCreated }) {
           <div style={{ flex: 1 }} />
           {step < 2 ? (
             <button onClick={() => canNext() && setStep(s => s + 1)} disabled={!canNext()} style={{
-              minHeight: 44, padding: '11px 22px', borderRadius: 11, border: 'none', fontSize: 13, fontWeight: 800, color: '#fff',
-              background: canNext() ? primary : 'var(--text-faint)',
+              minHeight: 44, padding: '11px 22px', borderRadius: 11, border: 'none', fontSize: 13, fontWeight: 800, color: canNext() ? 'var(--org-on-solid)' : '#fff',
+              background: canNext() ? 'var(--org-solid)' : 'var(--text-faint)',
               cursor: canNext() ? 'pointer' : 'default',
             }}>Continue</button>
           ) : (
             <button onClick={handleCreate} disabled={saving} style={{
-              minHeight: 44, padding: '11px 22px', borderRadius: 11, border: 'none', fontSize: 13, fontWeight: 800, color: '#fff',
-              background: saving ? 'var(--text-faint)' : primary,
+              minHeight: 44, padding: '11px 22px', borderRadius: 11, border: 'none', fontSize: 13, fontWeight: 800, color: saving ? '#fff' : 'var(--org-on-solid)',
+              background: saving ? 'var(--text-faint)' : 'var(--org-solid)',
               cursor: saving ? 'default' : 'pointer',
             }}>{saving ? 'Creating…' : `Create project & ${dates.length} days`}</button>
           )}
