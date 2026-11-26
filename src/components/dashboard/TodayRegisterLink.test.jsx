@@ -24,9 +24,13 @@ const org = { id: 'org-1', name: 'Solidarity Sports', primary_color: '#4714ff' }
 
 // A session running right now, with nobody marked in — the state in the
 // screenshot: "October — Day 2", register not started.
-const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date())
+//
+// The clock is pinned to a weekday afternoon. Read from the real clock, "today"
+// and "running now" stopped agreeing in the last minute before midnight and
+// whenever a run crossed it, and the suite failed for the time of night alone.
+const NOW = new Date('2026-10-09T13:00:00Z') // 14:00 in London
 const SESSION = {
-  id: 'sess-42', org_id: 'org-1', title: 'October — Day 2', session_date: today,
+  id: 'sess-42', org_id: 'org-1', title: 'October — Day 2', session_date: '2026-10-09',
   start_time: '00:01', end_time: '23:59', location: 'Fulham Hub', status: 'published',
 }
 
@@ -44,11 +48,13 @@ function mockTables({ sessions = [SESSION], attendance = [], staff = [] } = {}) 
 }
 
 beforeEach(() => {
+  jest.useFakeTimers().setSystemTime(NOW)
   supabase.auth.getSession.mockResolvedValue({ data: { session: { access_token: 't' } } })
   supabase.auth.onAuthStateChange.mockReturnValue({ data: { subscription: { unsubscribe: jest.fn() } } })
   supabase.rpc.mockResolvedValue({ data: null, error: null })
   mockTables()
 })
+afterEach(() => { jest.useRealTimers() })
 
 describe('Today → Open register', () => {
   // With one session affected, both the attention row and the Running now card
