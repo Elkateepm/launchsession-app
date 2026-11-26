@@ -1,4 +1,4 @@
-import { buildImpact, buildPairs, buildGoals, directionOf, MOVEMENT_THRESHOLD } from './distanceTravelled'
+import { buildImpact, buildPairs, buildGoals, buildWorklist, directionOf, MOVEMENT_THRESHOLD, FOLLOW_UP_DAYS, STALE_DAYS } from './distanceTravelled'
 
 // A reading `daysAgo` days before now.
 const s = (child, area, score, daysAgo) => ({
@@ -149,5 +149,52 @@ describe('goals', () => {
     const yesterday = new Date(Date.now() - 864e5).toISOString().slice(0, 10)
     const g = buildGoals([{ id: '1', status: 'completed', completed_at: iso(1), target_date: yesterday }], null)
     expect(g.overdue).toBe(0)
+  })
+})
+
+describe('what to record next', () => {
+  const kids = ['a', 'b', 'c', 'd', 'e', 'f'].map(id => ({ id, first_name: id.toUpperCase(), last_name: 'X' }))
+  const scores = [
+    s('a', 'confidence', 7, 200), s('a', 'confidence', 3, 5), // fell
+    s('b', 'wellbeing', 4, FOLLOW_UP_DAYS + 3), // baseline, follow-up due
+    s('c', 'confidence', 4, 10), // baseline, too recent to chase
+    s('d', 'confidence', 3, 300), s('d', 'confidence', 6, STALE_DAYS + 20), // improved, then quiet
+    s('e', 'confidence', 3, 60), s('e', 'confidence', 6, 5), // improved, current
+  ]
+  const goals = [
+    { id: 'g1', child_id: 'e', title: 'Join the team', target_date: '2000-01-01', status: 'active' },
+    { id: 'g2', child_id: 'e', title: 'Done already', target_date: '2000-01-01', status: 'completed', completed_at: '2001-01-01' },
+    { id: 'g3', child_id: 'c', title: 'Future', target_date: '2999-01-01', status: 'active' },
+  ]
+  const w = buildWorklist(scores, kids, goals)
+
+  it('puts each person under the most pressing reason, once', () => {
+    expect(w.fell.map(x => x.childId)).toEqual(['a'])
+    expect(w.followUp).toEqual([expect.objectContaining({ childId: 'b', areas: ['wellbeing'] })])
+    expect(w.quiet.map(x => x.childId)).toEqual(['d'])
+    const all = [...w.fell, ...w.followUp, ...w.quiet].map(x => x.childId)
+    expect(new Set(all).size).toBe(all.length)
+  })
+
+  it('leaves a fresh baseline alone until a follow-up is due', () => {
+    expect(w.status.get('c').kind).toBe('baseline')
+  })
+
+  it('lists only goals still open and past their date', () => {
+    expect(w.overdueGoals.map(g => g.id)).toEqual(['g1'])
+    expect(w.totals.activeGoals).toBe(2)
+  })
+
+  it('gives everyone on the roll a status, including the never-measured', () => {
+    expect(w.unmeasured).toEqual(['f'])
+    expect(Object.fromEntries([...w.status].map(([id, st]) => [id, st.kind])))
+      .toEqual({ a: 'fell', b: 'follow_up', c: 'baseline', d: 'quiet', e: 'measured', f: 'none' })
+  })
+
+  it('copes with an organisation that has recorded nothing', () => {
+    const empty = buildWorklist([], kids, [])
+    expect(empty.fell).toEqual([])
+    expect(empty.unmeasured).toHaveLength(6)
+    expect(buildWorklist(undefined, [], undefined).totals.measured).toBe(0)
   })
 })

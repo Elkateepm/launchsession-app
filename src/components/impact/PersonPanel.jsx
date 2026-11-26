@@ -14,9 +14,9 @@ const TABS = [
   { key: 'achievements', label: 'Achievements', icon: '🏆' },
 ]
 
-export default function PersonPanel({ child, org, scores, onClose, onRecordOutcome, isAdmin }) {
+export default function PersonPanel({ child, org, scores, onClose, onRecordOutcome, isAdmin, initialTab }) {
   const primary = org?.primary_color || '#1B9AAA'
-  const [tab, setTab] = useState('overview')
+  const [tab, setTab] = useState(() => (TABS.some(t => t.key === initialTab) ? initialTab : 'overview'))
   const [goals, setGoals] = useState([])
   const [goalsLoading, setGoalsLoading] = useState(true)
   const [attendance, setAttendance] = useState([])

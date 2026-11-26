@@ -45,7 +45,7 @@ const CATEGORY_TONE = {
   Impact: 'amber', Team: 'blue', Safeguarding: 'red', Funding: 'green',
 }
 
-export default function Reports({ org, session, userProfile, onNavigate }) {
+export default function Reports({ org, session, userProfile, onNavigate, initialReport }) {
   const isMobile = useIsMobile()
   const terms = useTerms()
   const orgId = org?.id
@@ -57,7 +57,12 @@ export default function Reports({ org, session, userProfile, onNavigate }) {
   const [savedReports, setSavedReports] = useState([])
   const [studio, setStudio] = useState(null)
   const [showFunder, setShowFunder] = useState(false)
-  const [docReport, setDocReport] = useState(null)
+  // Another page can ask for one ready-made report on arrival (Impact &
+  // Outcomes' "Open the impact report"). The same access rule as the library.
+  const [docReport, setDocReport] = useState(() => {
+    const r = initialReport && REPORT_LIBRARY.find(x => x.key === initialReport)
+    return r && hasDocument(r.key) && canAccessReport(r, role) ? { key: r.key, name: r.name } : null
+  })
 
   // The action prompts -- unmarked registers, repeat absence, open concerns,
   // reflections due -- each come from their own small query. They are a
