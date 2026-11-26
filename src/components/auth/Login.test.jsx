@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabase'
 let mockDesktop = false
 jest.mock('../../lib/supabase', () => ({ supabase: { auth: { signInWithPassword: jest.fn() }, functions: { invoke: jest.fn() } } }))
 jest.mock('../../hooks/useIsMobile', () => ({ useBreakpoint: () => ({ isDesktop: mockDesktop }) }))
-jest.mock('../../lib/nativeEnv', () => ({ isNativeApp: () => false }))
+jest.mock('../../lib/nativeEnv', () => ({ isNativeApp: () => false, isInstalledWebApp: () => false, runsAsApp: () => false }))
 jest.mock('../../lib/icons', () => () => null)
 const org = { id: 'org-a', name: 'Community Youth Project', slug: 'community-youth', primary_color: '#4562BC', branding_enabled: true }
 beforeEach(() => { jest.clearAllMocks(); localStorage.clear(); sessionStorage.clear(); mockDesktop = false })
