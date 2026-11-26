@@ -7,6 +7,9 @@ import Icon from '../../lib/icons'
 import { londonDate, sessionPhase } from '../../lib/sessionPhase'
 import ProjectAttention from './ProjectAttention'
 import { buildProjectAttention } from './projectAttentionModel'
+import { orgBrand, OrgLogo } from '../shared/OrgPageHero'
+import { withAlpha } from '../../lib/withAlpha'
+import { DayRibbon } from './ProjectsList'
 
 const todayISO = londonDate
 
@@ -223,13 +226,17 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
     return (
       <div style={{ padding: 40, textAlign: 'center' }}>
         <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 8 }}>Project not found</div>
-        <button onClick={onBack} style={btnGhost}><Icon name="←" /> Back to Sessions</button>
+        <button onClick={onBack} style={btnGhost}><Icon name="←" /> Back to Projects</button>
       </div>
     )
   }
 
   const typeLabel = PROJECT_TYPES.find(t => t.key === project.project_type)?.label || 'Project'
   const pct = metrics.totalDays > 0 ? Math.round((metrics.completedDays / metrics.totalDays) * 100) : 0
+  // The organisation's own colours, as on the Projects page, rather than a
+  // fixed purple every organisation shared.
+  const brand = orgBrand(org)
+  const ribbonDates = [...new Set(days.filter(d => !d.cancelled_at && d.status !== 'cancelled').map(d => d.session_date))].sort()
 
   return (
     <div style={{ padding: isMobile ? 16 : 28, width: '100%', maxWidth: '100%', margin: 0, boxSizing: 'border-box' }}>
@@ -260,44 +267,44 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
 
       <div style={{
         position: 'relative', overflow: 'hidden',
-        background: 'linear-gradient(135deg, #4C1D95 0%, #5B21B6 38%, #4338CA 72%, #3B82F6 100%)',
+        background: brand.hero, color: '#fff',
         borderRadius: isMobile ? 18 : 22,
         padding: isMobile ? '20px 18px' : '26px 30px',
         marginBottom: 18,
-        boxShadow: '0 1px 0 rgba(255,255,255,0.14) inset, 0 18px 40px -24px rgba(76,29,149,0.7)',
+        boxShadow: `0 20px 44px -28px ${withAlpha(brand.primary, 'CC')}`,
       }}>
-        {/* Soft light blooms so the block doesn't read as a flat slab */}
-        <div style={{ position: 'absolute', top: -70, right: -40, width: 260, height: 260, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.16), transparent 70%)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: -90, left: '30%', width: 300, height: 220, borderRadius: '50%', background: 'radial-gradient(circle, rgba(139,92,246,0.28), transparent 70%)', pointerEvents: 'none' }} />
+        <div aria-hidden="true" style={{ position: 'absolute', width: 320, height: 320, right: isMobile ? -190 : -80, top: -180, borderRadius: '50%', border: `2px solid ${withAlpha(brand.secondary, 'A6')}`, pointerEvents: 'none' }} />
+        <div aria-hidden="true" style={{ position: 'absolute', width: 260, height: 260, right: isMobile ? -170 : 300, bottom: -210, borderRadius: '50%', border: `2px solid ${withAlpha(brand.accent, 'B3')}`, pointerEvents: 'none' }} />
 
         <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+          {/* A phone puts "Open today's session" under the title, not beside it. */}
+          <div style={{ minWidth: 0, flex: isMobile ? '1 1 100%' : 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+              <OrgLogo org={org} height={isMobile ? 32 : 38} maxWidth={130} />
               <StatusChip status={projectStatus} onDark />
-              <span style={{ fontSize: 11, fontWeight: 800, color: '#E9D5FF', background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.22)', borderRadius: 99, padding: '3px 10px' }}>{typeLabel}</span>
+              <span style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.22)', borderRadius: 99, padding: '3px 10px' }}>{typeLabel}</span>
             </div>
             <h1 style={{ margin: 0, fontSize: isMobile ? 24 : 34, fontWeight: 900, color: '#fff', letterSpacing: -0.9, lineHeight: 1.1 }}>{project.name}</h1>
-            <p style={{ margin: '7px 0 0', fontSize: isMobile ? 13 : 14, color: 'rgba(237,233,254,0.85)', fontWeight: 500 }}>
+            <p style={{ margin: '7px 0 0', fontSize: isMobile ? 13 : 14, color: '#ffffffd9', fontWeight: 500 }}>
               {fmtRange(project.start_date, project.end_date)}
               {project.description ? ` · ${project.description}` : ''}
             </p>
 
-            {/* Progress lives in the hero -- it's the single most useful number */}
-            <div style={{ marginTop: 16, maxWidth: 460 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
-                <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(237,233,254,0.75)', letterSpacing: 0.5 }}>PROGRESS</span>
-                <span style={{ fontSize: 12.5, fontWeight: 800, color: '#fff' }}>{metrics.completedDays} of {metrics.totalDays} days</span>
+            {/* Progress lives in the hero -- it's the single most useful number.
+                One square per day, as on the Projects page; filled ones are done. */}
+            <div style={{ marginTop: 14, maxWidth: 560 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '2px 12px' }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: '#ffffffbf', letterSpacing: 0.5 }}>PROGRESS</span>
+                <span style={{ fontSize: 12.5, fontWeight: 800, color: '#fff' }}>{metrics.completedDays} of {metrics.totalDays} days · {pct}%</span>
               </div>
-              <div style={{ height: 8, background: 'rgba(255,255,255,0.18)', borderRadius: 99, overflow: 'hidden' }}>
-                <div style={{ width: `${pct}%`, height: '100%', borderRadius: 99, background: 'linear-gradient(90deg,#A78BFA,#60A5FA)', boxShadow: '0 0 12px rgba(167,139,250,0.7)', transition: 'width 500ms ease' }} />
-              </div>
+              <DayRibbon dates={ribbonDates} today={todayISO()} onDark />
             </div>
           </div>
 
           {todayDay && (
             <button onClick={() => onNavigate && onNavigate('registers', { sessionId: todayDay.id, returnTo: 'projects', projectId })}
               style={{
-                padding: '12px 22px', borderRadius: 12, border: 'none', background: 'var(--surface)', color: 'var(--violet-text)',
+                padding: '12px 22px', borderRadius: 12, border: 'none', background: '#fff', color: brand.ink, minHeight: 46,
                 fontSize: 13.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
                 boxShadow: '0 8px 20px -8px rgba(0,0,0,0.4)',
               }}>
@@ -319,9 +326,10 @@ export default function ProjectOverview({ org, session, projectId, onNavigate, o
             <button key={t.key} onClick={() => setTab(t.key)} style={{
               padding: '8px 16px', border: 'none', borderRadius: 10, cursor: 'pointer',
               fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap',
-              background: on ? 'linear-gradient(135deg,#6D5DF6,#5B8DEF)' : 'transparent',
-              color: on ? '#fff' : 'var(--text3)',
-              boxShadow: on ? '0 1px 0 rgba(255,255,255,0.25) inset, 0 6px 16px -8px rgba(109,93,246,0.8)' : 'none',
+              minHeight: 40,
+              background: on ? 'var(--org-solid)' : 'transparent',
+              color: on ? 'var(--org-on-solid)' : 'var(--text2)',
+              boxShadow: on ? '0 6px 16px -8px var(--org-a60)' : 'none',
               transition: 'background 0.16s ease, color 0.16s ease',
             }}>{t.label}</button>
           )
