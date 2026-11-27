@@ -1215,7 +1215,7 @@ export default function Dashboard({ session, org }) {
                 onSelect={handleSetTab}
               >
   {effectiveTab === 'office' && (
-    <OfficeOverview org={org} tabs={visibleOfficeTabs} onSelect={handleSetTab} newResponses={unreadSubs.length} />
+    <OfficeOverview org={org} tabs={visibleOfficeTabs} onSelect={handleSetTab} newResponses={unreadSubs.length} unread={unreadSubs} userRole={userProfile?.role} />
   )}
   {effectiveTab === 'newsletter' && (hasModule('messaging')  ? <NewsletterStudio org={org} session={session} />            : <LockedModule moduleKey="messaging"  label="Newsletter" icon="📨" onNavigate={handleSetTab} onTrial={onTrial} />)}
   {effectiveTab === 'forms'           && (hasModule('forms')           ? <Forms org={org} session={session} isAdmin={isAdmin} />                                  : <LockedModule moduleKey="forms"           label="Forms"           icon="📝" onNavigate={handleSetTab} onTrial={onTrial} />)}
