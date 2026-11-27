@@ -49,14 +49,16 @@ test('the portal opens on Today, in the organisation’s name, with five tabs wi
   expect(window.location.hash).toBe('#hours')
 })
 
-test('booking puts the volunteer on the session’s team, without the column that used to break it', async () => {
+// Booking is a request now: the team accepts it on the session's card, which
+// is what puts the volunteer on the team (session_staff).
+test('asking to help sends the team a request, not a place on the team', async () => {
   render(<VolunteerDashboard user={user} profile={profile} org={org} onSignOut={() => {}} />)
   fireEvent.click(within(await screen.findByRole('navigation')).getByRole('button', { name: 'Sessions' }))
   expect(await screen.findByText('4 of 4 volunteer places left')).toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: 'Book' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Ask to help' }))
   await waitFor(() => expect(writes).toHaveLength(1))
-  expect(writes[0]).toEqual({ table: 'session_staff', op: 'insert', payload: { session_id: 's1', user_id: 'v1', org_id: 'o1', role: 'volunteer' } })
-  expect(await screen.findByText(/You are down to help at Saturday multi-sports/)).toBeInTheDocument()
+  expect(writes[0]).toEqual({ table: 'session_volunteer_requests', op: 'insert', payload: { session_id: 's1', user_id: 'v1', org_id: 'o1' } })
+  expect(await screen.findByText(/The team will confirm your place at Saturday multi-sports/)).toBeInTheDocument()
 })
 
 test('the Hours tab counts register time, ticks while signed in, and explains where it comes from', () => {
