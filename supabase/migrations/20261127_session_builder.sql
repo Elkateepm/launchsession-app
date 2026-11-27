@@ -70,7 +70,7 @@ grant select, insert, update, delete on public.activity_library to authenticated
 revoke all on public.activity_library from anon;
 
 create or replace function public.touch_activity_library()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql set search_path = public as $$
 begin
   new.updated_at := now();
   return new;
