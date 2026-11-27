@@ -6,6 +6,8 @@ import { orgBrand } from '../shared/OrgPageHero'
 import { sessionPhase } from '../../lib/sessionPhase'
 import Icon from '../../lib/icons'
 import { bookingState } from './vpBooking'
+import RunningOrder from '../sessions/builder/RunningOrder'
+import { normalisePlan } from '../../lib/sessionPlan'
 import { withAlpha } from '../../lib/withAlpha'
 
 // One session, for a volunteer: when, where, who else is on the team, and
@@ -80,6 +82,15 @@ export default function VPSessionDetail({ session, org, booking, request, volunt
           {row('🙋', 'Volunteer places', limit ? `${Math.max(0, limit - volunteerCount)} of ${limit} left` : null)}
           {row('📝', 'About this session', session.description)}
         </div>
+
+        {/* The session plan from the session builder, so volunteers know what
+            happens when, and what is on now on the day. */}
+        {normalisePlan(session.plan).length > 0 && (
+          <section aria-label="Running order" style={{ marginTop: 14 }}>
+            <h3 style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 900, color: 'var(--text)' }}>Running order</h3>
+            <RunningOrder session={session} blocks={normalisePlan(session.plan)} compact />
+          </section>
+        )}
 
         <div style={{ display: 'grid', gap: 10, marginTop: 14 }}>
           {booking && onTheDay && (
