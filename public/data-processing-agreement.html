@@ -92,11 +92,11 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:56px 2
   <div class="legal-badge">Legal</div>
   <h1>Data Processing Agreement</h1>
   <div class="legal-updated">LaunchSession is provided by LaunchNexus Ltd (company no. 17333693), 14 Souldern Street, Watford, United Kingdom, WD18 0EU</div>
+  <p class="legal-updated">Last updated: 27 November 2026</p>
   <div class="legal-body">
-<p>This is the document most likely to need a solicitor's attention, given it governs processing of children's and safeguarding data at scale across multiple customer organisations.</p>
 <p>This Data Processing Agreement ("<strong>DPA</strong>") forms part of the agreement between <strong>LaunchNexus Ltd</strong> ("<strong>Processor</strong>", "<strong>we</strong>") and the customer organisation identified in its LaunchSession account ("<strong>Controller</strong>", "<strong>you</strong>") and applies whenever we process personal data on your behalf in connection with the LaunchSession Service. Where there is any conflict between this DPA and the Terms of Service on data protection matters, this DPA prevails.</p>
 <h2>1. Definitions</h2>
-<p>Terms such as "personal data", "processing", "controller", "processor", "data subject", "special category data", and "personal data breach" have the meanings given in UK GDPR and the Data Protection Act 2018 ("<strong>Data Protection Law</strong>").</p>
+<p>Terms such as "personal data", "processing", "controller", "processor", "data subject", "special category data", and "personal data breach" have the meanings given in UK GDPR and the Data Protection Act 2018, as amended, including by the Data (Use and Access) Act 2025 ("<strong>Data Protection Law</strong>").</p>
 <p><strong>"Customer Data"</strong> means personal data processed by the Processor on behalf of the Controller through the Service, including data relating to children/young people, parents/carers, staff, and volunteers.</p>
 <h2>2. Roles</h2>
 <p>2.1 The parties agree that, in relation to Customer Data, the Controller is the data controller and the Processor is the data processor, for the purposes of Data Protection Law.</p>
@@ -118,15 +118,15 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:56px 2
 <p>4.7 at the Controller's choice, delete or return all Customer Data at the end of the provision of the Service, save to the extent retention is required by law, in accordance with the export/retention period in the Terms of Service;</p>
 <p>4.8 make available to the Controller all information reasonably necessary to demonstrate compliance with this DPA, and allow for and contribute to audits, including inspections, conducted by the Controller or an auditor mandated by the Controller, subject to reasonable notice and confidentiality.</p>
 <h2>5. Personal data breach notification</h2>
-<p>5.1 The Processor will notify the Controller without undue delay, and in any event <strong>within 72 hours</strong> of becoming aware, of any personal data breach affecting Customer Data.</p>
-<p>5.2 That notification will describe, to the extent then known: the nature of the breach; categories and approximate number of data subjects and records affected; likely consequences; and measures taken or proposed to address the breach, including mitigating possible adverse effects. Where full information is not available within 72 hours, the Processor will provide it in phases without undue further delay.</p>
+<p>5.1 The Processor will notify the Controller <strong>without undue delay</strong> after becoming aware of a personal data breach affecting Customer Data. We will provide an initial notification promptly and will not wait for a completed investigation. This enables the Controller to assess and meet its own notification obligations, including the 72-hour deadline for notifying the ICO where applicable.</p>
+<p>5.2 That notification will describe, to the extent then known: the nature of the breach; categories and approximate number of data subjects and records affected; likely consequences; and measures taken or proposed to address the breach, including mitigating possible adverse effects. Where full information is not available at the time of the initial notification, the Processor will provide it in phases without undue further delay.</p>
 <h2>6. Sub-processors</h2>
 <p>6.1 The Controller provides general authorisation for the Processor to engage sub-processors to provide the Service (for example, cloud hosting, database, and transactional email providers).</p>
 <p>6.2 The current list of sub-processors is: <strong>Supabase</strong> (database, authentication, and file storage), <strong>Vercel</strong> (application hosting and content delivery), and <strong>Resend</strong> (transactional email delivery). See Schedule 2 for processing locations.</p>
 <p>6.3 The Processor will notify the Controller of any intended addition or replacement of a sub-processor, giving the Controller the opportunity to object on reasonable data-protection grounds.</p>
 <h2>7. International transfers</h2>
-<p>Where Customer Data is transferred outside the UK, the Processor will ensure an appropriate safeguard is in place, such as the UK International Data Transfer Addendum to the EU Standard Contractual Clauses, an adequacy regulation, or another lawful transfer mechanism.</p>
-<p>As of the date of this DPA: Supabase processes Customer Data in the EU (Ireland), which benefits from the UK's adequacy arrangements with the EU and requires no additional transfer safeguard. Vercel processes data in the US, which <strong>is</strong> an international transfer requiring a safeguard — the Processor will ensure Vercel is bound by the UK International Data Transfer Addendum (or equivalent SCCs) before Customer Data is processed there. The safeguard status of Resend's processing location will be confirmed once its region is known (see Schedule 2).</p>
+<p>Where Customer Data is transferred outside the UK, the Processor will ensure an appropriate safeguard is in place, such as applicable UK adequacy regulations, or the EU Standard Contractual Clauses together with the UK International Data Transfer Addendum and any required transfer assessment and supplementary measures. A supplier listing or hosting-region selection does not, by itself, establish that these requirements are met.</p>
+<p>The primary LaunchSession Supabase project is hosted in <strong>Frankfurt, Germany (EU; eu-central-1)</strong>. This identifies the project hosting region, not the location of every supplier operation. Vercel operates in the United States and other countries through its hosting and delivery network. Resend stores customer data in the United States; selecting an EU email-sending region does not change that storage location. The Processor must maintain applicable supplier agreements and transfer safeguards for these services.</p>
 <h2>8. Special category and children's data</h2>
 <p>Given the nature of the Service, the parties acknowledge that Customer Data may include special category data (e.g. health information) and data relating to children. The Processor will apply the technical and organisational measures in Schedule 1 with particular regard to this heightened sensitivity, and will not use such data for any purpose other than providing the Service.</p>
 <h2>9. Liability</h2>
@@ -155,21 +155,23 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:56px 2
 <tr>
 <td>Supabase</td>
 <td>Database, authentication, and file storage</td>
-<td>EU (Ireland)</td>
+<td>Primary project: Frankfurt, Germany (EU; eu-central-1). Additional supplier processing is described in <a href="https://supabase.com/legal/dpa">Supabase's DPA</a>.</td>
 </tr>
 <tr>
 <td>Vercel</td>
 <td>Application hosting and content delivery</td>
-<td>US (Washington, D.C. region)</td>
+<td>United States and other countries through Vercel's global infrastructure. See <a href="https://vercel.com/legal/dpa">Vercel's DPA</a> and its applicable plan terms.</td>
 </tr>
 <tr>
 <td>Resend</td>
 <td>Transactional email delivery</td>
-<td><strong>[Confirm — Resend runs on AWS; check which AWS region processes your sends]</strong></td>
+<td>United States for stored customer data, including message content and delivery logs. Sending regions may differ. See <a href="https://resend.com/security/gdpr">Resend's processing-location information</a> and <a href="https://resend.com/legal/dpa">DPA</a>.</td>
 </tr>
 </tbody>
 </table>
-<p><em>Supabase (EU/Ireland) sits within the UK's adequacy arrangements with the EU, so no additional transfer safeguard is needed there. Vercel (US) is an international transfer outside the UK — see clause 7. Confirm Resend's region before publication, as this determines whether it also needs a transfer safeguard.</em></p>
+<p>Supplier locations and terms may change. Changes to our sub-processors are handled under clause 6.3. Contact us for information about the safeguards applicable to your organisation's data.</p>
+<h2>Contact</h2>
+<p>For data protection requests or suspected security incidents, contact <a href="mailto:info@launchnexus.co.uk">info@launchnexus.co.uk</a>.</p>
   </div>
 </div>
 <footer>
@@ -198,7 +200,7 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:56px 2
     </div>
   </div>
   <div class="footer-bottom">
-    <div class="footer-copy">&copy; 2026 LaunchSession &middot; Built by Stacklane Studios Ltd</div>
+    <div class="footer-copy">&copy; 2026 LaunchSession &middot; Provided by LaunchNexus Ltd</div>
     <div class="footer-links">
       <a href="mailto:hello@launchsession.co.uk">hello@launchsession.co.uk</a>
     </div>
