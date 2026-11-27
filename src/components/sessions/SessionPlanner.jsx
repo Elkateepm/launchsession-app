@@ -15,9 +15,6 @@ import SessionSheet, { flowButton, flowInput } from './SessionSheet'
 import { withAlpha } from '../../lib/withAlpha'
 import OrgPageHero, { orgBrand, heroButtons } from '../shared/OrgPageHero'
 import VolunteerRequestStrip from './VolunteerRequestStrip'
-import SessionBuilder from './builder/SessionBuilder'
-import ActivityLibrary from './builder/ActivityLibrary'
-import { planSummary } from '../../lib/sessionPlan'
 import { useScrollFade } from '../../hooks/useScrollFade'
 
 const SESSION_TYPES = [
@@ -903,7 +900,7 @@ function Chipline({ icon, text }) {
   )
 }
 
-function SessionDetailDrawer({ session, org, onClose, onEdit, onVolunteers, volCount, attendanceCounts, hasReflection, project, onOpenProject, onOpenRegister, onReflect, hasRiskAssessment, onRisk, onPlan }) {
+function SessionDetailDrawer({ session, org, onClose, onEdit, onVolunteers, volCount, attendanceCounts, hasReflection, project, onOpenProject, onOpenRegister, onReflect, hasRiskAssessment, onRisk }) {
   const terms = useTerms(), primary = org?.primary_color || '#1B9AAA'
   const phase = sessionPhase(session), isPast = phase === 'completed'
   const needed = session.volunteer_limit || 0, covered = needed === 0 || volCount >= needed
@@ -967,22 +964,6 @@ function SessionDetailDrawer({ session, org, onClose, onEdit, onVolunteers, volC
               </div>
             </div>
           )}
-
-          {onPlan && phase !== 'cancelled' && (() => {
-            const p = planSummary(session)
-            return (
-              <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--text-faint)', letterSpacing: 0.4, marginBottom: 7 }}>SESSION PLAN</div>
-                <button type="button" onClick={() => onPlan(session)} style={{ ...flowButton, width: '100%', justifyContent: 'space-between', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left' }}>
-                  <span style={{ minWidth: 0 }}>
-                    <span style={{ display: 'block', fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{p.count ? `${p.count} ${p.count === 1 ? 'activity' : 'activities'} · ${p.text}` : 'No plan yet'}</span>
-                    {p.count > 0 && <span style={{ display: 'block', fontSize: 11.5, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.titles}</span>}
-                  </span>
-                  <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--org-ink)', whiteSpace: 'nowrap' }}>{p.count ? 'Open plan' : 'Build plan'} →</span>
-                </button>
-              </div>
-            )
-          })()}
 
           {session.description && (
             <div style={{ marginBottom: 14 }}>
@@ -1397,7 +1378,7 @@ function CardMenu({ status, onView, onEdit, onDuplicate, onDelete, onSaveTemplat
   )
 }
 
-function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, project, onOpenProject, isMobile, onView, onEdit, onDelete, onDuplicate, onSaveTemplate, onVolunteers, onReflect, onOpenRegister, primary, brandGradient, hasRiskAssessment, requests, names, userId, onRequestsChanged, onPlan }) {
+function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, project, onOpenProject, isMobile, onView, onEdit, onDelete, onDuplicate, onSaveTemplate, onVolunteers, onReflect, onOpenRegister, primary, brandGradient, hasRiskAssessment, requests, names, userId, onRequestsChanged }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const terms = useTerms()
   const past = status === 'completed' || status === 'review'
@@ -1425,7 +1406,7 @@ function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, pr
     <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', padding: '14px 0', marginTop: 10, borderTop: '1px solid var(--border-soft)' }}><MetaStat value={status === 'live' || past ? counts?.signedIn || 0 : counts?.total || 0} label={status === 'live' ? 'signed in' : past ? 'attended' : 'expected'} />{status === 'live' && <MetaStat value={counts?.expected || 0} label="to arrive" />}<MetaStat value={volCount} label={volCount === 1 ? 'volunteer' : 'volunteers'} />{past && <MetaStat value={counts?.absent || 0} label="absent" />}</div>
     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: issues?.length || needsVols || s.risk_assessment_required ? 12 : 0 }}>{(issues || []).map((issue, i) => <span key={i} style={{ fontSize: 12, color: (REVIEW_TONES[issue.kind] || REVIEW_TONES.admin).color, background: (REVIEW_TONES[issue.kind] || REVIEW_TONES.admin).bg, padding: '5px 8px', borderRadius: 6 }}>{issue.label}</span>)}{!past && needsVols && <StatusPill tone="amber">{s.volunteer_limit - volCount} {s.volunteer_limit - volCount === 1 ? 'volunteer' : 'volunteers'} needed</StatusPill>}{!past && s.risk_assessment_required && !hasRiskAssessment && <StatusPill tone="amber">Risk assessment needed</StatusPill>}</div>
     {!past && status !== 'cancelled' && <VolunteerRequestStrip session={s} requests={requests} names={names} userId={userId} onChanged={onRequestsChanged} full={!!s.volunteer_limit && volCount >= s.volunteer_limit} />}
-    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{status !== 'cancelled' && <button onClick={action} style={{ ...flowButton, flex: isMobile ? '1 1 auto' : undefined, background: brandGradient || primary, borderColor: 'transparent', color: '#fff' }}>{actionLabel} →</button>}{onPlan && status !== 'cancelled' && (() => { const p = planSummary(s); return (p.count || !past) ? <button onClick={onPlan} aria-label={p.count ? `Session plan for ${s.title}: ${p.count} activities` : `Build a plan for ${s.title}`} style={flowButton}><Icon name="📋" /> {p.count ? `Plan · ${p.count}` : 'Build plan'}</button> : null })()}<button onClick={onView} aria-label={`View ${terms.session} details for ${s.title}`} style={flowButton}>Details</button>{!isMobile && !past && needsVols && <button onClick={onVolunteers} style={flowButton}>Assign volunteers</button>}</div>
+    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{status !== 'cancelled' && <button onClick={action} style={{ ...flowButton, flex: isMobile ? '1 1 auto' : undefined, background: brandGradient || primary, borderColor: 'transparent', color: '#fff' }}>{actionLabel} →</button>}<button onClick={onView} aria-label={`View ${terms.session} details for ${s.title}`} style={flowButton}>Details</button>{!isMobile && !past && needsVols && <button onClick={onVolunteers} style={flowButton}>Assign volunteers</button>}</div>
   </article>
 }
 
@@ -1464,7 +1445,7 @@ function InsightsStrip({ completed, attendancePct, noShows, reached }) {
   )
 }
 
-export default function SessionPlanner({ org, session, onSessionSaved, initialReflectSessionId, autoOpenWizard, initialEditSessionId, initialPlanDate, initialPlanType, initialViewSessionId, autoOpenDuplicate, onNavigate, userRole }) {
+export default function SessionPlanner({ org, session, onSessionSaved, initialReflectSessionId, autoOpenWizard, initialEditSessionId, initialPlanDate, initialPlanType, initialViewSessionId, autoOpenDuplicate, onNavigate }) {
   const orgId = org?.id
   const terms = useTerms()
   const preferencesKey = `ls_planner_view_${orgId}`
@@ -1499,9 +1480,6 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
   const [showNewMenu, setShowNewMenu] = useState(false)
   const [showProjectWizard, setShowProjectWizard] = useState(false)
   const [showDuplicatePicker, setShowDuplicatePicker] = useState(false)
-  // Session builder: the session whose plan is open, and the activity library.
-  const [buildingSession, setBuildingSession] = useState(null)
-  const [showLibrary, setShowLibrary] = useState(false)
   const [frequentAbsentees, setFrequentAbsentees] = useState([])
   const [tipDismissed, setTipDismissed] = useState(() => {
     try { return localStorage.getItem('ls_sessions_tip_dismissed') === '1' } catch { return false }
@@ -2072,7 +2050,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
             <button onClick={() => openNew()} style={{ ...onHero.main, flex: isMobile ? 2 : undefined }}>+ New {terms.session}</button>
             <button onClick={() => setView('templates')} style={{ ...onHero.quiet, flex: isMobile ? 1 : undefined }}>Templates</button>
             <div style={{ position: 'relative' }}><button aria-label={isMobile ? 'More options' : 'More creation options'} aria-expanded={showNewMenu} onClick={() => setShowNewMenu(v => !v)} style={{ ...onHero.quiet, width: 44, padding: 0 }}>•••</button>
-              {showNewMenu && <><div onClick={() => setShowNewMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} /><div style={{ position: 'absolute', right: 0, top: 50, width: 240, zIndex: 41, padding: 6, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 12px 30px #0F172A20' }}>{[...(isMobile ? [{ label: 'Registers', action: () => onNavigate?.('registers') }, { label: 'Today', action: () => onNavigate?.('today') }] : []), { label: 'Activity library', action: () => setShowLibrary(true) }, { label: 'Duplicate a previous plan', action: () => setShowDuplicatePicker(true) }, { label: 'Create a multi-day project', action: () => setShowProjectWizard(true) }].map(item => <button key={item.label} onClick={() => { setShowNewMenu(false); item.action() }} style={{ ...flowButton, width: '100%', border: 0, textAlign: 'left' }}>{item.label}</button>)}</div></>}
+              {showNewMenu && <><div onClick={() => setShowNewMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} /><div style={{ position: 'absolute', right: 0, top: 50, width: 240, zIndex: 41, padding: 6, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 12px 30px #0F172A20' }}>{[...(isMobile ? [{ label: 'Registers', action: () => onNavigate?.('registers') }, { label: 'Today', action: () => onNavigate?.('today') }] : []), { label: 'Duplicate a previous plan', action: () => setShowDuplicatePicker(true) }, { label: 'Create a multi-day project', action: () => setShowProjectWizard(true) }].map(item => <button key={item.label} onClick={() => { setShowNewMenu(false); item.action() }} style={{ ...flowButton, width: '100%', border: 0, textAlign: 'left' }}>{item.label}</button>)}</div></>}
             </div>
           </>}
           shortcuts={<>
@@ -2199,7 +2177,6 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
                     onReflect={() => setReflectingSession(s)}
                     onOpenRegister={() => onNavigate && onNavigate('registers', { sessionId: s.id, returnTo: 'planner' })}
                     requests={volRequests[s.id]} names={memberNames} userId={session?.user?.id} onRequestsChanged={loadData}
-                    onPlan={() => setBuildingSession(s)}
                   />
                 ))}
               </div>
@@ -2371,16 +2348,9 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
             project={viewingSession.project_id ? projects[viewingSession.project_id] : null}
             onOpenProject={(pr) => { setViewingSession(null); onNavigate && onNavigate('projects', { projectId: pr.id }) }}
             onOpenRegister={(sess) => { setViewingSession(null); onNavigate && onNavigate('registers', { sessionId: sess.id, returnTo: 'planner' }) }}
-            onPlan={(sess) => { setViewingSession(null); setBuildingSession(sess) }}
           />
         )}
       </AnimatePresence>
-      {buildingSession && (
-        <SessionBuilder org={org} session={buildingSession} staff={teamMembers} userRole={userRole}
-          onClose={() => setBuildingSession(null)}
-          onSaved={next => { setSessions(list => list.map(x => (x.id === next.id ? { ...x, plan: next.plan } : x))); setBuildingSession(b => (b ? { ...b, plan: next.plan } : b)) }} />
-      )}
-      {showLibrary && <ActivityLibrary org={org} mode="manage" canWrite={['owner', 'admin', 'manager', 'staff'].includes(userRole)} onClose={() => setShowLibrary(false)} />}
       <AnimatePresence>
       {reflectingSession && (
         <ReflectionModal

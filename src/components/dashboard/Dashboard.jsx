@@ -1151,7 +1151,7 @@ export default function Dashboard({ session, org }) {
                 }} />
             : <RestrictedModule label="Today" icon="⚡" onNavigate={handleSetTab} />)}
           {effectiveTab === 'home'       && <Hub key={sessionVersion} org={org} session={session} onNavigate={handleSetTab} userProfile={userProfile} onAvatarClick={() => setShowProfile(true)} />}
-          {effectiveTab === 'planner'    && <SessionPlanner org={org} session={session} onSessionSaved={bumpSessions} initialReflectSessionId={reflectSessionId} autoOpenWizard={autoOpenWizard} initialEditSessionId={editSessionId} initialPlanDate={planPreset?.date} initialPlanType={planPreset?.type} initialViewSessionId={viewSessionId} autoOpenDuplicate={openDuplicate} onNavigate={handleSetTab} userRole={userProfile?.role} />}
+          {effectiveTab === 'planner'    && <SessionPlanner org={org} session={session} onSessionSaved={bumpSessions} initialReflectSessionId={reflectSessionId} autoOpenWizard={autoOpenWizard} initialEditSessionId={editSessionId} initialPlanDate={planPreset?.date} initialPlanType={planPreset?.type} initialViewSessionId={viewSessionId} autoOpenDuplicate={openDuplicate} onNavigate={handleSetTab} />}
           {effectiveTab === 'projects'   && <ProjectOverview org={org} session={session} projectId={openProjectId} onNavigate={handleSetTab} onBack={() => handleSetTab('projects_list')} />}
           {effectiveTab === 'projects_list' && <ProjectsList org={org} session={session} onNavigate={handleSetTab} />}
           {effectiveTab === 'calendar'   && <Calendar key={sessionVersion} org={org} session={session} onNavigate={handleSetTab} initialDate={calendarDate}
