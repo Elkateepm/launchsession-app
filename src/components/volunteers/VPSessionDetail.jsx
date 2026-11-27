@@ -5,6 +5,7 @@ import { activityTheme } from './vp_shared'
 import { orgBrand } from '../shared/OrgPageHero'
 import { sessionPhase } from '../../lib/sessionPhase'
 import Icon from '../../lib/icons'
+import { bookingState } from './vpBooking'
 import { withAlpha } from '../../lib/withAlpha'
 
 // One session, for a volunteer: when, where, who else is on the team, and
@@ -15,7 +16,8 @@ import { withAlpha } from '../../lib/withAlpha'
 
 const hhmm = t => String(t || '').slice(0, 5)
 
-export default function VPSessionDetail({ session, org, booking, volunteerCount = 0, saving, onBook, onClose, onNavigateTab, onOpenRegister }) {
+export default function VPSessionDetail({ session, org, booking, request, volunteerCount = 0, saving, onBook, onClose, onNavigateTab, onOpenRegister }) {
+  const st = bookingState(booking, request)
   const brand = orgBrand(org)
   const theme = activityTheme(session.session_type)
   const phase = sessionPhase(session)
@@ -85,10 +87,16 @@ export default function VPSessionDetail({ session, org, booking, volunteerCount 
               <Icon name="📖" /> Open register
             </button>
           )}
-          {!booking?.signed_in_at && phase !== 'completed' && (
-            <button onClick={onBook} disabled={saving || full}
-              style={{ ...btn, border: booking ? '1.5px solid var(--border)' : 'none', background: booking ? 'var(--surface)' : full ? 'var(--surface)' : 'var(--org-primary, #1B9AAA)', color: booking ? 'var(--text2)' : full ? 'var(--text-faint)' : 'var(--org-on-primary, #fff)' }}>
-              {saving ? 'Saving…' : booking ? 'Cancel my booking' : full ? 'Volunteer places full' : 'Book onto this session'}
+          {st.state === 'requested' && (
+            <div role="status" style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--warn-text)', background: 'var(--warn-bg)', borderRadius: 12, padding: '10px 14px' }}>You have asked to help. The team will confirm your place.</div>
+          )}
+          {st.state === 'declined' && (
+            <div role="status" style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text2)', background: 'var(--surface2)', borderRadius: 12, padding: '10px 14px' }}>The team does not need you at this one. Thank you for offering.</div>
+          )}
+          {st.detailButton && phase !== 'completed' && (
+            <button onClick={onBook} disabled={saving || (st.state === 'none' && full)}
+              style={{ ...btn, border: st.state !== 'none' ? '1.5px solid var(--border)' : 'none', background: st.state !== 'none' ? 'var(--surface)' : full ? 'var(--surface)' : 'var(--org-primary, #1B9AAA)', color: st.state !== 'none' ? 'var(--text2)' : full ? 'var(--text-faint)' : 'var(--org-on-primary, #fff)' }}>
+              {saving ? 'Saving…' : st.state === 'none' && full ? 'Volunteer places full' : st.detailButton}
             </button>
           )}
           <div style={{ display: 'grid', gridTemplateColumns: session.location ? '1fr 1fr' : '1fr', gap: 10 }}>

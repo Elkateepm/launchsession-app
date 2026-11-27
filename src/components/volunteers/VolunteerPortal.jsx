@@ -570,6 +570,7 @@ export function VolunteerDashboard({ user, profile: initialProfile, org, onSignO
   const [volunteerCounts, setVolunteerCounts] = useState({})
   const [announcements, setAnnouncements] = useState([])
   const [saving, setSaving] = useState(null)
+  const [requests, setRequests] = useState([])
   const [viewingSession, setViewingSession] = useState(null)
   const [registerSession, setRegisterSession] = useState(null)
   const [quickMenuOpen, setQuickMenuOpen] = useState(false)
@@ -580,11 +581,12 @@ export function VolunteerDashboard({ user, profile: initialProfile, org, onSignO
 
   async function loadData() {
     if (!org?.id || !user?.id) return
-    const [{ data: sess }, { data: mine }, { data: rota }, { data: ann }] = await Promise.all([
+    const [{ data: sess }, { data: mine }, { data: rota }, { data: ann }, { data: asks }] = await Promise.all([
       supabase.from('sessions').select('*').eq('org_id', org.id).gte('session_date', today).order('session_date').order('start_time').limit(40),
       supabase.from('session_staff').select('*').eq('org_id', org.id).eq('user_id', user.id),
       supabase.from('session_staff').select('session_id, role').eq('org_id', org.id),
       supabase.from('announcements').select('*').eq('org_id', org.id).order('pinned', { ascending: false }).order('created_at', { ascending: false }).limit(10),
+      supabase.from('session_volunteer_requests').select('id, session_id, status').eq('org_id', org.id).eq('user_id', user.id),
     ])
     const upcoming = sess || []
     const byId = Object.fromEntries(upcoming.map(x => [x.id, x]))
@@ -597,6 +599,7 @@ export function VolunteerDashboard({ user, profile: initialProfile, org, onSignO
     setSessions(upcoming)
     setSessionsById(byId)
     setTeamRows(mine || [])
+    setRequests(asks || [])
     const counts = {}
     ;(rota || []).forEach(r => { if (r.role === 'volunteer') counts[r.session_id] = (counts[r.session_id] || 0) + 1 })
     setVolunteerCounts(counts)
@@ -607,26 +610,35 @@ export function VolunteerDashboard({ user, profile: initialProfile, org, onSignO
 
   useRealtimeTable('sessions', loadData, { filter: org?.id ? `org_id=eq.${org.id}` : undefined, enabled: !!org?.id, pollInterval: 15000 })
   useRealtimeTable('session_staff', loadData, { filter: org?.id ? `org_id=eq.${org.id}` : undefined, enabled: !!org?.id, pollInterval: 10000 })
+  useRealtimeTable('session_volunteer_requests', loadData, { filter: user?.id ? `user_id=eq.${user.id}` : undefined, enabled: !!user?.id, pollInterval: 15000 })
 
   const flash = message => { setToast(message); setTimeout(() => setToast(''), 3200) }
 
   const myBookings = Object.fromEntries(teamRows.map(r => [r.session_id, r]))
+  const myRequests = Object.fromEntries(requests.map(r => [r.session_id, r]))
 
-  // Booking puts the volunteer on the session's team. Cancelling takes them
-  // off again, but only before they have been signed in: after that the row
-  // is their hours.
+  // "Ask to help" sends the team a request; they accept it on the session's
+  // card, which puts the volunteer on the team (session_staff). Before that
+  // the volunteer can withdraw it. Once on the team, cancelling takes them off
+  // again, but only before they have been signed in: after that the row is
+  // their hours.
   async function handleBook(session) {
     setSaving(session.id)
     const mineRow = myBookings[session.id]
+    const asked = myRequests[session.id]
     const { error } = mineRow
       ? await supabase.from('session_staff').delete().eq('id', mineRow.id).eq('user_id', user.id).is('signed_in_at', null)
-      : await supabase.from('session_staff').insert({ session_id: session.id, user_id: user.id, org_id: org.id, role: 'volunteer' })
+      : asked
+        ? await supabase.from('session_volunteer_requests').delete().eq('id', asked.id).eq('user_id', user.id).eq('status', 'requested')
+        : await supabase.from('session_volunteer_requests').insert({ session_id: session.id, user_id: user.id, org_id: org.id })
     setSaving(null)
     if (error) {
-      flash(/COMPLIANCE_EXPIRED/.test(error.message || '') ? 'Your checks have expired, so the team needs to update them before you can book.' : 'That did not save. Check your connection and try again.')
+      flash('That did not save. Check your connection and try again.')
       return
     }
-    flash(mineRow ? `You are no longer down for ${session.title}.` : `You are down to help at ${session.title}. Thank you!`)
+    flash(mineRow ? `You are no longer down for ${session.title}.`
+      : asked ? `Request for ${session.title} withdrawn.`
+        : `Thanks! The team will confirm your place at ${session.title}.`)
     loadData()
   }
 
@@ -661,7 +673,7 @@ export function VolunteerDashboard({ user, profile: initialProfile, org, onSignO
           />
         )}
         {tab === 'sessions' && (
-          <VPSessions sessions={sessions} myBookings={myBookings} volunteerCounts={volunteerCounts} todayStr={today} onOpenSession={setViewingSession} onBook={handleBook} saving={saving} />
+          <VPSessions sessions={sessions} myBookings={myBookings} myRequests={myRequests} volunteerCounts={volunteerCounts} todayStr={today} onOpenSession={setViewingSession} onBook={handleBook} saving={saving} />
         )}
         {tab === 'hours' && <VPHours org={org} profile={profile} teamRows={teamRows} sessionsById={sessionsById} onNavigate={goTab} />}
         {tab === 'messages' && <VPMessages org={org} user={user} primary={primary} />}
@@ -693,7 +705,7 @@ export function VolunteerDashboard({ user, profile: initialProfile, org, onSignO
 
       <AnimatePresence>
         {viewingSession && (
-          <VPSessionDetail session={viewingSession} org={org} user={user} booking={myBookings[viewingSession.id]} volunteerCount={volunteerCounts[viewingSession.id] || 0}
+          <VPSessionDetail session={viewingSession} org={org} user={user} booking={myBookings[viewingSession.id]} request={myRequests[viewingSession.id]} volunteerCount={volunteerCounts[viewingSession.id] || 0}
             saving={saving === viewingSession.id} onBook={() => handleBook(viewingSession)}
             onClose={() => setViewingSession(null)} onNavigateTab={t => { setViewingSession(null); goTab(t) }}
             onOpenRegister={() => { setRegisterSession(viewingSession); setViewingSession(null) }} />

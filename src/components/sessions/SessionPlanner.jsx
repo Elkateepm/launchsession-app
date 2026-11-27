@@ -1,5 +1,5 @@
 import { useOrgSettings } from '../../hooks/useOrgSettings'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { format, addDays, parseISO, startOfWeek, isSameDay } from 'date-fns'
 import { supabase } from '../../lib/supabase'
 import ProjectWizard from '../projects/ProjectWizard'
@@ -14,6 +14,7 @@ import { londonDate, sessionPhase } from '../../lib/sessionPhase'
 import SessionSheet, { flowButton, flowInput } from './SessionSheet'
 import { withAlpha } from '../../lib/withAlpha'
 import OrgPageHero, { orgBrand, heroButtons } from '../shared/OrgPageHero'
+import VolunteerRequestStrip from './VolunteerRequestStrip'
 import { useScrollFade } from '../../hooks/useScrollFade'
 
 const SESSION_TYPES = [
@@ -1377,7 +1378,7 @@ function CardMenu({ status, onView, onEdit, onDuplicate, onDelete, onSaveTemplat
   )
 }
 
-function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, project, onOpenProject, isMobile, onView, onEdit, onDelete, onDuplicate, onSaveTemplate, onVolunteers, onReflect, onOpenRegister, primary, brandGradient, hasRiskAssessment }) {
+function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, project, onOpenProject, isMobile, onView, onEdit, onDelete, onDuplicate, onSaveTemplate, onVolunteers, onReflect, onOpenRegister, primary, brandGradient, hasRiskAssessment, requests, names, userId, onRequestsChanged }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const terms = useTerms()
   const past = status === 'completed' || status === 'review'
@@ -1404,6 +1405,7 @@ function SessionRowCard({ s, status, counts, volCount, hasReflection, issues, pr
     </div>
     <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', padding: '14px 0', marginTop: 10, borderTop: '1px solid var(--border-soft)' }}><MetaStat value={status === 'live' || past ? counts?.signedIn || 0 : counts?.total || 0} label={status === 'live' ? 'signed in' : past ? 'attended' : 'expected'} />{status === 'live' && <MetaStat value={counts?.expected || 0} label="to arrive" />}<MetaStat value={volCount} label={volCount === 1 ? 'volunteer' : 'volunteers'} />{past && <MetaStat value={counts?.absent || 0} label="absent" />}</div>
     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: issues?.length || needsVols || s.risk_assessment_required ? 12 : 0 }}>{(issues || []).map((issue, i) => <span key={i} style={{ fontSize: 12, color: (REVIEW_TONES[issue.kind] || REVIEW_TONES.admin).color, background: (REVIEW_TONES[issue.kind] || REVIEW_TONES.admin).bg, padding: '5px 8px', borderRadius: 6 }}>{issue.label}</span>)}{!past && needsVols && <StatusPill tone="amber">{s.volunteer_limit - volCount} {s.volunteer_limit - volCount === 1 ? 'volunteer' : 'volunteers'} needed</StatusPill>}{!past && s.risk_assessment_required && !hasRiskAssessment && <StatusPill tone="amber">Risk assessment needed</StatusPill>}</div>
+    {!past && status !== 'cancelled' && <VolunteerRequestStrip session={s} requests={requests} names={names} userId={userId} onChanged={onRequestsChanged} full={!!s.volunteer_limit && volCount >= s.volunteer_limit} />}
     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{status !== 'cancelled' && <button onClick={action} style={{ ...flowButton, flex: isMobile ? '1 1 auto' : undefined, background: brandGradient || primary, borderColor: 'transparent', color: '#fff' }}>{actionLabel} →</button>}<button onClick={onView} aria-label={`View ${terms.session} details for ${s.title}`} style={flowButton}>Details</button>{!isMobile && !past && needsVols && <button onClick={onVolunteers} style={flowButton}>Assign volunteers</button>}</div>
   </article>
 }
@@ -1457,11 +1459,14 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
 
   const [sessions, setSessions] = useState([])
   const [volCounts, setVolCounts] = useState({})
+  // Volunteers who asked to help from the portal, by session.
+  const [volRequests, setVolRequests] = useState({})
   const [attendanceCounts, setAttendanceCounts] = useState({})
   const [reflections, setReflections] = useState({}) // session_id -> reflection row
   const [sessionOutcomes, setSessionOutcomes] = useState({}) // session_id -> planned outcome labels
   const [followUpActions, setFollowUpActions] = useState({}) // session_id -> accountable actions
   const [teamMembers, setTeamMembers] = useState([])
+  const memberNames = useMemo(() => Object.fromEntries(teamMembers.map(m => [m.id, m.full_name])), [teamMembers])
   const [openConcerns, setOpenConcerns] = useState({}) // session_id -> count of unresolved concerns
   const [raSessions, setRaSessions] = useState({}) // session_id -> true when a risk assessment is attached
   const [reflectingSession, setReflectingSession] = useState(null)
@@ -1507,7 +1512,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
 
   const loadData = async () => {
     if (!orgId) return
-    const [{ data: sess }, { data: staff }, { data: refl }, { data: concerns }, { data: raLinks }, { data: projs }, { data: outcomes }, { data: actions }, { data: team }] = await Promise.all([
+    const [{ data: sess }, { data: staff }, { data: refl }, { data: concerns }, { data: raLinks }, { data: projs }, { data: outcomes }, { data: actions }, { data: team }, { data: asks }] = await Promise.all([
       supabase.from('sessions').select('*').eq('org_id', orgId).order('session_date').order('start_time'),
       supabase.from('session_staff').select('session_id').eq('org_id', orgId),
       supabase.from('session_reflections').select('*').eq('org_id', orgId),
@@ -1517,11 +1522,15 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
       supabase.from('session_outcomes').select('session_id, area').eq('org_id', orgId),
       supabase.from('session_follow_up_actions').select('*').eq('org_id', orgId).order('due_date'),
       supabase.from('user_profiles').select('id, full_name').eq('org_id', orgId).order('full_name'),
+      supabase.from('session_volunteer_requests').select('id, session_id, user_id, created_at').eq('org_id', orgId).eq('status', 'requested').order('created_at'),
     ])
     setSessions(sess || [])
     const counts = {}
     ;(staff || []).forEach(r => { counts[r.session_id] = (counts[r.session_id] || 0) + 1 })
     setVolCounts(counts)
+    const askMap = {}
+    ;(asks || []).forEach(r => { askMap[r.session_id] = [...(askMap[r.session_id] || []), r] })
+    setVolRequests(askMap)
     const reflMap = {}
     ;(refl || []).forEach(r => { reflMap[r.session_id] = r })
     setReflections(reflMap)
@@ -2167,6 +2176,7 @@ export default function SessionPlanner({ org, session, onSessionSaved, initialRe
                     onVolunteers={() => setSelectedSession(s)}
                     onReflect={() => setReflectingSession(s)}
                     onOpenRegister={() => onNavigate && onNavigate('registers', { sessionId: s.id, returnTo: 'planner' })}
+                    requests={volRequests[s.id]} names={memberNames} userId={session?.user?.id} onRequestsChanged={loadData}
                   />
                 ))}
               </div>
