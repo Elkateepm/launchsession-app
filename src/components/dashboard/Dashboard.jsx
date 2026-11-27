@@ -16,6 +16,7 @@ import { makeModuleLevel, ACCESS_MODULES } from '../../lib/moduleAccess'
 import { useModuleAccess } from '../../context/ModuleAccessContext'
 import Registers from '../registers/Registers'
 import RegisterSheet from '../registers/RegisterSheet'
+import BrandNudge from '../settings/branding/BrandNudge'
 import { useBreakpoint, useIsMobile } from '../../hooks/useIsMobile'
 import EventsTrips from '../events/EventsTrips'
 import Calendar from '../calendar/Calendar';
@@ -46,7 +47,7 @@ import {
 } from './mobilenav/mobileNav'
 import QRShareSheet from '../shared/QRShareSheet'
 import CauseForConcernForm from '../safeguarding/CauseForConcernForm'
-import { useTerms } from '../../context/OrgContext'
+import { useTerms, useOrg } from '../../context/OrgContext'
 import Today from './Today'
 import {
   NAV_SECTIONS, NAV_GROUPS, ORG_ITEMS, CREATE_ACTIONS, OFFICE_TABS,
@@ -696,6 +697,7 @@ export default function Dashboard({ session, org }) {
 
   const plan    = org?.plan || 'trial'
   const terms   = useTerms()
+  const refreshOrgCtx = useOrg()?.refreshOrg
   // Module access is resolved centrally (see lib/moduleAccess) so the sidebar,
   // Hub and Calendar can't disagree, and so an active trial grants everything.
   const hasModule = makeHasModule(org)
@@ -1422,6 +1424,12 @@ export default function Dashboard({ session, org }) {
       </AnimatePresence>
       {/* The owner tour is for whoever runs the organisation. Waits for the
           profile so it can greet them by name. */}
+      {/* After signing in, owners and admins without a logo are asked to add
+          their logo and colours. Never on top of the welcome tour. */}
+      {!tourRole && userProfile && isAdmin && (
+        <BrandNudge org={org} role={userProfile.role} userId={session?.user?.id}
+          onOpenBranding={() => handleSetTab('branding')} onSaved={() => { try { refreshOrgCtx?.() } catch (e) { /* the page still shows the new brand */ } }} />
+      )}
       {tourRole && userProfile && (tourRole !== 'owner' || isAdmin) && (
         <Suspense fallback={null}>
           <WelcomeTour
