@@ -55,7 +55,6 @@ create policy "svr: volunteer asks" on public.session_volunteer_requests
     user_id = auth.uid()
     and org_id = public.get_my_org_id()
     and status = 'requested' and decided_by is null and decided_at is null
-    and not public.is_access_suspended(auth.uid())
     and exists (
       select 1 from public.sessions s
       where s.id = session_volunteer_requests.session_id
@@ -79,6 +78,8 @@ create policy "svr: withdraw or clear" on public.session_volunteer_requests
   using (user_id = auth.uid() or public.is_org_staff(org_id));
 
 grant select, insert, update, delete on public.session_volunteer_requests to authenticated;
+-- Supabase's default privileges also grant anon; signed-out visitors have no business here.
+revoke all on public.session_volunteer_requests from anon;
 
 -- Tell the people who run sessions that someone wants to help.
 create or replace function public.notify_session_volunteer_request()
