@@ -77,11 +77,30 @@ function computeSignals(children, scores, goals) {
   }
 }
 
+// Children's names never leave our infrastructure. The model only needs to
+// know that a particular young person is declining or rising, not who they
+// are, so each name goes out as a placeholder and is put back in our reply.
+// Sending names to a US-hosted model, alongside which children's wellbeing is
+// falling, was a transfer of children's data with no need for it.
+function pseudonymise(signals) {
+  const names = []
+  const token = name => { names.push(name); return `[P${names.length}]` }
+  const safe = {
+    ...signals,
+    decliningNames: signals.decliningNames.map(token),
+    risingNames: signals.risingNames.map(token),
+  }
+  const restore = text => (typeof text === 'string'
+    ? text.replace(/\[P(\d+)\]/g, (m, n) => names[Number(n) - 1] || 'a young person')
+    : text)
+  return { safe, restore }
+}
+
 async function callClaude(signals) {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY not configured')
 
-  const system = `You write short, honest impact summaries for youth-charity programme managers, based only on precomputed signals — never invent numbers, names, or facts not present in the signals you're given. Output strict JSON only, no markdown fences, matching exactly: {"headline": string, "bullets": [{"tone": "success"|"warning"|"accent", "text": string}]}. 3 to 5 bullets. Tone "success" for genuine positive momentum, "warning" for risks needing attention, "accent" for neutral suggestions. Keep each bullet under 25 words, warm but direct, no hype, no emoji.`
+  const system = `You write short, honest impact summaries for youth-charity programme managers, based only on precomputed signals — never invent numbers, names, or facts not present in the signals you're given. Output strict JSON only, no markdown fences, matching exactly: {"headline": string, "bullets": [{"tone": "success"|"warning"|"accent", "text": string}]}. 3 to 5 bullets. Tone "success" for genuine positive momentum, "warning" for risks needing attention, "accent" for neutral suggestions. Keep each bullet under 25 words, warm but direct, no hype, no emoji. Young people appear as placeholders such as [P1]; refer to them only by those placeholders, copied exactly.`
   const user = `Signals:\n${JSON.stringify(signals)}\n\nIf trackedCount is 0 or there is nothing meaningful in the signals, return {"headline": null, "bullets": []}.`
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -140,10 +159,12 @@ export default async function handler(req, res) {
     ])
 
     const signals = computeSignals(children || [], scores || [], goals || [])
+    const { safe, restore } = pseudonymise(signals)
 
     let content
     try {
-      content = await callClaude(signals)
+      const raw = await callClaude(safe)
+      content = { headline: restore(raw.headline), bullets: raw.bullets.map(b => ({ ...b, text: restore(b.text) })) }
     } catch (aiErr) {
       console.error('impact-insights: Claude call failed', aiErr)
       return res.status(502).json({ error: 'AI insight generation failed', detail: aiErr?.message || String(aiErr) })
