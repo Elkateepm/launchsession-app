@@ -74,6 +74,14 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
   const [loadError, setLoadError] = useState('')
   const [starting, setStarting] = useState(false)
   const loadingRef = useRef(false)
+  // Every local attendance save bumps this. A refresh that began before a save
+  // reads the row as it was, so its result is thrown away rather than painted
+  // over the save -- otherwise a child just signed out showed as on site until
+  // the next poll, with a Sign out button that recorded the departure twice.
+  const writeSeq = useRef(0)
+  // A reload asked for while one is in flight is queued, not dropped.
+  const reloadQueued = useRef(false)
+  const loadRef = useRef(null)
   const pendingAttendance = useRef(new Set())
   const isMobile = useIsMobile()
   const { groups: orgGroups } = useOrgSettings(org?.id)
@@ -131,8 +139,10 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
   useEffect(() => { loadPaymentBalances() }, [loadPaymentBalances])
 
   const load = useCallback(async () => {
-    if (!session?.id || !org?.id || loadingRef.current) return
+    if (!session?.id || !org?.id) return
+    if (loadingRef.current) { reloadQueued.current = true; return }
     loadingRef.current = true
+    const startSeq = writeSeq.current
     try {
     const results = await Promise.all([
       supabase.from('children').select('*').eq('org_id', org.id).order('first_name'),
@@ -146,6 +156,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
     const failed = [results[0], results[1], results[2], results[6]].find(result => result.error)
     if (failed) throw failed.error
     const [{ data: childData }, { data: attData }, { data: ssData }, { data: noteData }, { data: auditData }, { count: sgCount }, { data: freshSession }] = results
+    if (writeSeq.current !== startSeq) { reloadQueued.current = true; return }
     setSession(freshSession)
     setLoadError('')
     setChildren(childData || [])
@@ -169,8 +180,13 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
       setTeamPeople(people)
     }
     } catch (error) { setLoadError('Could not refresh the register. Check your connection and retry.') }
-    finally { loadingRef.current = false; setLoading(false) }
+    finally {
+      loadingRef.current = false
+      setLoading(false)
+      if (reloadQueued.current) { reloadQueued.current = false; setTimeout(() => loadRef.current?.(), 0) }
+    }
   }, [session?.id, session?.closed_by, session?.reopened_by, org?.id])
+  loadRef.current = load
 
   useEffect(() => { load() }, [load])
 
@@ -254,6 +270,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
   async function upsertAttendance(childId, patch) {
     if (pendingAttendance.current.has(childId) || loadError || session.closed_at) return false
     pendingAttendance.current.add(childId)
+    writeSeq.current += 1
     try {
       const existing = attendanceByChild[childId]
       const query = existing
@@ -261,6 +278,7 @@ export default function LiveRegister({ session: initialSession, org, authUserId,
         : supabase.from('attendance').insert({ org_id: org.id, session_id: session.id, child_id: childId, ...patch })
       const { data, error } = await query.select('*').single()
       if (error || !data) throw error || new Error('Not saved')
+      writeSeq.current += 1
       setAttendance(prev => [...prev.filter(row => row.child_id !== childId), data])
       return true
     } catch (error) {

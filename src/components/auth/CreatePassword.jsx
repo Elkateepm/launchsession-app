@@ -87,6 +87,7 @@ export default function CreatePassword() {
   // step: 'password' | 'profile' | 'fun' | 'done'
   const [step, setStep] = useState('password')
   const [authedUserId, setAuthedUserId] = useState(null)
+  const [signedIn, setSignedIn] = useState(false)
   const [awaitingApproval, setAwaitingApproval] = useState(true)
   const [preferredName, setPreferredName] = useState('')
   const [phone, setPhone] = useState('')
@@ -102,8 +103,15 @@ export default function CreatePassword() {
       const { data: rows, error } = await supabase
         .rpc('get_invite_by_token', { p_token: token })
       const data = rows?.[0]
-      if (error || !data) setError('Invite not found or already used.')
-      else {
+      if (error || !data) {
+        // Invite links are single-use, so the commonest way here is someone
+        // clicking the email again after setting their password. A bare error
+        // over a password form left them nowhere to go, often while still
+        // signed in; say what happened and offer the way in instead.
+        const { data: { session } } = await supabase.auth.getSession()
+        setSignedIn(!!session)
+        setStep('used')
+      } else {
         // Shaped to match what the rest of this component already expects, so
         // the change is confined to how the invite is fetched.
         setInvite({
@@ -331,6 +339,27 @@ export default function CreatePassword() {
                 </div>
                 <div style={{ marginTop: 22, height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 99, overflow: 'hidden' }}>
                   <motion.div initial={{ width: '0%' }} animate={{ width: '100%' }} transition={{ duration: 2.2, ease: 'linear' }} style={{ height: '100%', background: `linear-gradient(90deg, ${primary}, #6366F1)`, borderRadius: 99 }} />
+                </div>
+              </motion.div>
+            )}
+
+            {step === 'used' && (
+              <motion.div key="used" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} role="status"
+                style={{ textAlign: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: '36px 28px', backdropFilter: 'blur(18px)' }}>
+                <div style={{ fontSize: 44, marginBottom: 14 }}><Icon name="🔑" /></div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', marginBottom: 8 }}>This link has already been used</div>
+                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', lineHeight: 1.55, marginBottom: 22 }}>
+                  {signedIn
+                    ? 'Your account is set up and you are signed in.'
+                    : 'Set-up links work once. If you have already set your password, sign in with it.'}
+                </div>
+                <a href={signedIn ? '/' : '/members'}
+                  style={{ display: 'block', padding: 15, borderRadius: 12, background: `linear-gradient(135deg, ${primary}, #6366F1)`, color: '#fff', fontWeight: 800, fontSize: 15, textDecoration: 'none', marginBottom: 12 }}>
+                  {signedIn ? 'Open my workspace →' : 'Sign in →'}
+                </a>
+                {!signedIn && <a href="/members" style={{ fontSize: 13, color: '#C4B5FD', fontWeight: 700, textDecoration: 'none' }}>Forgotten your password? Reset it from the sign-in page</a>}
+                <div style={{ marginTop: 18, fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+                  Still stuck? <a href="mailto:support@launchsession.co.uk" style={{ color: '#C4B5FD', fontWeight: 700, textDecoration: 'none' }}>support@launchsession.co.uk</a>
                 </div>
               </motion.div>
             )}

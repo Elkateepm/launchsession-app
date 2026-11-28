@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import LiveRegister from './LiveRegister'
 import { supabase } from '../../lib/supabase'
 import { todayInLondon } from '../../lib/today'
@@ -97,5 +97,43 @@ test('a volunteer sees the team and their own time, but cannot sign anyone in', 
   const card = await screen.findByRole('region', { name: /Team/ })
   expect(card).toHaveTextContent('You')
   expect(card).toHaveTextContent('Your session lead signs the team in and out.')
+  expect(screen.queryByRole('button', { name: 'Sign in' })).not.toBeInTheDocument()
+})
+
+test('a refresh that started before a sign-in does not paint the old status back over it', async () => {
+  let release
+  let gated = false
+  let rows = [{ id: 'a1', child_id: 'c1', status: 'expected' }, { id: 'a2', child_id: 'c2', status: 'signed_in' }]
+  const base = supabase.from.getMockImplementation()
+  supabase.from.mockImplementation(table => {
+    const query = base(table)
+    if (table !== 'attendance') return query
+    let patched = null
+    query.update = patch => { patched = patch; return query }
+    query.then = resolve => {
+      if (patched) {
+        rows = rows.map(r => (r.id === 'a1' ? { ...r, ...patched } : r))
+        return Promise.resolve({ data: rows[0], error: null }).then(resolve)
+      }
+      // A gated read is taken now, before the sign-in, and delivered later.
+      if (gated) { const snapshot = rows; return new Promise(r => { release = () => r({ data: snapshot, error: null }) }).then(resolve) }
+      return Promise.resolve({ data: rows, error: null }).then(resolve)
+    }
+    return query
+  })
+  render(<LiveRegister session={session} org={{ id: 'o1' }} userRole="admin" authUserId="u1" />)
+  await screen.findByText('Alex Example')
+  expect(screen.getByRole('button', { name: /^Signed in 1$/ })).toBeInTheDocument()
+
+  // The poll fires and its read is still in flight when Alex is signed in.
+  gated = true
+  document.dispatchEvent(new Event('visibilitychange'))
+  await waitFor(() => expect(release).toBeDefined())
+  gated = false
+  fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
+  await waitFor(() => expect(screen.queryByRole('button', { name: 'Sign in' })).not.toBeInTheDocument())
+
+  // The stale read lands afterwards; Alex must stay signed in.
+  await act(async () => { release(); await new Promise(r => setTimeout(r, 50)) })
   expect(screen.queryByRole('button', { name: 'Sign in' })).not.toBeInTheDocument()
 })
