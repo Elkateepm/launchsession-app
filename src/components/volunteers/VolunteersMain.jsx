@@ -43,7 +43,6 @@ const CHANNELS = [
   { key: 'email', label: 'Email', icon: '📧', wired: true },
   { key: 'portal', label: 'Portal Notification', icon: '🔔', wired: true },
   { key: 'notes', label: 'Internal Notes', icon: '📝', wired: true },
-  { key: 'sms', label: 'SMS', icon: '💬', wired: false },
   { key: 'whatsapp', label: 'WhatsApp', icon: '🟢', wired: false },
   { key: 'push', label: 'Push', icon: '📲', wired: false },
 ]
