@@ -19,7 +19,7 @@ function serve(sessions) {
   supabase.from.mockImplementation(table => {
     const result = { data: table === 'sessions' ? sessions : [], error: null }
     const query = { then: (resolve, reject) => Promise.resolve(result).then(resolve, reject) }
-    for (const method of ['select', 'eq', 'in', 'gte', 'order', 'limit', 'not', 'is', 'single']) query[method] = jest.fn(() => query)
+    for (const method of ['select', 'eq', 'in', 'gte', 'lte', 'order', 'limit', 'not', 'is', 'single', 'maybeSingle']) query[method] = jest.fn(() => query)
     return query
   })
 }
@@ -76,4 +76,19 @@ test('on a phone the shortcuts move into the options menu so the actions fit one
   } finally {
     window.innerWidth = width
   }
+})
+
+test('New session opens the wizard every time it is pressed, not only the first', async () => {
+  serve([])
+  supabase.rpc.mockResolvedValue({ data: [], error: null })
+  localStorage.clear()
+  const { rerender } = render(<SessionPlanner org={org} onNavigate={() => {}} autoOpenWizard={1} />)
+  expect(await screen.findByText('What kind of session is this?')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+  expect(await screen.findByText('Your plans, people and registers in one place.')).toBeInTheDocument()
+  // The dashboard counts presses, so pressing New session again while already
+  // on this page arrives as a new value. It used to be true both times, which
+  // changed nothing and left the second press doing nothing.
+  rerender(<SessionPlanner org={org} onNavigate={() => {}} autoOpenWizard={2} />)
+  expect(await screen.findByText('What kind of session is this?')).toBeInTheDocument()
 })
