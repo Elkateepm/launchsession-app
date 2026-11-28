@@ -869,7 +869,7 @@ const NOTIFICATION_GROUPS = [
   },
 ]
 
-function NotificationsSection({ org, session: authSession }) {
+export function NotificationsSection({ org, session: authSession }) {
   const userId = authSession?.user?.id
   const supported = isPushSupported()
   const [permission, setPermission] = useState(getNotificationPermission())

@@ -35,6 +35,7 @@ import OverlayPortal from '../shared/OverlayPortal'
 import Icon from '../../lib/icons'
 import { carryAssessmentToSession } from '../../lib/sessionRiskAssessment'
 import { withAlpha } from '../../lib/withAlpha'
+import { NOTIF_ICONS, notifColor, timeAgo, groupNotifications, notifDestination } from '../../lib/notificationMeta'
 import { todayInLondon } from '../../lib/today'
 
 
@@ -2333,43 +2334,6 @@ function DateTimeInline({ primary }) {
   )
 }
 
-const NOTIF_ICONS = {
-  safeguarding: '🛡️', sessions: '📅', registers: '📋', volunteers: '🤝', forms: '📝',
-  consents: '✅', medical: '⚕️', resources: '🧰', reflections: '💭', messaging: '💬',
-  security: '🔒', reports: '📊',
-}
-
-// Colour identity per category so the list scans at a glance — safeguarding
-// and security read as urgent/red, everything else gets a calm, distinct hue.
-const NOTIF_COLORS = {
-  safeguarding: '#DC2626', security: '#DC2626', medical: '#DC2626',
-  registers: '#2563EB', sessions: '#7C3AED', volunteers: '#0D9488',
-  forms: '#D97706', consents: '#16A34A', resources: '#0891B2',
-  reflections: '#9333EA', messaging: '#2563EB', reports: '#4B5563',
-}
-function notifColor(n, fallback) {
-  if (n.priority === 'critical') return '#DC2626'
-  return NOTIF_COLORS[n.category] || fallback
-}
-function notifDayLabel(iso) {
-  const d = new Date(iso)
-  const now = new Date()
-  const startOfDay = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate())
-  const diffDays = Math.round((startOfDay(now) - startOfDay(d)) / 86400000)
-  if (diffDays <= 0) return 'Today'
-  if (diffDays === 1) return 'Yesterday'
-  if (diffDays < 7) return d.toLocaleDateString('en-GB', { weekday: 'long' })
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-}
-
-function timeAgo(iso) {
-  const s = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000))
-  if (s < 60) return 'just now'
-  const m = Math.floor(s / 60); if (m < 60) return `${m}m ago`
-  const h = Math.floor(m / 60); if (h < 24) return `${h}h ago`
-  const d = Math.floor(h / 24); if (d < 7) return `${d}d ago`
-  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-}
 
 // Real, unified notification centre backed by the `notifications` table —
 // every category the app writes to (safeguarding, sessions, registers,
@@ -2412,22 +2376,7 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
   // Identical alerts fire more than once (two "Reflection due" rows for the
   // same session, for example). Collapse repeats within the same day into a
   // single row carrying a count, so 25 notifications don't read as 25 things.
-  const groupedItems = React.useMemo(() => {
-    const groups = []
-    let lastLabel = null
-    let seen = new Map()
-    visibleItems.forEach(n => {
-      const label = notifDayLabel(n.created_at)
-      if (label !== lastLabel) { groups.push({ label, items: [] }); lastLabel = label; seen = new Map() }
-      const key = `${n.category}|${n.title}|${n.body}`
-      const hit = seen.get(key)
-      if (hit) { hit.dupes.push(n); return }
-      const stack = { ...n, dupes: [n] }
-      seen.set(key, stack)
-      groups[groups.length - 1].items.push(stack)
-    })
-    return groups
-  }, [visibleItems])
+  const groupedItems = React.useMemo(() => groupNotifications(visibleItems), [visibleItems])
 
   const openItem = async (n) => {
     // A row may stand for several identical notifications — read them all.
@@ -2438,14 +2387,8 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
       supabase.from('notifications').update({ read_at: now }).in('id', ids).then(() => {})
     }
     setOpen(false)
-    if (n.target_url) {
-      try {
-        const params = new URLSearchParams(n.target_url.split('?')[1] || '')
-        const tab = params.get('tab')
-        const sub = params.get('sub')
-        if (tab) onNavigate(tab, sub === 'requests' ? { openRegistrationRequests: true } : undefined)
-      } catch {}
-    }
+    const dest = notifDestination(n)
+    if (dest) onNavigate(dest.tab, dest.payload)
   }
 
   const markAllRead = () => {
@@ -2581,6 +2524,12 @@ function NotificationBell({ userId, orgId, primary, onNavigate }) {
                   </div>
                 )}
               </div>
+              {/* The bell shows the latest 30; everything else, the filters and
+                  this person's own alert settings live in the Notification Centre. */}
+              <button onClick={() => { setOpen(false); onNavigate('notifications') }}
+                style={{ flexShrink: 0, minHeight: 48, border: 'none', borderTop: '1px solid var(--border-soft)', background: 'var(--surface)', color: 'var(--org-ink)', fontSize: isMobile ? 14 : 12.5, fontWeight: 800, cursor: 'pointer', paddingBottom: isMobile ? 'env(safe-area-inset-bottom)' : 0 }}>
+                See all notifications and alert settings →
+              </button>
             </motion.div>
           </>
         )}

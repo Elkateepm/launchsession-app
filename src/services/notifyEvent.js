@@ -9,12 +9,9 @@ export async function notifyEvent(eventType, params = {}) {
   try {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
-    // Never block the calling UI flow on notification delivery.
-    fetch('/api/send-form-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-      body: JSON.stringify({ type: 'push', event_type: eventType, ...params }),
-    }).catch(() => {})
+    // Never block the calling UI flow on notification delivery. Sent to the
+    // send-push Edge Function, which checks the signed-in user's token.
+    supabase.functions.invoke('send-push', { body: { type: 'push', event_type: eventType, ...params } }).catch(() => {})
   } catch (e) {
     // Notifications are always best-effort — never surface this to the user.
   }

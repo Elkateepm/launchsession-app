@@ -27,6 +27,7 @@ import SafeguardingHub from '../safeguarding/SafeguardingHub'
 import NewsletterStudio from '../messaging/NewsletterStudio'
 import Reports from '../reports/Reports'
 import Messaging from '../messaging/Messaging'
+import NotificationCentre from '../notifications/NotificationCentre'
 import Forms from '../forms/Forms'
 import ChildrenDirectory from '../children/ChildrenDirectory'
 import ChildrenGate from '../children/ChildrenGate'
@@ -327,7 +328,7 @@ function FloatingHeader({ org, orgName, primary, tab, ALL_MODULES, userName, use
     return () => el.removeEventListener('scroll', onScroll, true)
   }, [])
 
-  const moduleLabel = tab === 'children' ? terms.People : tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : tab === 'branding' ? 'Branding' : tab === 'office' ? 'Office' : tab === 'today' ? 'Today' : (tab === 'projects' || tab === 'projects_list') ? 'Projects' : ALL_MODULES.find(m => m.key === tab)?.label
+  const moduleLabel = tab === 'children' ? terms.People : tab === 'team' ? 'Team & Staff' : tab === 'settings' ? 'Settings' : tab === 'branding' ? 'Branding' : tab === 'office' ? 'Office' : tab === 'today' ? 'Today' : tab === 'notifications' ? 'Notifications' : (tab === 'projects' || tab === 'projects_list') ? 'Projects' : ALL_MODULES.find(m => m.key === tab)?.label
     // Never the raw key: "projects_list" showed in the header as it was.
     || (tab ? tab.charAt(0).toUpperCase() + tab.slice(1).replace(/_/g, ' ') : '')
 
@@ -503,7 +504,7 @@ const ORG_TABS = ['settings', 'branding', 'team']
 // and putting it adjacent to everyday navigation invites mis-clicks.
 const PROFILE_MENU_ITEMS = [
   { id: 'profile', label: 'My profile', icon: '👤' },
-  { id: 'notifications', label: 'Notifications', icon: '🔔', tab: 'settings', adminOnly: true },
+  { id: 'notifications', label: 'Notifications', icon: '🔔', tab: 'notifications' },
   { id: 'org', label: 'Organisation settings', icon: '⚙️', tab: 'settings', adminOnly: true },
   { id: 'signout', label: 'Sign out', icon: '↪️', danger: true, dividerBefore: true },
 ]
@@ -1175,6 +1176,7 @@ export default function Dashboard({ session, org }) {
           {/* ── DELIVERY PACK ── */}
           {effectiveTab === 'registers'  && (hasModule('registers')  ? <Registers key={registersKey} org={org} session={session} onNavigate={handleSetTab} autoOpenAdd={autoOpenAddChild} canOpenRegister={tabLevel === 'edit'} /> : <LockedModule moduleKey="registers"  label="Registers"  icon="📋" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {effectiveTab === 'volunteers' && (hasModule('volunteers') ? <Volunteers org={org} session={session} autoOpenInvite={autoOpenInviteVolunteer} />                   : <LockedModule moduleKey="volunteers" label="Volunteers" icon="❤️" onNavigate={handleSetTab} onTrial={onTrial} />)}
+          {effectiveTab === 'notifications' && <NotificationCentre org={org} session={session} onNavigate={handleSetTab} />}
           {effectiveTab === 'messaging'  && (hasModule('messaging')  ? <Messaging org={org} session={session} initialThreadId={initialThreadId} readOnly={tabLevel === 'view'} />                   : <LockedModule moduleKey="messaging"  label="Messaging"  icon="💬" onNavigate={handleSetTab} onTrial={onTrial} />)}
           {/* Newsletter is rendered inside Office below. */}
 
@@ -1240,7 +1242,7 @@ export default function Dashboard({ session, org }) {
 
 
           {/* ── CATCH-ALL ── */}
-          {!['home','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','newsletter','safeguarding','forms','risk_assessments','reports','impact_outcomes','fundraising','hr','payments','resource_booking','mentoring','parent_portal','projects','projects_list','today','office','__no_access'].includes(effectiveTab) && (
+          {!['home','notifications','planner','calendar','events_trips','children','medical_alerts','team','templates','settings','branding','registers','volunteers','messaging','newsletter','safeguarding','forms','risk_assessments','reports','impact_outcomes','fundraising','hr','payments','resource_booking','mentoring','parent_portal','projects','projects_list','today','office','__no_access'].includes(effectiveTab) && (
             <ComingSoonModule icon={ALL_MODULES.find(m => m.key === tab)?.icon || '🚧'} label={ALL_MODULES.find(m => m.key === tab)?.label || tab} desc="This module is being built." />
           )}
           </TabTransition>
@@ -1416,6 +1418,7 @@ export default function Dashboard({ session, org }) {
           org={org}
           onClose={() => setShowProfile(false)}
           onSignOut={() => { setShowProfile(false); handleSignOut() }}
+          onOpenNotifications={() => handleSetTab('notifications')}
           onProfileUpdate={refreshUserProfile}
           onStartTour={isAdmin ? () => { setShowProfile(false); setTourRole('owner') } : undefined}
           dockClearance={isMobileBottomNav ? 'calc(76px + env(safe-area-inset-bottom, 0px))' : null}

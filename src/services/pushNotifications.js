@@ -170,14 +170,15 @@ export async function sendTestNotification() {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return { success: false, error: 'Not signed in' }
   try {
-    const res = await fetch('/api/send-form-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-      body: JSON.stringify({ type: 'push', event_type: 'TEST_NOTIFICATION' }),
-    })
-    const data = await res.json()
-    if (!res.ok) return { success: false, error: data?.error || 'Failed to send test notification' }
-    return { success: true, sent: data.sent, failed: data.failed }
+    const { data, error } = await supabase.functions.invoke('send-push', { body: { type: 'push', event_type: 'TEST_NOTIFICATION' } })
+    if (error) {
+      // invoke() wraps a non-2xx reply; read the server's own message from it.
+      let message = 'Failed to send test notification'
+      try { message = (await error.context.json())?.error || message } catch (e) { /* no JSON body */ }
+      return { success: false, error: message }
+    }
+    // A device can be subscribed and still get nothing; say so plainly.
+    return { success: true, sent: data?.sent || 0, subscriptions: data?.subscriptions || 0 }
   } catch (e) {
     return { success: false, error: 'Network error — please try again' }
   }

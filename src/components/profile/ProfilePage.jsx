@@ -52,7 +52,7 @@ const formatDate = iso => {
 // dockClearance: on a phone the app's dock stays on top of the profile, so you
 // can go straight to another page (which closes the profile). It is the dock's
 // height as CSS, and the bottom of the profile stays clear of it.
-export default function ProfilePage({ session, org, onClose, onSignOut, onProfileUpdate, onStartTour, dockClearance }) {
+export default function ProfilePage({ session, org, onClose, onSignOut, onProfileUpdate, onStartTour, onOpenNotifications, dockClearance }) {
   const isMobile = useIsMobile()
   const { isDesktop } = useBreakpoint()
   const reduceMotion = useReducedMotion()
@@ -253,6 +253,7 @@ export default function ProfilePage({ session, org, onClose, onSignOut, onProfil
 
             <Section title="Account">
               <Row icon="🔑" label="Password" value="Change your password" onClick={() => setShowPassword(true)} plain />
+              {onOpenNotifications && <Row icon="🔔" label="Notifications" value="Your alerts, devices and history" onClick={onOpenNotifications} plain />}
               {onStartTour && <Row icon="🧭" label="Take the tour" value="A one-minute look around the app" onClick={onStartTour} plain />}
               <Row icon="🚪" label="Sign out" value={`Signed in as ${userEmail}`} onClick={() => onSignOut && onSignOut()} danger plain />
             </Section>

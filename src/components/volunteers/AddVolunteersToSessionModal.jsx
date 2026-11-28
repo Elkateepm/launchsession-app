@@ -67,10 +67,8 @@ export default function AddVolunteersToSessionModal({ session, orgId, primary, s
       const accessToken = authSession?.access_token
 
       if (sendPush && accessToken) {
-        fetch('/api/send-form-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
-          body: JSON.stringify({ type: 'push', event_type: 'STAFF_ADDED_TO_SESSION', target_user_ids: ids, session_id: session.id }),
+        supabase.functions.invoke('send-push', {
+          body: { type: 'push', event_type: 'STAFF_ADDED_TO_SESSION', target_user_ids: ids, session_id: session.id },
         }).catch(() => {})
       }
 

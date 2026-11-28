@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js'
-import webpush from 'web-push'
 
 
 // Server-generated notification copy — the frontend only ever sends an
@@ -74,68 +73,37 @@ const EVENT_TEMPLATES = {
 // This also writes the bell notification directly via notify_users, same as
 // the bell-only trigger group above, so it works even if VAPID/push isn't
 // configured.
-const IMPLEMENTED_EVENTS = new Set(['TEST_NOTIFICATION', 'SAFEGUARDING_ACTION_REQUIRED', 'NEW_MESSAGE', 'STAFF_ADDED_TO_SESSION'])
+// Which user-triggered events resolve recipients, and which can never be
+// silenced, now live in supabase/functions/send-push.
 
-// Shared delivery path for the cron_reminders sweeps below — resolves
-// per-user notification prefs, writes the in-app notification row
-// regardless of push eligibility, then sends + logs the actual push.
-// (The user-triggered `push` type branch further down has its own copy of
-// this logic — deliberately not merged, so a change to one code path can't
-// silently affect the other.)
-// Safeguarding/security-critical event types that must always reach their
-// recipients, matching the locked (non-togglable) groups in the
-// Notifications settings screen. Enforced here, not just in the UI --
-// someone editing notification_preferences directly (bypassing the app)
-// still can't silence these.
-const CRITICAL_EVENT_TYPES = new Set(['SAFEGUARDING_ACTION_REQUIRED', 'SECURITY_ALERT'])
+// Push now goes out from the send-push Supabase Edge Function. The sweeps
+// still decide who should hear, then hand the delivery (bell row, prefs,
+// push, logs) to it with the shared db_event_secret. A failed hand-off is
+// logged, not thrown: the retention sweep runs later in the same request and
+// must not be skipped because a push could not be sent.
+async function forwardToSendPush(payload, authorization) {
+  const headers = { 'Content-Type': 'application/json' }
+  if (authorization) headers.Authorization = authorization
+  else headers['x-db-event-secret'] = process.env.DB_EVENT_SECRET
+  const res = await fetch(`${process.env.REACT_APP_SUPABASE_URL}/functions/v1/send-push`, { method: 'POST', headers, body: JSON.stringify(payload) })
+  const data = await res.json().catch(() => ({}))
+  return { status: res.status, data }
+}
 
 async function deliverSweepPush(adminClient, { org_id, event_type, category, title, body, url, priority, recipientIds }) {
   const ids = [...new Set(recipientIds)].filter(Boolean)
   if (ids.length === 0) return 0
-
-  const { data: prefsRows } = await adminClient.from('notification_preferences').select('*').in('user_id', ids)
-  const prefsByUser = {}
-  ;(prefsRows || []).forEach(p => { prefsByUser[p.user_id] = p })
-  const eligibleIds = ids.filter(id => {
-    if (CRITICAL_EVENT_TYPES.has(event_type)) return true // never silenceable, regardless of stored prefs
-    const p = prefsByUser[id]
-    if (!p) return true
-    if (p.push_enabled === false) return false
-    // A per-type override takes precedence over the broad category toggle
-    // either direction — lets someone turn off one specific alert while
-    // keeping the rest of its category on, or vice versa.
-    const override = p.event_overrides?.[event_type]
-    if (override !== undefined) return !!override
-    if (category && p[category] === false) return false
-    return true
-  })
-
-  await adminClient.from('notifications').insert(ids.map(id => ({
-    org_id, user_id: id, category, event_type, title, body, target_url: url, priority,
-  })))
-
-  if (eligibleIds.length === 0) return 0
-
-  const { data: subs } = await adminClient.from('push_subscriptions').select('*').in('user_id', eligibleIds).eq('is_active', true)
-  const payload = JSON.stringify({ title, body, url, event_type, category, priority, tag: `${event_type.toLowerCase()}-${url}` })
-  let sent = 0
-  const logRows = []
-  await Promise.allSettled((subs || []).map(async (sub) => {
-    try {
-      await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload)
-      sent += 1
-      logRows.push({ org_id, user_id: sub.user_id, subscription_id: sub.id, event_type, status: 'sent' })
-      await adminClient.from('push_subscriptions').update({ last_used_at: new Date().toISOString() }).eq('id', sub.id)
-    } catch (err) {
-      const code = err?.statusCode
-      logRows.push({ org_id, user_id: sub.user_id, subscription_id: sub.id, event_type, status: 'failed', error_code: code ? String(code) : 'unknown' })
-      if (code === 404 || code === 410) {
-        await adminClient.from('push_subscriptions').update({ is_active: false, revoked_at: new Date().toISOString() }).eq('id', sub.id)
-      }
-    }
-  }))
-  if (logRows.length) await adminClient.from('push_delivery_logs').insert(logRows)
-  return sent
+  try {
+    const { status, data } = await forwardToSendPush({
+      type: 'deliver', org_id, event_type, category, title, body, url, priority,
+      recipient_ids: ids, tag: `${event_type.toLowerCase()}-${url}`,
+    })
+    if (status !== 200) { console.error(`send-form-email: send-push ${status} for ${event_type}`, data?.error); return 0 }
+    return data.sent || 0
+  } catch (err) {
+    console.error(`send-form-email: send-push unreachable for ${event_type}`, err?.message)
+    return 0
+  }
 }
 
 export default async function handler(req, res) {
@@ -257,68 +225,13 @@ export default async function handler(req, res) {
     // gated by its own shared secret (kept separate from CRON_SECRET since
     // this fires inside a user's transaction, not an external poll). ──
     if (req.body?.type === 'db_event_push') {
+      // Kept so a trigger still pointed here keeps working; delivery itself
+      // happens in the send-push Edge Function.
       const providedSecret = req.headers['x-db-event-secret']
-      const { DB_EVENT_SECRET, REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT } = process.env
+      const { DB_EVENT_SECRET } = process.env
       if (!DB_EVENT_SECRET || providedSecret !== DB_EVENT_SECRET) return res.status(401).json({ error: 'Unauthorized' })
-      if (!REACT_APP_SUPABASE_URL || !REACT_APP_SUPABASE_SERVICE_KEY) {
-        console.error('send-form-email(db_event_push): missing Supabase env vars')
-        return res.status(500).json({ error: 'Server misconfiguration: missing Supabase credentials' })
-      }
-      if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
-        console.error('send-form-email(db_event_push): missing VAPID keys')
-        return res.status(500).json({ error: 'Push notifications are not configured on the server yet' })
-      }
-
-      const { event_type, session_id, actor_user_id, recipient_ids, org_id: bodyOrgId, body_override } = req.body || {}
-      if (!event_type || !EVENT_TEMPLATES[event_type]) return res.status(400).json({ error: 'Unknown or missing event_type' })
-
-      const adminClient = createClient(REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY)
-      webpush.setVapidDetails(VAPID_SUBJECT || 'mailto:support@launchsession.co.uk', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
-
-      const template = EVENT_TEMPLATES[event_type]
-      let orgId, recipientIds, notifBody = body_override || template.body, notifUrl = template.url
-
-      if (session_id) {
-        // Session-scoped events: SESSION_CREATED, SESSION_EDITED, REFLECTION_DUE.
-        const { data: sessionRow, error: sessionErr } = await adminClient.from('sessions').select('id, org_id, title, lead_staff_id').eq('id', session_id).maybeSingle()
-        if (sessionErr || !sessionRow) return res.status(404).json({ error: 'Session not found' })
-        orgId = sessionRow.org_id
-
-        if (event_type === 'REFLECTION_DUE') {
-          // Only the lead needs to write the reflection — not the whole team.
-          recipientIds = [sessionRow.lead_staff_id].filter(Boolean)
-          notifBody = `The session "${sessionRow.title}" is ready for its reflection to be written up.`
-          notifUrl = `/?tab=registers&session=${sessionRow.id}`
-        } else {
-          const { data: staffRows } = await adminClient.from('session_staff').select('user_id').eq('session_id', session_id).not('user_id', 'is', null)
-          // Never notify whoever just made the change about their own action.
-          recipientIds = [sessionRow.lead_staff_id, ...(staffRows || []).map(r => r.user_id)].filter(id => id && id !== actor_user_id)
-          const verb = event_type === 'SESSION_CREATED' ? 'created' : 'updated'
-          notifBody = `"${sessionRow.title}" has been ${verb}.`
-          notifUrl = `/?tab=registers&session=${sessionRow.id}`
-        }
-      } else if (bodyOrgId && Array.isArray(recipient_ids)) {
-        // Org-wide events with no single session to hang off, e.g. SECURITY_ALERT.
-        // The trigger computes and passes the recipient list itself since it
-        // already has the context (role change, etc.) that decided who cares.
-        orgId = bodyOrgId
-        recipientIds = recipient_ids.filter(id => id && id !== actor_user_id)
-      } else {
-        return res.status(400).json({ error: 'Missing session_id or (org_id + recipient_ids)' })
-      }
-
-      const sent = await deliverSweepPush(adminClient, {
-        org_id: orgId,
-        event_type,
-        category: template.category,
-        title: template.title,
-        body: notifBody,
-        url: notifUrl,
-        priority: template.priority,
-        recipientIds,
-      })
-
-      return res.status(200).json({ success: true, recipients: recipientIds.length, pushes_sent: sent })
+      const { status, data } = await forwardToSendPush(req.body)
+      return res.status(status).json(data)
     }
 
     // ── SESSION_STARTING_SOON sweep — called by an external cron (e.g.
@@ -327,19 +240,17 @@ export default async function handler(req, res) {
     // too, same 12-function Hobby cap reason as everything else below. ──
     if (req.body?.type === 'cron_reminders') {
       const providedSecret = req.headers['x-cron-secret']
-      const { CRON_SECRET, REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT } = process.env
+      const { CRON_SECRET, REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY, DB_EVENT_SECRET } = process.env
       if (!CRON_SECRET || providedSecret !== CRON_SECRET) return res.status(401).json({ error: 'Unauthorized' })
       if (!REACT_APP_SUPABASE_URL || !REACT_APP_SUPABASE_SERVICE_KEY) {
         console.error('send-form-email(cron_reminders): missing Supabase env vars')
         return res.status(500).json({ error: 'Server misconfiguration: missing Supabase credentials' })
       }
-      if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
-        console.error('send-form-email(cron_reminders): missing VAPID keys')
-        return res.status(500).json({ error: 'Push notifications are not configured on the server yet' })
-      }
+      // Pushes are handed to send-push with this; without it the sweeps still
+      // write nothing and retention still runs, so warn rather than stop.
+      if (!DB_EVENT_SECRET) console.error('send-form-email(cron_reminders): DB_EVENT_SECRET missing, pushes will not be sent')
 
       const adminClient = createClient(REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_SERVICE_KEY)
-      webpush.setVapidDetails(VAPID_SUBJECT || 'mailto:support@launchsession.co.uk', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
 
       // All orgs are UK-based today, so "starting soon" is computed against
       // UK wall-clock time rather than per-org/per-user timezones.
@@ -686,104 +597,11 @@ export default async function handler(req, res) {
     // ── Push notifications (shares this function to stay within the Hobby
     // plan's 12-serverless-functions-per-deployment limit) ──
     if (req.body?.type === 'push') {
-      const { event_type, target_user_ids, thread_id, session_id } = req.body || {}
-      if (!event_type || !EVENT_TEMPLATES[event_type]) return res.status(400).json({ error: 'Unknown or missing event_type' })
-      if (!IMPLEMENTED_EVENTS.has(event_type)) return res.status(400).json({ error: 'This event type is not yet wired to a recipient list' })
-
-      const { VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT } = process.env
-      if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
-        console.error('send-form-email(push): missing VAPID keys')
-        return res.status(500).json({ error: 'Push notifications are not configured on the server yet' })
-      }
-      webpush.setVapidDetails(VAPID_SUBJECT || 'mailto:support@launchsession.co.uk', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
-
-      const template = EVENT_TEMPLATES[event_type]
-
-      // ── Resolve recipients — always scoped to the caller's own org, never
-      // trusting client-supplied user ids without re-filtering by org_id. ──
-      let recipientIds = []
-      let notifBody = template.body
-      let notifUrl = template.url
-
-      if (event_type === 'TEST_NOTIFICATION') {
-        recipientIds = [user.id]
-      } else if (event_type === 'SAFEGUARDING_ACTION_REQUIRED') {
-        const { data: admins } = await adminClient.from('user_profiles').select('id').eq('org_id', profile.org_id).in('role', ['admin', 'owner'])
-        recipientIds = (admins || []).map(a => a.id)
-      } else if (event_type === 'NEW_MESSAGE') {
-        const requested = Array.isArray(target_user_ids) ? target_user_ids.slice(0, 200) : []
-        if (requested.length === 0) return res.status(400).json({ error: 'Missing target_user_ids' })
-        const { data: members } = await adminClient.from('user_profiles').select('id').eq('org_id', profile.org_id).in('id', requested)
-        recipientIds = (members || []).map(m => m.id).filter(id => id !== user.id)
-        if (thread_id) notifUrl = `/?tab=messaging&thread=${thread_id}`
-      } else if (event_type === 'STAFF_ADDED_TO_SESSION') {
-        const requested = Array.isArray(target_user_ids) ? target_user_ids.slice(0, 200) : []
-        if (requested.length === 0) return res.status(400).json({ error: 'Missing target_user_ids' })
-        // Re-filter by org — a client can't push a colleague from another org this way.
-        const { data: members } = await adminClient.from('user_profiles').select('id').eq('org_id', profile.org_id).in('id', requested)
-        recipientIds = (members || []).map(m => m.id)
-        if (session_id) {
-          const { data: sessionRow } = await adminClient.from('sessions').select('id, title').eq('id', session_id).eq('org_id', profile.org_id).maybeSingle()
-          if (sessionRow) {
-            notifBody = `You've been added to "${sessionRow.title}".`
-            notifUrl = `/?tab=registers&session=${sessionRow.id}`
-          }
-        }
-      }
-
-      recipientIds = [...new Set(recipientIds)].slice(0, 500) // hard cap — basic abuse guard
-      if (recipientIds.length === 0) return res.status(200).json({ success: true, sent: 0, recipients: 0 })
-
-      // Respect each recipient's own preferences (default to enabled if they
-      // haven't set any yet, matching the table's own column defaults).
-      const { data: prefsRows } = await adminClient.from('notification_preferences').select('*').in('user_id', recipientIds)
-      const prefsByUser = {}
-      ;(prefsRows || []).forEach(p => { prefsByUser[p.user_id] = p })
-
-      const eligibleIds = recipientIds.filter(id => {
-        if (CRITICAL_EVENT_TYPES.has(event_type)) return true // never silenceable, regardless of stored prefs
-        const p = prefsByUser[id]
-        if (!p) return true // no row yet = defaults = enabled
-        if (p.push_enabled === false) return false
-        const override = p.event_overrides?.[event_type]
-        if (override !== undefined) return !!override
-        if (template.category && p[template.category] === false) return false
-        return true
-      })
-
-      // Always write the in-app notification record, even for users with
-      // push disabled — they should still see it when they next open the app.
-      const notifRows = recipientIds.map(id => ({
-        org_id: profile.org_id, user_id: id, category: template.category, event_type,
-        title: template.title, body: notifBody, target_url: notifUrl, priority: template.priority,
-      }))
-      await adminClient.from('notifications').insert(notifRows)
-
-      if (eligibleIds.length === 0) return res.status(200).json({ success: true, sent: 0, recipients: recipientIds.length })
-
-      const { data: subs } = await adminClient.from('push_subscriptions').select('*').in('user_id', eligibleIds).eq('is_active', true)
-      const payload = JSON.stringify({ title: template.title, body: notifBody, url: notifUrl, event_type, category: template.category, priority: template.priority, tag: event_type })
-
-      let sent = 0
-      const logRows = []
-      await Promise.allSettled((subs || []).map(async (sub) => {
-        try {
-          await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload)
-          sent += 1
-          logRows.push({ org_id: profile.org_id, user_id: sub.user_id, subscription_id: sub.id, event_type, status: 'sent' })
-          await adminClient.from('push_subscriptions').update({ last_used_at: new Date().toISOString() }).eq('id', sub.id)
-        } catch (err) {
-          const code = err?.statusCode
-          logRows.push({ org_id: profile.org_id, user_id: sub.user_id, subscription_id: sub.id, event_type, status: 'failed', error_code: code ? String(code) : 'unknown' })
-          // 404/410 mean the endpoint is gone for good — deactivate so we stop retrying it.
-          if (code === 404 || code === 410) {
-            await adminClient.from('push_subscriptions').update({ is_active: false, revoked_at: new Date().toISOString() }).eq('id', sub.id)
-          }
-        }
-      }))
-      if (logRows.length) await adminClient.from('push_delivery_logs').insert(logRows)
-
-      return res.status(200).json({ success: true, sent, recipients: recipientIds.length, subscriptions: (subs || []).length })
+      // For app versions still calling here: the current app calls send-push
+      // directly. Forwarded with the caller's own token, so send-push applies
+      // the same organisation checks as for a direct call.
+      const { status, data } = await forwardToSendPush(req.body, authHeader)
+      return res.status(status).json(data)
     }
 
     // ── Child registration invite (shares this function to stay within the
